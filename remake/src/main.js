@@ -9,9 +9,9 @@ import { initAudio, unlockAudio, sfx, setMusicMode, applyVolumes } from './audio
 import { CARDS } from './cards.js';
 import { aiChoose } from './engine.js';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
-import { T, THEME, BUCKSHOT } from './theme.js';
+import { T } from './theme.js';
 
-document.body.classList.add(`theme-${THEME}`);
+document.body.classList.add('theme-buckshot');
 {
   const film = document.createElement('div'); film.id = 'film';
   const c = document.createElement('canvas'); c.width = c.height = 180; const g = c.getContext('2d'), im = g.createImageData(180, 180);
@@ -32,7 +32,7 @@ async function boot() {
   R = buildScene();
   // reflexos suaves para os modelos PBR (TV, luminária, arquivos)
   const pm = new THREE.PMREMGenerator(gfx.renderer);
-  R.scene.environment = pm.fromScene(new RoomEnvironment(), 0.04).texture; R.scene.environmentIntensity = BUCKSHOT ? 0.16 : 0.42; pm.dispose();
+  R.scene.environment = pm.fromScene(new RoomEnvironment(), 0.04).texture; R.scene.environmentIntensity = 0.16; pm.dispose();
   window.__R__ = R;
   particles = new Particles(R.scene);
   duel = new Duel({ gfx, R, particles, ui });

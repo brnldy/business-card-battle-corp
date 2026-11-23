@@ -1,7 +1,5 @@
-// A sala, a mesa e o Rival, em dois temas:
-//  · buckshot  — porão de escritório escuro, luminária industrial balançando, TV de tubo antiga
-//  · severance — andar corporativo frio e simétrico, monitor cinza, luz de painel
-// Modelos de terceiros (CC0): Poly Haven (TVs, luminária, arquivos, relógio, planta, fichário, grampeador) e Quaternius (corpo).
+// A sala, a mesa e o Rival: porão de escritório escuro, luminária industrial balançando, TV de tubo antiga.
+// Modelos de terceiros (CC0): Poly Haven (TV, luminária, arquivos, relógio, fichário, grampeador) e Quaternius (corpo).
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import { timeUniform, dustMotes, LAYER } from './gfx.js';
@@ -9,7 +7,7 @@ import * as TX from './textures.js';
 import * as GR from './grime.js';
 import { TABLE, LAYOUT, CARD } from './textures.js';
 import { model } from './assets.js';
-import { T, BUCKSHOT } from './theme.js';
+import { T } from './theme.js';
 
 const M = (color, o = {}) => new THREE.MeshLambertMaterial({ color, ...o });
 const mesh = (g, m) => new THREE.Mesh(g, m);
@@ -25,7 +23,7 @@ function faceMaterial() {
     uniforms: {
       uTime: timeUniform, uGlitch: { value: 0 }, uMood: { value: 0 }, uTalk: { value: 0 }, uBlink: { value: 0 }, uThink: { value: 0 },
       uLook: { value: new THREE.Vector2() }, uColor: { value: new THREE.Color(...T.face) }, uOn: { value: 1 }, uDead: { value: 0 }, tDigits: { value: GR.digitAtlas() },
-      uBase: { value: BUCKSHOT ? new THREE.Vector3(0.012, 0.035, 0.018) : new THREE.Vector3(0.01, 0.03, 0.06) },
+      uBase: { value: new THREE.Vector3(0.012, 0.035, 0.018) },
     },
     vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
     fragmentShader: `
@@ -101,7 +99,6 @@ function tune(o, fn) { o.traverse((c) => { if (c.isMesh) (Array.isArray(c.materi
 // ───────── o Rival: corpo de terno (esqueleto posado) + aparelho de tubo no lugar da cabeça ─────────
 // tela (em unidades locais do modelo): centro x/y, largura, altura, z da frente
 const HEADS = {
-  television_02: { scale: 5.5, screen: [0.0, 0.262, 0.318, 0.236, 0.118], bulge: 0.012 },
   Television_01: { scale: 4.4, screen: [-0.062, 0.243, 0.372, 0.3, 0.2], bulge: 0.018 },
 };
 function buildRival(R) {
@@ -114,7 +111,7 @@ function buildRival(R) {
     if (c.isBone) bones[c.name] = c;
     if (c.isSkinnedMesh) { c.frustumCulled = false; if (/Head/.test(c.name)) c.visible = false; }
   });
-  tune(man, (m) => { m.roughness = 0.9; m.metalness = 0; m.color.multiplyScalar(BUCKSHOT ? 0.7 : 0.6); });
+  tune(man, (m) => { m.roughness = 0.9; m.metalness = 0; m.color.multiplyScalar(0.7); });
   // pose por cinemática inversa: em pé atrás da mesa, levemente curvado, mãos apoiadas no tampo
   const v1 = new THREE.Vector3(), v2 = new THREE.Vector3(), q1 = new THREE.Quaternion(), q2 = new THREE.Quaternion();
   const wpos = (b, out = new THREE.Vector3()) => b.getWorldPosition(out);
@@ -149,17 +146,17 @@ function buildRival(R) {
   poseArms();
 
   // cabeça
-  const key = BUCKSHOT ? 'Television_01' : 'television_02', H = HEADS[key];
+  const key = 'Television_01', H = HEADS[key];
   const head = new THREE.Group();
   const tv = model(key); tv.scale.setScalar(H.scale); head.add(tv);
-  tune(tv, (m) => { m.envMapIntensity = 0.6; if (BUCKSHOT) m.color.multiplyScalar(0.9); else { m.roughness = Math.min(1, (m.roughness ?? 0.6) + 0.1); m.color.multiplyScalar(1.25); } });
+  tune(tv, (m) => { m.envMapIntensity = 0.6; m.color.multiplyScalar(0.9); });
   const [sx, sy, sw, shh, sz] = H.screen, faceMat = faceMaterial();
   const screen = mesh(bulged(sw * H.scale, shh * H.scale, H.bulge * H.scale), faceMat); screen.position.set(sx * H.scale, sy * H.scale, sz * H.scale);
   const glass = mesh(bulged(sw * H.scale, shh * H.scale, H.bulge * H.scale * 1.1), glassMaterial()); glass.position.copy(screen.position); glass.position.z += 0.01;
   head.add(screen, glass);
   const neck = cyl(0.26, 0.32, 0.5, 12, M(0x3a403c)); neck.position.y = -0.2; head.add(neck);
-  const plateR = cyl(0.62, 0.72, 0.1, 18, M(BUCKSHOT ? 0x2a2620 : 0x8a918b)); plateR.position.y = 0.0; head.add(plateR);
-  [[-0.5, 0x15181a], [0.42, 0x15181a], [0.08, BUCKSHOT ? 0x6d1410 : 0x2d4f86]].forEach(([x, c], i) => {
+  const plateR = cyl(0.62, 0.72, 0.1, 18, M(0x2a2620)); plateR.position.y = 0.0; head.add(plateR);
+  [[-0.5, 0x15181a], [0.42, 0x15181a], [0.08, 0x6d1410]].forEach(([x, c], i) => {
     const zb = -0.9 - i * 0.05, curve = new THREE.CatmullRomCurve3([new THREE.Vector3(x, 0.9, zb), new THREE.Vector3(x * 1.3, 0.2, zb - 0.45), new THREE.Vector3(x * 0.9, -0.5, zb - 0.1), new THREE.Vector3(x * 0.5, -1.0, -0.35)]);
     head.add(mesh(new THREE.TubeGeometry(curve, 14, 0.04, 6), M(c)));
   });
@@ -178,7 +175,7 @@ function buildRival(R) {
   R.badge = badge;
   R.setBadge = (name) => {
     const g = bc.getContext('2d'); g.fillStyle = '#eef2ea'; g.fillRect(0, 0, 96, 128);
-    g.fillStyle = BUCKSHOT ? '#6d1410' : '#1f3a2e'; g.fillRect(0, 0, 96, 22); g.fillStyle = '#eef2ea'; g.font = `700 11px ${TX.SANS}`; g.textAlign = 'center'; g.fillText('RIVAL', 48, 15);
+    g.fillStyle = '#6d1410'; g.fillRect(0, 0, 96, 22); g.fillStyle = '#eef2ea'; g.font = `700 11px ${TX.SANS}`; g.textAlign = 'center'; g.fillText('RIVAL', 48, 15);
     g.fillStyle = '#c9d2c5'; g.fillRect(24, 32, 48, 44); g.fillStyle = '#1f2b25'; g.fillRect(32, 40, 32, 22); g.fillStyle = '#9fe8ff'; g.fillRect(38, 47, 6, 5); g.fillRect(52, 47, 6, 5); g.fillStyle = '#1f2b25'; g.fillRect(44, 64, 8, 8);
     g.fillStyle = '#1f2b25'; g.font = `700 10px ${TX.SANS}`; let n = name; while (g.measureText(n).width > 84 && n.length > 3) n = n.slice(0, -1); g.fillText(n, 48, 94);
     for (let i = 0; i < 16; i++) g.fillRect(14 + i * 4.4, 106, i % 3 ? 2 : 3, 12);
@@ -237,46 +234,6 @@ function roomBuckshot(R) {
   shaft.position.y = -1.9 - 3.8; shaft.layers.set(LAYER.FX); pivot.add(shaft);
   return { pivot, lampY: -1.85, bulb };
 }
-function roomSeverance(R) {
-  const { scene } = R;
-  const floor = mesh(new THREE.PlaneGeometry(HALF * 2, HALF * 2), M(0xffffff, { map: TX.carpetTexture() })); floor.rotation.x = -Math.PI / 2; floor.position.y = FLOOR; floor.receiveShadow = true; scene.add(floor);
-  const ceil = mesh(new THREE.PlaneGeometry(HALF * 2, HALF * 2), M(0xffffff, { map: TX.ceilingTexture() })); ceil.rotation.x = Math.PI / 2; ceil.position.y = CEIL; scene.add(ceil);
-  const wallMat = M(0xffffff, { map: TX.wallTexture() }), wallGeo = new THREE.PlaneGeometry(HALF * 2, CEIL - FLOOR);
-  [[0, -9.5, 0], [-HALF, 0, Math.PI / 2], [HALF, 0, -Math.PI / 2], [0, 12, Math.PI]].forEach(([x, z, ry]) => { const w = mesh(wallGeo, wallMat); w.position.set(x, (CEIL + FLOOR) / 2, z); w.rotation.y = ry; scene.add(w); });
-  const base = box(HALF * 2, 0.5, 0.08, M(0x1f3a2e)); base.position.set(0, FLOOR + 0.25, -9.45); scene.add(base);
-  R.tubes = [];
-  for (let ix = -1; ix <= 1; ix++) for (let iz = 0; iz < 2; iz++) {
-    const m = new THREE.MeshBasicMaterial({ color: 0xf2fff8 }); m.userData.base = 2.2;
-    const t = box(3.4, 0.06, 3.4, m); t.position.set(ix * 6.2, CEIL - 0.03, 0.6 - iz * 7); scene.add(t); R.tubes.push(m);
-    const fr = box(3.7, 0.1, 3.7, M(0xb9c2b9)); fr.position.set(ix * 6.2, CEIL, 0.6 - iz * 7); scene.add(fr);
-  }
-  // parede do fundo: logotipo iluminado, nicho azul dos terminais, retrato, relógio, porta com leitor de crachá
-  const logo = mesh(new THREE.PlaneGeometry(5.2, 1.5), new THREE.MeshBasicMaterial({ map: TX.logoTexture(), transparent: true })); logo.position.set(0, 5.3, -9.44); scene.add(logo);
-  const wash = new THREE.SpotLight(0xdff5ff, 60, 14, 0.7, 1, 1.2); wash.position.set(0, 7.2, -6.8); wash.target.position.set(0, 3.5, -9.5); scene.add(wash, wash.target);
-  const frame = (tex, x, y, w, h) => {
-    const f = rbox(w + 0.22, h + 0.22, 0.1, 0.03, M(0x1c2420)); f.position.set(x, y, -9.42); scene.add(f);
-    const mt = box(w + 0.02, h + 0.02, 0.02, M(0xf0f3ec)); mt.position.set(x, y, -9.36); scene.add(mt);
-    const p = mesh(new THREE.PlaneGeometry(w * 0.86, h * 0.86), M(0xffffff, { map: tex })); p.position.set(x, y, -9.34); scene.add(p);
-  };
-  frame(TX.portraitTexture(), -6.0, 2.6, 2.3, 2.9);
-  frame(TX.imageTexture('img/START_MENU.png', false), 6.0, 2.6, 3.6, 2.1);
-  const clock = model('wall_clock'); clock.scale.setScalar(4.4); clock.position.set(-10.2, 4.9, -9.46); scene.add(clock); tune(clock, (m) => { m.color.multiplyScalar(1.3); });
-  const door = rbox(3.0, 7.6, 0.16, 0.04, M(0xdfe5dc)); door.position.set(10.4, FLOOR + 3.8, -9.42); scene.add(door);
-  const dWin = box(0.5, 2.4, 0.04, new THREE.MeshBasicMaterial({ color: 0xbfe6f6 })); dWin.position.set(11.2, FLOOR + 5.0, -9.33); scene.add(dWin);
-  const reader = box(0.3, 0.44, 0.08, M(0x1c2420)); reader.position.set(8.5, FLOOR + 4.3, -9.44); scene.add(reader);
-  const rLed = mesh(new THREE.CircleGeometry(0.05, 8), new THREE.MeshBasicMaterial({ color: 0xff4a34 })); rLed.position.set(8.5, FLOOR + 4.42, -9.39); scene.add(rLed);
-  for (let i = 0; i < 2; i++) {
-    const x = i ? 6.0 : -6.0, cab = rbox(4.2, 2.6, 1.4, 0.05, M(0xe6eae2)); cab.position.set(x, FLOOR + 1.3, -8.7); scene.add(cab);
-    for (let k = 0; k < 3; k++) { const dr = box(1.28, 2.2, 0.03, M(0xd6dcd2)); dr.position.set(x - 1.36 + k * 1.36, FLOOR + 1.3, -7.99); scene.add(dr); const hd = box(0.5, 0.06, 0.06, M(0x7d857f)); hd.position.set(x - 1.36 + k * 1.36, FLOOR + 2.1, -7.95); scene.add(hd); }
-    const plant = model('potted_plant_02'); plant.scale.setScalar(2.6); plant.position.set(x + (i ? 1.2 : -1.2), FLOOR + 2.6, -8.7); plant.rotation.y = i * 2; scene.add(plant);
-  }
-  // faixa de luz azul no rodapé do fundo (o brilho frio do andar)
-  const strip = box(HALF * 2, 0.07, 0.05, new THREE.MeshBasicMaterial({ color: 0x8fdcff })); strip.position.set(0, FLOOR + 0.56, -9.4); strip.material.color.multiplyScalar(1.8); scene.add(strip);
-  const rim = new THREE.PointLight(0x8fdcff, 34, 12, 1.6); rim.position.set(0, 2.6, -6.4); scene.add(rim);
-  const pivot = new THREE.Group(); pivot.position.set(0, CEIL, 0.6); scene.add(pivot);
-  return { pivot, lampY: -0.1, bulb: null };
-}
-
 export function buildScene() {
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(T.bg);
@@ -286,10 +243,10 @@ export function buildScene() {
   const R = { scene, camera };
 
   scene.add(new THREE.HemisphereLight(...T.hemi));
-  const room = BUCKSHOT ? roomBuckshot(R) : roomSeverance(R);
+  const room = roomBuckshot(R);
   const L = T.lamp, lamp = new THREE.SpotLight(L.color, L.intensity, 26, L.angle, L.penumbra, L.decay);
-  lamp.position.set(0, room.lampY, 0); lamp.target.position.set(0, room.lampY - 8, BUCKSHOT ? 0 : -0.5);
-  lamp.castShadow = true; lamp.shadow.mapSize.set(2048, 2048); lamp.shadow.camera.near = 1; lamp.shadow.camera.far = 16; lamp.shadow.bias = -0.0015; lamp.shadow.radius = BUCKSHOT ? 2 : 4;
+  lamp.position.set(0, room.lampY, 0); lamp.target.position.set(0, room.lampY - 8, 0);
+  lamp.castShadow = true; lamp.shadow.mapSize.set(2048, 2048); lamp.shadow.camera.near = 1; lamp.shadow.camera.far = 16; lamp.shadow.bias = -0.0015; lamp.shadow.radius = 2;
   room.pivot.add(lamp, lamp.target);
   const cold = new THREE.PointLight(T.fill[0], T.fill[1], 30, 1.5); cold.position.set(-4, 6.2, -6.5); scene.add(cold);
   const cold2 = new THREE.PointLight(T.fill[0], T.fill[1] * 0.6, 30, 1.5); cold2.position.set(6, 6.2, -5.0); scene.add(cold2);
@@ -298,51 +255,47 @@ export function buildScene() {
 
   // ───── mesa ─────
   const table = new THREE.Group(); scene.add(table);
-  const top = mesh(new THREE.PlaneGeometry(TABLE.w, TABLE.d), new THREE.MeshLambertMaterial({ map: BUCKSHOT ? GR.deskGrimy() : TX.deskTexture() }));
+  const top = mesh(new THREE.PlaneGeometry(TABLE.w, TABLE.d), new THREE.MeshLambertMaterial({ map: GR.deskGrimy() }));
   top.rotation.x = -Math.PI / 2; top.receiveShadow = true; table.add(top);
-  if (BUCKSHOT) {
+  {
     const wood = M(0xffffff, { map: TX.woodTexture() });
     const slab = rbox(TABLE.w + 0.04, 0.3, TABLE.d + 0.04, 0.05, wood); slab.position.y = -0.16; slab.receiveShadow = true; table.add(slab);
     const apron = box(TABLE.w - 0.4, 0.7, TABLE.d - 0.4, M(0x2a1a10)); apron.position.y = -0.62; table.add(apron);
     [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([sx, sz]) => { const leg = box(0.36, 6.6, 0.36, wood); leg.position.set(sx * (TABLE.w / 2 - 0.4), -4.0, sz * (TABLE.d / 2 - 0.4)); table.add(leg); });
-  } else {
-    const slab = rbox(TABLE.w + 0.06, 0.22, TABLE.d + 0.06, 0.08, M(0xaab1a7)); slab.position.y = -0.125; slab.receiveShadow = true; table.add(slab);
-    const apron = box(TABLE.w - 0.5, 0.6, TABLE.d - 0.5, M(0xcdd3c9)); apron.position.y = -0.53; table.add(apron);
-    [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([sx, sz]) => { const leg = cyl(0.12, 0.1, 6.6, 10, M(0x8d948f)); leg.position.set(sx * (TABLE.w / 2 - 0.5), -4.0, sz * (TABLE.d / 2 - 0.45)); table.add(leg); });
   }
   R.tableTop = top;
 
   const prop = (m, x, y, z) => { m.position.set(x, y, z); shadow(m); table.add(m); return m; };
-  const dk = BUCKSHOT ? 0x14100b : 0x1c2420;
+  const dk = 0x14100b;
   // caneca torneada
-  const mug = new THREE.Group(), mugC = BUCKSHOT ? 0xc9c2a8 : 0xf0f3ec;
+  const mug = new THREE.Group(), mugC = 0xc9c2a8;
   mug.add(lathe([[0, 0], [0.17, 0], [0.19, 0.03], [0.2, 0.4], [0.185, 0.42], [0.17, 0.4], [0.165, 0.06], [0, 0.05]], 20, M(mugC, { side: THREE.DoubleSide })));
   const coffee = mesh(new THREE.CircleGeometry(0.168, 20), M(0x2a160c)); coffee.rotation.x = -Math.PI / 2; coffee.position.y = 0.34; mug.add(coffee);
   const handle = mesh(new THREE.TorusGeometry(0.11, 0.028, 8, 14, Math.PI), M(mugC)); handle.rotation.z = -Math.PI / 2; handle.position.set(0.2, 0.22, 0); mug.add(handle);
-  const band = cyl(0.202, 0.202, 0.07, 20, M(BUCKSHOT ? 0x6d1410 : 0x1f3a2e)); band.position.y = 0.2; mug.add(band);
+  const band = cyl(0.202, 0.202, 0.07, 20, M(0x6d1410)); band.position.y = 0.2; mug.add(band);
   prop(mug, 3.22, 0, 0.36); mug.rotation.y = 0.6;
   // pilha de formulários + caneta
   const papers = new THREE.Group();
-  for (let i = 0; i < 5; i++) { const p = box(0.66, 0.012, 0.92, M(0xffffff, { map: i === 4 ? TX.paperTexture(true, 3) : TX.paperTexture(false, i + 5) })); p.position.y = 0.006 + i * 0.013; p.rotation.y = (i - 2) * (BUCKSHOT ? 0.07 : 0.025); papers.add(p); }
-  const penB = cyl(0.022, 0.022, 0.66, 8, M(BUCKSHOT ? 0x0a0a0a : 0x1f3a2e)); penB.rotation.z = Math.PI / 2; penB.position.set(0.02, 0.092, 0.1); papers.add(penB);
+  for (let i = 0; i < 5; i++) { const p = box(0.66, 0.012, 0.92, M(0xffffff, { map: i === 4 ? TX.paperTexture(true, 3) : TX.paperTexture(false, i + 5) })); p.position.y = 0.006 + i * 0.013; p.rotation.y = (i - 2) * 0.07; papers.add(p); }
+  const penB = cyl(0.022, 0.022, 0.66, 8, M(0x0a0a0a)); penB.rotation.z = Math.PI / 2; penB.position.set(0.02, 0.092, 0.1); papers.add(penB);
   const penT = mesh(new THREE.ConeGeometry(0.022, 0.07, 8), M(0x8d948f)); penT.rotation.z = Math.PI / 2; penT.position.set(-0.345, 0.092, 0.1); papers.add(penT);
   prop(papers, -3.3, 0, 0.08); papers.rotation.y = 0.07;
   // fichário (modelo) no canto do rival
-  const binder = model('binder_notebook'); binder.scale.setScalar(1.9); prop(binder, -3.2, 0, -1.75); binder.rotation.y = 1.2; if (!BUCKSHOT) tune(binder, (m) => m.color.multiplyScalar(1.4));
+  const binder = model('binder_notebook'); binder.scale.setScalar(1.9); prop(binder, -3.2, 0, -1.75); binder.rotation.y = 1.2;
   // carimbo + almofada
   const stamp = new THREE.Group();
   stamp.add(rbox(0.36, 0.1, 0.22, 0.03, M(dk))); const sNeck = cyl(0.05, 0.08, 0.22, 10, M(dk)); sNeck.position.y = 0.15; stamp.add(sNeck);
-  const sKnob = mesh(new THREE.SphereGeometry(0.1, 14, 10), M(BUCKSHOT ? 0x4a2d18 : 0xc23a2e)); sKnob.position.y = 0.32; stamp.add(sKnob);
+  const sKnob = mesh(new THREE.SphereGeometry(0.1, 14, 10), M(0x4a2d18)); sKnob.position.y = 0.32; stamp.add(sKnob);
   prop(stamp, 3.25, 0.05, -0.5); stamp.rotation.y = 0.4;
   prop(rbox(0.5, 0.06, 0.36, 0.02, M(dk)), 3.2, 0.03, -1.9); const ink = box(0.42, 0.01, 0.28, M(0x7a1410)); ink.position.set(3.2, 0.065, -1.9); table.add(ink);
-  if (BUCKSHOT) {
+  {
     const st = model('vintage_stapler'); st.scale.setScalar(3.2); prop(st, -3.25, 0.03, 1.2); st.rotation.y = 0.5;
     const ash = prop(lathe([[0, 0], [0.26, 0], [0.31, 0.1], [0.27, 0.1], [0.23, 0.03], [0, 0.03]], 16, M(0x23282a)), -3.2, 0, 1.95); void ash;
     const butt = cyl(0.025, 0.025, 0.3, 6, M(0xd9d2bd)); butt.rotation.set(Math.PI / 2, 0, 0.6); butt.position.set(-3.15, 0.12, 1.95); table.add(butt);
   }
   // campainha de balcão = encerrar turno
   const bell = new THREE.Group();
-  const chrome = new THREE.MeshPhongMaterial(BUCKSHOT ? { color: 0xc9a54a, specular: 0xfff0c0, shininess: 60, emissive: 0x2b2008 } : { color: 0xcfd6d0, specular: 0xffffff, shininess: 90, emissive: 0x252a27 });
+  const chrome = new THREE.MeshPhongMaterial({ color: 0xc9a54a, specular: 0xfff0c0, shininess: 60, emissive: 0x2b2008 });
   bell.add(lathe([[0, 0], [0.33, 0], [0.34, 0.03], [0.3, 0.06], [0, 0.06]], 24, M(dk)));
   bell.add(lathe([[0.29, 0.06], [0.285, 0.12], [0.25, 0.2], [0.18, 0.27], [0.08, 0.31], [0, 0.315]], 24, chrome));
   const bBtn = cyl(0.04, 0.04, 0.12, 12, M(dk)); bBtn.position.y = 0.36; const bCap = cyl(0.065, 0.065, 0.03, 12, M(dk)); bCap.position.y = 0.07; bBtn.add(bCap); bell.add(bBtn);
@@ -361,7 +314,7 @@ export function buildScene() {
     return m;
   });
 
-  const dust = dustMotes(BUCKSHOT ? 260 : 120, [0, BUCKSHOT ? 5.6 : 7.3, 0.3], BUCKSHOT ? [1.0, 0.86, 0.6] : [0.8, 0.95, 1.0]); scene.add(dust); R.dust = dust;
+  const dust = dustMotes(260, [0, 5.6, 0.3], [1.0, 0.86, 0.6]); scene.add(dust); R.dust = dust;
   buildRival(R);
   scene.traverse((o) => { if (o.isLight) o.layers.enableAll(); });
   void LAYER;

@@ -5,7 +5,7 @@
 ## Repositório unificado (23/11/2026) — github.com/brnldy/business-card-battle-corp
 O projeto passou a viver neste repositório, juntando as duas frentes:
 - **Daqui:** motor de regras + IA + simulador + testes (`src/`, `tests/`, `scripts/`), dados (`data/`), documentação (`docs/`), PDFs (`reference/`) e todos os arquivos do autor em resolução cheia (`assets-originais/`).
-- **De lá:** o remake visual em three.js (`remake/`), com as versões Buckshot e Severance e o HUD em design system. É a cara oficial do jogo.
+- **De lá:** o remake visual em three.js (`remake/`), com o visual Buckshot e o HUD em design system. É a cara oficial do jogo.
 - **Ponte:** o remake usa o motor oficial (`remake/src/engine.js` e `cards.js` reexportam `src/engine`). Antes da troca, os dois motores foram comparados em 300 partidas (51.890 jogadas) e 10.730 previsões de ataque: nenhuma diferença.
 - A previsão de ataque criada lá virou `src/engine/preview.ts`, com testes. As constantes de regra estão em `src/engine/rules.ts`.
 - **Áudio:** as trilhas do autor são o padrão. Os efeitos gravados pelo autor tocam onde existe arquivo e os gerados por código preenchem o resto (Configurações → Trilha / Efeitos).
@@ -80,6 +80,6 @@ Decisão do autor: "3D de verdade" e tudo de uma vez. Referências: Buckshot Rou
 - As minis são montadas pelo jogo (template em branco + recorte da arte da carta completa).
 
 ## Como rodar
-- Pelo Claude: servidor `remake-dev` em `.claude/launch.json` → http://localhost:5178/dist/?theme=buckshot (rodar `npm run build` antes de mandar a alguém)
+- Pelo Claude: servidor `remake-dev` em `.claude/launch.json` → http://localhost:5178/dist/ (rodar `npm run build` antes de mandar a alguém)
 - No terminal: `export PATH="$HOME/.local/node/bin:$PATH"` e depois `npm test` / `npm run typecheck` / `npm run dev`
-- Versão para mandar a alguém testar: `npm run build` → `BusinessCardBattleCorp_BUCKSHOT.html` e `_SEVERANCE.html` na raiz (um HTML só, com tudo dentro; abre com dois cliques, sem instalar nada e sem internet)
+- Versão para mandar a alguém testar: `npm run build` → `BusinessCardBattleCorp_BUCKSHOT.html` na raiz (um HTML só, com tudo dentro; abre com dois cliques, sem instalar nada e sem internet)

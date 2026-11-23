@@ -1,5 +1,5 @@
 /* ════════════════════════════════════════════════════════════════════════
-   HUD — design system (tema Severance; o tema Buckshot sobrescreve só tokens)
+   HUD — design system (tokens base; o tema Buckshot sobrescreve só tokens)
    Papelaria (pasta, ficha) = o que é seu. Terminal (painéis escuros) = o sistema.
    ════════════════════════════════════════════════════════════════════════ */
 :root {
@@ -260,7 +260,7 @@
 #slot-ticker.is-go .h-ticker { animation: h-drop var(--h-mid) var(--h-ease); }
 @keyframes h-drop { from { opacity: 0; transform: translateY(-8px); } }
 
-/* ───────── tema Buckshot: só tokens + alguns traços (o tema Severance é o padrão acima) ───────── */
+/* ───────── tema Buckshot: só tokens + alguns traços (sobre os tokens base acima) ───────── */
 body.theme-buckshot {
   --h-term: rgba(7, 11, 9, 0.94); --h-term-2: rgba(20, 26, 21, 0.96); --h-term-line: rgba(242, 185, 76, 0.24); --h-term-line-2: rgba(242, 185, 76, 0.45);
   --h-paper: #e4dcc0; --h-paper-2: #d6cdae; --h-sage: #4a442c; --h-sage-hi: #5d5535; --h-cream: #f2b94c;
