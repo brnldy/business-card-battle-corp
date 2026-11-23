@@ -30,6 +30,8 @@ node build.mjs --dev    # build de desenvolvimento em remake/dist
 node serve.mjs          # http://localhost:5178/dist/?theme=buckshot  (ou ?theme=severance)
 ```
 
+O HUD é um design system próprio: componentes puros em `remake/src/hud/components.js` e estilos/tokens em `remake/src/hud/hud.css`. Para ver cada componente isolado, em todas as variantes e sobre quadros reais da partida, rode o build de desenvolvimento e abra `http://localhost:5178/dist/lab.html`.
+
 Os modelos 3D de terceiros já estão convertidos em `remake/assets/models/`. Para refazer do zero:
 `node tools/fetch-models.mjs` e depois `node tools/pack-models.mjs`.
 

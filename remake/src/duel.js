@@ -12,9 +12,9 @@ import { T as TH, BUCKSHOT } from './theme.js';
 import { sfx, setTension, setMusicMode } from './audio.js';
 import { settings } from './settings.js';
 import { describeEvent } from './log.js';
-import { ICON } from './ui.js';
 
 const ME = 0, OP = 1;
+const C_money = (n) => `$ ${Math.round(n).toLocaleString('pt-BR')}`;
 const PLAY_TYPES = new Set(['summon', 'playEffect', 'setTrap', 'discard']);
 const COL = { play: TH.glow.play, pick: TH.glow.pick, picked: 0xff5a3c, foe: 0xff4a34, soft: 0x9fe8d2 };
 const V = (x = 0, y = 0, z = 0) => new THREE.Vector3(x, y, z);
@@ -187,7 +187,7 @@ export class Duel {
     if (p.kind === 'hand') {
       const n = p.n, halfW = Math.tan(THREE.MathUtils.degToRad(cam.fov / 2)) * 3 * cam.aspect, halfH = Math.tan(THREE.MathUtils.degToRad(cam.fov / 2)) * 3;
       const z = this.ui.scale, Wpx = this.gfx.w, lim = (px) => (px / Wpx * 2 - 1) * halfW;
-      const xl = lim(Math.min(Wpx * 0.3, 256 * z)), xr = lim(Wpx - 46 * z), xc = (xl + xr) / 2;
+      const xl = lim(Math.min(Wpx * 0.3, 276 * z)), xr = lim(Wpx - 46 * z), xc = (xl + xr) / 2;
       const dx = n > 1 ? Math.min(0.5, Math.max(0.12, (xr - xl - CARD.w * 0.82) / (n - 1))) : 0, k = p.idx - (n - 1) / 2, x = xc + k * dx;
       const sel = this.sel?.uid === c.uid, hov = this.hoverUid === c.uid && !this.mouse.dragging;
       const drag = this.mouse.dragging === c.uid;
@@ -226,7 +226,7 @@ export class Duel {
       if (!this.active) return;
       const e = events[i];
       const line = describeEvent(e, ctx);
-      if (line) this.ui.log(line, e.type);
+      if (line) this.ui.log(line, e.type, this.whoOf(e, prev));
       switch (e.type) {
         case 'gameStart':
           this.ui.banner(e.firstPlayer === ME ? 'Você começa' : `${this.names[OP]} começa`, 'cara ou coroa decidiu', e.firstPlayer === ME ? 'me' : 'foe');
@@ -255,7 +255,7 @@ export class Duel {
           break;
         case 'summon': {
           const c = this.ensureCard(e.uid, e.player);
-          if (e.player === OP) { this.oppArm(1); c.place = { kind: 'show', x: 0 }; c.hop = 1; c.hopH = 0.3; sfx('card'); this.ui.detail({ cardId: e.cardId, lines: [`${this.names[OP]} invocou em ${e.mode === 'ATK' ? 'ATAQUE' : 'DEFESA'}`] }); await wait(D(900)); }
+          if (e.player === OP) { this.oppArm(1); c.place = { kind: 'show', x: 0 }; c.hop = 1; c.hopH = 0.3; sfx('card'); this.ui.detail({ cardId: e.cardId, where: 'show', owner: 'opp', notes: [`${this.names[OP]} invocou em ${e.mode === 'ATK' ? 'ataque' : 'defesa'}.`] }); await wait(D(900)); }
           rel(e.uid, { hop: 0.9 }); sfx('whoosh');
           await wait(D(300));
           const p = this.zonePos('cr', e.player, e.zone);
@@ -302,7 +302,7 @@ export class Duel {
         }
         case 'effectPlayed': {
           const c = this.ensureCard(e.uid, e.player);
-          if (e.player === OP) { this.oppArm(1); this.ui.detail({ cardId: e.cardId, lines: [`${this.names[OP]} usou este efeito`] }); }
+          if (e.player === OP) { this.oppArm(1); this.ui.detail({ cardId: e.cardId, where: 'show', owner: 'opp', notes: [`${this.names[OP]} usou este efeito.`] }); }
           c.place = { kind: 'show', x: 0 }; c.hop = 1; c.hopH = 0.3;
           sfx('effect'); await wait(D(360));
           this.sparkle(c.group.position, [0.6, 1, 0.85], 34); this.pulse('uAberr', 0.006, 500);
@@ -313,7 +313,7 @@ export class Duel {
         }
         case 'trapTriggered': {
           const c = this.cards.get(e.uid);
-          this.ui.banner('Armadilha!', cardDef(e.cardId).name, 'trap'); this.ui.detail({ cardId: e.cardId, lines: [e.player === ME ? 'Sua armadilha disparou!' : `Armadilha de ${this.names[OP]} disparou!`] }); sfx('trap'); this.bump(0.3); this.pulse('uFlash', 0.5, 500, [1, 0.75, 0.1]); this.pulse('uGlitch', 1, 450);
+          this.ui.banner('Armadilha!', cardDef(e.cardId).name, 'trap'); this.ui.detail({ cardId: e.cardId, where: 'show', owner: e.player === ME ? 'me' : 'opp', status: { tone: e.player === ME ? 'go' : 'stop', text: e.player === ME ? 'Sua armadilha disparou.' : `Armadilha de ${this.names[OP]} disparou.` } }); sfx('trap'); this.bump(0.3); this.pulse('uFlash', 0.5, 500, [1, 0.75, 0.1]); this.pulse('uGlitch', 1, 450);
           if (c) { c.place = { kind: 'show', x: 0 }; c.hop = 1; c.hopH = 0.5; await wait(D(1000)); await this.dissolve(c, 0, 1, D(380)); rel(e.uid, { noHop: true }); this.snap(c); this.dissolve(c, 1, 0, D(200)); }
           break;
         }
@@ -370,7 +370,6 @@ export class Duel {
         case 'damage': {
           this.caixaShown[e.player] = e.caixa;
           sfx('damage'); this.bump(e.player === ME ? 0.45 : 0.2);
-          this.ui.caixaTag(e.player === ME, e.amount, false);
           this.coins(e.player === ME ? V(0, 0.2, 2.0) : V(0, 0.5, -2.0), Math.min(40, 8 + e.amount / 60));
           if (e.player === ME) { this.pulse('uFlash', 0.5, 650, [0.93, 0.23, 0.19]); this.pulse('uAberr', 0.012, 600); this.oppMood = -0.8; this.lampFlicker(0.5); setTension(1 - e.caixa / RULES.STARTING_CAIXA); }
           else { this.oppGlitch = 1; this.oppMood = 1; sfx('glitch'); this.pulse('uGlitch', 0.5, 280); }
@@ -380,7 +379,6 @@ export class Duel {
         }
         case 'heal': {
           this.caixaShown[e.player] = e.caixa; sfx('heal');
-          this.ui.caixaTag(e.player === ME, e.amount, true);
           this.sparkle(e.player === ME ? V(0, 0.4, 1.9) : V(0, 0.6, -1.9), [0.5, 1, 0.55], 28);
           if (e.player === ME) setTension(1 - e.caixa / RULES.STARTING_CAIXA);
           this.refreshHud(); await wait(D(520));
@@ -571,7 +569,7 @@ export class Duel {
     if (this.mouse.dragging) {
       const uid = this.mouse.dragging, c = this.cards.get(uid); this.mouse.dragging = null;
       // soltar sobre a mesa = jogar; soltar de volta na mão = cancelar
-      this.slotGlow.visible = false; this.ui.hint(null);
+      this.slotGlow.visible = false; this.ui.prompt(null);
       if (c && this.mouse.y < 0.74) this.clickHand(uid); else sfx('cancel');
       this.refreshGlows();
       return;
@@ -620,7 +618,7 @@ export class Duel {
     if (this.busy) return;
     if (this.sel?.uid === uid && this.sel.stage === 'menu') return this.cancel();
     const cands = this.handCands(c);
-    if (!cands.length) { this.ui.toast(this.whyNot(c.cardId)); sfx('deny'); this.setSel(null); if (cardDef(c.cardId).cost && this.state.phase === 'main') this.ui.tutor('cost', 'Cada <b>✕</b> no nome da carta é uma criatura sua que você <b>sacrifica</b> para invocá-la. Comece pelas cartas sem ✕.'); return; }
+    if (!cands.length) { this.ui.toast(this.whyNot(c.cardId)); sfx('deny'); this.setSel(null); if (cardDef(c.cardId).cost && this.state.phase === 'main') this.ui.tutor('cost', { title: 'Custo', anchor: 'sheet', html: 'Cada <b>✕</b> é uma criatura sua que você <b>sacrifica</b> para invocar a carta. Comece pelas cartas sem ✕.' }); return; }
     sfx('select');
     this.resolve(cands, { menu: true, uid });
   }
@@ -657,16 +655,16 @@ export class Duel {
     if (!o.setsDone && uniq.some((x) => sacKey(x) !== '')) {
       const needed = a.type === 'summon' ? a.sacrifices.length : a.costs?.length ?? 0, pl = needed > 1;
       return this.setSel({ stage: 'multi', cands: uniq, uid: o.uid, needed, picks: [], selectable: new Set(uniq.flatMap((x) => sacKey(x).split(',').filter(Boolean))),
-        label: `Escolha ${needed} criatura${pl ? 's' : ''} sua${pl ? 's' : ''} para sacrificar` });
+        label: `Sacrifique ${needed} criatura${pl ? 's' : ''} sua${pl ? 's' : ''}` });
     }
     const tg = new Set(uniq.map(tgtOf));
     if (!o.targetDone && [...tg].some((t) => t !== null)) {
       const atk = a.type === 'attack';
       return this.setSel({ stage: 'target', cands: uniq, uid: o.uid, attacker: atk ? a.uid : null, selectable: new Set([...tg].filter((t) => t !== null)), allowNull: tg.has(null),
-        nullLabel: atk ? 'Atacar o CAIXA' : 'Entrar sem efeito', label: atk ? 'Escolha o alvo do ataque' : a.type === 'summon' ? 'Escolha o alvo do efeito de entrada' : 'Escolha a criatura que recebe o efeito' });
+        nullLabel: atk ? 'Atacar o CAIXA' : 'Pular efeito', label: atk ? 'Escolha quem atacar' : a.type === 'summon' ? 'Efeito de entrada: escolha um alvo' : 'Escolha quem recebe o efeito' });
     }
     if (a.type === 'attack' && a.target === null && !o.targetDone)
-      return this.setSel({ stage: 'target', cands: uniq, uid: o.uid, attacker: a.uid, selectable: new Set(), allowNull: true, nullLabel: 'Atacar o CAIXA', label: 'Rival sem criaturas: o ataque vai direto no CAIXA' });
+      return this.setSel({ stage: 'target', cands: uniq, uid: o.uid, attacker: a.uid, selectable: new Set(), allowNull: true, nullLabel: 'Atacar o CAIXA', label: 'O rival está sem criaturas na mesa' });
     this.apply(a);
   }
   pickMenu(key) {
@@ -687,7 +685,7 @@ export class Duel {
   }
   dragHint(c) {
     const def = cardDef(c.cardId), p = this.state.players[ME];
-    this.ui.hint('Solte na mesa para jogar', { cancel: false });
+    this.ui.prompt({ icon: 'hand', text: 'Solte na mesa para jogar', cancel: false });
     if (!isEffect(def) && !def.cost) { const z = p.creatures.indexOf(null); if (z >= 0) this.showSlot('cr', z); }
     else if (def.kind === 'effect_trap' || def.durationTurns) { const z = p.effects.indexOf(null); if (z >= 0) this.showSlot('fx', z); }
   }
@@ -706,33 +704,37 @@ export class Duel {
     if (ab?.choose) return 'Não há criatura na mesa para receber o efeito.';
     return p.effects.some((e) => e === null) ? 'Essa carta não pode ser usada agora.' : 'Sua fileira de efeitos está cheia.';
   }
-  setSel(sel) { this.sel = sel; this.refreshSel(); }
+  setSel(sel) { this.sel = sel; this.refreshSel(); if (this.state) this.refreshHud(); }
   refreshSel() {
     const s = this.sel;
     this.slotGlow.visible = false;
-    if (!s) { this.ui.menu(null); this.ui.hint(null); this.refreshGlows(); return; }
+    if (!s) { this.ui.menu(null); this.ui.prompt(null); this.refreshGlows(); return; }
     if (s.stage === 'menu') {
-      const dcard = cardDef(this.cardIndex.get(s.uid));
+      const def = cardDef(this.cardIndex.get(s.uid)), f = findCreature(this.state, s.uid);
       const opt = (k) => {
-        if (k === 'summon:ATK') return { label: 'Invocar em ataque', key2: 'A', sub: 'Pode atacar. Se perder o combate, a diferença sai do seu CAIXA.' };
-        if (k === 'summon:DEF') return { label: 'Invocar em defesa', key2: 'D', sub: 'Não ataca. Se for destruída, o seu CAIXA não sofre.' };
-        if (k === 'playEffect') return { label: 'Usar efeito', key2: 'Enter', sub: dcard.durationTurns ? `Fica na mesa por ${dcard.durationTurns} turnos seus.` : 'Vale agora. Depois a carta vai para o Morto.' };
-        if (k === 'setTrap') return { label: 'Armar armadilha', key2: 'Enter', sub: 'Fica virada para baixo e dispara quando o rival atacar.' };
-        if (k === 'discard') return { label: 'Descartar', cls: 'bad', sub: 'Manda a carta para o Morto.' };
-        if (k === 'goAttack') return { label: 'Atacar', key2: 'A', sub: 'Começa a batalha. Depois disso, nada de jogar cartas neste turno.' };
-        if (k === 'changeMode') return findCreature(this.state, s.uid)?.c.mode === 'ATK' ? { label: 'Passar para defesa', key2: 'D', sub: 'Para de atacar e protege o seu CAIXA. 1 vez por turno.' } : { label: 'Passar para ataque', key2: 'D', sub: 'Volta a poder atacar. 1 vez por turno.' };
+        if (k === 'summon:ATK') return { icon: 'atk', tone: 'atk', label: 'Invocar em ataque', keycap: 'A', sub: 'Pode atacar. Se perder, a diferença sai do seu CAIXA.' };
+        if (k === 'summon:DEF') return { icon: 'def', tone: 'def', label: 'Invocar em defesa', keycap: 'D', sub: 'Não ataca. Se for destruída, o seu CAIXA não sofre.' };
+        if (k === 'playEffect') return { icon: 'fx', label: 'Usar efeito', keycap: 'Enter', sub: def.durationTurns ? `Fica na mesa por ${def.durationTurns} turnos seus.` : 'Vale agora. Depois a carta vai para o Morto.' };
+        if (k === 'setTrap') return { icon: 'trap', label: 'Armar armadilha', keycap: 'Enter', sub: 'Fica virada para baixo e dispara quando o rival atacar.' };
+        if (k === 'discard') return { icon: 'bin', tone: 'stop', label: 'Descartar', sub: 'Manda a carta para o Morto.' };
+        if (k === 'goAttack' || k === 'attack') return { icon: 'atk', tone: 'atk', label: 'Atacar', keycap: 'A', sub: k === 'goAttack' ? 'Começa a batalha. Depois, nada de jogar cartas.' : 'Escolha o alvo em seguida.' };
+        if (k === 'changeMode') return f?.c.mode === 'ATK' ? { icon: 'swap', label: 'Passar para defesa', keycap: 'D', sub: 'Para de atacar e protege o seu CAIXA. 1 vez por turno.' } : { icon: 'swap', label: 'Passar para ataque', keycap: 'D', sub: 'Volta a poder atacar. 1 vez por turno.' };
         return { label: k };
       };
-      this.ui.menu(s.kinds.map((k) => ({ key: k, cls: '', ...opt(k) })), s.uid);
-      if (s.kinds.some((k) => k.startsWith('summon'))) this.ui.tutor('modes', 'Em <b>ataque</b> a criatura pode bater — mas, se perder, a diferença sai do seu CAIXA. Em <b>defesa</b> ela só protege, e o seu CAIXA fica a salvo.');
-      const a = s.cands[0] ?? { type: 'none' }, def = cardDef(this.cardIndex.get(s.uid));
-      this.ui.hint(a.type === 'summon' && def.cost ? `${def.name} · custo: sacrificar ${def.cost} criatura${def.cost > 1 ? 's' : ''}` : def.name, { cancel: true });
+      const a = s.cands[0] ?? { type: 'none' };
+      const note = f ? (f.c.mode === 'ATK' ? 'em ataque' : 'em defesa') : isEffect(def) ? (def.kind === 'effect_trap' ? 'armadilha' : 'efeito') : def.cost ? `custo: ${def.cost} sacrifício${def.cost > 1 ? 's' : ''}` : 'custo: grátis';
+      this.ui.menu({ title: def.name, note, options: s.kinds.map((k) => ({ key: k, ...opt(k) })) });
+      this.ui.prompt(null);
+      if (s.kinds.some((k) => k.startsWith('summon'))) this.ui.tutor('modes', { title: 'Ataque ou defesa', anchor: 'menu', html: 'Em <b>ataque</b> a criatura pode bater — mas, se perder, a diferença sai do seu CAIXA. Em <b>defesa</b> ela só protege, e o seu CAIXA fica a salvo.' });
       if (a.type === 'summon') { const z = this.state.players[ME].creatures.indexOf(null); if (z >= 0 && !def.cost) this.showSlot('cr', z); }
       if (a.type === 'setTrap' || (a.type === 'playEffect' && def.durationTurns)) { const z = this.state.players[ME].effects.indexOf(null); if (z >= 0) this.showSlot('fx', z); }
     } else {
       this.ui.menu(null);
-      const extra = s.stage === 'multi' ? ` (${s.picks.length}/${s.needed})` : '';
-      this.ui.hint(s.label + extra, { cancel: true, action: s.stage === 'target' && s.allowNull ? s.nullLabel : null });
+      this.ui.prompt({
+        icon: s.stage === 'multi' ? 'summon' : s.attacker ? 'atk' : 'arrow', text: s.label,
+        count: s.stage === 'multi' && s.needed > 1 ? { n: s.picks.length, of: s.needed } : null,
+        action: s.stage === 'target' && s.allowNull ? { act: 'direct', label: s.nullLabel, tone: s.attacker ? 'danger' : 'secondary', icon: s.attacker ? 'atk' : null } : null,
+      });
     }
     this.refreshGlows();
   }
@@ -763,24 +765,32 @@ export class Duel {
 
   // ───────── HUD ─────────
   refreshHud(activeOverride, phaseOverride) {
-    const s = this.state, info = (i) => { const p = s.players[i]; return { name: this.names[i], caixa: this.caixaShown[i], deck: p.deck.length, hand: p.hand.length, dead: p.dead.length, frio: Object.values(p.frio).reduce((a, b) => a + b, 0) }; };
-    const can = this.canAct(), battle = this.legal.some((a) => a.type === 'enterBattle'), end = this.legal.some((a) => a.type === 'endTurn');
+    const s = this.state, can = this.canAct(), battle = this.legal.some((a) => a.type === 'enterBattle'), end = this.legal.some((a) => a.type === 'endTurn');
     const other = can ? this.legal.filter((a) => a.type !== 'endTurn' && a.type !== 'changeMode') : [];
-    const active = activeOverride ?? s.active;
-    this.ui.setInfo({ me: info(ME), opp: info(OP), turn: s.turn, phase: phaseOverride ?? s.phase, mine: active === ME && s.phase !== 'over', busy: this.busy });
-    const mineNow = s.active === ME && s.phase !== 'over', me = s.players[ME];
-    const atkLeft = mineNow ? (s.phase === 'battle' ? new Set(this.legal.filter((a) => a.type === 'attack').map((a) => a.uid)).size : creaturesOf(s, ME).filter((f) => this.couldAttack(f.c.uid)).length) : 0;
-    const canAtk = can && (s.phase === 'battle' ? atkLeft > 0 : this.attacksLeft());
-    this.ui.setButtons({
-      battle: { enabled: can && battle, hidden: mineNow && s.phase === 'battle', label: 'Ir para a batalha', hint: s.turn === 1 && s.active === ME ? 'No 1º turno ninguém ataca' : '' },
-      end: { enabled: can && end, pulse: other.length === 0 || (s.phase === 'battle' && !canAtk) },
-      primary: !can ? null : s.phase === 'main' && battle && canAtk && !other.some((a) => PLAY_TYPES.has(a.type)) ? 'battle' : (other.length === 0 || (s.phase === 'battle' && !canAtk)) ? 'end' : null,
-      pills: mineNow ? [
-        { text: me.summonsThisTurn >= RULES.SUMMONS_PER_TURN ? 'invocação usada' : 'invocação livre', on: me.summonsThisTurn < RULES.SUMMONS_PER_TURN, tip: 'Você pode invocar 1 criatura por turno' },
-        { text: s.turn === 1 ? 'sem ataque no 1º turno' : `${atkLeft} ataque${atkLeft === 1 ? '' : 's'} disponíve${atkLeft === 1 ? 'l' : 'is'}`, on: atkLeft > 0, tip: 'Criaturas suas em ataque que ainda podem atacar neste turno' },
+    const active = activeOverride ?? s.active, over = s.phase === 'over', mine = active === ME && !over, phase = phaseOverride ?? s.phase;
+    const folder = (i) => {
+      const p = s.players[i], frio = Object.values(p.frio).reduce((a, b) => a + b, 0), meta = [];
+      if (i === OP) meta.push({ icon: 'hand', text: `${p.hand.length} carta${p.hand.length === 1 ? '' : 's'} na mão`, title: 'Cartas na mão do rival' });
+      if (frio) meta.push({ icon: 'cold', tone: 'cold', html: `Frio ×${frio} · perde <b>${C_money(frio * 100)}</b> por turno`, title: 'No início de cada turno, perde $100 por marcador de Frio' });
+      return { who: i === ME ? 'me' : 'opp', name: this.names[i], caixa: this.caixaShown[i], max: RULES.STARTING_CAIXA, active: !over && active === i, meta };
+    };
+    this.ui.setFolders({ me: folder(ME), opp: folder(OP), mine, over });
+    const me = s.players[ME], canAtk = can && (s.phase === 'battle' ? this.legal.some((a) => a.type === 'attack') : this.attacksLeft());
+    const atkN = mine ? (s.phase === 'battle' ? new Set(this.legal.filter((a) => a.type === 'attack').map((a) => a.uid)).size : creaturesOf(s, ME).filter((f) => this.couldAttack(f.c.uid)).length) : 0;
+    const plays = other.some((a) => PLAY_TYPES.has(a.type)), idle = can && !plays && !canAtk;
+    const END = { act: 'end', label: 'Encerrar turno', keycap: 'Espaço', disabled: !(can && end) };
+    const BAT = { act: 'battle', label: 'Ir para a batalha', keycap: 'B', disabled: !(can && battle) };
+    let primary, secondary = null;
+    if (!mine) primary = { act: 'end', label: over ? 'Partida encerrada' : 'Aguarde a sua vez', disabled: true };
+    else if (phase === 'main' && battle && canAtk) { primary = { ...BAT, ready: !plays }; secondary = END; }
+    else primary = { ...END, ready: idle || (phase === 'battle' && !canAtk) };
+    this.ui.setTurn({
+      mine, over, turn: s.turn, who: this.names[OP], phase, coach: this.coachLine(can, other), primary, secondary,
+      res: mine ? [
+        { icon: 'summon', label: 'Invocação', value: me.summonsThisTurn >= RULES.SUMMONS_PER_TURN ? 'já usada' : phase === 'battle' ? 'só antes da batalha' : 'disponível', on: me.summonsThisTurn < RULES.SUMMONS_PER_TURN && phase !== 'battle', title: 'Você pode invocar 1 criatura por turno, antes da batalha' },
+        s.turn === 1 ? { icon: 'atk', label: 'Ataques', value: 'a partir do turno 2', on: false } : { icon: 'atk', label: 'Ataques', value: atkN ? `${atkN} pronto${atkN > 1 ? 's' : ''}` : 'nenhum', on: atkN > 0, title: 'Criaturas suas em ataque que ainda podem atacar neste turno' },
       ] : [],
     });
-    this.ui.coach(this.coachLine(can, other));
     const lim = this.myTurn() ? handLimitStatus(s) : 'ok';
     this.ui.limit(lim === 'ok' ? null : lim === 'play_cards' ? 'Mão cheia (10). Jogue uma carta para voltar a comprar.' : 'Mão e mesa cheias. Descarte uma carta da mão.');
   }
@@ -789,6 +799,7 @@ export class Duel {
     if (s.phase === 'over') return '';
     if (s.active !== ME) return `${this.names[OP]} está jogando.`;
     if (!can) return '';
+    if (this.sel && this.sel.stage !== 'menu') return 'Conclua a escolha indicada no topo — ou cancele com Esc.';
     if (handLimitStatus(s) !== 'ok') return 'Sua mão está cheia. Jogue ou descarte uma carta.';
     if (s.phase === 'battle') return this.legal.some((a) => a.type === 'attack') ? 'Escolha uma criatura sua para atacar.' : 'Sem mais ataques. Encerre o turno.';
     if (other.some((a) => PLAY_TYPES.has(a.type))) return s.players[ME].summonsThisTurn ? 'Você ainda pode usar efeitos.' : 'Jogue uma carta de contorno verde.';
@@ -802,22 +813,17 @@ export class Duel {
       const p = s.players[side];
       p.creatures.forEach((c) => {
         if (!c || this.cards.get(c.uid)?.place?.kind !== 'cr') return;
-        const st = statsOf(s, c.uid), d = cardDef(c.cardId), cls = (v, b) => (v > b ? 'up' : v < b ? 'down' : ''), ar = (v, b) => (v > b ? '▲' : v < b ? '▼' : '');
-        const locked = c.lockedUntilOwnerTurn > 0 && c.lockedUntilOwnerTurn >= p.turnsStarted;
-        out.push({ id: c.uid, uid: c.uid, html:
-          `<b class="${c.mode === 'ATK' ? 'on' : ''} ${cls(st.atk, d.atk ?? 0)}"><span class="ic">${ICON.atk}</span>${st.atk}${ar(st.atk, d.atk ?? 0)}</b><b class="${c.mode === 'DEF' ? 'on' : ''} ${cls(st.def, d.def ?? 0)}"><span class="ic">${ICON.def}</span>${st.def}${ar(st.def, d.def ?? 0)}</b>${locked ? '<i>travada</i>' : ''}${maxAttacks(c.cardId) > 1 ? '<i>2 ataques</i>' : ''}` });
+        const st = statsOf(s, c.uid), d = cardDef(c.cardId), tone = (v, b) => (v > b ? 'up' : v < b ? 'down' : null);
+        out.push({ id: c.uid, uid: c.uid, chip: { kind: 'creature', atk: st.atk, def: st.def, mode: c.mode, atkTone: tone(st.atk, d.atk ?? 0), defTone: tone(st.def, d.def ?? 0), locked: c.lockedUntilOwnerTurn > 0 && c.lockedUntilOwnerTurn >= p.turnsStarted, multi: maxAttacks(c.cardId) > 1 } });
       });
       p.effects.forEach((e) => {
         if (!e || this.cards.get(e.uid)?.place?.kind !== 'fx') return;
-        if (e.faceDown) out.push({ id: e.uid, uid: e.uid, html: `<b class="trap">${side === ME ? 'sua armadilha' : 'armadilha'}</b>` });
-        else if (e.turnsLeft !== null) out.push({ id: e.uid, uid: e.uid, html: `<b class="note">dura ${e.turnsLeft} turno${e.turnsLeft > 1 ? 's' : ''}</b>` });
+        if (e.faceDown) out.push({ id: e.uid, uid: e.uid, chip: { kind: 'trap', mine: side === ME } });
+        else if (e.turnsLeft !== null) out.push({ id: e.uid, uid: e.uid, chip: { kind: 'duration', turns: e.turnsLeft } });
       });
-    }
-    // contagem das pilhas, em cima da própria pilha (como nos deckbuilders)
-    for (const side of [ME, OP]) {
-      const p = s.players[side], dk = side === ME ? LAYOUT.myDeck : LAYOUT.oppDeck, dd = side === ME ? LAYOUT.myDead : LAYOUT.oppDead, off = -CARD.h * 0.5 - 0.3;
-      out.push({ id: `deck${side}`, pos: V(dk.x, 0.05 + this.deckShown[side] * 0.006, dk.z + off), html: `<b class="pile">deck ${this.deckShown[side]}</b>` });
-      if (p.dead.length) out.push({ id: `dead${side}`, pos: V(dd.x, 0.05, dd.z + off), html: `<b class="pile">morto ${p.dead.length}</b>` });
+      const dk = side === ME ? LAYOUT.myDeck : LAYOUT.oppDeck, dd = side === ME ? LAYOUT.myDead : LAYOUT.oppDead, off = -CARD.h * 0.5 - 0.3;
+      out.push({ id: `deck${side}`, pos: V(dk.x, 0.05 + this.deckShown[side] * 0.006, dk.z + off), chip: { kind: 'pile', icon: 'deck', label: 'deck', n: this.deckShown[side] } });
+      if (p.dead.length) out.push({ id: `dead${side}`, pos: V(dd.x, 0.05, dd.z + off), chip: { kind: 'pile', icon: 'dead', label: 'morto', n: p.dead.length } });
     }
     return out;
   }
@@ -825,55 +831,57 @@ export class Duel {
   autoTips() {
     const s = this.state, ui = this.ui;
     if (s.active === ME) {
-      ui.tutor('start', 'Zere o <b>CAIXA</b> do rival (pasta de cima) antes que ele zere o seu (pasta de baixo).<br>Cartas de <b>contorno verde</b> podem ser jogadas: clique ou arraste para a mesa. Passe o mouse numa carta para ler o que ela faz.');
-      if (s.phase === 'main' && this.attacksLeft()) ui.tutor('battle', 'Suas criaturas já podem <b>atacar</b>. Clique numa delas e escolha “Atacar”: o jogo mostra o <b>resultado previsto</b> antes de você confirmar. Jogue suas cartas antes — depois da batalha não dá mais.');
-      if (s.players[OP].effects.some((e) => e?.faceDown)) ui.tutor('trap', 'Carta do rival <b>virada para baixo</b> é <b>armadilha</b>: pode anular o seu ataque.');
-    } else ui.tutor('foe', '<b>Vez do rival.</b> A carta que ele joga aparece ampliada, e o resumo de cada jogada passa no topo da tela. O histórico completo fica em <b>Relatório</b>.');
+      ui.tutor('start', { ctx: 'me', title: 'Objetivo', anchor: 'folder', html: 'Zere o <b>CAIXA</b> do rival (pasta de cima) antes que ele zere o seu (pasta de baixo).' });
+      ui.tutor('hand', { ctx: 'me', title: 'Sua mão', anchor: 'hand', html: 'Cartas de <b>contorno verde</b> podem ser jogadas agora: clique ou arraste para a mesa. Passe o mouse para ler o que cada uma faz.' });
+      ui.tutor('turn', { ctx: 'me', title: 'Próximo passo', anchor: 'turn', html: 'O botão grande do painel sempre mostra o <b>próximo passo</b>. Quando ele pulsa, não há mais nada a fazer.' });
+      if (s.phase === 'main' && this.attacksLeft()) ui.tutor('battle', { ctx: 'me', title: 'Atacar', anchor: 'turn', html: 'Suas criaturas já podem <b>atacar</b>. Clique numa delas e escolha “Atacar”: o resultado aparece <b>antes</b> de você confirmar. Jogue suas cartas antes — depois da batalha não dá mais.' });
+      if (s.players[OP].effects.some((e) => e?.faceDown)) ui.tutor('trap', { ctx: 'me', title: 'Armadilha', anchor: 'top', html: 'Carta do rival <b>virada para baixo</b> é armadilha: pode anular o seu ataque.' });
+    } else ui.tutor('foe', { ctx: 'foe', title: 'Vez do rival', anchor: 'top', html: 'A carta que ele joga aparece ampliada à esquerda; cada jogada passa no topo. O histórico completo fica em <b>Relatório</b>.' });
   }
   detailFor(uid) {
     const c = this.cards.get(uid), p = c?.place; if (!p) return null;
-    const def = cardDef(c.cardId), s = this.state;
-    if (p.kind === 'hand' && p.side === OP) return { faceDown: true, lines: [`Mão de ${this.names[OP]}: ${p.n} carta${p.n > 1 ? 's' : ''}.`] };
-    if (p.kind === 'fx' && p.faceDown && p.side === OP) return { faceDown: true, lines: ['Armadilha do rival, virada para baixo.', 'Pode disparar quando você declarar um ataque.'] };
-    const lines = [];
-    let cur;
+    const s = this.state;
+    if (p.kind === 'hand' && p.side === OP) return { faceDown: true, notes: [`Mão de ${this.names[OP]}: ${p.n} carta${p.n > 1 ? 's' : ''}.`] };
+    if (p.kind === 'fx' && p.faceDown && p.side === OP) return { faceDown: true, notes: ['Armadilha do rival, virada para baixo.', 'Pode disparar quando você atacar.'] };
+    const owner = p.side === ME ? 'me' : 'opp';
     if (p.kind === 'hand') {
       const playable = this.legal.some((a) => PLAY_TYPES.has(a.type) && this.cardIndex.get(a.uid) === c.cardId);
-      lines.push(this.myTurn() ? (playable ? 'Jogável agora: clique ou arraste para a mesa.' : this.whyNot(c.cardId)) : 'Aguarde a sua vez.');
-    } else if (p.kind === 'cr') {
-      const f = findCreature(s, uid); if (!f) return { cardId: c.cardId, lines };
-      const pl = s.players[f.side];
-      cur = statsOf(s, uid);
-      lines.push(`${f.side === ME ? 'Sua' : 'Do rival'} · em ${f.c.mode === 'ATK' ? 'ataque (em pé)' : 'defesa (deitada)'}`);
-      if (f.c.lockedUntilOwnerTurn > 0 && f.c.lockedUntilOwnerTurn >= pl.turnsStarted) lines.push('Travada: não pode atacar por enquanto.');
+      return { cardId: c.cardId, where: 'hand', owner, status: !this.myTurn() ? { tone: 'info', text: 'Você joga na sua vez.' } : playable ? { tone: 'go', text: 'Clique ou arraste para a mesa.' } : { tone: 'stop', text: this.whyNot(c.cardId) } };
+    }
+    if (p.kind === 'cr') {
+      const f = findCreature(s, uid); if (!f) return { cardId: c.cardId, where: 'table', owner };
+      const pl = s.players[f.side], notes = [f.c.mode === 'ATK' ? 'Em ataque (em pé).' : 'Em defesa (deitada).'];
+      if (f.c.lockedUntilOwnerTurn > 0 && f.c.lockedUntilOwnerTurn >= pl.turnsStarted) notes.push('Travada: não ataca por enquanto.');
       for (const m of f.c.mods) {
         const t = [];
         if (m.mulAtk !== undefined && m.mulAtk !== 1) t.push(m.mulAtk < 1 ? 'força pela metade' : `×${m.mulAtk}`);
-        if (m.atk) t.push(`ATQ ${m.atk > 0 ? '+' : ''}${m.atk}`); if (m.def) t.push(`DEF ${m.def > 0 ? '+' : ''}${m.def}`);
-        if (t.length) lines.push(`${cardDef(m.source).name}: ${t.join(', ')}${m.until === 'end_of_turn' ? ' (até o fim do turno)' : ''}`);
+        if (m.atk) t.push(`ATQ ${m.atk > 0 ? '+' : '−'}${Math.abs(m.atk)}`); if (m.def) t.push(`DEF ${m.def > 0 ? '+' : '−'}${Math.abs(m.def)}`);
+        if (t.length) notes.push(`${cardDef(m.source).name}: ${t.join(', ')}${m.until === 'end_of_turn' ? ' (até o fim do turno)' : ''}`);
       }
-      if ((cur.atk !== (def.atk ?? 0) || cur.def !== (def.def ?? 0)) && !f.c.mods.length) lines.push('ATQ/DEF alterados por efeitos de outras cartas na mesa.');
-    } else if (p.kind === 'fx') {
-      const e = s.players[p.side].effects[p.idx];
-      lines.push(p.faceDown ? 'Sua armadilha, virada para baixo: o rival não vê.' : e?.turnsLeft != null ? `Na mesa por mais ${e.turnsLeft} turno${e.turnsLeft > 1 ? 's' : ''} do dono.` : 'Efeito');
-    } else if (p.kind === 'dead') {
-      const dead = s.players[p.side].dead;
-      lines.push(`Morto de ${p.side === ME ? 'você' : this.names[OP]} — ${dead.length} carta${dead.length > 1 ? 's' : ''} descartada${dead.length > 1 ? 's' : ''}. Últimas:`, ...dead.slice(-5).reverse().map((d) => `· ${cardDef(d.cardId).name}`));
-      return { cardId: dead[dead.length - 1].cardId, lines };
+      const cur = statsOf(s, uid), d = cardDef(c.cardId);
+      if ((cur.atk !== (d.atk ?? 0) || cur.def !== (d.def ?? 0)) && !f.c.mods.length) notes.push('Valores alterados por outras cartas na mesa.');
+      return { cardId: c.cardId, where: 'table', owner, cur, notes };
     }
-    return { cardId: c.cardId, lines, cur };
+    if (p.kind === 'fx') {
+      const e = s.players[p.side].effects[p.idx];
+      return { cardId: c.cardId, where: 'table', owner, notes: [p.faceDown ? 'Sua armadilha, virada para baixo: o rival não vê.' : e?.turnsLeft != null ? `Na mesa por mais ${e.turnsLeft} turno${e.turnsLeft > 1 ? 's' : ''} do dono.` : 'Efeito na mesa.'] };
+    }
+    if (p.kind === 'dead') {
+      const dead = s.players[p.side].dead;
+      return { cardId: dead[dead.length - 1].cardId, where: 'dead', owner, notes: [`Morto de ${p.side === ME ? 'você' : this.names[OP]}: ${dead.length} carta${dead.length > 1 ? 's' : ''}.`, `Últimas: ${dead.slice(-3).reverse().map((d) => cardDef(d.cardId).name).join(' · ')}`] };
+    }
+    return { cardId: c.cardId, owner };
   }
   previewFor(uid) {
     const s = this.sel; if (!s || s.stage !== 'target' || !s.attacker) return null;
     const pv = previewAttack(this.state, s.attacker, uid); if (!pv) return null;
-    const res = { win: 'Você destrói a carta', lose: 'Você perde a sua carta', trade: 'As duas são destruídas', bounce: 'Não passa pela defesa', nothing: 'Empate: nada acontece', direct: 'Direto no CAIXA' }[pv.result];
-    const cls = { win: 'good', direct: 'good', lose: 'bad', bounce: 'bad', trade: 'warn', nothing: 'warn' }[pv.result];
-    let h = `<b class="${cls}">${res}</b><span>seu ATQ ${money(pv.atk)} contra ${pv.mode === 'DEF' ? `DEF ${money(pv.against)}` : pv.mode === 'ATK' ? `ATQ ${money(pv.against)}` : 'ninguém'}</span>`;
-    if (pv.dmgFoe) h += `<span class="good">rival perde ${money(pv.dmgFoe)} de CAIXA</span>`;
-    if (pv.dmgMe) h += `<span class="bad">você perde ${money(pv.dmgMe)} de CAIXA</span>`;
-    if (pv.result === 'win' && pv.mode === 'DEF') h += '<span>estava em defesa: o rival não perde CAIXA</span>';
-    if (this.state.players[OP].effects.some((e) => e?.faceDown)) h += '<span class="warn">atenção: há armadilha armada</span>';
-    return h;
+    return { ...pv, trap: this.state.players[OP].effects.some((e) => e?.faceDown) };
+  }
+  whoOf(e, prev) {
+    if (e.player !== undefined && e.type !== 'damage' && e.type !== 'heal' && e.type !== 'frio') return e.player === ME ? 'me' : 'opp';
+    if (e.type === 'damage' || e.type === 'heal' || e.type === 'frio') return e.player === ME ? 'me' : 'opp';
+    const u = e.attacker ?? e.uid; if (!u) return 'sys';
+    return this.sideOf(u, prev ?? new Map()) === ME ? 'me' : 'opp';
   }
 
   // ───────── por quadro ─────────
@@ -920,7 +928,7 @@ export class Duel {
     // HUD projetado
     if (this.active) {
       if (this.chipsDirty) { this.chipList = this.buildChips(); this.chipsDirty = false; }
-      const list = (this.chipList ?? []).map((ch) => { const c = ch.pos ? null : this.cards.get(ch.uid); if (!ch.pos && !c) return null; const s = this.project(ch.pos ?? c.group.position.clone().add(V(0, 0.02, CARD.h * 0.5 + 0.02))); return { ...ch, x: s.x, y: s.y }; }).filter(Boolean);
+      const list = (this.chipList ?? []).map((ch) => { const c = ch.pos ? null : this.cards.get(ch.uid); if (!ch.pos && !c) return null; const s = this.project(ch.pos ?? c.group.position.clone().add(V(0, 0.02, CARD.h * 0.5 + 0.02))); return { ...ch, x: s.x, y: s.y + 2 }; }).filter(Boolean);
       this.ui.chips(list);
       if (this.sel?.stage === 'menu') { const c = this.cards.get(this.sel.uid); if (c) { const s = this.project(c.group.position.clone().add(V(0, c.place.kind === 'hand' ? CARD.h * 0.5 * c.scale : 0.5, 0))); this.ui.menuPos(s.x, s.y); } }
       this.ui.previewPos(this.mouse.x * this.gfx.w, this.mouse.y * this.gfx.h);

@@ -1,0 +1,19 @@
+/* estilos só do laboratório */
+* { box-sizing: border-box; }
+body { margin: 0; background: #0b1311; color: #dfe9e3; font: 14px/1.5 Helvena, system-ui, sans-serif; }
+#app { padding: 0 32px 80px; }
+.lab-nav { position: sticky; top: 0; z-index: 9; display: flex; gap: 4px; padding: 10px 0; background: #0b1311ee; border-bottom: 1px solid #ffffff14; margin-bottom: 8px; }
+.lab-nav a { color: #9fb3aa; text-decoration: none; padding: 4px 10px; border-radius: 6px; font-size: 13px; } .lab-nav a:hover { background: #ffffff10; color: #fff; }
+.lab-sec { padding: 28px 0 8px; border-bottom: 1px solid #ffffff10; }
+.lab-sec > header h2 { margin: 0 0 4px; font: 400 28px/1.1 "Apple Garamond", Georgia, serif; }
+.lab-sec > header p { margin: 0 0 18px; max-width: 760px; color: #9fb3aa; }
+.lab-grid { display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-start; }
+.lab-frame { margin: 0; }
+.lab-stage { display: grid; background-size: 1366px 768px; background-repeat: no-repeat; border-radius: 10px; outline: 1px solid #ffffff18; overflow: hidden; position: relative; }
+.lab-frame figcaption { margin-top: 6px; font-size: 12px; color: #7f948b; }
+.lab-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: 16px; }
+.lab-dark { padding: 16px; background: #0f1d1a; border-radius: 10px; }
+.lab-sw { display: grid; gap: 2px; width: 108px; font-size: 12px; } .lab-sw i { height: 44px; border-radius: 8px; display: block; } .lab-sw code { color: #7f948b; font-size: 11px; }
+.lab-type { display: flex; flex-wrap: wrap; gap: 24px; align-items: baseline; margin-bottom: 16px; }
+.lab-comp { position: relative; width: 1366px; height: 768px; background-size: cover; border-radius: 10px; overflow: hidden; outline: 1px solid #ffffff18; }
+.lab-sheetbox { display: flex; max-height: 420px; } .lab-sheetbox .h-sheet { max-height: 100%; }

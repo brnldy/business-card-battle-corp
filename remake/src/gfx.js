@@ -51,14 +51,14 @@ export function glowMaterial() {
       void main(){
         vec2 p = (vUv - 0.5) * vec2(uAspect, 1.0) * 2.0;
         float d = sdBox(p, vec2(uAspect, 1.0) * 0.82, 0.07);
-        float line = smoothstep(0.07, 0.0, abs(d - 0.035));
+        float line = smoothstep(0.1, 0.0, abs(d - 0.04));
         float halo = exp(-max(d, 0.0) * 6.0) * step(0.0, d) * 0.7;
         float ang = atan(p.y, p.x / uAspect);
         float march = 0.72 + 0.28 * step(0.5, fract(ang * 5.0 / 3.14159 - uTime * 0.9));
         float pulse = 0.78 + 0.22 * sin(uTime * 5.0);
         float a = (line * march + halo) * uAlpha * pulse;
         if (a < 0.01) discard;
-        gl_FragColor = vec4(uColor * a * 2.2, a);
+        gl_FragColor = vec4(uColor * a * 3.0, a);
       }`,
   });
 }

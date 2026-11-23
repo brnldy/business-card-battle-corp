@@ -19,7 +19,7 @@ const MODELS = {
 
 const result = await build({ entryPoints: [path.join(root, 'src/main.js')], bundle: true, format: 'iife', minify: !dev, write: false, target: 'es2022', legalComments: 'none' });
 const js = result.outputFiles[0].text;
-const css = fs.readFileSync(path.join(root, 'src/style.css'), 'utf8');
+const css = fs.readFileSync(path.join(root, 'src/style.css'), 'utf8') + '\n' + fs.readFileSync(path.join(root, 'src/hud/hud.css'), 'utf8');
 
 const fonts = [
   ['Apple Garamond', 400, 'normal', 'AppleGaramond-400-normal.ttf'], ['Apple Garamond', 700, 'normal', 'AppleGaramond-700-normal.ttf'],
@@ -55,7 +55,13 @@ if (dev) {
   fs.mkdirSync(path.join(root, 'dist'), { recursive: true });
   fs.writeFileSync(path.join(root, 'dist/bundle.js'), js);
   fs.writeFileSync(path.join(root, 'dist/index.html'), html('<script>window.__ASSET_BASE__="../"</script>', '<script src="bundle.js"></script>'));
-  console.log('dev build ok', (js.length / 1024).toFixed(0) + 'KB');
+  // laboratório do design system do HUD (só no build de desenvolvimento)
+  const lab = await build({ entryPoints: [path.join(root, 'src/lab.js')], bundle: true, format: 'iife', write: false, target: 'es2022' });
+  fs.writeFileSync(path.join(root, 'dist/lab.js'), lab.outputFiles[0].text);
+  fs.writeFileSync(path.join(root, 'dist/lab.html'), `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>HUD · design system</title><style>${fontCss}
+${fs.readFileSync(path.join(root, 'src/hud/hud.css'), 'utf8')}
+${fs.readFileSync(path.join(root, 'src/lab.css'), 'utf8')}</style></head><body class="theme-severance"><div id="app"></div><script>window.__ASSET_BASE__="../"</script><script src="lab.js"></script></body></html>`);
+  console.log('dev build ok', (js.length / 1024).toFixed(0) + 'KB', '+ lab');
 } else {
   const shared = {};
   for (const dir of ['cards', 'img', 'music']) for (const f of fs.readdirSync(path.join(root, 'assets', dir))) shared[`${dir}/${f}`] = dataUri(path.join(root, 'assets', dir, f));

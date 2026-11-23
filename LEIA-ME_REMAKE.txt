@@ -25,6 +25,7 @@ ARQUIVOS
     npm install                 instala dependências
     node build.mjs              gera os dois HTMLs
     node build.mjs --dev        build de desenvolvimento em remake/dist (rodar com: node serve.mjs, abrir /dist/?theme=buckshot)
+    http://localhost:5178/dist/lab.html   laboratório do design system do HUD (cada componente e suas variantes)
     node tools/fetch-models.mjs e node tools/pack-models.mjs   baixam e convertem os modelos 3D de terceiros
 
 CRÉDITOS

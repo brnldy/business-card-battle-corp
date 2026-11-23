@@ -1,57 +1,21 @@
-// Interface em DOM por cima do canvas. Linguagem visual das próprias cartas: papel claro, verde sálvia,
-// Garamond para números e títulos, sans para rótulos. Tudo dimensionado para ler em tela de notebook.
+// Interface em DOM por cima do canvas. O HUD do duelo é montado só com os componentes do design system
+// (src/hud/components.js + hud.css); as telas (menu, janelas, fim de jogo) usam style.css.
 import { CARDS } from './cards.js';
 import { asset } from './assets.js';
 import { settings, cleanName, MAX_NAME } from './settings.js';
 import { sfx, applyVolumes, unlockAudio } from './audio.js';
-import { money, cardFaceCanvas } from './textures.js';
-import { isEffect } from './engine.js';
-import { RULES_TEXT, DEPT, KIND } from './cardtext.js';
+import * as C from './hud/components.js';
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const el = (tag, cls, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html !== undefined) e.innerHTML = html; return e; };
-const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-const defOf = (id) => CARDS.find((c) => c.id === id);
-const faceUrls = new Map();
-function faceUrl(id) { if (!faceUrls.has(id)) faceUrls.set(id, cardFaceCanvas(id).toDataURL('image/jpeg', 0.9)); return faceUrls.get(id); }
-const ICON = {
-  atk: '<svg viewBox="0 0 16 16"><path d="M13.5 1.5 6.2 8.8M13.5 1.5l-3 .4-5.6 5.6 2.6 2.6 5.6-5.6zM4.2 8.2l3.6 3.6M5.4 10.6l-3 3M2 12.6l1.4 1.4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>',
-  def: '<svg viewBox="0 0 16 16"><path d="M8 1.6c1.6 1 3.3 1.5 5 1.5v4.6c0 3-2 5.3-5 6.7-3-1.4-5-3.700-5-6.700V3.100c1.700 0 3.400-.5 5-1.500z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>',
-};
-function stampSvg(w = 150, h = 58, d = 3) {
-  const nx = 22, ny = 8, sx = w / nx, sy = h / ny, p = [];
-  for (let i = 0; i < nx; i++) p.push([(i + 0.5) * sx, i % 2 ? d : 0], [(i + 1) * sx, d / 2]);
-  for (let i = 0; i < ny; i++) p.push([w - (i % 2 ? d : 0), (i + 0.5) * sy], [w - d / 2, (i + 1) * sy]);
-  for (let i = 0; i < nx; i++) p.push([w - (i + 0.5) * sx, h - (i % 2 ? d : 0)], [w - (i + 1) * sx, h - d / 2]);
-  for (let i = 0; i < ny; i++) p.push([i % 2 ? d : 0, h - (i + 0.5) * sy], [d / 2, h - (i + 1) * sy]);
-  return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none"><polygon points="${p.map((q) => q.map((v) => v.toFixed(1)).join(',')).join(' ')}"/></svg>`;
-}
-function glossHtml(id) {
-  const txt = (RULES_TEXT[id] ?? []).map((r) => r[1]).join(' ');
-  const hits = GLOSS.filter(([re]) => re.test(txt)).slice(0, 2);
-  return hits.length ? `<div class="d-gloss">${hits.map(([, t, d]) => `<div><b>${t}:</b> ${d}</div>`).join('')}</div>` : '';
-}
-export function rulesHtml(id) {
-  return (RULES_TEXT[id] ?? []).map(([t, d]) => `<p><b>${esc(t)}</b> — ${esc(d)}</p>`).join('');
-}
-const TICKER = new Set(['summon', 'effectPlayed', 'trapSet', 'trapTriggered', 'attack', 'attackNegated', 'destroy', 'sacrifice', 'toHand', 'toDeck', 'controlChange', 'modeChange', 'coin', 'effectExpired', 'discard']);
-// termos que um iniciante pode não conhecer: aparecem explicados na ficha quando a carta os usa
-const GLOSS = [
-  [/Frio/, 'Frio', 'marcadores que tiram $100 do CAIXA de quem os tem, a cada turno.'],
-  [/Morto/, 'Morto', 'a pilha de descarte.'],
-  [/[Ii]mune/, 'Imune', 'esse tipo de efeito não a afeta.'],
-  [/depto\./, 'Depto.', 'o departamento da carta, escrito logo abaixo do nome.'],
-  [/moeda/, 'Moeda', 'cara ou coroa, 50% de chance.'],
-  [/virada para baixo/, 'Virada para baixo', 'o rival não vê qual carta é.'],
-];
-const plateHtml = (who) => `
-  <div class="tag" id="tag-${who}">${stampSvg()}<span></span></div>
-  <div class="folder"><div class="f-tab"><i class="dot"></i><span class="f-name"></span></div><div class="f-body"><span class="f-caixa"></span></div></div>
-  <div class="f-stats"></div>`;
+const esc = C.esc;
+const { ICON } = C;
+// jogadas que aparecem na faixa do topo (o resto fica só no relatório)
+const TICKER = new Set(['summon', 'effectPlayed', 'trapSet', 'trapTriggered', 'attack', 'attackNegated', 'destroy', 'sacrifice', 'toHand', 'toDeck', 'controlChange', 'modeChange', 'coin', 'effectExpired', 'discard', 'mill']);
 
 export class UI {
   constructor(root) {
-    this.root = root; this.scale = 1; this.h = {}; this.chipEls = new Map(); this.pointerOverUi = false; this.tutorQ = [];
+    this.root = root; this.scale = 1; this.h = {}; this.chipEls = new Map(); this.pointerOverUi = false; this.tutorQ = []; this.logLines = [];
     root.innerHTML = `
       <div id="boot" class="screen"><div class="boot-box"><div class="logo-sm">BUSINESS CARD <i>Battle</i> Corp.</div><div id="boot-line">Abrindo o caixa… 0%</div><div class="bar"><b id="boot-bar"></b></div></div></div>
       <div id="menu" class="screen hidden">
@@ -68,61 +32,52 @@ export class UI {
           <div class="company" id="menu-company"></div>
         </div>
       </div>
-      <div id="hud" class="hidden">
-        <div class="plate opp" id="plate-opp">${plateHtml('opp')}</div>
-        <div class="plate me" id="plate-me">${plateHtml('me')}</div>
-        <div class="topbar"><button data-act="logtoggle" id="btn-log" title="Relatório da partida (L)">Relatório</button><button data-act="help" title="Como jogar">?</button><button data-act="mute" id="btn-mute" title="Som">♪</button><button data-act="settings" title="Configurações">⚙</button><button data-act="quit" title="Voltar ao menu">Menu</button></div>
-        <div class="log hidden" id="log"><header><span>Relatório da partida</span><button id="log-toggle" title="Fechar">×</button></header><div id="log-lines"></div></div>
-        <div class="ticker hidden" id="ticker"></div>
-        <div class="edge" id="edge"></div>
-        <div class="turnbox">
-          <div id="turn-label"></div>
-          <div class="steps"><span id="ph-main">Jogar</span><i></i><span id="ph-battle">Batalha</span><i></i><span id="ph-end">Encerrar</span></div>
-          <div id="coach"></div>
-          <div class="pills" id="pills"></div>
-          <button id="btn-battle" data-act="battle"><span>Ir para a batalha</span><kbd>B</kbd></button>
-          <button id="btn-end" data-act="end"><span>Encerrar turno</span><kbd>Espaço</kbd></button>
-        </div>
-        <div class="detail hidden" id="detail"></div>
-        <div class="hint hidden" id="hint"><span id="hint-text"></span><button id="hint-action" class="hidden danger"></button><button id="hint-cancel">Cancelar <kbd>Esc</kbd></button></div>
-        <div class="limit hidden" id="limit"></div>
-        <div class="amenu hidden" id="amenu"></div>
-        <div class="preview hidden" id="preview"></div>
-        <div class="tip hidden" id="tip"></div>
-        <div id="chips"></div><div id="floats"></div>
-        <div class="banner" id="banner"><div class="b-sub" id="banner-sub"></div><div class="b-title" id="banner-title"></div></div>
-        <div class="toast hidden" id="toast"></div>
-        <div class="tutor hidden" id="tutor"><div class="t-label">Dica</div><div id="tutor-text"></div><div class="t-actions"><button id="tutor-skip" class="ghost">Não mostrar dicas</button><button id="tutor-ok" class="primary">Entendi</button></div></div>
+      <div id="hud" class="h-hud hidden">
+        <div class="h-edge" id="edge"></div>
+        <div class="h-layer" id="chips"></div>
+        <div class="h-layer" id="floats"></div>
+        <div class="h-slot--opp" id="slot-opp">${C.folder({ who: 'opp' })}</div>
+        <div class="h-slot--me" id="slot-me">${C.folder({ who: 'me' })}</div>
+        <div class="h-slot--sheet hidden" id="slot-sheet"></div>
+        <div class="h-slot--bar" id="slot-bar"></div>
+        <div class="h-slot--turn" id="slot-turn"></div>
+        <div class="h-slot--log hidden" id="slot-log">${C.logPanel()}</div>
+        <div class="h-slot--center" id="slot-center"><div id="slot-prompt" class="hidden"></div><div id="slot-ticker" class="hidden"></div><div id="slot-limit" class="hidden"></div></div>
+        <div class="h-slot--banner" id="slot-banner"></div>
+        <div class="h-slot--toast hidden" id="slot-toast"></div>
+        <div class="h-slot--coach hidden" id="slot-coach"></div>
+        <div class="h-anchor hidden" id="amenu"></div>
+        <div class="h-follow hidden" id="preview"></div>
+        <div class="h-follow hidden" id="tip"></div>
       </div>
       <div id="over" class="screen hidden"><div class="over-box"><div class="memo" id="over-memo"></div><h2 id="over-title"></h2><p id="over-sub"></p><p class="stats" id="over-stats"></p><nav><button data-act="quit2">Menu</button><button data-act="again" class="primary">Nova partida</button></nav></div></div>
       <div id="modal" class="screen hidden"></div>
       <div id="unlock" class="hidden">clique para ligar o som</div>`;
+    this.folders = { me: $('#slot-me .h-folder'), opp: $('#slot-opp .h-folder') };
+    this.renderBar();
     root.addEventListener('click', (e) => {
-      const b = e.target.closest('[data-act]'); if (!b) return;
+      const b = e.target.closest('[data-act], [data-k]'); if (!b) return;
       unlockAudio();
+      if (b.dataset.k) return this.h.menuPick?.(b.dataset.k);
       const a = b.dataset.act;
-      if (a === 'mute') { settings.set({ muted: !settings.get().muted }); applyVolumes(); this.syncMute(); return; }
+      if (a === 'mute') { settings.set({ muted: !settings.get().muted }); applyVolumes(); this.renderBar(); return; }
       if (a === 'settings') return this.settings();
       if (a === 'help') return this.help();
       if (a === 'gallery') return this.gallery();
       if (a === 'logtoggle') return this.toggleLog();
+      if (a === 'tips-ok') return this.tutorNext();
+      if (a === 'tips-off') { settings.set({ tipsOff: true }); this.tutorQ = []; this.show('slot-coach', false); return; }
       this.h[a]?.();
     });
     root.addEventListener('pointerover', (e) => { if (e.target.closest('button')) sfx('hover'); });
-    $('#hint-cancel').onclick = () => this.h.cancel?.();
-    $('#hint-action').onclick = () => this.h.direct?.();
-    $('#log-toggle').onclick = () => this.toggleLog();
-    $('#tutor-ok').onclick = () => this.tutorNext();
-    $('#tutor-skip').onclick = () => { settings.set({ tipsOff: true }); this.tutorQ = []; this.show('tutor', false); };
-    $('#amenu').addEventListener('click', (e) => { const b = e.target.closest('[data-k]'); if (b) this.h.menuPick?.(b.dataset.k); });
     window.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !$('#modal').classList.contains('hidden')) { this.closeModal(); e.stopPropagation(); } }, true);
-    this.syncMute(); this.setScale(); window.addEventListener('resize', () => this.setScale());
+    this.setScale(); window.addEventListener('resize', () => this.setScale());
   }
   on(handlers) { Object.assign(this.h, handlers); }
-  syncMute() { $('#btn-mute').classList.toggle('off', settings.get().muted); }
   show(id, on) { $(`#${id}`).classList.toggle('hidden', !on); }
   // escala a interface inteira: nunca abaixo de 100% (notebook 1366×768) e cresce em telas maiores
   setScale() { this.scale = Math.max(1, Math.min(1.9, Math.min(window.innerHeight / 760, window.innerWidth / 1300))); this.root.style.zoom = this.scale; }
+  renderBar() { $('#slot-bar').innerHTML = C.topbar({ logOn: !$('#slot-log')?.classList.contains('hidden'), muted: settings.get().muted }); }
 
   // ───── telas ─────
   boot(p) { $('#boot-line').textContent = `Abrindo o caixa… ${Math.round(p * 100)}%`; $('#boot-bar').style.width = `${p * 100}%`; }
@@ -132,7 +87,10 @@ export class UI {
     const n = settings.get().companyName;
     $('#menu-company').innerHTML = n ? `Empresa registrada: <b>${esc(n)}</b>` : '';
   }
-  hud(on) { this.show('hud', on); if (!on) { $('#log').classList.add('hidden'); $('#btn-log').classList.remove('on'); this.show('ticker', false); this.chips([]); this.menu(null); this.hint(null); this.detail(null); this.preview(null); this.tip(null); this.tutorQ = []; this.show('tutor', false); } }
+  hud(on) {
+    this.show('hud', on);
+    if (!on) { this.show('slot-log', false); this.renderBar(); ['slot-ticker', 'slot-prompt', 'slot-limit', 'slot-coach', 'slot-toast'].forEach((id) => this.show(id, false)); this.chips([]); this.menu(null); this.detail(null); this.preview(null); this.tip(null); this.tutorQ = []; }
+  }
   closeModal() { const m = $('#modal'); if (m.classList.contains('hidden')) return; m.classList.add('hidden'); m.innerHTML = ''; sfx('cancel'); const cb = this.onModalClose; this.onModalClose = null; cb?.(); }
   modal(html, cls = '') {
     const m = $('#modal'); m.innerHTML = `<div class="modal-box ${cls}">${html}</div>`; m.classList.remove('hidden');
@@ -164,14 +122,14 @@ export class UI {
     this.modal(`
       <div class="memo">Manual do colaborador</div><h2>Como jogar</h2>
       <div class="help-grid">
-        <section><h3>1 · O objetivo</h3><p>Cada empresa começa com <b>$ 8.000 de CAIXA</b> — é a sua vida, mostrada na pasta com o seu nome. Zere o CAIXA do rival antes que ele zere o seu.</p></section>
-        <section><h3>2 · O seu turno</h3><p>Você compra 1 carta e pode: <b>jogar cartas</b> da mão (as de contorno verde), depois <b>ir para a batalha</b> e atacar, e por fim <b>encerrar o turno</b>. Só dá para invocar <b>1 criatura por turno</b>.</p></section>
-        <section><h3>3 · Criaturas</h3><p>Têm dois números: <span class="ic">${ICON.atk}</span> <b>ATQ</b> (ataque) e <span class="ic">${ICON.def}</span> <b>DEF</b> (defesa). Entram em <b>ataque</b> (em pé, podem atacar) ou em <b>defesa</b> (deitadas, só protegem).</p></section>
-        <section><h3>4 · Custo</h3><p>Cada <span class="pip">✕</span> no nome da carta é uma criatura sua que precisa ser <b>sacrificada</b> para invocá-la. Cartas sem ✕ entram de graça.</p></section>
-        <section><h3>5 · Combate</h3><p>O número maior vence e destrói a outra carta. Contra criatura em <b>ataque</b>, quem perde também perde a diferença em CAIXA. Contra criatura em <b>defesa</b>, ninguém perde CAIXA — a não ser você, se atacar com menos. Sem criaturas na frente? O ataque vai <b>direto no CAIXA</b>.</p></section>
-        <section><h3>6 · Efeitos e armadilhas</h3><p><b>Efeitos</b> acontecem na hora. <b>Armadilhas</b> ficam viradas para baixo e disparam sozinhas quando o rival ataca. O <b>Morto</b> é a pilha de descarte.</p></section>
+        <section><h3>1 · O objetivo</h3><p>Cada empresa começa com <b>$ 8.000 de CAIXA</b> — é a sua vida, na pasta com o seu nome. Zere o CAIXA do rival antes que ele zere o seu.</p></section>
+        <section><h3>2 · O seu turno</h3><p>Você compra 1 carta. Depois <b>joga cartas</b> (as de contorno verde), <b>vai para a batalha</b> e <b>encerra o turno</b>. É <b>1 invocação por turno</b>.</p></section>
+        <section><h3>3 · Criaturas</h3><p>Têm <span class="ic">${ICON.atk}</span> <b>ATQ</b> e <span class="ic">${ICON.def}</span> <b>DEF</b>. Em <b>ataque</b> (em pé) podem atacar; em <b>defesa</b> (deitadas) só protegem.</p></section>
+        <section><h3>4 · Custo</h3><p>Cada <span class="pip">✕</span> no nome da carta é uma criatura sua que você <b>sacrifica</b> para invocá-la. Sem ✕, entra de graça.</p></section>
+        <section><h3>5 · Combate</h3><p>O número maior vence e destrói a outra carta. Contra criatura em <b>ataque</b>, quem perde paga a diferença em CAIXA. Contra <b>defesa</b>, só você paga — se atacar com menos. Sem criaturas na frente, o ataque vai <b>direto no CAIXA</b>.</p></section>
+        <section><h3>6 · Efeitos e armadilhas</h3><p><b>Efeitos</b> valem na hora. <b>Armadilhas</b> ficam viradas para baixo e disparam quando o rival ataca. O <b>Morto</b> é a pilha de descarte.</p></section>
       </div>
-      <p class="fine">Atalhos: <kbd>B</kbd> batalha · <kbd>Espaço</kbd> encerrar turno · <kbd>Esc</kbd> ou botão direito cancela · passe o mouse em qualquer carta para ler o que ela faz.</p>
+      <p class="fine">Atalhos: <kbd>B</kbd> batalha · <kbd>Espaço</kbd> encerrar turno · <kbd>L</kbd> relatório · <kbd>Esc</kbd> ou botão direito cancela. Passe o mouse em qualquer carta para ler o que ela faz.</p>
       <nav><button data-close class="primary">Entendido</button></nav>`, 'wide');
   }
   settings() {
@@ -179,23 +137,23 @@ export class UI {
     const box = this.modal(`
       <h2>Configurações</h2>
       <div class="rows">
-        <label>Música e ambiente <input type="range" min="0" max="1" step="0.05" value="${s.music}" data-k="music"></label>
-        <label>Efeitos sonoros <input type="range" min="0" max="1" step="0.05" value="${s.sfx}" data-k="sfx"></label>
-        <label>Trilha <span class="seg" data-k="soundtrack"><button data-v="procedural">Gerada</button><button data-v="original">Original</button></span></label>
-        <label>Imagem <span class="seg" data-k="pixel"><button data-v="1">Nítida</button><button data-v="2">Retrô</button><button data-v="3">Pixelada</button></span></label>
-        <label>Velocidade das animações <span class="seg" data-k="speed"><button data-v="1">Normal</button><button data-v="1.6">Rápida</button><button data-v="2.5">Turbo</button></span></label>
-        <label>Tremor e clarões <span class="seg" data-k="shake"><button data-v="true">Ligado</button><button data-v="false">Reduzido</button></span></label>
-        <label>Dicas para iniciantes <span class="seg" data-k="tipsOff"><button data-v="false">Ligadas</button><button data-v="true">Desligadas</button></span></label>
-        <label>Som <span class="seg" data-k="muted"><button data-v="false">Ligado</button><button data-v="true">Mudo</button></span></label>
+        <label>Música e ambiente <input type="range" min="0" max="1" step="0.05" value="${s.music}" data-k2="music"></label>
+        <label>Efeitos sonoros <input type="range" min="0" max="1" step="0.05" value="${s.sfx}" data-k2="sfx"></label>
+        <label>Trilha <span class="seg" data-s="soundtrack"><button data-v="procedural">Gerada</button><button data-v="original">Original</button></span></label>
+        <label>Imagem <span class="seg" data-s="pixel"><button data-v="1">Nítida</button><button data-v="2">Retrô</button><button data-v="3">Pixelada</button></span></label>
+        <label>Velocidade das animações <span class="seg" data-s="speed"><button data-v="1">Normal</button><button data-v="1.6">Rápida</button><button data-v="2.5">Turbo</button></span></label>
+        <label>Tremor e clarões <span class="seg" data-s="shake"><button data-v="true">Ligado</button><button data-v="false">Reduzido</button></span></label>
+        <label>Dicas para iniciantes <span class="seg" data-s="tipsOff"><button data-v="false">Ligadas</button><button data-v="true">Desligadas</button></span></label>
+        <label>Som <span class="seg" data-s="muted"><button data-v="false">Ligado</button><button data-v="true">Mudo</button></span></label>
       </div>
       <nav><button data-close class="primary">Voltar</button></nav>`);
-    const syncSeg = () => box.querySelectorAll('.seg').forEach((sg) => sg.querySelectorAll('button').forEach((b) => b.classList.toggle('on', String(settings.get()[sg.dataset.k]) === b.dataset.v)));
+    const syncSeg = () => box.querySelectorAll('.seg').forEach((sg) => sg.querySelectorAll('button').forEach((b) => b.classList.toggle('on', String(settings.get()[sg.dataset.s]) === b.dataset.v)));
     syncSeg();
-    box.addEventListener('input', (e) => { const k = e.target.dataset?.k; if (!k) return; settings.set({ [k]: Number(e.target.value) }); applyVolumes(); if (k === 'sfx') sfx('select'); });
+    box.addEventListener('input', (e) => { const k = e.target.dataset?.k2; if (!k) return; settings.set({ [k]: Number(e.target.value) }); applyVolumes(); if (k === 'sfx') sfx('select'); });
     box.addEventListener('click', (e) => {
       const b = e.target.closest('.seg button'); if (!b) return;
-      const k = b.parentElement.dataset.k, raw = b.dataset.v, v = raw === 'true' ? true : raw === 'false' ? false : isNaN(Number(raw)) ? raw : Number(raw);
-      settings.set(k === 'tipsOff' && v === false ? { tipsOff: false, tips: {} } : { [k]: v }); applyVolumes(); this.syncMute(); syncSeg(); sfx('select');
+      const k = b.parentElement.dataset.s, raw = b.dataset.v, v = raw === 'true' ? true : raw === 'false' ? false : isNaN(Number(raw)) ? raw : Number(raw);
+      settings.set(k === 'tipsOff' && v === false ? { tipsOff: false, tips: {} } : { [k]: v }); applyVolumes(); this.renderBar(); syncSeg(); sfx('select');
     });
   }
   gallery() {
@@ -207,141 +165,124 @@ export class UI {
     const z = $('#gal-zoom', box);
     box.addEventListener('click', (e) => {
       const f = e.target.closest('figure');
-      if (f) { const d = defOf(f.dataset.id); z.firstElementChild.src = asset(d.art); z.lastElementChild.innerHTML = this.cardBody(d, {}); z.classList.remove('hidden'); sfx('card'); e.stopPropagation(); }
+      if (f) { const d = CARDS.find((c) => c.id === f.dataset.id); z.firstElementChild.src = asset(d.art); z.lastElementChild.innerHTML = C.cardSheet({ cardId: d.id }); z.classList.remove('hidden'); sfx('card'); e.stopPropagation(); }
       else if (e.target.closest('#gal-zoom')) { z.classList.add('hidden'); e.stopPropagation(); }
     });
   }
 
   // ───── HUD do duelo ─────
-  setInfo(i) {
-    const fill = (id, p, mine) => {
-      const r = $(id), el = $('.f-caixa', r), from = Number(el.dataset.v ?? p.caixa), to = Math.round(p.caixa);
-      $('.f-name', r).textContent = p.name.toLowerCase();
-      // o valor "roda" até o novo número e a pasta treme quando perde CAIXA
-      if (from !== to) {
-        cancelAnimationFrame(el._raf); const t0 = performance.now(), dur = Math.min(900, 250 + Math.abs(to - from) * 0.25);
-        const step = (now) => { const k = Math.min(1, (now - t0) / dur), v = Math.round(from + (to - from) * (1 - Math.pow(1 - k, 3))); el.textContent = `$ ${v.toLocaleString('pt-BR')}`; if (k < 1) el._raf = requestAnimationFrame(step); };
-        el._raf = requestAnimationFrame(step);
-        r.classList.remove('hit', 'gain'); void r.offsetWidth; r.classList.add(to < from ? 'hit' : 'gain');
-      } else if (!el.textContent) el.textContent = `$ ${to.toLocaleString('pt-BR')}`;
-      el.dataset.v = to;
-      r.classList.toggle('low', p.caixa <= 2000);
-      r.classList.toggle('active', mine ? i.mine : !i.mine && i.phase !== 'over');
-      $('.f-stats', r).innerHTML = (mine ? '' : `<span title="Cartas na mão do rival">mão <b>${p.hand}</b></span>`) + (p.frio ? `<span class="frio" title="Frio: perde $100 por marcador no início de cada turno">frio <b>${p.frio}</b> · −$${p.frio * 100}/turno</span>` : '') + (p.caixa <= 2000 ? '<span class="warn">CAIXA baixo</span>' : '');
-    };
-    fill('#plate-opp', i.opp, false); fill('#plate-me', i.me, true);
-    $('#turn-label').innerHTML = i.phase === 'over' ? 'Fim de expediente' : `<small>Turno ${i.turn}</small>${i.mine ? 'Sua vez' : `Vez de ${esc(i.opp.name)}`}`;
-    $('#ph-main').className = i.mine && i.phase === 'main' ? 'on' : i.mine && i.phase === 'battle' ? 'done' : '';
-    $('#ph-battle').className = i.mine && i.phase === 'battle' ? 'on' : '';
-    $('.turnbox').classList.toggle('foe', !i.mine);
-    $('#edge').className = `edge ${i.phase === 'over' ? '' : i.mine ? 'me' : 'foe'}`;
+  // pastas de CAIXA: { me: folderProps, opp: folderProps, mine, over }
+  setFolders(f) {
+    C.patchFolder(this.folders.me, f.me, { animate: f.animate !== false });
+    C.patchFolder(this.folders.opp, f.opp, { animate: f.animate !== false });
+    $('#edge').className = `h-edge ${f.over ? '' : f.mine ? 'is-me' : 'is-opp'}`;
   }
-  // etiqueta carimbada saindo de trás da pasta (igual à referência 2D)
-  caixaTag(mine, amount, heal) {
-    const t = $(mine ? '#tag-me' : '#tag-opp');
-    t.lastElementChild.textContent = `${heal ? '+' : '-'} $ ${Math.round(amount).toLocaleString('pt-BR')}`;
-    t.className = `tag ${heal ? 'heal' : 'dmg'}`; void t.offsetWidth; t.classList.add('go');
+  setTurn(p) {
+    const h = C.turnPanel(p), slot = $('#slot-turn');
+    if (this._turn !== h) { slot.innerHTML = h; this._turn = h; }
+    // quando a vez troca, o painel "vira" para chamar atenção
+    if (this._mine !== undefined && this._mine !== p.mine) { slot.classList.remove('is-flip'); void slot.offsetWidth; slot.classList.add('is-flip'); }
+    this._mine = p.mine;
+    // dicas presas a uma vez (sua/rival) somem quando a vez muda
+    const ctx = p.mine ? 'me' : 'foe';
+    this.tutorQ = this.tutorQ.filter((t) => !t.ctx || t.ctx === ctx);
+    if (this._tipCtx && this._tipCtx !== ctx && !$('#slot-coach').classList.contains('hidden')) this.tutorNext();
   }
-  setButtons(b) {
-    const bb = $('#btn-battle'), be = $('#btn-end');
-    bb.disabled = !b.battle.enabled; bb.firstElementChild.textContent = b.battle.label; bb.title = b.battle.hint || '';
-    bb.classList.toggle('hidden', !!b.battle.hidden);
-    be.disabled = !b.end.enabled;
-    // um botão principal por vez: o próximo passo recomendado
-    bb.classList.toggle('main', b.primary === 'battle'); be.classList.toggle('main', b.primary === 'end'); be.classList.toggle('pulse', b.primary === 'end' && !!b.end.pulse);
-    $('#pills').innerHTML = (b.pills ?? []).map((p) => `<span class="${p.on ? 'on' : ''}" title="${p.tip}">${p.text}</span>`).join('');
+  toggleLog() { const l = $('#slot-log'); l.classList.toggle('hidden'); this.renderBar(); if (!l.classList.contains('hidden')) $('.h-log__list', l).scrollTop = 1e6; sfx('select'); }
+  clearLog() { $('.h-log__list').innerHTML = ''; }
+  log(text, type = '', who = 'sys') {
+    const list = $('.h-log__list'), tmp = el('div', '', C.logLine({ text, type, who }));
+    list.appendChild(tmp.firstElementChild);
+    while (list.children.length > 160) list.firstChild.remove();
+    list.scrollTop = list.scrollHeight;
+    if (TICKER.has(type)) this.ticker(text, who, type);
   }
-  toggleLog() { const l = $('#log'); l.classList.toggle('hidden'); $('#btn-log').classList.toggle('on', !l.classList.contains('hidden')); if (!l.classList.contains('hidden')) $('#log-lines').scrollTop = 1e6; sfx('select'); }
-  // faixa no topo com a última jogada (substitui o relatório sempre aberto)
-  ticker(text, type) {
-    const t = $('#ticker'); t.textContent = text; t.className = `ticker ${type}`; void t.offsetWidth; t.classList.add('go');
-    clearTimeout(this.tickT); this.tickT = setTimeout(() => t.classList.add('hidden'), 3600);
+  ticker(text, who, type) {
+    const t = $('#slot-ticker'); t.innerHTML = C.ticker({ text, who, tone: type === 'trapTriggered' || type === 'destroy' ? 'stop' : null });
+    t.classList.remove('hidden', 'is-go'); void t.offsetWidth; t.classList.add('is-go');
+    clearTimeout(this.tickT); this.tickT = setTimeout(() => t.classList.add('hidden'), 3800);
   }
-  coach(text) { const c = $('#coach'); if (c.textContent !== text) c.textContent = text; }
-  clearLog() { $('#log-lines').innerHTML = ''; }
-  log(line, type = '') {
-    const box = $('#log-lines'), d = el('div', `l ${type}`); d.textContent = line; box.appendChild(d);
-    while (box.children.length > 120) box.firstChild.remove();
-    box.scrollTop = box.scrollHeight;
-    if (TICKER.has(type)) this.ticker(line, type);
-  }
-  banner(title, sub, kind = 'me') {
-    const b = $('#banner'), tEl = $('#banner-title'); $('#banner-sub').textContent = sub ?? '';
+  banner(title, sub, tone = 'me') {
+    const b = $('#slot-banner'); b.innerHTML = C.banner({ title, sub, tone });
+    const tEl = $('.h-banner__title', b);
     clearInterval(this.scrT); let n = 0; const total = 9;
+    // o título "decodifica" a partir de dígitos, como nos terminais do andar
     const draw = () => { tEl.textContent = [...title].map((ch, i) => (ch === ' ' || i < (n / total) * title.length ? ch : String(Math.floor(Math.random() * 10)))).join(''); if (n++ >= total) clearInterval(this.scrT); };
     draw(); this.scrT = setInterval(draw, 34);
-    b.className = `banner ${kind}`; void b.offsetWidth; b.classList.add('go');
+    b.classList.remove('is-go'); void b.offsetWidth; b.classList.add('is-go');
   }
-  toast(msg) {
-    const t = $('#toast'); t.textContent = msg; t.classList.remove('hidden'); t.classList.remove('go'); void t.offsetWidth; t.classList.add('go');
-    clearTimeout(this.toastT); this.toastT = setTimeout(() => t.classList.add('hidden'), 3200);
+  toast(text, tone = 'stop') {
+    const t = $('#slot-toast'); t.innerHTML = C.toast({ text, tone });
+    t.classList.remove('hidden', 'is-go'); void t.offsetWidth; t.classList.add('is-go');
+    clearTimeout(this.toastT); this.toastT = setTimeout(() => t.classList.add('hidden'), 3400);
   }
-  // dicas de primeira vez (fila; cada uma aparece só uma vez)
-  tutor(id, html) {
+  // dicas de primeira vez (fila; cada uma aparece só uma vez) — tip: { title, html, anchor }
+  tutor(id, tip) {
     const s = settings.get();
     if (s.tipsOff || s.tips?.[id]) return;
     settings.set({ tips: { ...(s.tips ?? {}), [id]: true } });
-    this.tutorQ.push(html);
-    if ($('#tutor').classList.contains('hidden')) this.tutorNext();
+    this.tutorQ.push(typeof tip === 'string' ? { html: tip } : tip);
+    if ($('#slot-coach').classList.contains('hidden')) this.tutorNext();
   }
   tutorNext() {
-    const next = this.tutorQ.shift();
-    this.show('tutor', !!next);
-    if (next) { $('#tutor-text').innerHTML = next; sfx('turn'); }
+    const next = this.tutorQ.shift(), slot = $('#slot-coach');
+    this.show('slot-coach', !!next);
+    if (!next) { this._tipCtx = null; return; }
+    this._tipCtx = next.ctx;
+    const seen = Object.keys(settings.get().tips ?? {}).length;
+    slot.className = `h-slot--coach is-${next.anchor ?? 'top'}`;
+    slot.innerHTML = C.coach({ ...next, step: Math.max(1, seen - this.tutorQ.length), of: 7 });
+    sfx('turn');
   }
-  hint(text, o = {}) {
-    this.show('hint', !!text); if (!text) return;
-    $('#hint-text').textContent = text;
-    $('#hint-cancel').classList.toggle('hidden', o.cancel === false);
-    const a = $('#hint-action'); a.classList.toggle('hidden', !o.action); if (o.action) a.textContent = o.action;
+  // barra de instrução: { icon, text, count, action, cancel } | null
+  prompt(p) {
+    const s = $('#slot-prompt'); this.show('slot-prompt', !!p);
+    $('#slot-center').classList.toggle('has-prompt', !!p);
+    if (p) s.innerHTML = C.prompt(p);
   }
-  limit(text) { this.show('limit', !!text); if (text) $('#limit').textContent = text; }
-  menu(options) {
-    const m = $('#amenu'); this.show('amenu', !!options); if (!options) return;
-    m.innerHTML = options.map((o) => `<button data-k="${o.key}" class="${o.cls}"><b>${o.label}${o.key2 ? `<kbd>${o.key2}</kbd>` : ''}</b>${o.sub ? `<small>${o.sub}</small>` : ''}</button>`).join('') + '<button data-act="cancel" class="ghost">Cancelar</button>';
-  }
-  menuPos(x, y) { const m = $('#amenu'), z = this.scale, W = window.innerWidth / z; m.style.left = `${Math.max(170, Math.min(W - 170, x / z))}px`; m.style.top = `${Math.max(250, y / z - 12)}px`; }
-  cardBody(d, o) {
-    const fx = isEffect(d), cur = o.cur;
-    const cls = (v, b) => (v > b ? 'up' : v < b ? 'down' : '');
-    const stats = fx ? '' : `<div class="d-stats">
-        <span class="${cur ? cls(cur.atk, d.atk) : ''}"><i class="ic">${ICON.atk}</i><small>ATQ</small>${money(cur ? cur.atk : d.atk)}</span>
-        <span class="${cur ? cls(cur.def, d.def) : ''}"><i class="ic">${ICON.def}</i><small>DEF</small>${money(cur ? cur.def : d.def)}</span>
-        <span class="cost">${d.cost ? `<small>custo</small>${'<i class="pip">✕</i>'.repeat(d.cost)}` : '<small>custo</small>grátis'}</span></div>`;
-    return `<div class="d-name">${esc(d.name)}</div>
-      <div class="d-type">${KIND[d.kind]} · ${esc(d.element)} · depto. ${DEPT[d.department] ?? d.department}</div>
-      ${stats}<div class="d-rules">${rulesHtml(d.id)}</div>${glossHtml(d.id)}`;
-  }
+  limit(text) { this.show('slot-limit', !!text); if (text) $('#slot-limit').innerHTML = C.toast({ text, tone: 'stop' }); }
+  // menu de ação: { title, note, options } | null
+  menu(p) { const m = $('#amenu'); this.show('amenu', !!p); if (p) m.innerHTML = C.actionMenu(p); }
+  menuPos(x, y) { const m = $('#amenu'), z = this.scale, W = window.innerWidth / z; m.style.left = `${Math.max(16 + 296 + 16 + 160, Math.min(W - 176, x / z))}px`; m.style.top = `${Math.max(260, y / z - 12)}px`; }
+  // ficha da carta: props de C.cardSheet | null
   detail(d) {
-    const box = $('#detail'); this.show('detail', !!d); if (!d) return;
-    const key = JSON.stringify(d); if (box.dataset.k === key) return; box.dataset.k = key;
-    const notes = (d.lines ?? []).map((l) => `<div>${esc(l)}</div>`).join('');
-    if (d.faceDown || !d.cardId) { box.innerHTML = `<img class="d-back" src="${asset('cards/back.png')}" alt=""><div class="d-body"><div class="d-notes">${notes}</div></div>`; return; }
-    const def = defOf(d.cardId);
-    box.innerHTML = `<img src="${faceUrl(d.cardId)}" alt=""><div class="d-body">${this.cardBody(def, d)}${notes ? `<div class="d-notes">${notes}</div>` : ''}</div>`;
-    box.classList.remove('compact', 'noimg');
-    if (box.scrollHeight > box.clientHeight + 2) { box.classList.add('compact'); if (box.scrollHeight > box.clientHeight + 2) box.classList.add('noimg'); }
+    const slot = $('#slot-sheet'); this.show('slot-sheet', !!d); if (!d) { this._sheet = null; return; }
+    const key = JSON.stringify(d); if (this._sheet === key) return; this._sheet = key;
+    slot.innerHTML = C.cardSheet(d);
+    C.fitSheet(slot.firstElementChild);
   }
-  preview(html) { this.show('preview', !!html); if (html) $('#preview').innerHTML = html; }
-  previewPos(x, y) { const p = $('#preview'), t = $('#tip'), z = this.scale, W = window.innerWidth / z; x /= z; y /= z; p.style.transform = `translate(${Math.min(W - 270, x + 24)}px, ${Math.max(10, y - 110)}px)`; t.style.transform = `translate(${Math.min(W - 320, x + 18)}px, ${y + 24}px)`; }
-  tip(text) { this.show('tip', !!text); if (text) $('#tip').textContent = text; }
+  // prévia de combate: props de C.combatPreview | null
+  preview(p) { this.show('preview', !!p); if (p) $('#preview').innerHTML = C.combatPreview(p); }
+  previewPos(x, y) {
+    const z = this.scale, W = window.innerWidth / z, H = window.innerHeight / z; x /= z; y /= z;
+    $('#preview').style.transform = `translate(${x + 64 + 240 < W ? x + 64 : x - 64 - 240}px, ${Math.max(12, Math.min(H - 220, y - 110))}px)`;
+    $('#tip').style.transform = `translate(${Math.min(W - 300, x + 18)}px, ${y + 24}px)`;
+  }
+  tip(text) { this.show('tip', !!text); if (text) $('#tip').innerHTML = `<div class="h-tip">${esc(text)}</div>`; }
+  // etiquetas da mesa: [{ id, x, y, chip }]
   chips(list) {
     const box = $('#chips'), seen = new Set();
     for (const c of list) {
       seen.add(c.id);
       let e = this.chipEls.get(c.id);
-      if (!e) { e = el('div', 'chip'); box.appendChild(e); this.chipEls.set(c.id, e); }
-      if (e.dataset.h !== c.html) { e.innerHTML = c.html; e.dataset.h = c.html; }
+      if (!e) { e = el('div', 'h-chipwrap'); box.appendChild(e); this.chipEls.set(c.id, e); }
+      const h = C.chip(c.chip);
+      if (e.dataset.h !== h) {
+        // número mudou numa carta da mesa: pisca para o jogador perceber
+        if (e.dataset.h && c.chip.kind === 'creature') { e.classList.remove('is-changed'); void e.offsetWidth; e.classList.add('is-changed'); }
+        e.innerHTML = h; e.dataset.h = h;
+      }
       e.style.transform = `translate(${Math.round(c.x / this.scale)}px, ${Math.round(c.y / this.scale)}px) translate(-50%, 0)`;
     }
     for (const [id, e] of this.chipEls) if (!seen.has(id)) { e.remove(); this.chipEls.delete(id); }
   }
   float(x, y, text, cls = '') {
-    const f = el('div', `float ${cls}`); f.textContent = text; f.style.left = `${x / this.scale}px`; f.style.top = `${y / this.scale}px`;
+    const f = el('div', `h-float is-${cls}`); f.textContent = text; f.style.left = `${x / this.scale}px`; f.style.top = `${y / this.scale}px`;
     $('#floats').appendChild(f); setTimeout(() => f.remove(), 1700);
   }
   clash(pos, a, b, mode) {
-    const f = el('div', 'float clash', `<b>${a}</b><i>${ICON.atk}</i><i>${mode === 'DEF' ? ICON.def : ICON.atk}</i><b>${b}</b>`); f.style.left = `${pos.x / this.scale}px`; f.style.top = `${pos.y / this.scale - 44}px`;
+    const f = el('div', 'h-float is-clash', `<b>${a}</b><i>${ICON.atk}</i><span>×</span><i>${mode === 'DEF' ? ICON.def : ICON.atk}</i><b>${b}</b>`);
+    f.style.left = `${pos.x / this.scale}px`; f.style.top = `${pos.y / this.scale - 44}px`;
     $('#floats').appendChild(f); setTimeout(() => f.remove(), 1500);
   }
   gameOver(o) {
