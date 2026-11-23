@@ -149,6 +149,19 @@ Haverá vários departamentos, cada um com um estilo de jogo (como as cores do M
 - **Coleção e montador de deck:** deck de 40, até 2 cópias.
 - **Save:** salvo no navegador (sem login) até existir o modo online.
 
+### Como está no jogo hoje (lobby v1, 23/11/2026)
+Os números abaixo ficam em `data/meta.json` e podem ser trocados sem mexer em código.
+- **Começo:** kit do novato (40 cartas que nunca se perdem) e $3.000 de PATRIMÔNIO.
+- **Deck:** 40 cartas, até 3 cópias (exceção enquanto houver menos de 20 cartas diferentes), até 6 decks salvos.
+- **Recompensa:** vitória paga o CAIXA que sobrou; derrota e empate não pagam; abandonar a partida conta como derrota.
+- **Rival:** sorteado entre as 11 empresas, com um deck sorteado **só entre as cartas que o jogador já tem**. O ranking em escada ainda não foi feito.
+- **Raridade** (em `data/cards.json`): 10 comuns, 6 raras, 3 lendárias (Chat GPT, Thays, Filipe).
+- **Loja:** pacote de 3 cartas por $3.000 (62% comum, 30% rara, 8% lendária; não entrega cópia sobrando enquanto faltar carta); avulsa por $1.500 / $3.000 / $6.000; 3 decks prontos por $9.000 (entregam as cartas que faltam); logos e versos de carta de $2.500 a $5.000.
+- **Reciclar:** cópias além do limite de um deck devolvem 25% do preço.
+- **Metas do dia:** 3 por dia, de $800 a $1.200, valem em duelos de verdade e pagam mesmo na derrota.
+- **Conquistas:** 17, de $1.000 a $8.000.
+- **Treino:** contra o estagiário (IA que erra quase metade das jogadas); não paga nem conta para nada.
+
 ### Empresas-paródia (primeira lista, para você editar)
 | # | Empresa | Tema do deck |
 |---|---|---|

@@ -3,8 +3,11 @@
 import * as THREE from 'three';
 import {
   RULES, cardDef, isEffect, other, creaturesOf, findCreature, statsOf, canAttack, maxAttacks,
-  legalActions, applyAction, aiChoose, createGame, handLimitStatus, previewAttack,
+  legalActions, applyAction, aiChoose, aiWeak, createGame, handLimitStatus, previewAttack,
 } from './engine.js';
+import { backTexture } from './cosmetics.js';
+import { save } from './save.js';
+import { newTracker, track } from '../../src/meta/meta.ts';
 import { RIVALS } from './cards.js';
 import { CARD, LAYOUT, TABLE, cardFaceTexture, cardBackTexture, money, coinTexture } from './textures.js';
 import { cardMaterial, glowMaterial, tween, wait, ease, LAYER, cardMats } from './gfx.js';
@@ -46,19 +49,26 @@ export class Duel {
   }
 
   // ───────── ciclo de partida ─────────
-  async newGame() {
+  // opts: { training, deck, pool } — treino é contra o estagiário (IA fraca) e não vale nada;
+  // deck = lista de 40 ids do lobby; pool = cartas que o rival pode usar (as que o jogador já tem)
+  async newGame(opts = {}) {
     this.clearCards();
     this.ui.gameOver(null); this.ui.hud(true); this.ui.clearLog();
-    const rival = RIVALS[Math.floor(Math.random() * RIVALS.length)];
+    this.training = !!opts.training;
+    const rival = this.training ? 'ESTAGIÁRIO' : RIVALS[Math.floor(Math.random() * RIVALS.length)];
     this.names = [settings.get().companyName ?? 'SUA EMPRESA', rival];
-    const { state, events, seed } = createGame(this.names);
-    this.state = state; this.legal = []; this.sel = null; this.over = false; this.started = false; this.active = true; this.busy = true;
+    const { state, events, seed } = createGame(this.names, { myDeck: opts.deck ?? null, rivalPool: opts.pool ?? null });
+    // acompanha o que o jogador faz (metas, conquistas, estatísticas) e veste as cartas dele com o verso escolhido
+    this.tracker = newTracker(state, ME); track(this.tracker, events, state);
+    const look = save.get().cosmetics; this.myBack = backTexture(look.back, look.logo);
+    { const m = this.R.decks[ME].material[2]; m.map = this.myBack; m.emissiveMap = this.myBack; m.needsUpdate = true; }
+    this.state = state; this.legal = []; this.sel = null; this.over = false; this.closed = false; this.started = false; this.active = true; this.busy = true;
     this.caixaShown = [RULES.STARTING_CAIXA, RULES.STARTING_CAIXA];
     this.deckShown = [RULES.DECK_SIZE, RULES.DECK_SIZE];
     this.R.opp.face.uDead.value = 0; this.R.opp.face.uOn.value = 1; this.oppMood = 0;
     this.gfx.u.uFade.value = 0; this.lampOn = 1;
     setMusicMode('duel'); setTension(0); this.R.setBadge(rival);
-    this.ui.log(`Partida contra ${rival} · protocolo ${seed.toString(36).toUpperCase()}`);
+    this.ui.log(this.training ? 'Treino com o estagiário · não vale PATRIMÔNIO' : `Partida contra ${rival} · protocolo ${seed.toString(36).toUpperCase()}`);
     this.indexCards();
     this.refreshHud();
     await wait(350);
@@ -87,6 +97,7 @@ export class Duel {
     this.busy = true; this.setSel(null);
     const prev = this.placements(this.state);
     this.state = res.state; this.indexCards();
+    if (this.tracker) track(this.tracker, res.events, this.state);
     this.refreshHud();
     await this.play(res.events, prev);
     this.afterAction();
@@ -107,7 +118,7 @@ export class Duel {
     wait(780 / sp).then(() => {
       this.thinking = false;
       if (!this.active || this.state.phase === 'over' || this.state.active !== OP) { this.busy = false; return; }
-      const a = aiChoose(this.state);
+      const a = this.training ? aiWeak(this.state) : aiChoose(this.state);
       this.busy = false;
       this.oppNod = 1;
       this.apply(a);
@@ -133,7 +144,7 @@ export class Duel {
     const cardId = this.cardIndex.get(uid);
     const group = new THREE.Group();
     const front = new THREE.Mesh(cardGeo, cardMaterial(cardFaceTexture(cardId)));
-    const back = new THREE.Mesh(cardGeo, cardMaterial(cardBackTexture())); back.rotation.y = Math.PI;
+    const back = new THREE.Mesh(cardGeo, cardMaterial(this.tracker?.owner[uid] === ME && this.myBack ? this.myBack : cardBackTexture())); back.rotation.y = Math.PI;
     const glow = new THREE.Mesh(glowGeo, glowMaterial()); glow.position.z = -0.004; glow.visible = false; glow.renderOrder = 5; glow.layers.set(LAYER.GLOW);
     glow.material.uniforms.uAspect.value = CARD.w / CARD.h;
     const hit = new THREE.Mesh(hitGeo, hitMat); hit.visible = false;
@@ -445,13 +456,25 @@ export class Duel {
       await tween(1600, (k) => { this.lampOn = 1 - k * 0.92; });
     }
     const s = this.state, name = this.names[OP];
+    const out = this.closeMatch(draw ? 'draw' : win ? 'win' : 'loss');
     this.ui.gameOver({
       win, draw,
+      reward: this.training ? 'Treino: não vale PATRIMÔNIO nem entra no histórico.' : out?.reward ? `+ ${money(out.reward)} de PATRIMÔNIO` : win ? '' : 'Os investidores não pagam derrota. As metas do mural pagam.',
       title: draw ? 'EMPATE' : win ? 'VOCÊ VENCEU' : 'VOCÊ FALIU',
       sub: e.reason === 'turn_limit' ? 'Limite de turnos atingido: vence quem tem mais CAIXA.' : win ? `${name} ficou sem CAIXA. Os investidores aprovam.` : `Seu CAIXA zerou. ${name} leva o investimento.`,
       stats: `CAIXA final · você ${money(s.players[ME].caixa)} · ${name} ${money(s.players[OP].caixa)} · ${s.turn} turnos`,
     });
   }
+
+  /** Fecha a partida uma vez só e entrega o resultado ao lobby (main.js grava e devolve recompensa e conquistas). */
+  closeMatch(result) {
+    if (this.closed || !this.tracker || !this.state) return null;
+    this.closed = true;
+    const s = this.state;
+    return this.onMatchEnd?.({ rival: this.names[OP], result, turns: s.turn, caixa: [s.players[ME].caixa, s.players[OP].caixa], counters: this.tracker.c, training: this.training, startingCaixa: RULES.STARTING_CAIXA }) ?? null;
+  }
+  /** Abandonar uma partida em andamento conta como derrota. */
+  forfeit() { if (this.active && !this.over) this.closeMatch('loss'); }
 
   // ───────── VFX procedurais ─────────
   bump(a) { if (settings.get().shake) this.shake = Math.min(1, this.shake + a); }
@@ -538,7 +561,7 @@ export class Duel {
     });
     this.ui.on({
       battle: () => this.pressBattle(), end: () => this.pressEnd(), menuPick: (k) => this.pickMenu(k), cancel: () => this.cancel(),
-      direct: () => this.pickDirect(), again: () => this.newGame(),
+      direct: () => this.pickDirect(), again: () => (this.rematch ? this.rematch() : this.newGame()),
     });
   }
   setRay(cam) {

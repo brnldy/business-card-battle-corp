@@ -12,6 +12,28 @@ O projeto passou a viver neste repositório, juntando as duas frentes:
 - A versão Phaser e a 3D feita aqui (descritas abaixo) ficaram guardadas num ramo local, `historico-yugioro`, que não sobe para o GitHub. A estética oficial é a do remake.
 - Regra de trabalho: tudo que fizermos sobe neste repositório.
 
+### Lobby 3D (23/11/2026)
+Entre o menu (a rua) e o duelo agora existe o **lobby**: a recepção da empresa por dentro, em 3D, no clima de escritório decadente, pós-apocalíptico e amaldiçoado. Cada área é um objeto clicável da sala (e também um atalho numérico na barra de baixo):
+
+| Objeto | Área | O que faz |
+|---|---|---|
+| Porta dupla "Sala de reunião" | Duelo | Entra num duelo valendo, com o deck escolhido |
+| Arquivos de aço | Decks e coleção | Montador de deck (até 6 decks), coleção com contador e ficha de cada carta |
+| Máquina de benefícios | Loja | Pacotes (com abertura carta a carta), cartas avulsas, decks prontos e visual |
+| Mural de cortiça | Metas do dia | 3 metas por dia que pagam mesmo na derrota |
+| Prateleira de troféus | Conquistas | 17 conquistas, cada uma com bônus |
+| Recepção (monitor de tubo) | Perfil | Nome da empresa, estatísticas, histórico de batalhas e visual (logo e verso das cartas) |
+| Estagiário de caixa na cabeça | Treino | Partida contra uma IA que erra; não vale nada |
+| Trituradora | Reciclar | Cópias além do limite viram PATRIMÔNIO |
+| Quadro de luz | Configurações | A janela de configurações de sempre |
+
+- **Regras e números:** `src/meta/meta.ts` (lógica pura, 16 testes em `tests/meta.test.ts`) e `data/meta.json` (preços, chances do pacote, kit do novato, decks prontos, metas, conquistas, itens de visual). A raridade de cada carta está em `data/cards.json`.
+- **Telas:** `remake/src/lobby.js` (sala 3D), `remake/src/lobbyui.js` + `lobby.css` (janelas), `remake/src/cosmetics.js` (5 logos e 5 versos desenhados por código), `remake/src/save.js` (progresso no navegador, chave `bcbc:save`).
+- **Economia:** começa com o kit do novato (40 cartas, 14 diferentes) e $3.000. Vitória paga o CAIXA que sobrou; derrota não paga; abandonar conta como derrota.
+- **Rivais justos:** o deck do rival é sorteado **só entre as cartas que o jogador já tem**. Sem isso, o kit do novato vencia 11% das partidas contra rivais com as cartas raras; com isso, 59% (simulação de 300 partidas IA × IA).
+- **Ficou de fora por decisão do autor:** o ranking em escada das 11 empresas (o rival segue sorteado).
+- Para testar direto: `http://localhost:5178/dist/?lobby`.
+
 ### Cartas niveladas + carta 19 (23/11/2026)
 - O autor reexportou as 18 cartas com valores mais baixos e quase todo custo zerado (só Chat GPT 2, Siamesas 1 e Thays 1). As cartas 13–16 trocaram de número: Paulo 13, Pão 14, Pilha 15, Café 16 (o ID segue o arquivo).
 - Carta nova **BCB-019 Filipe, the Bear**: desvia o ataque para outra criatura de quem atacou (2 vezes na partida) e faz dupla com a Nath (+$100 ATQ/DEF para os dois). Detalhes em `docs/CARDS.md`.

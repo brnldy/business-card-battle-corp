@@ -50,9 +50,10 @@ export class UI {
         <div class="h-follow hidden" id="preview"></div>
         <div class="h-follow hidden" id="tip"></div>
       </div>
-      <div id="over" class="screen hidden"><div class="over-box"><div class="memo" id="over-memo"></div><h2 id="over-title"></h2><p id="over-sub"></p><p class="stats" id="over-stats"></p><nav><button data-act="quit2">Menu</button><button data-act="again" class="primary">Nova partida</button></nav></div></div>
+      <div id="over" class="screen hidden"><div class="over-box"><div class="memo" id="over-memo"></div><h2 id="over-title"></h2><p id="over-sub"></p><p class="stats" id="over-stats"></p><p class="reward" id="over-reward"></p><nav><button data-act="quit2">Voltar ao lobby</button><button data-act="again" class="primary">Nova partida</button></nav></div></div>
       <div id="modal" class="screen hidden"></div>
-      <div id="unlock" class="hidden">clique para ligar o som</div>`;
+      <div id="unlock" class="hidden">clique para ligar o som</div>
+      <div id="fade"></div>`;
     this.folders = { me: $('#slot-me .h-folder'), opp: $('#slot-opp .h-folder') };
     this.renderBar();
     root.addEventListener('click', (e) => {
@@ -101,8 +102,8 @@ export class UI {
     m.onclick = (e) => { if (e.target === m || e.target.closest('[data-close]')) this.closeModal(); };
     return m.firstElementChild;
   }
-  confirm(title, body, yes, onYes) {
-    const box = this.modal(`<h2>${esc(title)}</h2><p>${esc(body)}</p><nav><button data-close>Continuar jogando</button><button id="cf-yes" class="primary">${esc(yes)}</button></nav>`);
+  confirm(title, body, yes, onYes, no = 'Cancelar') {
+    const box = this.modal(`<h2>${esc(title)}</h2><p>${esc(body)}</p><nav><button data-close>${esc(no)}</button><button id="cf-yes" class="primary">${esc(yes)}</button></nav>`);
     $('#cf-yes', box).onclick = () => { $('#modal').classList.add('hidden'); $('#modal').innerHTML = ''; onYes(); };
   }
   nameEntry(onDone) {
@@ -295,7 +296,7 @@ export class UI {
     this.show('over', !!o); if (!o) return;
     $('#over').className = `screen ${o.win ? 'win' : o.draw ? 'draw' : 'lose'}`;
     $('#over-memo').textContent = o.win ? 'Comunicado aos acionistas · aprovado' : o.draw ? 'Ata de reunião · sem deliberação' : 'Aviso de falência · 2ª via';
-    $('#over-title').textContent = o.title; $('#over-sub').textContent = o.sub; $('#over-stats').textContent = o.stats;
+    $('#over-title').textContent = o.title; $('#over-sub').textContent = o.sub; $('#over-stats').textContent = o.stats; $('#over-reward').textContent = o.reward ?? ''; $('#over-reward').className = `reward ${o.win ? 'good' : ''}`;
   }
 }
 export { ICON };

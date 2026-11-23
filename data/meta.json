@@ -1,0 +1,348 @@
+{
+  "version": "0.1",
+  "_nota": "Economia do lobby (fora da partida). Todos os preços, raridades, metas e conquistas são editáveis aqui. Regras em docs/GDD.md §13.",
+  "startingPatrimonio": 3000,
+  "historyLimit": 50,
+  "maxDecks": 6,
+  "recycleRate": 0.25,
+  "lossReward": 0,
+  "singlePrice": {
+    "common": 1500,
+    "rare": 3000,
+    "legendary": 6000
+  },
+  "booster": {
+    "price": 3000,
+    "size": 3,
+    "odds": {
+      "common": 62,
+      "rare": 30,
+      "legendary": 8
+    }
+  },
+  "starterDeck": {
+    "name": "Kit do novato",
+    "cards": {
+      "BCB-001": 3,
+      "BCB-002": 3,
+      "BCB-003": 2,
+      "BCB-004": 3,
+      "BCB-006": 3,
+      "BCB-008": 3,
+      "BCB-009": 3,
+      "BCB-010": 3,
+      "BCB-011": 3,
+      "BCB-012": 3,
+      "BCB-013": 3,
+      "BCB-014": 2,
+      "BCB-015": 3,
+      "BCB-018": 3
+    }
+  },
+  "readyDecks": [
+    {
+      "id": "barulho",
+      "name": "Barulho no Open Space",
+      "price": 9000,
+      "text": "Ataque rápido: criaturas que batem cedo e não deixam o rival respirar.",
+      "cards": {
+        "BCB-001": 3,
+        "BCB-009": 3,
+        "BCB-002": 3,
+        "BCB-007": 3,
+        "BCB-017": 3,
+        "BCB-010": 3,
+        "BCB-004": 3,
+        "BCB-018": 3,
+        "BCB-019": 3,
+        "BCB-012": 3,
+        "BCB-016": 3,
+        "BCB-015": 3,
+        "BCB-008": 2,
+        "BCB-006": 2
+      }
+    },
+    {
+      "id": "muralha",
+      "name": "Muralha do RH",
+      "price": 9000,
+      "text": "Defesa: paredes altas, armadilhas e o Chat GPT para fechar a conta.",
+      "cards": {
+        "BCB-013": 3,
+        "BCB-011": 3,
+        "BCB-006": 3,
+        "BCB-004": 3,
+        "BCB-018": 3,
+        "BCB-019": 3,
+        "BCB-005": 3,
+        "BCB-002": 3,
+        "BCB-003": 3,
+        "BCB-015": 3,
+        "BCB-008": 3,
+        "BCB-016": 3,
+        "BCB-014": 2,
+        "BCB-009": 2
+      }
+    },
+    {
+      "id": "horaextra",
+      "name": "Hora Extra",
+      "price": 9000,
+      "text": "Truques: efeitos, armadilhas e criaturas que mudam o jogo quando entram.",
+      "cards": {
+        "BCB-016": 3,
+        "BCB-015": 3,
+        "BCB-003": 3,
+        "BCB-014": 3,
+        "BCB-002": 3,
+        "BCB-017": 3,
+        "BCB-005": 3,
+        "BCB-007": 3,
+        "BCB-001": 3,
+        "BCB-012": 3,
+        "BCB-010": 3,
+        "BCB-019": 3,
+        "BCB-004": 2,
+        "BCB-018": 2
+      }
+    }
+  ],
+  "cosmetics": [
+    {
+      "id": "logo-clipe",
+      "kind": "logo",
+      "name": "Clipe torto",
+      "price": 0
+    },
+    {
+      "id": "logo-grafico",
+      "kind": "logo",
+      "name": "Gráfico otimista",
+      "price": 0
+    },
+    {
+      "id": "logo-olho",
+      "kind": "logo",
+      "name": "Olho da diretoria",
+      "price": 2500
+    },
+    {
+      "id": "logo-gravata",
+      "kind": "logo",
+      "name": "Gravata com dentes",
+      "price": 3500
+    },
+    {
+      "id": "logo-cafe",
+      "kind": "logo",
+      "name": "Café com tentáculos",
+      "price": 5000
+    },
+    {
+      "id": "back-original",
+      "kind": "back",
+      "name": "Padrão da firma",
+      "price": 0
+    },
+    {
+      "id": "back-carbono",
+      "kind": "back",
+      "name": "Papel carbono",
+      "price": 0
+    },
+    {
+      "id": "back-mofo",
+      "kind": "back",
+      "name": "Mofo de arquivo",
+      "price": 2500
+    },
+    {
+      "id": "back-estatica",
+      "kind": "back",
+      "name": "Estática de TV",
+      "price": 3000
+    },
+    {
+      "id": "back-carpete",
+      "kind": "back",
+      "name": "Carpete do 13º andar",
+      "price": 4000
+    },
+    {
+      "id": "back-planilha",
+      "kind": "back",
+      "name": "Planilha infinita",
+      "price": 5000
+    }
+  ],
+  "missionsPerDay": 3,
+  "missions": [
+    {
+      "id": "play2",
+      "kind": "play",
+      "goal": 2,
+      "reward": 800,
+      "text": "Dispute 2 partidas"
+    },
+    {
+      "id": "win1",
+      "kind": "win",
+      "goal": 1,
+      "reward": 1200,
+      "text": "Vença 1 partida"
+    },
+    {
+      "id": "summon8",
+      "kind": "summon",
+      "goal": 8,
+      "reward": 800,
+      "text": "Invoque 8 criaturas"
+    },
+    {
+      "id": "destroy5",
+      "kind": "destroy",
+      "goal": 5,
+      "reward": 1000,
+      "text": "Destrua 5 criaturas do rival"
+    },
+    {
+      "id": "damage6k",
+      "kind": "damage",
+      "goal": 6000,
+      "reward": 1000,
+      "text": "Tire $ 6.000 do CAIXA rival"
+    },
+    {
+      "id": "effect3",
+      "kind": "effect",
+      "goal": 3,
+      "reward": 800,
+      "text": "Use 3 cartas de efeito"
+    },
+    {
+      "id": "trap2",
+      "kind": "trap",
+      "goal": 2,
+      "reward": 800,
+      "text": "Arme 2 armadilhas"
+    },
+    {
+      "id": "sacrifice2",
+      "kind": "sacrifice",
+      "goal": 2,
+      "reward": 900,
+      "text": "Sacrifique 2 criaturas"
+    },
+    {
+      "id": "direct2",
+      "kind": "direct",
+      "goal": 2,
+      "reward": 900,
+      "text": "Ataque o CAIXA rival direto 2 vezes"
+    }
+  ],
+  "achievements": [
+    {
+      "id": "first_win",
+      "name": "Primeiro contrato",
+      "text": "Vença 1 partida",
+      "reward": 1000
+    },
+    {
+      "id": "wins_5",
+      "name": "Funcionário do mês",
+      "text": "Vença 5 partidas",
+      "reward": 2000
+    },
+    {
+      "id": "wins_10",
+      "name": "Promoção merecida",
+      "text": "Vença 10 partidas",
+      "reward": 3000
+    },
+    {
+      "id": "wins_25",
+      "name": "Sócio majoritário",
+      "text": "Vença 25 partidas",
+      "reward": 6000
+    },
+    {
+      "id": "streak_3",
+      "name": "Sequência de fechamentos",
+      "text": "Vença 3 partidas seguidas",
+      "reward": 2000
+    },
+    {
+      "id": "flawless",
+      "name": "Balanço perfeito",
+      "text": "Vença com o CAIXA intacto",
+      "reward": 3000
+    },
+    {
+      "id": "clutch",
+      "name": "No cheque especial",
+      "text": "Vença com $ 500 ou menos de CAIXA",
+      "reward": 2000
+    },
+    {
+      "id": "fast",
+      "name": "Reunião que virou e-mail",
+      "text": "Vença em até 10 turnos",
+      "reward": 2000
+    },
+    {
+      "id": "big_hit",
+      "name": "Corte de custos",
+      "text": "Tire $ 2.500 ou mais do rival num golpe só",
+      "reward": 1500
+    },
+    {
+      "id": "fake_news",
+      "name": "Eu vi num insta",
+      "text": "Desvie um ataque com o Filipe",
+      "reward": 1500
+    },
+    {
+      "id": "louro",
+      "name": "Louro José",
+      "text": "Tenha Nath e Filipe juntos na mesa",
+      "reward": 1500
+    },
+    {
+      "id": "collector",
+      "name": "Arquivo completo",
+      "text": "Tenha pelo menos 1 cópia de cada carta",
+      "reward": 4000
+    },
+    {
+      "id": "packs_10",
+      "name": "Viciado em envelope",
+      "text": "Abra 10 pacotes",
+      "reward": 2000
+    },
+    {
+      "id": "recycler",
+      "name": "Enxugando a folha",
+      "text": "Recicle 10 cartas",
+      "reward": 1500
+    },
+    {
+      "id": "rivals_all",
+      "name": "Monopólio",
+      "text": "Vença todas as empresas rivais",
+      "reward": 8000
+    },
+    {
+      "id": "deck_builder",
+      "name": "Organograma próprio",
+      "text": "Salve um deck montado por você",
+      "reward": 1000
+    },
+    {
+      "id": "stylist",
+      "name": "Rebranding",
+      "text": "Troque o logo e o verso das cartas",
+      "reward": 1000
+    }
+  ]
+}

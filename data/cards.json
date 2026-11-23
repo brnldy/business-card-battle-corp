@@ -38,7 +38,7 @@
         }
       ],
       "art": "cards/full/BW_0001.png",
-      "rarity": null
+      "rarity": "common"
     },
     {
       "id": "BCB-002",
@@ -71,7 +71,7 @@
         }
       ],
       "art": "cards/full/BW_0002.png",
-      "rarity": null
+      "rarity": "common"
     },
     {
       "id": "BCB-003",
@@ -103,7 +103,7 @@
         }
       ],
       "art": "cards/full/BW_0003.png",
-      "rarity": null
+      "rarity": "common"
     },
     {
       "id": "BCB-004",
@@ -148,7 +148,7 @@
         }
       ],
       "art": "cards/full/BW_0004.png",
-      "rarity": null
+      "rarity": "rare"
     },
     {
       "id": "BCB-005",
@@ -178,7 +178,7 @@
         }
       ],
       "art": "cards/full/BW_0005.png",
-      "rarity": null
+      "rarity": "legendary"
     },
     {
       "id": "BCB-006",
@@ -205,7 +205,7 @@
         }
       ],
       "art": "cards/full/BW_0006.png",
-      "rarity": null
+      "rarity": "common"
     },
     {
       "id": "BCB-007",
@@ -230,7 +230,7 @@
         }
       ],
       "art": "cards/full/BW_0007.png",
-      "rarity": null
+      "rarity": "rare"
     },
     {
       "id": "BCB-008",
@@ -269,7 +269,7 @@
         }
       ],
       "art": "cards/full/BW_0008.png",
-      "rarity": null
+      "rarity": "common"
     },
     {
       "id": "BCB-009",
@@ -293,7 +293,7 @@
         }
       ],
       "art": "cards/full/BW_0009.png",
-      "rarity": null
+      "rarity": "common"
     },
     {
       "id": "BCB-010",
@@ -315,7 +315,7 @@
         }
       ],
       "art": "cards/full/BW_0010.png",
-      "rarity": null
+      "rarity": "common"
     },
     {
       "id": "BCB-011",
@@ -334,7 +334,7 @@
         }
       ],
       "art": "cards/full/BW_0011.png",
-      "rarity": null
+      "rarity": "rare"
     },
     {
       "id": "BCB-012",
@@ -347,7 +347,7 @@
       "def": 350,
       "abilities": [],
       "art": "cards/full/BW_0012.png",
-      "rarity": null
+      "rarity": "common"
     },
     {
       "id": "BCB-013",
@@ -373,7 +373,7 @@
         }
       ],
       "art": "cards/full/BW_0013.png",
-      "rarity": null
+      "rarity": "common"
     },
     {
       "id": "BCB-014",
@@ -397,7 +397,7 @@
         }
       ],
       "art": "cards/full/BW_0014.png",
-      "rarity": null
+      "rarity": "common"
     },
     {
       "id": "BCB-015",
@@ -420,7 +420,7 @@
         }
       ],
       "art": "cards/full/BW_0015.png",
-      "rarity": null
+      "rarity": "rare"
     },
     {
       "id": "BCB-016",
@@ -447,7 +447,7 @@
         }
       ],
       "art": "cards/full/BW_0016.png",
-      "rarity": null
+      "rarity": "rare"
     },
     {
       "id": "BCB-017",
@@ -484,7 +484,7 @@
         }
       ],
       "art": "cards/full/BW_0017.png",
-      "rarity": null
+      "rarity": "legendary"
     },
     {
       "id": "BCB-018",
@@ -520,7 +520,7 @@
         }
       ],
       "art": "cards/full/BW_0018.png",
-      "rarity": null
+      "rarity": "rare"
     },
     {
       "id": "BCB-019",
@@ -554,7 +554,7 @@
         }
       ],
       "art": "cards/full/BW_0019.png",
-      "rarity": null
+      "rarity": "legendary"
     }
   ]
 }

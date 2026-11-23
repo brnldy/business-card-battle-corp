@@ -6,6 +6,12 @@ Dê dois cliques no arquivo (Chrome ou Edge recomendados):
 Espere "Abrindo o caixa… 100%" e clique uma vez na tela para liberar o som.
 Não precisa instalar nada nem de internet. Nome da empresa, volume e opções ficam salvos no navegador.
 
+O LOBBY
+"Iniciar expediente" leva para dentro do prédio. Cada objeto da sala é uma área (clique nele ou use os números 1 a 9):
+porta dupla = duelo · arquivos = decks e coleção · máquina = loja e pacotes · mural = metas do dia
+troféus = conquistas · recepção = perfil, histórico e visual · estagiário = treino · trituradora = reciclar repetidas
+Vencer um duelo paga o CAIXA que sobrou como PATRIMÔNIO. O progresso fica salvo no navegador.
+
 COMO JOGAR (resumo)
 - Objetivo: zerar o CAIXA do rival (a pasta com o nome dele). O seu CAIXA é a pasta de baixo.
 - Cartas com contorno verde podem ser jogadas: clique nelas ou arraste para a mesa.

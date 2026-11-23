@@ -13,13 +13,28 @@ Baixe o arquivo `.html` e abra com dois cliques (Chrome ou Edge). Não precisa i
 
 Mais detalhes em [`LEIA-ME_REMAKE.txt`](LEIA-ME_REMAKE.txt). Regras completas em [`docs/GDD.md`](docs/GDD.md).
 
+## O lobby
+
+"Iniciar expediente" leva para dentro do prédio: a recepção da empresa, em 3D. Cada objeto da sala é uma área (clique nele ou use os números do teclado):
+
+- **Sala de reunião** (porta dupla): iniciar um duelo valendo.
+- **Arquivos:** montar decks e ver a coleção.
+- **Máquina de benefícios:** loja de pacotes, cartas avulsas, decks prontos e visual.
+- **Mural:** metas do dia. **Troféus:** conquistas.
+- **Recepção:** perfil da empresa, com nome, estatísticas, histórico de batalhas, logo e verso das cartas.
+- **Estagiário:** treino que não vale nada. **Trituradora:** reciclar cópias repetidas. **Quadro de luz:** configurações.
+
+O progresso fica salvo no navegador. Quem vence leva o CAIXA que sobrou como PATRIMÔNIO, que compra cartas e visual.
+
 ## Como o projeto está organizado
 
 ```
 src/engine/        motor de regras (TypeScript puro, determinístico): a ÚNICA fonte das regras
 src/ai/            IA do rival
 src/sim/           simulador de partidas IA × IA (balanceamento)
-data/cards.json    as cartas (números e habilidades); data/companies.json: empresas rivais
+src/meta/          regras do lobby: coleção, decks, loja, pacotes, metas, conquistas, histórico
+data/cards.json    as cartas (números, habilidades e raridade); data/companies.json: empresas rivais
+data/meta.json     economia do lobby: preços, pacotes, kit inicial, decks prontos, metas, conquistas
 tests/             testes do motor, de cada carta e da IA
 remake/            o jogo visual: three.js + HUD próprio + áudio, empacotado com esbuild
 assets-originais/  arquivos do autor em resolução cheia (cartas, trilhas, efeitos sonoros, UI, fontes)
@@ -44,7 +59,7 @@ npm run dev                 # build de desenvolvimento + servidor em http://loca
 ```
 
 Com o servidor de desenvolvimento rodando:
-- `?duel` vai direto à mesa; `?autoplay=N` faz a IA jogar por você.
+- `?lobby` vai direto ao lobby; `?duel` vai direto à mesa.
 - `http://localhost:5178/dist/lab.html` mostra cada componente do HUD isolado, em todas as variantes. O HUD é um design system próprio: componentes em `remake/src/hud/components.js` e estilos e tokens em `remake/src/hud/hud.css`.
 
 Os modelos 3D de terceiros já estão convertidos em `remake/assets/models/`. Para refazer do zero, rode `node tools/fetch-models.mjs` e depois `node tools/pack-models.mjs` (dentro de `remake/`).
