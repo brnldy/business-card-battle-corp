@@ -1,5 +1,5 @@
 // Servidor estático mínimo para desenvolvimento.
-//   http://localhost:5178/dist/            jogo (use ?theme=buckshot ou ?theme=severance)
+//   http://localhost:5178/dist/            jogo
 //   http://localhost:5178/dist/lab.html    laboratório do design system do HUD
 //   POST /__lab/<nome>.jpg                 salva um fundo de referência em lab/ (só em localhost, só .jpg)
 import http from 'node:http';
@@ -24,7 +24,7 @@ http.createServer((req, res) => {
   }
   if (p === '/') { res.writeHead(302, { Location: '/dist/' }); return res.end(); }
   if (p.endsWith('/')) p += 'index.html';
-  const fin = { '/final-buckshot': 'BusinessCardBattleCorp_BUCKSHOT.html', '/final-severance': 'BusinessCardBattleCorp_SEVERANCE.html' }[p];
+  const fin = { '/final-buckshot': 'BusinessCardBattleCorp_BUCKSHOT.html' }[p];
   const file = fin ? path.join(root, '..', fin) : path.join(root, p);
   if ((!fin && !file.startsWith(root)) || !fs.existsSync(file) || fs.statSync(file).isDirectory()) { res.writeHead(404); return res.end('404'); }
   res.writeHead(200, { 'Content-Type': MIME[path.extname(file)] ?? 'application/octet-stream', 'Cache-Control': 'no-store' });

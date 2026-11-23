@@ -1,9 +1,8 @@
-BUSINESS CARD BATTLE CORP. — remake visual (WebGL), em duas versões
+BUSINESS CARD BATTLE CORP. — remake visual (WebGL)
 
 COMO ABRIR
-Dê dois cliques em um dos arquivos (Chrome ou Edge recomendados):
+Dê dois cliques no arquivo (Chrome ou Edge recomendados):
   BusinessCardBattleCorp_BUCKSHOT.html ... porão de escritório: escuro, sujo, luminária balançando, TV de tubo antiga
-  BusinessCardBattleCorp_SEVERANCE.html .. andar corporativo: frio, limpo, monitor cinza, brilho azul dos terminais
 Espere "Abrindo o caixa… 100%" e clique uma vez na tela para liberar o som.
 Não precisa instalar nada nem de internet. Nome da empresa, volume e opções ficam salvos no navegador.
 
@@ -23,8 +22,8 @@ ARQUIVOS
 - BusinessCardBattleCorp_REMAKE.html ..... versão intermediária antiga do remake (pode apagar).
 - remake/ ................................ código-fonte (three.js + esbuild).
     npm install                 instala dependências
-    node build.mjs              gera os dois HTMLs
-    node build.mjs --dev        build de desenvolvimento em remake/dist (rodar com: node serve.mjs, abrir /dist/?theme=buckshot)
+    node build.mjs              gera o HTML
+    node build.mjs --dev        build de desenvolvimento em remake/dist (rodar com: node serve.mjs, abrir /dist/)
     http://localhost:5178/dist/lab.html   laboratório do design system do HUD (cada componente e suas variantes)
     node tools/fetch-models.mjs e node tools/pack-models.mjs   baixam e convertem os modelos 3D de terceiros
 
@@ -32,6 +31,6 @@ CRÉDITOS
 Regras, cartas, IA, arte das cartas, trilhas e efeitos gravados: projeto original do autor.
 Mesa, salas, iluminação, shaders, partículas, efeitos sonoros, ambiente e trilha "gerada": feitos por código.
 Modelos 3D de terceiros, todos em domínio público (CC0):
-  Poly Haven (polyhaven.com): Television 01, Television 02, Hanging Industrial Lamp, Mounted Fluorescent Lights,
-    Drawer Cabinet, Wall Clock, Vintage Stapler, Binder Notebook, Potted Plant 02
+  Poly Haven (polyhaven.com): Television 01, Hanging Industrial Lamp, Mounted Fluorescent Lights,
+    Drawer Cabinet, Wall Clock, Vintage Stapler, Binder Notebook
   Quaternius (via poly.pizza): Business Man

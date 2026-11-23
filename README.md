@@ -1,15 +1,10 @@
 # Business Card Battle Corp.
 
-Card game de escritório num fim de mundo corporativo: empresas duelam com cartas de funcionários para não falir diante dos investidores. Roda no navegador, contra a IA, em duas versões visuais sobre as mesmas regras:
-
-| Arquivo | Estilo |
-|---|---|
-| `BusinessCardBattleCorp_BUCKSHOT.html` | Porão de escritório: escuro, sujo, luminária industrial balançando, TV de tubo antiga na cabeça do rival |
-| `BusinessCardBattleCorp_SEVERANCE.html` | Andar corporativo: frio, simétrico, monitor cinza, brilho azul dos terminais |
+Card game de escritório num fim de mundo corporativo: empresas duelam com cartas de funcionários para não falir diante dos investidores. Roda no navegador, contra a IA, no estilo `BusinessCardBattleCorp_BUCKSHOT.html`: porão de escritório escuro e sujo, luminária industrial balançando, TV de tubo antiga na cabeça do rival.
 
 ## Como jogar
 
-Baixe um dos dois arquivos `.html` e abra com dois cliques (Chrome ou Edge). Não precisa instalar nada nem de internet.
+Baixe o arquivo `.html` e abra com dois cliques (Chrome ou Edge). Não precisa instalar nada nem de internet.
 
 - Objetivo: zerar o CAIXA do rival antes que ele zere o seu.
 - Cartas de contorno verde podem ser jogadas: clique ou arraste para a mesa.
@@ -44,12 +39,12 @@ cd remake && npm install    # three.js e esbuild
 npm test                    # testes do motor
 npm run typecheck
 npm run simulate -- 4000    # 4.000 partidas IA × IA → relatório em docs/BALANCE.md
-npm run build               # gera os dois HTMLs na raiz
-npm run dev                 # build de desenvolvimento + servidor em http://localhost:5178/dist/?theme=buckshot
+npm run build               # gera o HTML na raiz
+npm run dev                 # build de desenvolvimento + servidor em http://localhost:5178/dist/
 ```
 
 Com o servidor de desenvolvimento rodando:
-- `?theme=severance` troca o estilo; `?duel` vai direto à mesa; `?autoplay=N` faz a IA jogar por você.
+- `?duel` vai direto à mesa; `?autoplay=N` faz a IA jogar por você.
 - `http://localhost:5178/dist/lab.html` mostra cada componente do HUD isolado, em todas as variantes. O HUD é um design system próprio: componentes em `remake/src/hud/components.js` e estilos e tokens em `remake/src/hud/hud.css`.
 
 Os modelos 3D de terceiros já estão convertidos em `remake/assets/models/`. Para refazer do zero, rode `node tools/fetch-models.mjs` e depois `node tools/pack-models.mjs` (dentro de `remake/`).
@@ -65,5 +60,5 @@ Os modelos 3D de terceiros já estão convertidos em `remake/assets/models/`. Pa
 - Regras, cartas, motor, IA, arte das cartas, trilhas e efeitos gravados: projeto original do autor.
 - Mesa, salas, iluminação, shaders, partículas, HUD, sons de ambiente e a trilha "gerada": feitos por código.
 - Modelos 3D em domínio público (CC0):
-  - [Poly Haven](https://polyhaven.com): Television 01, Television 02, Hanging Industrial Lamp, Mounted Fluorescent Lights, Drawer Cabinet, Wall Clock, Vintage Stapler, Binder Notebook e Potted Plant 02.
+  - [Poly Haven](https://polyhaven.com): Television 01, Hanging Industrial Lamp, Mounted Fluorescent Lights, Drawer Cabinet, Wall Clock, Vintage Stapler, e Binder Notebook.
   - [Quaternius](https://quaternius.com): Business Man.

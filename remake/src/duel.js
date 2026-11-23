@@ -8,7 +8,7 @@ import {
 import { RIVALS } from './cards.js';
 import { CARD, LAYOUT, TABLE, cardFaceTexture, cardBackTexture, money, coinTexture } from './textures.js';
 import { cardMaterial, glowMaterial, tween, wait, ease, LAYER, cardMats } from './gfx.js';
-import { T as TH, BUCKSHOT } from './theme.js';
+import { T as TH } from './theme.js';
 import { sfx, setTension, setMusicMode } from './audio.js';
 import { settings } from './settings.js';
 import { describeEvent } from './log.js';
@@ -962,7 +962,7 @@ export class Duel {
     R.lamp.intensity = R.lampBase * fl;
     if (R.bulb) R.bulb.material.color.setRGB(1 * fl, 0.89 * fl, 0.66 * fl);
     R.cold.intensity = R.coldBase * (0.35 + 0.65 * fl);
-    const bad = BUCKSHOT && (Math.sin(t * 3.1) > 0.93 || Math.random() < 0.01) ? 0.15 : 1;
+    const bad = (Math.sin(t * 3.1) > 0.93 || Math.random() < 0.01) ? 0.15 : 1;
     R.tubes.forEach((m, i) => { const v = (0.35 + 0.65 * fl) * (i === 0 ? bad : 1); if (m.emissiveIntensity !== undefined && m.isMeshStandardMaterial) m.emissiveIntensity = 2.2 * v; else m.color.setRGB(1.9 * v, 2.0 * v, 1.95 * v); });
     // câmera
     this.lookUp += ((this.active && !myT && !this.over ? 1 : this.over ? 0.7 : 0) - this.lookUp) * Math.min(1, dt * 2.2);

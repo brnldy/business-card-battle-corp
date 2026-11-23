@@ -8,7 +8,7 @@ const root = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
 const src = path.join(root, 'models_src'), out = path.join(root, 'assets', 'models');
 fs.mkdirSync(out, { recursive: true });
 const cli = path.join(root, 'node_modules', '@gltf-transform', 'cli', 'bin', 'cli.js');
-const SIZE = { television_02: 1024, Television_01: 1024 }; // a cabeça do rival fica em close: textura maior
+const SIZE = { Television_01: 1024 }; // a cabeça do rival fica em close: textura maior
 for (const name of fs.readdirSync(src)) {
   const p = path.join(src, name), isDir = fs.statSync(p).isDirectory();
   const input = isDir ? path.join(p, `${name}.gltf`) : p, id = isDir ? name : path.basename(name, '.glb');

@@ -65,64 +65,6 @@ export const LAYOUT = (() => {
   };
 })();
 
-export function deskTexture() {
-  const W = 1480, H = 940, { c, g } = canvas(W, H);
-  const px = (x) => (x / TABLE.w + 0.5) * W, pz = (z) => (z / TABLE.d + 0.5) * H, sc = W / TABLE.w;
-  paint(g, W, H, (x, y) => {
-    // tampo de laminado claro com um forro verde embutido (limpo, levemente gasto)
-    const edge = Math.min(x, y, W - x, H - y);
-    const n = fbm(x / 120, y / 120, 3, 4), n2 = hash(x, y, 8);
-    if (edge < 44) { const v = 0.9 + n * 0.08 - (edge > 40 ? 0.35 : 0); return [176 * v, 184 * v, 172 * v]; }
-    const wear = clamp01((fbm(x / 320, y / 240 + 9, 12, 4) - 0.5) * 2.2);
-    const v = 0.86 + n * 0.2 + n2 * 0.05 + wear * 0.08 - (edge < 50 ? 0.25 : 0);
-    return [24 * v, 62 * v, 47 * v];
-  });
-  const ink = (a = 0.7) => `rgba(214,226,206,${a})`;
-  const slot = (p, w, h, o = {}) => {
-    const x = px(p.x) - (w * sc) / 2, y = pz(p.z) - (h * sc) / 2;
-    if (o.fill) { g.fillStyle = o.fill; g.beginPath(); g.roundRect(x, y, w * sc, h * sc, 10); g.fill(); }
-    g.strokeStyle = ink(o.a ?? 0.7); g.lineWidth = o.lw ?? 2.4; g.setLineDash(o.dash ?? []);
-    g.beginPath(); g.roundRect(x, y, w * sc, h * sc, 10); g.stroke(); g.setLineDash([]);
-    if (o.cross) { g.lineWidth = 1.6; g.beginPath(); g.moveTo(x + 12, y + 12); g.lineTo(x + w * sc - 12, y + h * sc - 12); g.moveTo(x + w * sc - 12, y + 12); g.lineTo(x + 12, y + h * sc - 12); g.stroke(); }
-    if (o.label) { g.fillStyle = ink(0.55); g.font = `400 15px ${SANS}`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(o.label, px(p.x), pz(p.z) + (o.ly ?? 0)); }
-  };
-  const cw = CARD.w + 0.1, ch = CARD.h + 0.1, soft = 'rgba(10,30,22,0.22)';
-  LAYOUT.myCr.forEach((p) => slot(p, cw, ch, { fill: soft })); LAYOUT.oppCr.forEach((p) => slot(p, cw, ch, { fill: soft }));
-  LAYOUT.myFx.forEach((p) => slot(p, cw, ch, { dash: [9, 7], a: 0.5 })); LAYOUT.oppFx.forEach((p) => slot(p, cw, ch, { dash: [9, 7], a: 0.5 }));
-  slot(LAYOUT.myDeck, cw, ch, { label: 'deck' }); slot(LAYOUT.oppDeck, cw, ch, { label: 'deck' });
-  slot(LAYOUT.myDead, cw, ch, { cross: true, a: 0.45 }); slot(LAYOUT.oppDead, cw, ch, { cross: true, a: 0.45 });
-  // rótulos das fileiras (para quem nunca jogou)
-  g.fillStyle = ink(0.5); g.font = `400 16px ${SANS}`; g.textAlign = 'left'; g.textBaseline = 'middle';
-  g.save(); g.translate(px(-2.02), pz(0.5)); g.rotate(-Math.PI / 2); g.textAlign = 'center'; g.fillText('criaturas', 0, 0); g.restore();
-  g.save(); g.translate(px(-2.02), pz(1.38)); g.rotate(-Math.PI / 2); g.textAlign = 'center'; g.fillText('efeitos', 0, 0); g.restore();
-  g.save(); g.translate(px(2.02), pz(-0.5)); g.rotate(Math.PI / 2); g.textAlign = 'center'; g.fillText('criaturas', 0, 0); g.restore();
-  g.save(); g.translate(px(2.02), pz(-1.38)); g.rotate(Math.PI / 2); g.textAlign = 'center'; g.fillText('efeitos', 0, 0); g.restore();
-  g.textAlign = 'center'; g.fillText('morto', px(LAYOUT.myDead.x), pz(LAYOUT.myDead.z) - (ch * sc) / 2 - 14); g.fillText('morto', px(LAYOUT.oppDead.x), pz(LAYOUT.oppDead.z) + (ch * sc) / 2 + 14);
-  g.strokeStyle = ink(0.3); g.lineWidth = 1.5; g.setLineDash([4, 10]); g.beginPath(); g.moveTo(px(-1.95), pz(0)); g.lineTo(px(1.95), pz(0)); g.stroke(); g.setLineDash([]);
-  g.fillStyle = ink(0.35); g.font = `400 13px ${SANS}`; g.textAlign = 'left';
-  g.fillText('form. 27-B  ·  mesa de negociação  ·  não remover', px(-1.9), pz(2.05));
-  return tex(c);
-}
-
-export function carpetTexture() {
-  const S = 128, { c, g } = canvas(S, S);
-  paint(g, S, S, (x, y) => { const v = (0.8 + hash(x, y, 5) * 0.2) * (0.9 + fbm(x / 30, y / 30, 2, 3) * 0.2); return [20 * v, 52 * v, 38 * v]; });
-  return tex(c, { repeat: [14, 14] });
-}
-export function wallTexture() {
-  const W = 512, H = 256, { c, g } = canvas(W, H);
-  paint(g, W, H, (x, y) => {
-    let v = 0.93 + fbm(x / 90, y / 90, 9, 3) * 0.06 - clamp01((y / H - 0.82) * 2) * 0.1;
-    if (x % 256 < 2) v *= 0.82;
-    return [226 * v, 234 * v, 224 * v];
-  });
-  return tex(c, { repeat: [4, 1] });
-}
-export function ceilingTexture() {
-  const S = 128, { c, g } = canvas(S, S);
-  paint(g, S, S, (x, y) => { const border = x < 2 || y < 2 ? 0.8 : 1, v = (0.86 + hash(x >> 1, y >> 1, 3) * 0.06) * border; return [226 * v, 232 * v, 224 * v]; });
-  return tex(c, { repeat: [10, 10] });
-}
 export function metalTexture(seed = 1) {
   const S = 128, { c, g } = canvas(S, S);
   paint(g, S, S, (x, y) => {
@@ -165,15 +107,6 @@ export function clockTexture() {
 export function labelTexture(text, bg, fg) {
   const { c, g } = canvas(256, 56);
   g.fillStyle = bg; g.fillRect(0, 0, 256, 56); g.fillStyle = fg; g.font = `700 30px ${SERIF}`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(text, 128, 30);
-  return tex(c);
-}
-export function logoTexture() {
-  const { c, g } = canvas(832, 240);
-  g.fillStyle = '#1f3a2e'; g.textBaseline = 'middle'; g.textAlign = 'left';
-  g.font = `400 132px ${SERIF}`; g.fillText('BUSINESS CARD', 4, 96);
-  g.font = `400 44px ${SANS}`; const w = g.measureText('Battle').width;
-  g.save(); g.translate(250, 196); g.rotate(-0.06); g.beginPath(); g.roundRect(-18, -32, w + 36, 62, 12); g.fill(); g.fillStyle = '#e9ece4'; g.fillText('Battle', 0, 2); g.restore();
-  g.fillStyle = '#1f3a2e'; g.font = `400 56px ${SERIF}`; g.fillText('Corp.', 250 + w + 34, 196);
   return tex(c);
 }
 export function portraitTexture() {
