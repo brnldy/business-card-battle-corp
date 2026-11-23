@@ -1,0 +1,17 @@
+{
+  "name": "business-card-battle-corp",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test \"tests/**/*.test.ts\"",
+    "typecheck": "tsc --noEmit",
+    "simulate": "node scripts/simulate.ts",
+    "build": "cd remake && node build.mjs",
+    "dev": "cd remake && node build.mjs --dev && node serve.mjs"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "typescript": "^5.9.0"
+  }
+}

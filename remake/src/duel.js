@@ -326,7 +326,7 @@ export class Duel {
           if (side === OP) { this.oppMood = 0.6; this.oppNod = 1; }
           c.glowT = 1; c.glow.material.uniforms.uColor.value.setHex(COL.picked);
           await tween(D(260), (k) => { c.offset.set(0, 0.5 * k, (side === ME ? 0.35 : -0.35) * k); }, ease.out);
-          sfx('whoosh');
+          sfx('attack');
           break;
         }
         case 'attackNegated': {

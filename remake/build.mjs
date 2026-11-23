@@ -64,7 +64,7 @@ ${fs.readFileSync(path.join(root, 'src/lab.css'), 'utf8')}</style></head><body c
   console.log('dev build ok', (js.length / 1024).toFixed(0) + 'KB', '+ lab');
 } else {
   const shared = {};
-  for (const dir of ['cards', 'img', 'music']) for (const f of fs.readdirSync(path.join(root, 'assets', dir))) shared[`${dir}/${f}`] = dataUri(path.join(root, 'assets', dir, f));
+  for (const dir of ['cards', 'img', 'music', 'sfx']) for (const f of fs.readdirSync(path.join(root, 'assets', dir))) shared[`${dir}/${f}`] = dataUri(path.join(root, 'assets', dir, f));
   const inline = `<script>${js.replace(/<\/script/g, '<\\/script')}</script>`;
   for (const theme of ['buckshot', 'severance']) {
     const map = { ...shared };

@@ -15,7 +15,7 @@ COMO JOGAR (resumo)
 - Batalha: clique numa criatura sua e escolha "Atacar"; o jogo mostra a previsão antes de confirmar.
 - Passe o mouse em qualquer carta para ler, em texto grande, o que ela faz.
 - Atalhos: B = batalha · Espaço = encerrar turno (ou toque a campainha da mesa) · Esc / botão direito = cancelar.
-- Configurações: trilha (gerada/original), imagem (nítida/retrô/pixelada — as cartas ficam sempre nítidas),
+- Configurações: trilha (original/gerada), efeitos (gravados/gerados), imagem (nítida/retrô/pixelada — as cartas ficam sempre nítidas),
   velocidade das animações, tremor/clarões e dicas para iniciantes.
 
 ARQUIVOS
@@ -29,7 +29,7 @@ ARQUIVOS
     node tools/fetch-models.mjs e node tools/pack-models.mjs   baixam e convertem os modelos 3D de terceiros
 
 CRÉDITOS
-Regras, cartas, IA, arte das cartas e trilha "original": protótipo original.
+Regras, cartas, IA, arte das cartas, trilhas e efeitos gravados: projeto original do autor.
 Mesa, salas, iluminação, shaders, partículas, efeitos sonoros, ambiente e trilha "gerada": feitos por código.
 Modelos 3D de terceiros, todos em domínio público (CC0):
   Poly Haven (polyhaven.com): Television 01, Television 02, Hanging Industrial Lamp, Mounted Fluorescent Lights,

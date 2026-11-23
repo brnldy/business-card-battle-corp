@@ -1,4 +1,6 @@
-// Áudio 100% procedural (WebAudio): efeitos sintetizados, ambiente de escritório e trilha generativa.
+// Áudio (WebAudio): efeitos sintetizados, ambiente de escritório e trilha generativa,
+// mais os efeitos gravados pelo autor (remake/assets/sfx): onde existe arquivo para o momento, toca o arquivo;
+// onde não existe, toca o sintetizado. Configurações → "Efeitos: seus arquivos / gerados".
 import { settings } from './settings.js';
 import { asset } from './assets.js';
 
@@ -54,8 +56,51 @@ export function unlockAudio() {
   initAudio();
   if (!ctx) return;
   if (ctx.state === 'suspended') ctx.resume();
-  if (!started) { started = true; startAmbience(); startMusicLoop(); }
+  if (!started) { started = true; startAmbience(); startMusicLoop(); loadFileSfx(); }
   syncOriginal();
+}
+
+// ───────── efeitos gravados pelo autor ─────────
+// Ganho de cada arquivo para soar no nível dos efeitos sintetizados (medido em volume percebido, LUFS aproximado):
+// efeitos ~ -18 dB, cliques/teclas mais baixos (~ -24/-26 dB), vinhetas de fim ~ -16 dB. Ajuste aqui se algo destoar.
+const FILE_SFX = {
+  attack: { file: 'ATTACK_BASIC.mp3', gain: 0.54 },   // -12,6 dB
+  summon: { file: 'SUMMON_CARD.mp3', gain: 3.3 },     // -28,4 dB
+  effect: { file: 'EFFECT.mp3', gain: 4.6 },          // -31,2 dB
+  trap: { file: 'TRAP.mp3', gain: 3.8 },              // -29,7 dB
+  trapSet: { file: 'TRAP.mp3', gain: 2.6 },
+  sacrifice: { file: 'SACRIFICE.mp3', gain: 3.2 },    // -28,2 dB
+  draw: { file: 'CARD.mp3', gain: 4 },                // -43,2 dB (baixinho de propósito)
+  select: { file: 'CHOSING_CARD.mp3', gain: 4.7 },    // -37,5 dB
+  start: { file: 'START_BUTTON.mp3', gain: 2.6 },     // -26,4 dB
+  battle: { file: 'BATTLE_BUTTON.mp3', gain: 4.5 },   // -31 dB
+  bell: { file: 'END_TURN_BUTTON.mp3', gain: 1.5 },   // -21,8 dB (encerrar turno)
+  type: { file: 'TYPE_SOUND.mp3', gain: 2.2 },        // -33 dB
+  win: { file: 'YOU_WIN.m4a', gain: 0.44 },           // -8,9 dB
+  lose: { file: 'YOU_LOSE.m4a', gain: 0.5 },          // -10 dB
+};
+const fileBufs = new Map();
+function loadFileSfx() {
+  const files = [...new Set(Object.values(FILE_SFX).map((x) => x.file))];
+  for (const f of files) {
+    fetch(asset(`sfx/${f}`))
+      .then((r) => r.arrayBuffer())
+      .then((b) => ctx.decodeAudioData(b))
+      .then((buf) => fileBufs.set(f, buf))
+      .catch(() => { /* sem o arquivo, fica o som sintetizado */ });
+  }
+}
+function playFile(name) {
+  if (settings.get().sfxSource === 'procedural') return false;
+  const spec = FILE_SFX[name];
+  const buf = spec && fileBufs.get(spec.file);
+  if (!buf) return false;
+  const src = ctx.createBufferSource(), g = ctx.createGain();
+  src.buffer = buf;
+  g.gain.value = spec.gain;
+  src.connect(g).connect(sfxBus);
+  src.start();
+  return true;
 }
 export function applyVolumes() {
   if (!ctx) return;
@@ -135,6 +180,7 @@ const SFX = {
     noise({ type: 'lowpass', f: 500, d: 0.5, vol: 0.35, rev: 0.5 }); tone({ f: 55, d: 0.6, vol: 0.5 });
   },
   whoosh() { noise({ f: 500, f2: 3600, q: 1.4, a: 0.12, d: 0.12, vol: 0.3 }); },
+  attack() { SFX.whoosh(); }, // investida do ataque (o autor tem arquivo próprio: ATTACK_BASIC)
   impact() {
     tone({ f: 150, f2: 32, d: 0.3, vol: 0.9, rev: 0.3 }); noise({ type: 'lowpass', f: 3500, f2: 300, d: 0.22, vol: 0.55, rev: 0.4 });
     tone({ f: 61, type: 'sawtooth', d: 0.18, vol: 0.2 });
@@ -199,7 +245,7 @@ export function sfx(name, delay = 0) {
     const t = performance.now();
     if (lastPlayed[name] && t - lastPlayed[name] < 35) return; // evita empilhar o mesmo som
     lastPlayed[name] = t;
-    try { fn(); } catch (e) { /* áudio nunca deve quebrar o jogo */ }
+    try { if (!playFile(name)) fn(); } catch (e) { /* áudio nunca deve quebrar o jogo */ }
   };
   delay > 0 ? setTimeout(run, delay) : run();
 }
