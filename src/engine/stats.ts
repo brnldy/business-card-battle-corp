@@ -84,12 +84,15 @@ interface Aura {
 
 interface Condition {
   cardOnField?: string;
+  /** a carta citada precisa estar na mesa do MESMO lado da fonte (ex.: Filipe + Nath) */
+  cardOnOwnField?: string;
   selfMode?: 'ATK' | 'DEF';
 }
 
-function conditionMet(s: GameState, cond: Condition | undefined, source: FieldCreature | null): boolean {
+function conditionMet(s: GameState, cond: Condition | undefined, source: FieldCreature | null, sourceSide: PlayerId | null = null): boolean {
   if (!cond) return true;
   if (cond.cardOnField && !cardOnField(s, cond.cardOnField)) return false;
+  if (cond.cardOnOwnField && (sourceSide === null || !creaturesOf(s, sourceSide).some(({ c }) => c.cardId === cond.cardOnOwnField))) return false;
   if (cond.selfMode && source?.mode !== cond.selfMode) return false;
   return true;
 }
@@ -143,7 +146,7 @@ export function stats(s: GameState, uid: string, ctx?: CombatCtx): Stats {
     for (const ab of sDef.abilities) {
       if (ab.trigger !== 'continuous' || !ab.aura) continue;
       const aura = ab.aura as Aura;
-      if (!conditionMet(s, ab.condition as Condition | undefined, src.c)) continue;
+      if (!conditionMet(s, ab.condition as Condition | undefined, src.c, src.side)) continue;
       if (auraHits(aura, src.c.uid, src.side, loc)) applyAura(aura, sDef);
     }
   }
@@ -153,7 +156,7 @@ export function stats(s: GameState, uid: string, ctx?: CombatCtx): Stats {
     for (const ab of sDef.abilities) {
       if (ab.trigger !== 'continuous' || !ab.aura) continue;
       const aura = ab.aura as Aura;
-      if (!conditionMet(s, ab.condition as Condition | undefined, null)) continue;
+      if (!conditionMet(s, ab.condition as Condition | undefined, null, side)) continue;
       if (auraHits(aura, e.uid, side, loc)) applyAura(aura, sDef);
     }
   }
@@ -179,7 +182,7 @@ export function stats(s: GameState, uid: string, ctx?: CombatCtx): Stats {
           if (ab.trigger !== 'on_attacked') continue;
           const cond = ab.condition as { attackerDepartment?: string } | undefined;
           if (cond?.attackerDepartment && cond.attackerDepartment !== tDef.department) continue;
-          const eff = ab.effect as { attackerAtk?: number };
+          const eff = (ab.effect ?? {}) as { attackerAtk?: number };
           if (eff.attackerAtk && !(isImmune(tDef, dDef) && eff.attackerAtk < 0)) atk += eff.attackerAtk;
         }
       }

@@ -11,7 +11,7 @@ const el = (tag, cls, html) => { const e = document.createElement(tag); if (cls)
 const esc = C.esc;
 const { ICON } = C;
 // jogadas que aparecem na faixa do topo (o resto fica só no relatório)
-const TICKER = new Set(['summon', 'effectPlayed', 'trapSet', 'trapTriggered', 'attack', 'attackNegated', 'destroy', 'sacrifice', 'toHand', 'toDeck', 'controlChange', 'modeChange', 'coin', 'effectExpired', 'discard', 'mill']);
+const TICKER = new Set(['summon', 'effectPlayed', 'trapSet', 'trapTriggered', 'attack', 'attackNegated', 'attackRedirected', 'destroy', 'sacrifice', 'toHand', 'toDeck', 'controlChange', 'modeChange', 'coin', 'effectExpired', 'discard', 'mill']);
 
 export class UI {
   constructor(root) {

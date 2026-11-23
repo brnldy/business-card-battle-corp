@@ -69,6 +69,8 @@ export interface GameState {
   winner: PlayerId | 'draw' | null;
   endReason: 'caixa' | 'turn_limit' | null;
   nextUid: number;
+  /** Usos de habilidades limitadas por partida, por uid da cópia (Filipe: 2 desvios). */
+  uses?: Record<string, number>;
   /** Só para testes: força o resultado das próximas moedas. */
   debugCoins?: Coin[];
 }
@@ -99,6 +101,7 @@ export type GameEvent =
   | { type: 'phase'; phase: Phase }
   | { type: 'attack'; attacker: string; target: string | null; second: boolean }
   | { type: 'attackNegated'; attacker: string; by: string }
+  | { type: 'attackRedirected'; attacker: string; from: string; to: string; by: string }
   | { type: 'coin'; source: string; result: Coin; target: string }
   | { type: 'statMod'; uid: string; source: string; atk: number; def: number; mul?: number }
   | { type: 'combat'; attacker: string; defender: string | null; atk: number; against: number; defenderMode: Mode | null }

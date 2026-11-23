@@ -329,6 +329,15 @@ export class Duel {
           sfx('attack');
           break;
         }
+        case 'attackRedirected': {
+          // Filipe conta uma fake news: o ataque muda de rumo e vai para um colega de quem atacou
+          const a = this.atkCtx, f = posOf(e.from);
+          if (f) { this.floatAt(f, 'fake news!', 'info'); this.sparkle(f, [1, 0.85, 0.4], 18); }
+          this.ui.banner('Fake news!', 'o ataque foi desviado', 'trap'); sfx('glitch'); this.oppGlitch = 0.6;
+          if (a) { const to = posOf(e.to); if (to) a.to = to; }
+          await wait(D(650));
+          break;
+        }
         case 'attackNegated': {
           const a = this.atkCtx; if (a) { this.floatAt(a.c.group.position, 'ataque anulado', 'bad'); await tween(D(300), (k) => a.c.offset.multiplyScalar(1 - k)); a.c.offset.set(0, 0, 0); a.c.glowT = 0; this.atkCtx = null; }
           break;

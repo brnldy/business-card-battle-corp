@@ -2,9 +2,10 @@
 // sem moeda nem armadilha (o resultado real pode mudar se o Bruno estiver na mesa ou houver armadilha).
 // Criada no remake visual (remake/src/engine.js) e trazida para o motor oficial com testes.
 import { cardDef, findCreature, stats } from './stats.ts';
+import { redirectAvailable } from './engine.ts';
 import type { GameState, Mode } from './types.ts';
 
-export type PreviewResult = 'direct' | 'win' | 'lose' | 'bounce' | 'trade' | 'nothing';
+export type PreviewResult = 'direct' | 'win' | 'lose' | 'bounce' | 'trade' | 'nothing' | 'redirect';
 
 export interface AttackPreview {
   atk: number;
@@ -29,6 +30,8 @@ export function previewAttack(s: GameState, uid: string, target: string | null):
   const d = findCreature(s, target);
   if (!d) return null;
   const mode = d.c.mode;
+  // Filipe vai desviar o ataque para um colega de quem ataca: o resultado depende de qual
+  if (redirectAvailable(s, uid, target)) return { atk, against: 0, mode, result: 'redirect', dmgFoe: 0, dmgMe: 0 };
   const ds = stats(s, target, ctx);
   const against = mode === 'ATK' ? ds.atk : ds.def;
   let result: PreviewResult;

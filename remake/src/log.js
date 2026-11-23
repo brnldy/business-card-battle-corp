@@ -21,6 +21,7 @@ export function describeEvent(e, ctx) {
     case 'effectExpired': return `${nm(ctx, e.cardId)} acabou.`;
     case 'phase': return e.phase === 'battle' ? 'Fase de batalha.' : null;
     case 'attack': return `${nm(ctx, e.attacker)} ${e.second ? 'atacou de novo' : 'atacou'} ${e.target ? nm(ctx, e.target) : 'direto o CAIXA'}.`;
+    case 'attackRedirected': return `FAKE NEWS! ${nm(ctx, e.by)} desviou o ataque de ${nm(ctx, e.attacker)} para ${nm(ctx, e.to)}.`;
     case 'attackNegated': return `O ataque de ${nm(ctx, e.attacker)} foi anulado por ${nm(ctx, e.by)}.`;
     case 'coin': return `Moeda de ${nm(ctx, e.source)}: ${e.result.toUpperCase()}.`;
     case 'statMod': {

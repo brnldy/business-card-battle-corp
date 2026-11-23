@@ -3,12 +3,12 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { applyAction } from '../src/engine/engine.ts';
 import { previewAttack } from '../src/engine/preview.ts';
-import { act, FILLER, newGame, put } from './helpers.ts';
+import { act, ATK, FILLER, newGame, put } from './helpers.ts';
 
 test('prévia: ataque direto tira o ATQ inteiro', () => {
   const s = newGame();
   const caio = put(s, 0, 'BCB-002');
-  assert.deepEqual(previewAttack(s, caio, null), { atk: 2000, against: 0, mode: null, result: 'direct', dmgFoe: 2000, dmgMe: 0 });
+  assert.deepEqual(previewAttack(s, caio, null), { atk: ATK('BCB-002'), against: 0, mode: null, result: 'direct', dmgFoe: ATK('BCB-002'), dmgMe: 0 });
 });
 
 test('prévia: vence ATQ × ATQ e o rival perde a diferença', () => {
@@ -17,7 +17,7 @@ test('prévia: vence ATQ × ATQ e o rival perde a diferença', () => {
   const cesar = put(s, 1, FILLER);
   const p = previewAttack(s, caio, cesar)!;
   assert.equal(p.result, 'win');
-  assert.equal(p.dmgFoe, 1000);
+  assert.equal(p.dmgFoe, ATK('BCB-002') - ATK(FILLER));
 });
 
 test('prévia: perde contra DEF maior e quem ataca perde a diferença', () => {

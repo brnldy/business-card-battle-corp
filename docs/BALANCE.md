@@ -1,4 +1,57 @@
-# Relatório de balanceamento #2
+# Relatório de balanceamento #3
+
+> 23/11/2026 · 4.000 partidas IA × IA · decks aleatórios de 40 cartas (até 3 cópias, exceção de teste) · **valores nivelados pelo autor** + carta nova **Filipe, the Bear**.
+> Para repetir: `npm run simulate -- 4000` (dados brutos em `output/balance.json`).
+
+## O que mudou nas cartas
+Quase todo custo de sacrifício virou 0: só Chat GPT (2), Siamesas (1) e Thays (1) ainda pedem sacrifício. ATQ/DEF baixaram em Bruno, Caio, Nath, Chat GPT (DEF), Ralph, Paulo (DEF) e Duda; o 2104 ganhou DEF. Detalhes em `docs/CARDS.md`.
+
+## Resultado geral
+| Medida | #2 (18/11) | #3 (agora) | Leitura |
+|---|---|---|---|
+| Quem começa vence | 51% | **51%** ✅ | Continua equilibrado |
+| Duração | média 13,3 turnos (mediana 11) | **média 23,7 (mediana 19)** | Partidas quase 2× mais longas: os ataques ficaram mais fracos que as defesas |
+| Partidas no limite de 60 turnos | 0% | **5%** ⚠️ | Algumas partidas travam: ninguém consegue furar a defesa do outro |
+
+## Por carta
+| Carta | Cópias a mais no vencedor | Jogada em | Vitória quando jogada |
+|---|---|---|---|
+| BCB-016 Café com 8 Colheres | **+0,100** ± 0,034 | 5117 | 57% |
+| BCB-007 Ralph, o Pai | **+0,098** ± 0,034 | 4706 | 54% |
+| BCB-019 Filipe, the Bear | **+0,054** ± 0,034 | 4594 | 55% |
+| BCB-002 Caio Batera | +0,038 ± 0,033 | 4724 | 51% |
+| BCB-018 Duda Kiryu | +0,027 ± 0,034 | 4723 | 54% |
+| BCB-005 Chat GPT | +0,018 ± 0,034 | 2704 | 60% |
+| BCB-004 Nath, a Redatora | +0,011 ± 0,034 | 4879 | 53% |
+| BCB-003 Ar Condicionado no Talo | +0,009 ± 0,034 | 3436 | 33% |
+| BCB-015 Onde tem Pilha? | +0,005 ± 0,034 | 4832 | 51% |
+| BCB-008 Lucas, o Social Media | −0,009 ± 0,034 | 3375 | 41% |
+| BCB-001 Bruno, o Estrondoso | −0,013 ± 0,034 | 3809 | 47% |
+| BCB-006 2104 | −0,019 ± 0,034 | 4665 | 48% |
+| BCB-013 Paulo, o Crente | −0,025 ± 0,034 | 4489 | 49% |
+| BCB-017 Thays Kiryu | −0,025 ± 0,034 | 4735 | 54% |
+| BCB-009 Roger | −0,028 ± 0,034 | 3898 | 41% |
+| BCB-012 César Malandro | −0,045 ± 0,034 | 1878 | 33% |
+| BCB-014 Pão com Requeijão | −0,049 ± 0,034 | 69 | 61% |
+| BCB-010 Tênia do Lucas | **−0,052** ± 0,034 | 2779 | 38% |
+| BCB-011 Siamesas Boreal | **−0,095** ± 0,034 | 2677 | 57% |
+
+## O que os números dizem
+1. **O problema do sacrifício acabou.** Ralph, Chat GPT e Duda, que quase não eram jogados (263, 824 e 1.408 vezes), agora entram em quase toda partida (4.706, 2.704 e 4.723).
+2. **O jogo ficou muito mais nivelado.** Antes a Thays dominava (+0,135); agora quase todas as cartas ficam dentro de ±0,05, ou seja, nenhuma decide a partida sozinha.
+3. **As mais fortes agora:** Café (+$600 de ATQ ajuda a furar as defesas, que ficaram relativamente altas) e Ralph (custo 0 e dano dobrado).
+4. **Filipe estreou bem** (+0,054): a fake news pune quem ataca com a mesa cheia.
+5. **As mais fracas:** Siamesas (a única criatura comum que ainda pede sacrifício), Tênia (come o próprio deck) e Pão com Requeijão (69 usos: continua quase morto).
+6. **Partidas mais longas:** com ATQs mais baixos, as defesas seguram mais. 5% das partidas chegam ao limite de 60 turnos.
+
+## Sugestões (nada foi alterado sem você decidir)
+- **Siamesas:** custo 1 → 0, como as outras criaturas comuns.
+- **Pão com Requeijão:** pedir 1 criatura em vez de 2, ou dar $1.500.
+- **Partidas longas:** se nos testes de vocês o jogo parecer arrastado, uma saída é baixar algumas DEFs (Paulo, 2104, Nath) ou subir um pouco os ATQs.
+
+---
+
+# Relatório de balanceamento #2 (histórico)
 
 > 18/11/2026 · 4.000 partidas IA × IA · decks aleatórios de 40 cartas (até 3 cópias, exceção de teste) · regras do GDD v0.2 com a **nova regra do 1º turno**.
 > Para repetir: `npm run simulate -- 4000`

@@ -1,9 +1,14 @@
 // Utilidades de teste: montam situações de mesa diretamente, sem jogar a partida toda.
 import { applyAction } from '../src/engine/engine.ts';
 import { createGame } from '../src/engine/setup.ts';
+import { cardDef } from '../src/engine/stats.ts';
 import type { Action, FieldCreature, GameEvent, GameState, Mode, PlayerId } from '../src/engine/types.ts';
 
 export const FILLER = 'BCB-012'; // César: criatura sem habilidade
+
+/** ATQ/DEF impressos na carta (data/cards.json): os testes calculam a partir deles, para sobreviver a rebalanceamentos. */
+export const ATK = (id: string): number => cardDef(id).atk ?? 0;
+export const DEF = (id: string): number => cardDef(id).def ?? 0;
 
 /** Partida com decks previsíveis (sem embaralhar). Começa no turno 3 para permitir ataques. */
 export function newGame(opts: { deck0?: string[]; deck1?: string[]; turn?: number } = {}): GameState {

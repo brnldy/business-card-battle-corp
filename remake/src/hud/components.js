@@ -207,10 +207,11 @@ export function prompt(p) {
 }
 
 // ───────── prévia de combate ─────────
-// props: { result: 'win'|'lose'|'trade'|'bounce'|'nothing'|'direct', atk, against, mode, dmgFoe, dmgMe, trap }
+// props: { result: 'win'|'lose'|'trade'|'bounce'|'nothing'|'direct'|'redirect', atk, against, mode, dmgFoe, dmgMe, trap }
 const RESULT = {
   win: ['Você destrói a carta', 'go'], direct: ['Direto no CAIXA', 'go'], lose: ['Você perde a sua carta', 'stop'],
   bounce: ['Não passa da defesa', 'stop'], trade: ['As duas são destruídas', 'warn'], nothing: ['Empate: nada acontece', 'warn'],
+  redirect: ['Fake news! O ataque será desviado', 'stop'],
 };
 export function combatPreview(p) {
   const [title, tone] = RESULT[p.result];
@@ -219,6 +220,7 @@ export function combatPreview(p) {
   if (p.dmgFoe) out.push(['go', `Rival perde ${money(p.dmgFoe)}`]);
   if (p.dmgMe) out.push(['stop', `Você perde ${money(p.dmgMe)}`]);
   if (p.result === 'win' && p.mode === 'DEF') out.push(['info', 'Estava em defesa: o CAIXA dele não sofre']);
+  if (p.result === 'redirect') out.push(['stop', 'O Filipe joga o ataque contra outra carta SUA']);
   if (p.trap) out.push(['warn', 'Há armadilha armada do outro lado']);
   return `<div class="${cx('h-preview', `is-${tone}`)}">
     <header class="h-preview__title">${esc(title)}</header>

@@ -12,6 +12,12 @@ O projeto passou a viver neste repositório, juntando as duas frentes:
 - A versão Phaser e a 3D feita aqui (descritas abaixo) ficaram guardadas num ramo local, `historico-yugioro`, que não sobe para o GitHub. A estética oficial é a do remake.
 - Regra de trabalho: tudo que fizermos sobe neste repositório.
 
+### Cartas niveladas + carta 19 (23/11/2026)
+- O autor reexportou as 18 cartas com valores mais baixos e quase todo custo zerado (só Chat GPT 2, Siamesas 1 e Thays 1). As cartas 13–16 trocaram de número: Paulo 13, Pão 14, Pilha 15, Café 16 (o ID segue o arquivo).
+- Carta nova **BCB-019 Filipe, the Bear**: desvia o ataque para outra criatura de quem atacou (2 vezes na partida) e faz dupla com a Nath (+$100 ATQ/DEF para os dois). Detalhes em `docs/CARDS.md`.
+- Os testes agora calculam a partir dos valores da carta (`ATK()`/`DEF()` em `tests/helpers.ts`), então rebalancear não quebra os testes. São 56 testes.
+- Simulação #3 em `docs/BALANCE.md`: o problema do sacrifício acabou e as cartas ficaram niveladas, mas as partidas dobraram de duração (5% chegam ao limite de 60 turnos).
+
 ### Ajustes de 23/11/2026 (depois do primeiro teste no repositório novo)
 - **HUD menor:** a interface crescia até 190% em telas grandes. Agora escala entre 80% e 125% conforme a tela, e os painéis, a ficha da carta, o menu de ação, a prévia de combate e as dicas ficaram mais compactos. Em Configurações → Tamanho da interface: Pequena / Média / Grande.
 - **Ataques:** conferido no motor e na tela que cada criatura em ATQ ataca 1 vez por turno (a Nath, 2), como no GDD. Nada mudou.

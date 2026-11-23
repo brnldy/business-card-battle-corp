@@ -141,7 +141,7 @@ const comp2 = `<div class="lab-comp" style="background-image:url(${BOARD})"><div
 const comp3 = `<div class="lab-comp" style="background-image:url(${RIVAL})"><div class="h-hud">
   <div class="h-slot--opp" data-folder="c4">${C.folder({ who: 'opp' })}</div>
   <div class="h-slot--me" data-folder="c5">${C.folder({ who: 'me' })}</div>
-  <div class="h-slot--sheet">${C.cardSheet({ cardId: 'BCB-013', where: 'show', owner: 'opp', notes: ['MOCA-COLA usou este efeito.'] })}</div>
+  <div class="h-slot--sheet">${C.cardSheet({ cardId: 'BCB-014', where: 'show', owner: 'opp', notes: ['MOCA-COLA usou este efeito.'] })}</div>
   <div class="h-slot--bar">${C.topbar({})}</div>
   <div class="h-slot--turn">${turns[5][1]}</div>
   <div class="h-slot--center">${C.ticker({ text: 'MOCA-COLA usou PÃO COM REQUEIJÃO.', who: 'opp' })}</div>

@@ -503,6 +503,49 @@ function doPlayEffect(s: GameState, ev: GameEvent[], uid: string, target: string
 
 // ───────────────────────── Combate ─────────────────────────
 
+/** Filipe pode desviar o ataque? (habilidade, usos restantes na partida e outra criatura do lado de quem ataca) */
+export function redirectAvailable(s: GameState, attackerUid: string, targetUid: string | null): boolean {
+  if (targetUid === null) return false;
+  const t = findCreature(s, targetUid);
+  const att = findCreature(s, attackerUid);
+  if (!t || !att) return false;
+  const ab = cardDef(t.c.cardId).abilities.find((a) => a.trigger === 'on_attacked' && a.redirectAttack);
+  if (!ab) return false;
+  const max = (ab.redirectAttack as { usesPerGame?: number }).usesPerGame ?? Infinity;
+  if ((s.uses?.[t.c.uid] ?? 0) >= max) return false;
+  return creaturesOf(s, att.side).some((f) => f.c.uid !== attackerUid);
+}
+
+/**
+ * Filipe ("Gente, eu vi isso num insta..."): o ataque volta contra outra criatura do próprio atacante.
+ * O alvo é o pior para quem atacou (é o que o dono do Filipe escolheria): mais CAIXA perdido e mais cartas destruídas.
+ */
+function redirectAttack(s: GameState, ev: GameEvent[], attackerUid: string, targetUid: string, second: boolean): string {
+  if (!redirectAvailable(s, attackerUid, targetUid)) return targetUid;
+  const t = findCreature(s, targetUid)!;
+  const att = findCreature(s, attackerUid)!;
+  let best: CreatureLoc | null = null;
+  let bestScore = -Infinity;
+  for (const ally of creaturesOf(s, att.side)) {
+    if (ally.c.uid === attackerUid) continue;
+    const ctx: CombatCtx = { attackerUid, defenderUid: ally.c.uid, secondAttack: second };
+    const A = stats(s, attackerUid, ctx).atk;
+    const st = stats(s, ally.c.uid, ctx);
+    const D = ally.c.mode === 'ATK' ? st.atk : st.def;
+    let loss = 0;
+    let killed = 0;
+    if (ally.c.mode === 'ATK') {
+      if (A > D) { killed = 1; loss = A - D; } else if (A < D) { killed = 1; loss = D - A; } else killed = 2;
+    } else if (A > D) killed = 1;
+    else if (A < D) loss = D - A;
+    const score = loss + killed * 1500 + D * 0.001;
+    if (score > bestScore) { bestScore = score; best = ally; }
+  }
+  s.uses = { ...(s.uses ?? {}), [t.c.uid]: (s.uses?.[t.c.uid] ?? 0) + 1 };
+  ev.push({ type: 'attackRedirected', attacker: attackerUid, from: targetUid, to: best!.c.uid, by: t.c.cardId });
+  return best!.c.uid;
+}
+
 function doAttack(s: GameState, ev: GameEvent[], attackerUid: string, targetUid: string | null): void {
   const side = s.active;
   const oppSide = other(side);
@@ -531,6 +574,9 @@ function doAttack(s: GameState, ev: GameEvent[], attackerUid: string, targetUid:
     if (eff.endTurn) endTurn(s, ev);
     if (eff.negateAttack) return;
   }
+
+  // 1b) Filipe: a "fake news" desvia o ataque para um colega de quem atacou.
+  if (targetUid !== null) targetUid = redirectAttack(s, ev, attackerUid, targetUid, second);
 
   // 2) Gatilhos "quando o inimigo ataca" (Bruno: moeda).
   for (const o of creaturesOf(s, oppSide)) {
@@ -577,7 +623,7 @@ function doAttack(s: GameState, ev: GameEvent[], attackerUid: string, targetUid:
   if (defMode === 'ATK') {
     if (A > D) {
       leaveField(s, ev, targetUid, 'destroyed');
-      dealCombatDamage(s, ev, att, dLoc, oppSide, A - D, false);
+      dealCombatDamage(s, ev, att, dLoc, dLoc.side, A - D, false);
     } else if (A < D) {
       leaveField(s, ev, attackerUid, 'destroyed');
       dealCombatDamage(s, ev, dLoc, att, side, D - A, false);

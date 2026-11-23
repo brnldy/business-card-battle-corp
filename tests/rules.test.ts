@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { applyAction, handLimitStatus, IllegalActionError, legalActions } from '../src/engine/engine.ts';
 import { createGame, OFFICIAL_DECK_RULES, validateDeck } from '../src/engine/setup.ts';
-import { act, attack, FILLER, hand, inDead, newGame, onField, put } from './helpers.ts';
+import { act, ATK, attack, FILLER, hand, inDead, newGame, onField, put } from './helpers.ts';
 
 const filler40 = Array(40).fill(FILLER);
 
@@ -41,32 +41,32 @@ test('invocação de custo 0 e limite de 1 por turno', () => {
 
 test('custo pago com sacrifício: custo 1 exige 1 criatura sua na mesa', () => {
   let s = newGame();
-  const caio = hand(s, 0, 'BCB-002');
-  assert.throws(() => applyAction(s, { type: 'summon', uid: caio, mode: 'ATK', sacrifices: [] }), IllegalActionError);
+  const sia = hand(s, 0, 'BCB-011'); // Siamesas: custo 1
+  assert.throws(() => applyAction(s, { type: 'summon', uid: sia, mode: 'ATK', sacrifices: [] }), IllegalActionError);
   const roger = put(s, 0, 'BCB-009');
-  s = act(s, { type: 'summon', uid: caio, mode: 'ATK', sacrifices: [roger] });
-  assert.ok(onField(s, caio));
+  s = act(s, { type: 'summon', uid: sia, mode: 'ATK', sacrifices: [roger] });
+  assert.ok(onField(s, sia));
   assert.ok(inDead(s, 0, roger));
 });
 
 test('combate ATQ × ATQ: o menor morre e o dono perde a diferença', () => {
   const s = newGame();
-  const caio = put(s, 0, 'BCB-002'); // 2.000
-  const cesar = put(s, 1, FILLER); // 1.000
+  const caio = put(s, 0, 'BCB-002');
+  const cesar = put(s, 1, FILLER);
   const r = attack(s, caio, cesar).state;
   assert.ok(!onField(r, cesar));
-  assert.equal(r.players[1].caixa, 8000 - 1000);
+  assert.equal(r.players[1].caixa, 8000 - (ATK('BCB-002') - ATK(FILLER)));
   assert.equal(r.players[0].caixa, 8000);
 });
 
 test('combate ATQ × ATQ: atacante mais fraco morre e o dono dele perde', () => {
   const s = newGame();
-  const cesar = put(s, 0, FILLER); // 1.000
-  const caio = put(s, 1, 'BCB-002'); // 2.000
+  const cesar = put(s, 0, FILLER);
+  const caio = put(s, 1, 'BCB-002');
   const r = attack(s, cesar, caio).state;
   assert.ok(!onField(r, cesar));
   assert.ok(onField(r, caio));
-  assert.equal(r.players[0].caixa, 7000);
+  assert.equal(r.players[0].caixa, 8000 - (ATK('BCB-002') - ATK(FILLER)));
 });
 
 test('combate ATQ × ATQ: empate destrói as duas, sem dano', () => {
@@ -104,7 +104,7 @@ test('ataque direto só sem criaturas inimigas, e tira o ATQ inteiro', () => {
   assert.ok(!legalActions(s).some((a) => a.type === 'attack' && a.target === null));
   s.players[1].creatures = s.players[1].creatures.map((c) => (c?.uid === blocker ? null : c));
   const r = act(s, { type: 'attack', uid: caio, target: null });
-  assert.equal(r.players[1].caixa, 6000);
+  assert.equal(r.players[1].caixa, 8000 - ATK('BCB-002'));
 });
 
 test('criatura em DEF não ataca; cada criatura ataca 1 vez', () => {
@@ -161,7 +161,7 @@ test('limite de mão com mesa lotada pede para eliminar carta', () => {
   for (let i = 0; i < 10; i++) hand(s, 1, FILLER);
   for (let i = 0; i < 5; i++) put(s, 1, FILLER);
   s.players[1].effects = s.players[1].effects.map((_, i) => ({
-    uid: `fx${i}`, cardId: 'BCB-014', owner: 1, faceDown: true, turnsLeft: null, setTurn: 0,
+    uid: `fx${i}`, cardId: 'BCB-015', owner: 1, faceDown: true, turnsLeft: null, setTurn: 0,
   }));
   s = act(s, { type: 'endTurn' });
   assert.equal(handLimitStatus(s), 'must_discard');
@@ -177,7 +177,7 @@ test('limite de 60 turnos: vence quem tem mais CAIXA', () => {
 });
 
 test('a mesma semente gera a mesma partida (determinismo)', () => {
-  const ids = ['BCB-001', 'BCB-002', 'BCB-004', 'BCB-009', 'BCB-016'];
+  const ids = ['BCB-001', 'BCB-002', 'BCB-004', 'BCB-009', 'BCB-013'];
   const deck = Array.from({ length: 40 }, (_, i) => ids[i % ids.length]);
   const a = createGame({ seed: 99, decks: [deck, deck], deckRules: null }).state;
   const b = createGame({ seed: 99, decks: [deck, deck], deckRules: null }).state;
