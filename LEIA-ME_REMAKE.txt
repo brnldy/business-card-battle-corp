@@ -1,0 +1,36 @@
+BUSINESS CARD BATTLE CORP. — remake visual (WebGL), em duas versões
+
+COMO ABRIR
+Dê dois cliques em um dos arquivos (Chrome ou Edge recomendados):
+  BusinessCardBattleCorp_BUCKSHOT.html ... porão de escritório: escuro, sujo, luminária balançando, TV de tubo antiga
+  BusinessCardBattleCorp_SEVERANCE.html .. andar corporativo: frio, limpo, monitor cinza, brilho azul dos terminais
+Espere "Abrindo o caixa… 100%" e clique uma vez na tela para liberar o som.
+Não precisa instalar nada nem de internet. Nome da empresa, volume e opções ficam salvos no navegador.
+
+COMO JOGAR (resumo)
+- Objetivo: zerar o CAIXA do rival (a pasta com o nome dele). O seu CAIXA é a pasta de baixo.
+- Cartas com contorno verde podem ser jogadas: clique nelas ou arraste para a mesa.
+- Criaturas entram em ATAQUE (em pé) ou DEFESA (deitadas). 1 invocação por turno.
+- Cada X vermelho no nome da carta = 1 criatura sua que precisa ser sacrificada para invocá-la.
+- Batalha: clique numa criatura sua e escolha "Atacar"; o jogo mostra a previsão antes de confirmar.
+- Passe o mouse em qualquer carta para ler, em texto grande, o que ela faz.
+- Atalhos: B = batalha · Espaço = encerrar turno (ou toque a campainha da mesa) · Esc / botão direito = cancelar.
+- Configurações: trilha (gerada/original), imagem (nítida/retrô/pixelada — as cartas ficam sempre nítidas),
+  velocidade das animações, tremor/clarões e dicas para iniciantes.
+
+ARQUIVOS
+- BusinessCardBattleCorp.html ............ protótipo original (intocado).
+- BusinessCardBattleCorp_REMAKE.html ..... versão intermediária antiga do remake (pode apagar).
+- remake/ ................................ código-fonte (three.js + esbuild).
+    npm install                 instala dependências
+    node build.mjs              gera os dois HTMLs
+    node build.mjs --dev        build de desenvolvimento em remake/dist (rodar com: node serve.mjs, abrir /dist/?theme=buckshot)
+    node tools/fetch-models.mjs e node tools/pack-models.mjs   baixam e convertem os modelos 3D de terceiros
+
+CRÉDITOS
+Regras, cartas, IA, arte das cartas e trilha "original": protótipo original.
+Mesa, salas, iluminação, shaders, partículas, efeitos sonoros, ambiente e trilha "gerada": feitos por código.
+Modelos 3D de terceiros, todos em domínio público (CC0):
+  Poly Haven (polyhaven.com): Television 01, Television 02, Hanging Industrial Lamp, Mounted Fluorescent Lights,
+    Drawer Cabinet, Wall Clock, Vintage Stapler, Binder Notebook, Potted Plant 02
+  Quaternius (via poly.pizza): Business Man

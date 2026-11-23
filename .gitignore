@@ -1,0 +1,14 @@
+# dependências e saídas de build de desenvolvimento
+node_modules/
+remake/dist/
+# downloads brutos dos modelos (refazer com: node remake/tools/fetch-models.mjs)
+remake/models_src/
+# protótipo original e versão intermediária antiga (não fazem parte do remake)
+BusinessCardBattleCorp.html
+BusinessCardBattleCorp_REMAKE.html
+LEIA-ME.txt
+# lixo de sistema
+._*
+.DS_Store
+Thumbs.db
+.claude/
