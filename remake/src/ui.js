@@ -75,8 +75,12 @@ export class UI {
   }
   on(handlers) { Object.assign(this.h, handlers); }
   show(id, on) { $(`#${id}`).classList.toggle('hidden', !on); }
-  // escala a interface inteira: nunca abaixo de 100% (notebook 1366×768) e cresce em telas maiores
-  setScale() { this.scale = Math.max(1, Math.min(1.9, Math.min(window.innerHeight / 760, window.innerWidth / 1300))); this.root.style.zoom = this.scale; }
+  // escala a interface inteira pela tela (1600×960 = 100%), entre 80% e 125%, vezes o "Tamanho da interface" das Configurações.
+  // Antes crescia até 190% em telas grandes e esmagava a mesa; o autor pediu tudo menor (23/11/2026).
+  setScale() {
+    const base = Math.max(0.8, Math.min(1.25, Math.min(window.innerHeight / 960, window.innerWidth / 1600)));
+    this.scale = base * (Number(settings.get().uiSize) || 1); this.root.style.zoom = this.scale;
+  }
   renderBar() { $('#slot-bar').innerHTML = C.topbar({ logOn: !$('#slot-log')?.classList.contains('hidden'), muted: settings.get().muted }); }
 
   // ───── telas ─────
@@ -142,6 +146,7 @@ export class UI {
         <label>Trilha <span class="seg" data-s="soundtrack"><button data-v="original">Original</button><button data-v="procedural">Gerada</button></span></label>
         <label>Efeitos <span class="seg" data-s="sfxSource"><button data-v="files">Gravados</button><button data-v="procedural">Gerados</button></span></label>
         <label>Imagem <span class="seg" data-s="pixel"><button data-v="1">Nítida</button><button data-v="2">Retrô</button><button data-v="3">Pixelada</button></span></label>
+        <label>Tamanho da interface <span class="seg" data-s="uiSize"><button data-v="0.85">Pequena</button><button data-v="1">Média</button><button data-v="1.15">Grande</button></span></label>
         <label>Velocidade das animações <span class="seg" data-s="speed"><button data-v="1">Normal</button><button data-v="1.6">Rápida</button><button data-v="2.5">Turbo</button></span></label>
         <label>Tremor e clarões <span class="seg" data-s="shake"><button data-v="true">Ligado</button><button data-v="false">Reduzido</button></span></label>
         <label>Dicas para iniciantes <span class="seg" data-s="tipsOff"><button data-v="false">Ligadas</button><button data-v="true">Desligadas</button></span></label>
@@ -154,7 +159,7 @@ export class UI {
     box.addEventListener('click', (e) => {
       const b = e.target.closest('.seg button'); if (!b) return;
       const k = b.parentElement.dataset.s, raw = b.dataset.v, v = raw === 'true' ? true : raw === 'false' ? false : isNaN(Number(raw)) ? raw : Number(raw);
-      settings.set(k === 'tipsOff' && v === false ? { tipsOff: false, tips: {} } : { [k]: v }); applyVolumes(); this.renderBar(); syncSeg(); sfx('select');
+      settings.set(k === 'tipsOff' && v === false ? { tipsOff: false, tips: {} } : { [k]: v }); applyVolumes(); if (k === 'uiSize') this.setScale(); this.renderBar(); syncSeg(); sfx('select');
     });
   }
   gallery() {
@@ -244,7 +249,7 @@ export class UI {
   limit(text) { this.show('slot-limit', !!text); if (text) $('#slot-limit').innerHTML = C.toast({ text, tone: 'stop' }); }
   // menu de ação: { title, note, options } | null
   menu(p) { const m = $('#amenu'); this.show('amenu', !!p); if (p) m.innerHTML = C.actionMenu(p); }
-  menuPos(x, y) { const m = $('#amenu'), z = this.scale, W = window.innerWidth / z; m.style.left = `${Math.max(16 + 296 + 16 + 160, Math.min(W - 176, x / z))}px`; m.style.top = `${Math.max(260, y / z - 12)}px`; }
+  menuPos(x, y) { const m = $('#amenu'), z = this.scale, W = window.innerWidth / z; m.style.left = `${Math.max(16 + 248 + 16 + 130, Math.min(W - 146, x / z))}px`; m.style.top = `${Math.max(220, y / z - 12)}px`; }
   // ficha da carta: props de C.cardSheet | null
   detail(d) {
     const slot = $('#slot-sheet'); this.show('slot-sheet', !!d); if (!d) { this._sheet = null; return; }
@@ -256,7 +261,7 @@ export class UI {
   preview(p) { this.show('preview', !!p); if (p) $('#preview').innerHTML = C.combatPreview(p); }
   previewPos(x, y) {
     const z = this.scale, W = window.innerWidth / z, H = window.innerHeight / z; x /= z; y /= z;
-    $('#preview').style.transform = `translate(${x + 64 + 240 < W ? x + 64 : x - 64 - 240}px, ${Math.max(12, Math.min(H - 220, y - 110))}px)`;
+    $('#preview').style.transform = `translate(${x + 56 + 212 < W ? x + 56 : x - 56 - 212}px, ${Math.max(12, Math.min(H - 220, y - 110))}px)`;
     $('#tip').style.transform = `translate(${Math.min(W - 300, x + 18)}px, ${y + 24}px)`;
   }
   tip(text) { this.show('tip', !!text); if (text) $('#tip').innerHTML = `<div class="h-tip">${esc(text)}</div>`; }

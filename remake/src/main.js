@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { loadAll } from './assets.js';
 import { Gfx, Particles, timeUniform, updateTweens } from './gfx.js';
 import { buildScene } from './scene.js';
+import { buildStreet } from './street.js';
 import { Duel } from './duel.js';
 import { UI } from './ui.js';
 import { settings } from './settings.js';
@@ -22,7 +23,7 @@ document.body.classList.add('theme-buckshot');
 
 const ui = new UI(document.getElementById('ui'));
 const canvas = document.getElementById('gl');
-let gfx, R, particles, duel, mode = 'boot';
+let gfx, R, street, particles, duel, mode = 'boot';
 const camPos = new THREE.Vector3(0, 2.2, 7), camLook = new THREE.Vector3(0, 1.4, -3);
 
 async function boot() {
@@ -34,6 +35,7 @@ async function boot() {
   const pm = new THREE.PMREMGenerator(gfx.renderer);
   R.scene.environment = pm.fromScene(new RoomEnvironment(), 0.04).texture; R.scene.environmentIntensity = 0.16; pm.dispose();
   window.__R__ = R;
+  street = buildStreet(); window.__STREET__ = street; // fundo do menu: a sede da empresa e a fila de candidatos
   particles = new Particles(R.scene);
   duel = new Duel({ gfx, R, particles, ui });
   ui.boot(1);
@@ -68,7 +70,7 @@ function startDuel() {
 function onResize() {
   if (!gfx) return;
   gfx.resize();
-  R.camera.aspect = gfx.w / gfx.h; R.camera.updateProjectionMatrix();
+  R.camera.aspect = gfx.w / gfx.h; R.camera.updateProjectionMatrix(); street.resize(gfx.w / gfx.h);
   particles.mat.uniforms.uScale.value = gfx.pointScale; R.dust.material.uniforms.uScale.value = gfx.pointScale;
 }
 
@@ -82,6 +84,8 @@ function loop(nowMs) {
   updateTweens(dt * 1000);
   duel.update(dt, t);
   particles.update(dt);
+  // menu: a rua com o prédio e a fila (cena própria, mesmo filtro de imagem)
+  if (mode !== 'duel') { street.update(dt, t, duel.mouse); gfx.render(street.scene, street.camera); return; }
   // câmera: pose-alvo por modo + paralaxe do mouse + respiração + tremor
   const cam = R.camera, wide = Math.max(1, 1.62 / cam.aspect);
   if (mode === 'duel') {

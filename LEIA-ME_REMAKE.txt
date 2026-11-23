@@ -14,7 +14,7 @@ COMO JOGAR (resumo)
 - Batalha: clique numa criatura sua e escolha "Atacar"; o jogo mostra a previsão antes de confirmar.
 - Passe o mouse em qualquer carta para ler, em texto grande, o que ela faz.
 - Atalhos: B = batalha · Espaço = encerrar turno (ou toque a campainha da mesa) · Esc / botão direito = cancelar.
-- Configurações: trilha (original/gerada), efeitos (gravados/gerados), imagem (nítida/retrô/pixelada — as cartas ficam sempre nítidas),
+- Configurações: trilha (original/gerada), efeitos (gravados/gerados), imagem (nítida/retrô/pixelada — as cartas ficam sempre nítidas), tamanho da interface,
   velocidade das animações, tremor/clarões e dicas para iniciantes.
 
 ARQUIVOS

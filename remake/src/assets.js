@@ -6,7 +6,9 @@ import { CARDS } from './cards.js';
 
 export function asset(key) { return window.__ASSETS__?.[key] ?? `${window.__ASSET_BASE__ ?? ''}assets/${key}`; }
 
-const images = new Map(), models = new Map();
+const images = new Map(), models = new Map(), clipsByModel = new Map();
+// animações que vêm no arquivo do modelo (ex.: Walk/Idle do business_man, usados pela fila do menu)
+export function clips(name) { return clipsByModel.get(name) ?? []; }
 export function img(key) { return images.get(key); }
 // cópia independente de um modelo (materiais clonados para poder ajustar por instância)
 export function model(name) {
@@ -44,6 +46,6 @@ export async function loadAll(onProgress) {
   await Promise.all([
     fontWait,
     ...keys.map((k) => loadImage(k).then(tick)),
-    ...MODEL_LIST.map((m) => loader.loadAsync(asset(`models/${m}.glb`)).then((g) => { models.set(m, g.scene); tick(); }).catch((e) => { console.warn('modelo não carregou', m, e); tick(); })),
+    ...MODEL_LIST.map((m) => loader.loadAsync(asset(`models/${m}.glb`)).then((g) => { models.set(m, g.scene); clipsByModel.set(m, g.animations ?? []); tick(); }).catch((e) => { console.warn('modelo não carregou', m, e); tick(); })),
   ]);
 }

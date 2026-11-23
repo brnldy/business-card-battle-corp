@@ -12,6 +12,11 @@ O projeto passou a viver neste repositório, juntando as duas frentes:
 - A versão Phaser e a 3D feita aqui (descritas abaixo) ficaram guardadas num ramo local, `historico-yugioro`, que não sobe para o GitHub. A estética oficial é a do remake.
 - Regra de trabalho: tudo que fizermos sobe neste repositório.
 
+### Ajustes de 23/11/2026 (depois do primeiro teste no repositório novo)
+- **HUD menor:** a interface crescia até 190% em telas grandes. Agora escala entre 80% e 125% conforme a tela, e os painéis, a ficha da carta, o menu de ação, a prévia de combate e as dicas ficaram mais compactos. Em Configurações → Tamanho da interface: Pequena / Média / Grande.
+- **Ataques:** conferido no motor e na tela que cada criatura em ATQ ataca 1 vez por turno (a Nath, 2), como no GDD. Nada mudou.
+- **Menu em 3D** (`remake/src/street.js`): a sede da Business Card Battle Corp. numa rua em ruínas, com letreiro no telhado, céu com redemoinho e números girando, janelas e postes que piscam, carros abandonados e uma fila de candidatos de terno (modelo Business Man com as animações Walk/Idle). A cada ~4,6 s o primeiro entra pela porta, a fila anda uma vaga e um candidato novo, com outras cores de terno, pele e cabelo, entra no fim, fora do quadro.
+
 
 ## Etapa 1 — Fundação ✅
 - [x] Entrevista e plano aprovado
