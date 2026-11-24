@@ -93,7 +93,7 @@ export class Duel {
     if (this.busy || !this.active) return;
     let res;
     try { res = applyAction(this.state, action); }
-    catch (e) { console.warn('Jogada recusada', action, e); this.ui.toast('Essa jogada não é permitida agora.'); sfx('deny'); return; }
+    catch (e) { console.warn('Jogada recusada', action, e); this.ui.toast('Jogada não permitida agora.'); sfx('deny'); return; }
     this.busy = true; this.setSel(null);
     const prev = this.placements(this.state);
     this.state = res.state; this.indexCards();
@@ -240,7 +240,7 @@ export class Duel {
       if (line) this.ui.log(line, e.type, this.whoOf(e, prev));
       switch (e.type) {
         case 'gameStart':
-          this.ui.banner(e.firstPlayer === ME ? 'Você começa' : `${this.names[OP]} começa`, 'cara ou coroa decidiu', e.firstPlayer === ME ? 'me' : 'foe');
+          this.ui.banner(e.firstPlayer === ME ? 'Você começa' : `${this.names[OP]} começa`, 'no cara ou coroa', e.firstPlayer === ME ? 'me' : 'foe');
           sfx('coin'); await wait(D(900));
           break;
         case 'draw': {
@@ -412,7 +412,7 @@ export class Duel {
           break;
         }
         case 'drawSkipped':
-          if (e.player === ME) this.ui.toast(e.reason === 'hand_limit' ? 'Mão cheia: você compra assim que abrir espaço.' : 'Seu deck acabou: não há mais o que comprar.');
+          if (e.player === ME) this.ui.toast(e.reason === 'hand_limit' ? 'Mão cheia: você compra assim que abrir espaço.' : 'Deck vazio: sem compra.');
           break;
         case 'gameOver': await this.finale(e, D); break;
       }
@@ -459,10 +459,10 @@ export class Duel {
     const out = this.closeMatch(draw ? 'draw' : win ? 'win' : 'loss');
     this.ui.gameOver({
       win, draw,
-      reward: this.training ? 'Treino: não vale PATRIMÔNIO nem entra no histórico.' : out?.reward ? `+ ${money(out.reward)} de PATRIMÔNIO` : win ? '' : 'Os investidores não pagam derrota. As metas do mural pagam.',
+      reward: this.training ? 'Treino: não vale nada.' : out?.reward ? `+ ${money(out.reward)} de PATRIMÔNIO` : win ? '' : 'Derrota não paga. As metas pagam.',
       title: draw ? 'EMPATE' : win ? 'VOCÊ VENCEU' : 'VOCÊ FALIU',
-      sub: e.reason === 'turn_limit' ? 'Limite de turnos atingido: vence quem tem mais CAIXA.' : win ? `${name} ficou sem CAIXA. Os investidores aprovam.` : `Seu CAIXA zerou. ${name} leva o investimento.`,
-      stats: `CAIXA final · você ${money(s.players[ME].caixa)} · ${name} ${money(s.players[OP].caixa)} · ${s.turn} turnos`,
+      sub: e.reason === 'turn_limit' ? 'Limite de turnos: vence o maior CAIXA.' : win ? `${name} ficou sem CAIXA.` : `${name} leva o investimento.`,
+      stats: `Você ${money(s.players[ME].caixa)} · ${name} ${money(s.players[OP].caixa)} · ${s.turn} turnos`,
     });
   }
 
@@ -630,16 +630,16 @@ export class Duel {
     if (this.sel) this.cancel();
   }
   pressEnd() {
-    if (this.sel && this.sel.stage !== 'menu') { this.ui.toast('Conclua ou cancele a escolha atual (Esc).'); sfx('deny'); return; }
-    if (!this.canAct() || !this.legal.some((a) => a.type === 'endTurn')) { if (this.myTurn() && !this.busy) { this.ui.toast('Mão cheia: jogue ou descarte uma carta antes de encerrar.'); sfx('deny'); } return; }
-    if (this.attacksLeft() && performance.now() - (this.endArmed ?? 0) > 4000) { this.endArmed = performance.now(); this.ui.toast('Você ainda pode atacar. Aperte de novo para encerrar assim mesmo.'); sfx('deny'); return; }
+    if (this.sel && this.sel.stage !== 'menu') { this.ui.toast('Conclua a escolha ou Esc.'); sfx('deny'); return; }
+    if (!this.canAct() || !this.legal.some((a) => a.type === 'endTurn')) { if (this.myTurn() && !this.busy) { this.ui.toast('Mão cheia: jogue ou descarte antes de encerrar.'); sfx('deny'); } return; }
+    if (this.attacksLeft() && performance.now() - (this.endArmed ?? 0) > 4000) { this.endArmed = performance.now(); this.ui.toast('Ainda dá para atacar. Aperte de novo para encerrar.'); sfx('deny'); return; }
     this.endArmed = 0;
     const b = this.R.bell.userData.btn; tween(220, (k, raw) => { b.position.y = 0.36 - Math.sin(raw * Math.PI) * 0.07; }, ease.lin);
     sfx('bell'); this.apply({ type: 'endTurn' });
   }
   pressBattle() {
     if (!this.canAct()) return;
-    if (this.sel && this.sel.stage !== 'menu') { this.ui.toast('Conclua ou cancele a escolha atual (Esc).'); sfx('deny'); return; }
+    if (this.sel && this.sel.stage !== 'menu') { this.ui.toast('Conclua a escolha ou Esc.'); sfx('deny'); return; }
     if (!this.legal.some((a) => a.type === 'enterBattle')) { if (this.state.phase === 'main') { this.ui.toast(this.state.turn === 1 ? 'No 1º turno ninguém ataca.' : 'Mão cheia: jogue ou descarte uma carta antes da batalha.'); sfx('deny'); } return; }
     this.apply({ type: 'enterBattle' });
   }
@@ -650,7 +650,7 @@ export class Duel {
     if (this.busy) return;
     if (this.sel?.uid === uid && this.sel.stage === 'menu') return this.cancel();
     const cands = this.handCands(c);
-    if (!cands.length) { this.ui.toast(this.whyNot(c.cardId)); sfx('deny'); this.setSel(null); if (cardDef(c.cardId).cost && this.state.phase === 'main') this.ui.tutor('cost', { title: 'Custo', anchor: 'sheet', html: 'Cada <b>✕</b> é uma criatura sua que você <b>sacrifica</b> para invocar a carta. Comece pelas cartas sem ✕.' }); return; }
+    if (!cands.length) { this.ui.toast(this.whyNot(c.cardId)); sfx('deny'); this.setSel(null); if (cardDef(c.cardId).cost && this.state.phase === 'main') this.ui.tutor('cost', { title: 'Custo', anchor: 'sheet', html: 'Cada <b>✕</b> = 1 criatura sua <b>sacrificada</b>. Comece pelas sem ✕.' }); return; }
     sfx('select');
     this.resolve(cands, { menu: true, uid });
   }
@@ -664,7 +664,7 @@ export class Duel {
     if (s?.stage === 'target' && s.selectable.has(uid)) return this.resolve(s.cands.filter((a) => tgtOf(a) === uid), { setsDone: true, targetDone: true, uid: s.uid });
     if (!this.myTurn()) { this.ui.toast('Espere a sua vez.'); sfx('deny'); return; }
     if (this.busy) return;
-    if (side !== ME) { if (this.state.phase === 'battle') { this.ui.toast('Escolha primeiro a sua atacante.'); sfx('deny'); } this.setSel(null); return; }
+    if (side !== ME) { if (this.state.phase === 'battle') { this.ui.toast('Escolha a atacante primeiro.'); sfx('deny'); } this.setSel(null); return; }
     if (s?.uid === uid) return this.cancel();
     const cands = this.legal.filter((a) => (a.type === 'changeMode' || a.type === 'attack') && a.uid === uid);
     if (this.state.phase === 'main' && this.couldAttack(uid)) { sfx('select'); return this.setSel({ stage: 'menu', cands, uid, kinds: ['goAttack', ...new Set(cands.map(menuKey))] }); }
@@ -693,10 +693,10 @@ export class Duel {
     if (!o.targetDone && [...tg].some((t) => t !== null)) {
       const atk = a.type === 'attack';
       return this.setSel({ stage: 'target', cands: uniq, uid: o.uid, attacker: atk ? a.uid : null, selectable: new Set([...tg].filter((t) => t !== null)), allowNull: tg.has(null),
-        nullLabel: atk ? 'Atacar o CAIXA' : 'Pular efeito', label: atk ? 'Escolha quem atacar' : a.type === 'summon' ? 'Efeito de entrada: escolha um alvo' : 'Escolha quem recebe o efeito' });
+        nullLabel: atk ? 'Atacar o CAIXA' : 'Pular efeito', label: atk ? 'Escolha quem atacar' : a.type === 'summon' ? 'Escolha o alvo' : 'Escolha o alvo' });
     }
     if (a.type === 'attack' && a.target === null && !o.targetDone)
-      return this.setSel({ stage: 'target', cands: uniq, uid: o.uid, attacker: a.uid, selectable: new Set(), allowNull: true, nullLabel: 'Atacar o CAIXA', label: 'O rival está sem criaturas na mesa' });
+      return this.setSel({ stage: 'target', cands: uniq, uid: o.uid, attacker: a.uid, selectable: new Set(), allowNull: true, nullLabel: 'Atacar o CAIXA', label: 'Mesa do rival vazia' });
     this.apply(a);
   }
   pickMenu(key) {
@@ -725,16 +725,16 @@ export class Duel {
   cancel() { if (this.sel) { sfx('cancel'); this.setSel(null); } this.mouse.dragging = null; }
   whyNot(cardId) {
     const s = this.state, p = s.players[ME], d = cardDef(cardId);
-    if (s.phase === 'battle') return 'A batalha já começou: cartas, só no próximo turno.';
+    if (s.phase === 'battle') return 'Batalha em curso: cartas só no próximo turno.';
     if (d.kind === 'creature' || d.kind === 'entity') {
-      if (p.summonsThisTurn >= RULES.SUMMONS_PER_TURN) return 'É 1 invocação por turno — e você já fez a sua.';
+      if (p.summonsThisTurn >= RULES.SUMMONS_PER_TURN) return 'Invocação do turno já usada.';
       const n = p.creatures.filter(Boolean).length, c = d.cost ?? 0;
-      return c > n ? `Custa ${c} sacrifício${c > 1 ? 's' : ''}: você precisa de ${c} criatura${c > 1 ? 's' : ''} na mesa.` : 'Sua fileira de criaturas está cheia.';
+      return c > n ? `Precisa de ${c} criatura${c > 1 ? 's' : ''} na mesa para sacrificar.` : 'Fileira de criaturas cheia.';
     }
     const ab = d.abilities.find((a) => a.trigger === 'on_play');
     if (ab?.playCost?.sendOwnCreaturesToDead) return `Custa ${ab.playCost.sendOwnCreaturesToDead} criaturas suas da mesa.`;
-    if (ab?.choose) return 'Não há criatura na mesa para receber o efeito.';
-    return p.effects.some((e) => e === null) ? 'Essa carta não pode ser usada agora.' : 'Sua fileira de efeitos está cheia.';
+    if (ab?.choose) return 'Sem criatura na mesa para o efeito.';
+    return p.effects.some((e) => e === null) ? 'Não dá para usar agora.' : 'Fileira de efeitos cheia.';
   }
   setSel(sel) { this.sel = sel; this.refreshSel(); if (this.state) this.refreshHud(); }
   refreshSel() {
@@ -757,7 +757,7 @@ export class Duel {
       const note = f ? (f.c.mode === 'ATK' ? 'em ataque' : 'em defesa') : isEffect(def) ? (def.kind === 'effect_trap' ? 'armadilha' : 'efeito') : def.cost ? `custo: ${def.cost} sacrifício${def.cost > 1 ? 's' : ''}` : 'custo: grátis';
       this.ui.menu({ title: def.name, note, options: s.kinds.map((k) => ({ key: k, ...opt(k) })) });
       this.ui.prompt(null);
-      if (s.kinds.some((k) => k.startsWith('summon'))) this.ui.tutor('modes', { title: 'Ataque ou defesa', anchor: 'menu', html: 'Em <b>ataque</b> a criatura pode bater — mas, se perder, a diferença sai do seu CAIXA. Em <b>defesa</b> ela só protege, e o seu CAIXA fica a salvo.' });
+      if (s.kinds.some((k) => k.startsWith('summon'))) this.ui.tutor('modes', { title: 'Ataque ou defesa', anchor: 'menu', html: '<b>Em pé</b>: ataca, mas se perder você paga a diferença. <b>Deitada</b>: só protege, seu CAIXA fica a salvo.' });
       if (a.type === 'summon') { const z = this.state.players[ME].creatures.indexOf(null); if (z >= 0 && !def.cost) this.showSlot('cr', z); }
       if (a.type === 'setTrap' || (a.type === 'playEffect' && def.durationTurns)) { const z = this.state.players[ME].effects.indexOf(null); if (z >= 0) this.showSlot('fx', z); }
     } else {
@@ -819,8 +819,8 @@ export class Duel {
     this.ui.setTurn({
       mine, over, turn: s.turn, who: this.names[OP], phase, coach: this.coachLine(can, other), primary, secondary,
       res: mine ? [
-        { icon: 'summon', label: 'Invocação', value: me.summonsThisTurn >= RULES.SUMMONS_PER_TURN ? 'já usada' : phase === 'battle' ? 'só antes da batalha' : 'disponível', on: me.summonsThisTurn < RULES.SUMMONS_PER_TURN && phase !== 'battle', title: 'Você pode invocar 1 criatura por turno, antes da batalha' },
-        s.turn === 1 ? { icon: 'atk', label: 'Ataques', value: 'a partir do turno 2', on: false } : { icon: 'atk', label: 'Ataques', value: atkN ? `${atkN} pronto${atkN > 1 ? 's' : ''}` : 'nenhum', on: atkN > 0, title: 'Criaturas suas em ataque que ainda podem atacar neste turno' },
+        { icon: 'summon', label: 'Invocação', value: me.summonsThisTurn >= RULES.SUMMONS_PER_TURN ? 'usada' : phase === 'battle' ? 'antes da batalha' : 'livre', on: me.summonsThisTurn < RULES.SUMMONS_PER_TURN && phase !== 'battle', title: 'Você pode invocar 1 criatura por turno, antes da batalha' },
+        s.turn === 1 ? { icon: 'atk', label: 'Ataques', value: 'no turno 2', on: false } : { icon: 'atk', label: 'Ataques', value: atkN ? `${atkN} pronto${atkN > 1 ? 's' : ''}` : 'nenhum', on: atkN > 0, title: 'Criaturas suas em ataque que ainda podem atacar neste turno' },
       ] : [],
     });
     const lim = this.myTurn() ? handLimitStatus(s) : 'ok';
@@ -831,12 +831,12 @@ export class Duel {
     if (s.phase === 'over') return '';
     if (s.active !== ME) return `${this.names[OP]} está jogando.`;
     if (!can) return '';
-    if (this.sel && this.sel.stage !== 'menu') return 'Conclua a escolha indicada no topo — ou cancele com Esc.';
-    if (handLimitStatus(s) !== 'ok') return 'Sua mão está cheia. Jogue ou descarte uma carta.';
-    if (s.phase === 'battle') return this.legal.some((a) => a.type === 'attack') ? 'Escolha uma criatura sua para atacar.' : 'Sem mais ataques. Encerre o turno.';
-    if (other.some((a) => PLAY_TYPES.has(a.type))) return s.players[ME].summonsThisTurn ? 'Você ainda pode usar efeitos.' : 'Jogue uma carta de contorno verde.';
-    if (this.attacksLeft()) return 'Suas criaturas podem atacar.';
-    return s.turn === 1 ? 'No 1º turno ninguém ataca. Encerre o turno.' : 'Nada mais a fazer. Encerre o turno.';
+    if (this.sel && this.sel.stage !== 'menu') return 'Conclua a escolha do topo ou Esc.';
+    if (handLimitStatus(s) !== 'ok') return 'Mão cheia: jogue ou descarte.';
+    if (s.phase === 'battle') return this.legal.some((a) => a.type === 'attack') ? 'Escolha quem ataca.' : 'Sem ataques. Encerre o turno.';
+    if (other.some((a) => PLAY_TYPES.has(a.type))) return s.players[ME].summonsThisTurn ? 'Ainda dá para usar efeitos.' : 'Jogue uma carta verde.';
+    if (this.attacksLeft()) return 'Você pode atacar.';
+    return s.turn === 1 ? '1º turno: sem ataques. Encerre.' : 'Nada mais a fazer. Encerre.';
   }
   refreshChips() { this.chipsDirty = true; }
   buildChips() {
@@ -863,22 +863,22 @@ export class Duel {
   autoTips() {
     const s = this.state, ui = this.ui;
     if (s.active === ME) {
-      ui.tutor('start', { ctx: 'me', title: 'Objetivo', anchor: 'folder', html: 'Zere o <b>CAIXA</b> do rival (pasta de cima) antes que ele zere o seu (pasta de baixo).' });
-      ui.tutor('hand', { ctx: 'me', title: 'Sua mão', anchor: 'hand', html: 'Cartas de <b>contorno verde</b> podem ser jogadas agora: clique ou arraste para a mesa. Passe o mouse para ler o que cada uma faz.' });
-      ui.tutor('turn', { ctx: 'me', title: 'Próximo passo', anchor: 'turn', html: 'O botão grande do painel sempre mostra o <b>próximo passo</b>. Quando ele pulsa, não há mais nada a fazer.' });
-      if (s.phase === 'main' && this.attacksLeft()) ui.tutor('battle', { ctx: 'me', title: 'Atacar', anchor: 'turn', html: 'Suas criaturas já podem <b>atacar</b>. Clique numa delas e escolha “Atacar”: o resultado aparece <b>antes</b> de você confirmar. Jogue suas cartas antes — depois da batalha não dá mais.' });
-      if (s.players[OP].effects.some((e) => e?.faceDown)) ui.tutor('trap', { ctx: 'me', title: 'Armadilha', anchor: 'top', html: 'Carta do rival <b>virada para baixo</b> é armadilha: pode anular o seu ataque.' });
-    } else ui.tutor('foe', { ctx: 'foe', title: 'Vez do rival', anchor: 'top', html: 'A carta que ele joga aparece ampliada à esquerda; cada jogada passa no topo. O histórico completo fica em <b>Relatório</b>.' });
+      ui.tutor('start', { ctx: 'me', title: 'Objetivo', anchor: 'folder', html: 'Zere o <b>CAIXA</b> do rival (pasta de cima). O seu é a de baixo.' });
+      ui.tutor('hand', { ctx: 'me', title: 'Sua mão', anchor: 'hand', html: '<b>Contorno verde</b> = pode jogar. Clique ou arraste para a mesa.' });
+      ui.tutor('turn', { ctx: 'me', title: 'Próximo passo', anchor: 'turn', html: 'O botão grande é o <b>próximo passo</b>. Pulsando: nada mais a fazer.' });
+      if (s.phase === 'main' && this.attacksLeft()) ui.tutor('battle', { ctx: 'me', title: 'Atacar', anchor: 'turn', html: 'Clique numa criatura e escolha <b>Atacar</b>. O resultado aparece antes de confirmar. Jogue suas cartas antes da batalha.' });
+      if (s.players[OP].effects.some((e) => e?.faceDown)) ui.tutor('trap', { ctx: 'me', title: 'Armadilha', anchor: 'top', html: 'Carta do rival <b>virada</b> = armadilha. Pode anular seu ataque.' });
+    } else ui.tutor('foe', { ctx: 'foe', title: 'Vez do rival', anchor: 'top', html: 'A jogada dele aparece à esquerda. Tudo fica no <b>Relatório</b>.' });
   }
   detailFor(uid) {
     const c = this.cards.get(uid), p = c?.place; if (!p) return null;
     const s = this.state;
     if (p.kind === 'hand' && p.side === OP) return { faceDown: true, notes: [`Mão de ${this.names[OP]}: ${p.n} carta${p.n > 1 ? 's' : ''}.`] };
-    if (p.kind === 'fx' && p.faceDown && p.side === OP) return { faceDown: true, notes: ['Armadilha do rival, virada para baixo.', 'Pode disparar quando você atacar.'] };
+    if (p.kind === 'fx' && p.faceDown && p.side === OP) return { faceDown: true, notes: ['Armadilha do rival: dispara no seu ataque.'] };
     const owner = p.side === ME ? 'me' : 'opp';
     if (p.kind === 'hand') {
       const playable = this.legal.some((a) => PLAY_TYPES.has(a.type) && this.cardIndex.get(a.uid) === c.cardId);
-      return { cardId: c.cardId, where: 'hand', owner, status: !this.myTurn() ? { tone: 'info', text: 'Você joga na sua vez.' } : playable ? { tone: 'go', text: 'Clique ou arraste para a mesa.' } : { tone: 'stop', text: this.whyNot(c.cardId) } };
+      return { cardId: c.cardId, where: 'hand', owner, status: !this.myTurn() ? { tone: 'info', text: 'Jogue na sua vez.' } : playable ? { tone: 'go', text: 'Clique ou arraste.' } : { tone: 'stop', text: this.whyNot(c.cardId) } };
     }
     if (p.kind === 'cr') {
       const f = findCreature(s, uid); if (!f) return { cardId: c.cardId, where: 'table', owner };
@@ -896,7 +896,7 @@ export class Duel {
     }
     if (p.kind === 'fx') {
       const e = s.players[p.side].effects[p.idx];
-      return { cardId: c.cardId, where: 'table', owner, notes: [p.faceDown ? 'Sua armadilha, virada para baixo: o rival não vê.' : e?.turnsLeft != null ? `Na mesa por mais ${e.turnsLeft} turno${e.turnsLeft > 1 ? 's' : ''} do dono.` : 'Efeito na mesa.'] };
+      return { cardId: c.cardId, where: 'table', owner, notes: [p.faceDown ? 'Sua armadilha: o rival não vê.' : e?.turnsLeft != null ? `Na mesa por mais ${e.turnsLeft} turno${e.turnsLeft > 1 ? 's' : ''} do dono.` : 'Efeito na mesa.'] };
     }
     if (p.kind === 'dead') {
       const dead = s.players[p.side].dead;

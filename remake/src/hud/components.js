@@ -146,7 +146,7 @@ export function cardSheet(p) {
   const cost = d.cost ? `<div class="h-stat h-stat--cost"><span class="h-stat__label">${ICON.summon}Custo</span><span class="h-stat__value">${'<i class="h-pip">✕</i>'.repeat(d.cost)}</span><span class="h-stat__base">${d.cost} sacrifício${d.cost > 1 ? 's' : ''}</span></div>`
     : `<div class="h-stat h-stat--cost"><span class="h-stat__label">${ICON.summon}Custo</span><span class="h-stat__value h-stat__value--free">grátis</span></div>`;
   const kindLine = [KIND[d.kind], d.element, `depto. ${DEPT[d.department] ?? d.department}`].join(' · ');
-  const extra = fx ? (d.kind === 'effect_trap' ? 'Fica virada para baixo até disparar.' : d.durationTurns ? `Fica na mesa por ${d.durationTurns} turnos seus.` : 'Vale na hora; depois vai para o Morto.') : '';
+  const extra = fx ? (d.kind === 'effect_trap' ? 'Virada até disparar.' : d.durationTurns ? `Dura ${d.durationTurns} turnos seus.` : 'Vale na hora e vai para o Morto.') : '';
   const where = { hand: 'Na sua mão', table: p.owner === 'opp' ? 'Na mesa do rival' : 'Na sua mesa', dead: 'No Morto', show: p.owner === 'opp' ? 'Jogada do rival' : 'Sua jogada' }[p.where] ?? '';
   return `<article class="${cx('h-sheet', p.owner === 'opp' && 'h-sheet--opp')}">
     <div class="h-sheet__art" style="background-image:url(${asset(d.art)})">${where ? `<span class="h-sheet__where">${where}</span>` : ''}</div>
@@ -169,12 +169,12 @@ export function fitSheet(el) {
   for (const c of ['is-noart', 'is-tight']) { if (!over()) break; el.classList.add(c); }
 }
 const GLOSS = [
-  [/Frio/, 'Frio', 'marcadores que tiram $100 do CAIXA de quem os tem, a cada turno.'],
+  [/Frio/, 'Frio', '−$100 do CAIXA por marcador, a cada turno.'],
   [/Morto/, 'Morto', 'a pilha de descarte.'],
-  [/[Ii]mune/, 'Imune', 'esse tipo de efeito não a afeta.'],
-  [/depto\./, 'Depto.', 'o departamento da carta (veja a linha abaixo do nome).'],
-  [/moeda/, 'Moeda', 'cara ou coroa, 50% de chance.'],
-  [/virada para baixo/, 'Virada para baixo', 'o rival não vê qual carta é.'],
+  [/[Ii]mune/, 'Imune', 'o efeito não pega nela.'],
+  [/depto\./, 'Depto.', 'departamento, abaixo do nome.'],
+  [/moeda/, 'Moeda', 'cara ou coroa, 50%.'],
+  [/virada para baixo/, 'Virada para baixo', 'o rival não vê a carta.'],
 ];
 function gloss(id) {
   const txt = (RULES_TEXT[id] ?? []).map((r) => r[1]).join(' ');

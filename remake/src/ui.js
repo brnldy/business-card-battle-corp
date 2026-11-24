@@ -111,9 +111,8 @@ export class UI {
     const box = this.modal(`
       <div class="memo">Formulário 01-A · registro de empresa</div>
       <h2>Como se chama a sua empresa?</h2>
-      <p>É esse nome que vai na sua pasta de CAIXA e disputa os investidores.</p>
       <input id="name-in" maxlength="${MAX_NAME}" value="${esc(cur)}" placeholder="Nome da empresa" autocomplete="off" spellcheck="false">
-      <p class="fine">Até ${MAX_NAME} caracteres · Enter confirma</p>
+      <p class="fine">Máx. ${MAX_NAME} · Enter confirma</p>
       <nav><button data-close>Voltar</button><button id="name-ok" class="primary">Assinar e entrar</button></nav>`, 'form');
     const inp = $('#name-in', box), ok = $('#name-ok', box);
     const sync = () => { ok.disabled = !cleanName(inp.value); };
@@ -142,15 +141,15 @@ export class UI {
     const box = this.modal(`
       <h2>Configurações</h2>
       <div class="rows">
-        <label>Música e ambiente <input type="range" min="0" max="1" step="0.05" value="${s.music}" data-k2="music"></label>
-        <label>Efeitos sonoros <input type="range" min="0" max="1" step="0.05" value="${s.sfx}" data-k2="sfx"></label>
+        <label>Música <input type="range" min="0" max="1" step="0.05" value="${s.music}" data-k2="music"></label>
+        <label>Efeitos <input type="range" min="0" max="1" step="0.05" value="${s.sfx}" data-k2="sfx"></label>
         <label>Trilha <span class="seg" data-s="soundtrack"><button data-v="original">Original</button><button data-v="procedural">Gerada</button></span></label>
-        <label>Efeitos <span class="seg" data-s="sfxSource"><button data-v="files">Gravados</button><button data-v="procedural">Gerados</button></span></label>
+        <label>Origem dos efeitos <span class="seg" data-s="sfxSource"><button data-v="files">Gravados</button><button data-v="procedural">Gerados</button></span></label>
         <label>Imagem <span class="seg" data-s="pixel"><button data-v="1">Nítida</button><button data-v="2">Retrô</button><button data-v="3">Pixelada</button></span></label>
-        <label>Tamanho da interface <span class="seg" data-s="uiSize"><button data-v="0.85">Pequena</button><button data-v="1">Média</button><button data-v="1.15">Grande</button></span></label>
-        <label>Velocidade das animações <span class="seg" data-s="speed"><button data-v="1">Normal</button><button data-v="1.6">Rápida</button><button data-v="2.5">Turbo</button></span></label>
+        <label>Tamanho <span class="seg" data-s="uiSize"><button data-v="0.85">Pequena</button><button data-v="1">Média</button><button data-v="1.15">Grande</button></span></label>
+        <label>Animações <span class="seg" data-s="speed"><button data-v="1">Normal</button><button data-v="1.6">Rápida</button><button data-v="2.5">Turbo</button></span></label>
         <label>Tremor e clarões <span class="seg" data-s="shake"><button data-v="true">Ligado</button><button data-v="false">Reduzido</button></span></label>
-        <label>Dicas para iniciantes <span class="seg" data-s="tipsOff"><button data-v="false">Ligadas</button><button data-v="true">Desligadas</button></span></label>
+        <label>Dicas <span class="seg" data-s="tipsOff"><button data-v="false">Ligadas</button><button data-v="true">Desligadas</button></span></label>
         <label>Som <span class="seg" data-s="muted"><button data-v="false">Ligado</button><button data-v="true">Mudo</button></span></label>
       </div>
       <nav><button data-close class="primary">Voltar</button></nav>`);
