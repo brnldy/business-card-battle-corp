@@ -16,7 +16,7 @@ const MODELS = ['business_man', 'Television_01', 'hanging_industrial_lamp', 'mou
 
 const result = await build({ entryPoints: [path.join(root, 'src/main.js')], bundle: true, format: 'iife', minify: !dev, write: false, target: 'es2022', legalComments: 'none' });
 const js = result.outputFiles[0].text;
-const css = fs.readFileSync(path.join(root, 'src/tokens.css'), 'utf8') + '\n' + fs.readFileSync(path.join(root, 'src/style.css'), 'utf8') + '\n' + fs.readFileSync(path.join(root, 'src/hud/hud.css'), 'utf8') + '\n' + fs.readFileSync(path.join(root, 'src/lobby.css'), 'utf8');
+const css = fs.readFileSync(path.join(root, 'src/tokens.css'), 'utf8') + '\n' + fs.readFileSync(path.join(root, 'src/style.css'), 'utf8') + '\n' + fs.readFileSync(path.join(root, 'src/hud/hud.css'), 'utf8') + '\n' + fs.readFileSync(path.join(root, 'src/lobby.css'), 'utf8') + '\n' + fs.readFileSync(path.join(root, 'src/ds-pilot.css'), 'utf8');
 
 const fonts = [
   ['Apple Garamond', 400, 'normal', 'AppleGaramond-400-normal.ttf'], ['Apple Garamond', 700, 'normal', 'AppleGaramond-700-normal.ttf'],

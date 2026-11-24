@@ -254,15 +254,29 @@ export class LobbyUI {
   // ───────── sala de reunião e treino ─────────
   deckLine(s) { const d = Meta.activeDeck(s), ok = Meta.activeDeckValid(s); return `<div class="lb-deckline ${ok ? '' : 'bad'}"><span class="memo">Deck escolhido</span><b>${esc(d.name)}</b><span>${ok ? `${d.cards.length} cartas · pronto` : esc(Meta.deckErrors(s, d.cards)[0] ?? 'Deck inválido')}</span><button data-a="open" data-id="deck">Trocar no arquivo</button></div>`; }
   vDuel(s) {
-    const rv = RIVALS.map((r) => { const x = s.stats.rivals[r] ?? { w: 0, l: 0 }; return `<li class="${x.w ? 'won' : ''}"><span>${esc(r)}</span><em>${x.w}V · ${x.l}D</em></li>`; }).join('');
-    return `<div class="lb-pad lb-two">
-      <div>
-        <p class="lb-lead">Rival <b>sorteado</b> entre ${RIVALS.length}, com deck das suas cartas. Vença: o <b>CAIXA que sobrar</b> vira PATRIMÔNIO. Perca: nada.</p>
-        ${this.deckLine(s)}
-        <div class="lb-actions"><button data-a="duel" class="primary big" ${Meta.activeDeckValid(s) ? '' : 'disabled'}>Entrar na reunião <kbd>Enter</kbd></button><button data-a="open" data-id="training">Treinar antes</button></div>
-        <p class="fine">Sequência ${s.stats.streak} · recorde ${s.stats.bestStreak}</p>
-      </div>
-      <div><p class="memo">Empresas rivais · seu retrospecto</p><ul class="lb-rivals">${rv}</ul></div></div>`;
+    const won = RIVALS.filter((r) => (s.stats.rivals[r]?.w ?? 0) > 0).length;
+    const rv = RIVALS.map((r) => { const x = s.stats.rivals[r] ?? { w: 0, l: 0 }; return `<li class="${x.w ? 'won' : ''}"><span>${esc(r)}</span><em><b>${x.w}</b>V<b>${x.l}</b>D</em></li>`; }).join('');
+    const d = Meta.activeDeck(s), ok = Meta.activeDeckValid(s), back = backUrl(s.cosmetics.back, s.cosmetics.logo, asset('cards/back.png'));
+    return `<div class="ds-duel">
+      <section class="ds-sheet ds-sheet--main">
+        <dl class="ds-stakes">
+          <div class="win"><dt>Vitória</dt><dd>CAIXA que sobrar <i>→</i> PATRIMÔNIO</dd></div>
+          <div class="loss"><dt>Derrota</dt><dd>${money(0)}</dd></div>
+        </dl>
+        <div class="ds-deck ${ok ? '' : 'bad'}">
+          <div class="ds-deck__fan"><img src="${back}" alt=""><img src="${back}" alt=""><img src="${back}" alt=""></div>
+          <div class="ds-deck__txt"><span class="memo">Deck</span><b>${esc(d.name)}</b><span class="ds-deck__n">${ok ? `${d.cards.length} cartas` : esc(Meta.deckErrors(s, d.cards)[0] ?? 'Deck inválido')}</span></div>
+          <i class="ds-stamp ${ok ? 'ok' : 'no'}">${ok ? 'Pronto' : 'Inválido'}</i>
+          <button data-a="open" data-id="deck" class="ds-link">Trocar</button>
+        </div>
+        <div class="ds-cta"><button data-a="duel" class="primary big" ${ok ? '' : 'disabled'}>Entrar na reunião <kbd>Enter</kbd></button><button data-a="open" data-id="training" class="ds-link">Treinar antes</button></div>
+        <p class="ds-foot">Sequência <b>${s.stats.streak}</b> · Recorde <b>${s.stats.bestStreak}</b></p>
+      </section>
+      <section class="ds-sheet ds-sheet--side">
+        <header><span class="memo">Concorrência</span><b>${won}<i>/${RIVALS.length}</i></b></header>
+        <ul class="ds-rivals">${rv}</ul>
+        <p class="ds-foot">Rival sorteado a cada reunião</p>
+      </section></div>`;
   }
   vTraining(s) {
     return `<div class="lb-pad">
