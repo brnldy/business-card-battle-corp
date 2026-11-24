@@ -175,9 +175,9 @@ function buildRival(R) {
   R.badge = badge;
   R.setBadge = (name) => {
     const g = bc.getContext('2d'); g.fillStyle = '#eef2ea'; g.fillRect(0, 0, 96, 128);
-    g.fillStyle = '#6d1410'; g.fillRect(0, 0, 96, 22); g.fillStyle = '#eef2ea'; g.font = `700 11px ${TX.SANS}`; g.textAlign = 'center'; g.fillText('RIVAL', 48, 15);
+    g.fillStyle = '#6d1410'; g.fillRect(0, 0, 96, 22); g.fillStyle = '#eef2ea'; g.font = `700 11px ${TX.UI}`; g.textAlign = 'center'; g.fillText('RIVAL', 48, 15);
     g.fillStyle = '#c9d2c5'; g.fillRect(24, 32, 48, 44); g.fillStyle = '#1f2b25'; g.fillRect(32, 40, 32, 22); g.fillStyle = '#9fe8ff'; g.fillRect(38, 47, 6, 5); g.fillRect(52, 47, 6, 5); g.fillStyle = '#1f2b25'; g.fillRect(44, 64, 8, 8);
-    g.fillStyle = '#1f2b25'; g.font = `700 10px ${TX.SANS}`; let n = name; while (g.measureText(n).width > 84 && n.length > 3) n = n.slice(0, -1); g.fillText(n, 48, 94);
+    g.fillStyle = '#1f2b25'; g.font = `700 10px ${TX.UI}`; let n = name; while (g.measureText(n).width > 84 && n.length > 3) n = n.slice(0, -1); g.fillText(n, 48, 94);
     for (let i = 0; i < 16; i++) g.fillRect(14 + i * 4.4, 106, i % 3 ? 2 : 3, 12);
     badgeTex.needsUpdate = true;
   };

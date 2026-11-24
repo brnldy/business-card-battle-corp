@@ -24,9 +24,9 @@
   --h-stop: #ee3a30;     /* dano, perigo, bloqueio */
   --h-go-ink: #1d7a3e; --h-stop-ink: #a8231a; --h-warn-ink: #7a5d0c;
   /* tipografia */
-  --h-ui: Helvena, "Segoe UI", system-ui, sans-serif;
-  --h-num: "Apple Garamond", Georgia, serif;
-  --h-fs-cap: 11px; --h-fs-sm: 12.5px; --h-fs-md: 13.5px; --h-fs-lg: 15px; --h-fs-xl: 20px; --h-fs-num: 34px;
+  --h-ui: var(--f-ui);
+  --h-num: var(--f-display);
+  --h-fs-cap: var(--t-cap); --h-fs-sm: var(--t-sm); --h-fs-md: var(--t-md); --h-fs-lg: var(--t-lg); --h-fs-xl: var(--t-xl); --h-fs-num: var(--t-num);
   /* espaço, raio, elevação, movimento */
   --h-1: 4px; --h-2: 8px; --h-3: 12px; --h-4: 16px; --h-5: 24px;
   --h-r1: 4px; --h-r2: 8px; --h-r3: 12px;
@@ -265,7 +265,7 @@ body.theme-buckshot {
   --h-term: rgba(7, 11, 9, 0.94); --h-term-2: rgba(20, 26, 21, 0.96); --h-term-line: rgba(242, 185, 76, 0.24); --h-term-line-2: rgba(242, 185, 76, 0.45);
   --h-paper: #e4dcc0; --h-paper-2: #d6cdae; --h-sage: #4a442c; --h-sage-hi: #5d5535; --h-cream: #f2b94c;
   --h-mdr: #f2b94c; --h-go: #86d98f; --h-t1: #e9e3cc; --h-t2: #b3ab90; --h-t3: #7f7962;
-  --h-ui: "Courier New", Consolas, monospace; --h-r1: 2px; --h-r2: 2px; --h-r3: 3px;
+  --h-r1: 2px; --h-r2: 2px; --h-r3: 3px;
 }
 body.theme-buckshot :is(.h-btn, .h-ibtn, .h-menu__opt, .h-chip, .h-prompt, .h-ticker) { border-radius: 2px; }
 body.theme-buckshot :is(.h-btn, .h-ibtn, .h-cap, .h-steps__item, .h-folder__tab, .h-res__row dt) { text-transform: uppercase; letter-spacing: 0.05em; }

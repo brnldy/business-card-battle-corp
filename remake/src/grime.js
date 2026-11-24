@@ -1,5 +1,5 @@
 // Texturas procedurais do tema "Buckshot" (sujas, gastas) + atlas de dígitos dos terminais.
-import { fbm, mkCanvas, paint, tex, hash, TABLE, CARD, LAYOUT, MONO, SERIF } from './textures.js';
+import { fbm, mkCanvas, paint, tex, hash, TABLE, CARD, LAYOUT, UI, SERIF } from './textures.js';
 
 const clamp01 = (v) => Math.max(0, Math.min(1, v));
 
@@ -30,14 +30,14 @@ export function deskGrimy() {
     g.strokeStyle = ink(o.a ?? 0.62); g.lineWidth = 3; g.setLineDash(o.dash ?? []);
     g.beginPath(); g.roundRect(x, y, w * sc, h * sc, 9); g.stroke(); g.setLineDash([]);
     if (o.cross) { g.lineWidth = 1.8; g.beginPath(); g.moveTo(x + 10, y + 10); g.lineTo(x + w * sc - 10, y + h * sc - 10); g.moveTo(x + w * sc - 10, y + 10); g.lineTo(x + 10, y + h * sc - 10); g.stroke(); }
-    if (o.label) { g.fillStyle = ink(0.4); g.font = `700 14px ${MONO}`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(o.label, px(p.x), pz(p.z)); }
+    if (o.label) { g.fillStyle = ink(0.4); g.font = `700 14px ${UI}`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(o.label, px(p.x), pz(p.z)); }
   };
   const cw = CARD.w + 0.1, ch = CARD.h + 0.1;
   LAYOUT.myCr.forEach((p) => slot(p, cw, ch)); LAYOUT.oppCr.forEach((p) => slot(p, cw, ch));
   LAYOUT.myFx.forEach((p) => slot(p, cw, ch, { dash: [9, 7], a: 0.45 })); LAYOUT.oppFx.forEach((p) => slot(p, cw, ch, { dash: [9, 7], a: 0.45 }));
   slot(LAYOUT.myDeck, cw, ch, { label: 'DECK' }); slot(LAYOUT.oppDeck, cw, ch, { label: 'DECK' });
   slot(LAYOUT.myDead, cw, ch, { cross: true, a: 0.45 }); slot(LAYOUT.oppDead, cw, ch, { cross: true, a: 0.45 });
-  g.fillStyle = ink(0.42); g.font = `700 14px ${MONO}`; g.textBaseline = 'middle';
+  g.fillStyle = ink(0.42); g.font = `700 14px ${UI}`; g.textBaseline = 'middle';
   const side = (txt, x, z, rot) => { g.save(); g.translate(px(x), pz(z)); g.rotate(rot); g.textAlign = 'center'; g.fillText(txt, 0, 0); g.restore(); };
   side('CRIATURAS', -2.02, 0.5, -Math.PI / 2); side('EFEITOS', -2.02, 1.38, -Math.PI / 2); side('CRIATURAS', 2.02, -0.5, Math.PI / 2); side('EFEITOS', 2.02, -1.38, Math.PI / 2);
   g.textAlign = 'center'; g.fillText('MORTO', px(LAYOUT.myDead.x), pz(LAYOUT.myDead.z) - (ch * sc) / 2 - 13); g.fillText('MORTO', px(LAYOUT.oppDead.x), pz(LAYOUT.oppDead.z) + (ch * sc) / 2 + 13);

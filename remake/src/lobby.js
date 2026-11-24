@@ -6,7 +6,7 @@
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import { model, clips } from './assets.js';
-import { fbm, hash, mkCanvas, paint, tex, woodTexture, metalTexture, paperTexture, posterTexture, portraitTexture, clockTexture, cardBackTexture, SERIF, MONO } from './textures.js';
+import { fbm, hash, mkCanvas, paint, tex, woodTexture, metalTexture, paperTexture, posterTexture, portraitTexture, clockTexture, cardBackTexture, SERIF, UI } from './textures.js';
 import * as GR from './grime.js';
 import { dustMotes } from './gfx.js';
 import { drawLogo } from './cosmetics.js';
@@ -27,7 +27,7 @@ const AMBER = 0xf2b94c, SICK = 0xb8ffd0, WARM = 0xffc27a;
 
 // ───────── texturas ─────────
 const canvasTex = (c, pixel = true) => { const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; if (pixel) { t.magFilter = THREE.NearestFilter; } return t; };
-function signTexture(text, { w = 512, h = 96, bg = '#0b0f0c', fg = '#f2b94c', font = `700 54px ${MONO}`, border = true } = {}) {
+function signTexture(text, { w = 512, h = 96, bg = '#0b0f0c', fg = '#f2b94c', font = `700 54px ${UI}`, border = true } = {}) {
   const { c, g } = mkCanvas(w, h);
   g.fillStyle = bg; g.fillRect(0, 0, w, h);
   if (border) { g.strokeStyle = fg; g.lineWidth = 4; g.strokeRect(6, 6, w - 12, h - 12); }
@@ -69,7 +69,7 @@ function vendingTexture() {
   }
   // painel lateral: visor de preço, fenda de moedas, teclado
   g.fillStyle = '#060a08'; g.fillRect(190, 16, 54, 330);
-  g.fillStyle = '#0a2014'; g.fillRect(194, 26, 46, 26); g.fillStyle = '#7dff9e'; g.font = `700 15px ${MONO}`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('3000', 217, 40);
+  g.fillStyle = '#0a2014'; g.fillRect(194, 26, 46, 26); g.fillStyle = '#7dff9e'; g.font = `700 15px ${UI}`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('3000', 217, 40);
   for (let i = 0; i < 12; i++) { g.fillStyle = hash(i, 4, 6) > 0.85 ? '#ee3a30' : '#3a4a40'; g.fillRect(196 + (i % 3) * 15, 66 + Math.floor(i / 3) * 15, 11, 11); }
   g.fillStyle = '#c9c2a6'; g.fillRect(208, 140, 18, 5); g.fillStyle = '#ee3a30'; g.fillRect(200, 160, 34, 8);
   // gaveta de retirada e mancha escorrendo
@@ -100,7 +100,7 @@ function annoyingCarpet() {
 function fuseTexture() {
   const W = 128, H = 176, { c, g } = mkCanvas(W, H);
   paint(g, W, H, (x, y) => { const v = 0.5 + fbm(x / 30, y / 30, 5, 4) * 0.5, rust = k01((fbm(x / 14, y / 14, 61, 4) - 0.55) * 6); return [78 * v + rust * 70, 84 * v + rust * 10, 80 * v - rust * 20]; });
-  g.fillStyle = '#f2b94c'; g.fillRect(34, 12, 60, 22); g.fillStyle = '#0b0f0c'; g.font = `700 13px ${MONO}`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('PERIGO', 64, 24);
+  g.fillStyle = '#f2b94c'; g.fillRect(34, 12, 60, 22); g.fillStyle = '#0b0f0c'; g.font = `700 13px ${UI}`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('PERIGO', 64, 24);
   for (let r = 0; r < 3; r++) for (let k = 0; k < 4; k++) { const x = 16 + k * 25, y = 46 + r * 40, on = hash(r, k, 12) > 0.4; g.fillStyle = '#0a0d0b'; g.fillRect(x, y, 20, 32); g.fillStyle = on ? '#d8d2b8' : '#5a3a34'; g.fillRect(x + 5, on ? y + 4 : y + 16, 10, 12); g.fillStyle = on ? '#6fe89a' : '#ee3a30'; g.fillRect(x + 8, y + 28, 4, 3); }
   return canvasTex(c);
 }
@@ -111,10 +111,10 @@ function crtTexture() {
     g.fillStyle = '#04130a'; g.fillRect(0, 0, 256, 192);
     drawLogo(g, logo, 88, 14, 80, { ink: '#9dffb8', accent: '#f2b94c', bg: '#04130a' });
     g.fillStyle = '#9dffb8'; g.textAlign = 'center'; g.textBaseline = 'middle';
-    let size = 26; g.font = `700 ${size}px ${MONO}`; while (g.measureText(name).width > 236 && size > 11) { size -= 1; g.font = `700 ${size}px ${MONO}`; }
+    let size = 26; g.font = `700 ${size}px ${UI}`; while (g.measureText(name).width > 236 && size > 11) { size -= 1; g.font = `700 ${size}px ${UI}`; }
     g.fillText(name, 128, 120);
-    g.fillStyle = '#f2b94c'; g.font = `700 17px ${MONO}`; g.fillText(`$ ${Math.round(patrimonio).toLocaleString('pt-BR')}`, 128, 150);
-    g.fillStyle = 'rgba(157,255,184,0.5)'; g.font = `700 10px ${MONO}`; g.fillText('PATRIMONIO', 128, 170);
+    g.fillStyle = '#f2b94c'; g.font = `700 17px ${UI}`; g.fillText(`$ ${Math.round(patrimonio).toLocaleString('pt-BR')}`, 128, 150);
+    g.fillStyle = 'rgba(157,255,184,0.5)'; g.font = `700 10px ${UI}`; g.fillText('PATRIMONIO', 128, 170);
     for (let y = 0; y < 192; y += 3) { g.fillStyle = 'rgba(0,0,0,0.28)'; g.fillRect(0, y, 256, 1); }
     t.needsUpdate = true;
   };
@@ -280,7 +280,7 @@ export function buildLobby() {
     doorGlow = new THREE.PointLight(0x7dffa6, 14, 6.5, 1.6); at(doorGlow, 0.5, 1.1, -0.5); g.add(doorGlow);
     const wedge = plane(1.3, 3.2, new THREE.MeshBasicMaterial({ color: 0x3aa864, transparent: true, opacity: 0.2, blending: THREE.AdditiveBlending, depthWrite: false })); wedge.rotation.x = -Math.PI / 2; wedge.rotation.z = -0.22; at(wedge, 0.62, 0.012, 1.7); g.add(wedge);
     // placa e lâmpada vermelha de "em reunião"
-    g.add(at(plane(1.7, 0.3, B(0xffffff, { map: signTexture('SALA DE REUNIAO', { font: `700 46px ${MONO}` }) })), 0, 2.74, 0.06));
+    g.add(at(plane(1.7, 0.3, B(0xffffff, { map: signTexture('SALA DE REUNIAO', { font: `700 46px ${UI}` }) })), 0, 2.74, 0.06));
     redBulb = at(new THREE.Mesh(new THREE.SphereGeometry(0.07, 10, 8), B(0xee3a30)), 1.06, 2.74, 0.12); g.add(redBulb);
     const rl = new THREE.PointLight(0xff3020, 3.5, 4.5, 1.8); at(rl, 1.06, 2.7, 0.5); g.add(rl);
     pulses.push({ fn: (t) => { const k = 0.55 + 0.45 * Math.sin(t * 2.4); redBulb.material.color.setRGB(0.93 * k + 0.07, 0.2 * k, 0.16 * k); rl.intensity = 3.5 * k * (1 + doorHot.k); } });
@@ -301,7 +301,7 @@ export function buildLobby() {
     const g = new THREE.Group(); at(g, 3.4, 0, BACK + 0.44);
     const body = rbox(1.08, 2.0, 0.8, 0.03, M(0x3a1512, { map: metalTexture(7), emissive: 0x000000 })); at(body, 0, 1.0, 0); body.castShadow = true; g.add(body);
     vendFront = at(plane(0.98, 1.84, B(0xffffff, { map: vendingTexture() })), 0, 1.02, 0.405); g.add(vendFront);
-    g.add(at(plane(0.96, 0.16, B(0xffffff, { map: signTexture('BENEFICIOS', { w: 384, h: 64, font: `700 40px ${MONO}`, fg: '#b8ffd0', bg: '#06120c' }) })), 0, 2.09, 0.2));
+    g.add(at(plane(0.96, 0.16, B(0xffffff, { map: signTexture('BENEFICIOS', { w: 384, h: 64, font: `700 40px ${UI}`, fg: '#b8ffd0', bg: '#06120c' }) })), 0, 2.09, 0.2));
     g.add(at(box(1.0, 0.2, 0.42, M(0x2a100e)), 0, 2.09, 0));
     const l = new THREE.PointLight(SICK, 11, 5.5, 1.6); at(l, 0, 1.2, 1.1); g.add(l);
     flick.push({ set: (k) => { vendFront.material.color.setScalar(0.5 + 0.5 * k); }, rate: 0.8, seed: 52 });
@@ -333,7 +333,7 @@ export function buildLobby() {
     const g = new THREE.Group(); at(g, -3.75, 0, -1.0); g.rotation.y = 0.5;
     const desk = fit(model('metal_office_desk'), { w: 1.45 }); g.add(desk);
     const deskTop = new THREE.Box3().setFromObject(desk).max.y;
-    g.add(at(plane(0.7, 0.2, B(0xffffff, { map: signTexture('ESTAGIARIO', { w: 384, h: 96, font: `700 50px ${MONO}`, bg: '#d9d3b8', fg: '#17110c', border: false }) })), 0, deskTop * 0.55, 0.38));
+    g.add(at(plane(0.7, 0.2, B(0xffffff, { map: signTexture('ESTAGIARIO', { w: 384, h: 96, font: `700 50px ${UI}`, bg: '#d9d3b8', fg: '#17110c', border: false }) })), 0, deskTop * 0.55, 0.38));
     const st = fit(model('vintage_stapler'), { w: 0.2 }); at(st, 0.42, deskTop, 0.05); st.rotation.y = 0.5; g.add(st);
     const pile = at(box(0.2, 0.05, 0.28, [M(0xe9ece4), M(0xe9ece4), M(0x9a9a9a, { map: cardBackTexture() }), M(0xe9ece4), M(0xe9ece4), M(0xe9ece4)]), -0.35, deskTop + 0.025, 0.08); pile.rotation.y = -0.2; g.add(pile);
     // o estagiário: terno, caixa de papelão na cabeça
@@ -361,7 +361,7 @@ export function buildLobby() {
     const g = new THREE.Group(); at(g, 3.8, 0, -1.0); g.rotation.y = -0.5;
     const counter = at(box(1.7, 1.02, 0.62, M(0x4a3626, { map: woodTexture(), emissive: 0x000000 })), 0, 0.51, 0); counter.castShadow = true; counter.receiveShadow = true; g.add(counter);
     g.add(at(box(1.8, 0.06, 0.74, M(0x211a14)), 0, 1.05, 0));
-    g.add(at(plane(1.1, 0.2, B(0xffffff, { map: signTexture('RECEPCAO', { w: 384, h: 72, font: `700 44px ${MONO}` }) })), 0, 0.62, 0.315));
+    g.add(at(plane(1.1, 0.2, B(0xffffff, { map: signTexture('RECEPCAO', { w: 384, h: 72, font: `700 44px ${UI}` }) })), 0, 0.62, 0.315));
     const tv = fit(model('Television_01'), { h: 0.52 }); at(tv, -0.42, 1.08, 0.02); tv.rotation.y = 0.18; g.add(tv);
     const tb = new THREE.Box3().setFromObject(tv), ts = tb.getSize(V(0, 0, 0));
     const screen = plane(0.4, 0.3, B(0xffffff, { map: crt })); at(screen, -0.455, 1.08 + 0.29, 0.02 + ts.z * 0.36); screen.rotation.y = 0.18; g.add(screen);

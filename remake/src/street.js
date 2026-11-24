@@ -6,7 +6,7 @@
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import { model, clips } from './assets.js';
-import { fbm, mkCanvas, paint, tex, hash, SERIF, SANS } from './textures.js';
+import { fbm, mkCanvas, paint, tex, hash, SERIF, LOGO } from './textures.js';
 import { timeUniform } from './gfx.js';
 
 const M = (color, o = {}) => new THREE.MeshLambertMaterial({ color, ...o });
@@ -67,14 +67,14 @@ function signTexture() {
   const W = 1024, H = 360, { c, g } = mkCanvas(W, H);
   paint(g, W, H, (x, y) => { const v = 0.12 + fbm(x / 60, y / 60, 31, 4) * 0.12; return [120 * v, 70 * v, 50 * v]; });
   g.textAlign = 'center'; g.textBaseline = 'alphabetic';
-  const glow = (txt, x, y, size, color, blur) => { g.font = `400 ${size}px ${SERIF}`; g.shadowColor = color; g.shadowBlur = blur; g.fillStyle = color; g.fillText(txt, x, y); g.shadowBlur = 0; };
+  const glow = (txt, x, y, size, color, blur) => { g.font = `400 ${size}px ${LOGO}`; g.shadowColor = color; g.shadowBlur = blur; g.fillStyle = color; g.fillText(txt, x, y); g.shadowBlur = 0; };
   glow('BUSINESS', W / 2, 140, 132, '#f3d39a', 26);
   glow('CARD', W * 0.38, 300, 170, '#f6dca6', 30);
   // etiqueta "Battle" inclinada e "Corp."
   g.save(); g.translate(W * 0.72, 238); g.rotate(-0.06);
   g.fillStyle = '#1a120c'; g.strokeStyle = '#e7c486'; g.lineWidth = 5; g.beginPath(); g.roundRect(-110, -44, 220, 80, 24); g.fill(); g.stroke();
-  g.font = `italic 400 58px ${SERIF}`; g.fillStyle = '#f0d49c'; g.shadowColor = '#f0d49c'; g.shadowBlur = 14; g.fillText('Battle', 0, 16); g.restore();
-  g.shadowBlur = 0; g.font = `400 62px ${SERIF}`; g.fillStyle = '#9d8160'; g.fillText('Corp.', W * 0.9, 300);
+  g.font = `italic 400 58px ${LOGO}`; g.fillStyle = '#f0d49c'; g.shadowColor = '#f0d49c'; g.shadowBlur = 14; g.fillText('Battle', 0, 16); g.restore();
+  g.shadowBlur = 0; g.font = `400 62px ${LOGO}`; g.fillStyle = '#9d8160'; g.fillText('Corp.', W * 0.9, 300);
   // lâmpadas apagadas em duas letras, como num letreiro velho
   g.fillStyle = 'rgba(20,12,8,0.6)'; g.fillRect(W / 2 - 52, 40, 50, 104);
   return tex(c, { pixel: false });

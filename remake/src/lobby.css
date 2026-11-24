@@ -1,6 +1,6 @@
 /* ════════════════════════════════════════════════════════════════════════
    Lobby — telas por cima da sala 3D (src/lobbyui.js). Mesmos tokens de style.css (tema Buckshot):
-   terminal escuro, âmbar, Courier em caixa alta, cantos retos. Papel velho para memorandos e fichas.
+   terminal escuro, âmbar, caixa alta, cantos retos. Papel velho para memorandos e fichas.
    ════════════════════════════════════════════════════════════════════════ */
 #fade { position: absolute; inset: 0; background: #000; opacity: 0; pointer-events: none; transition: opacity 0.3s; z-index: 60; }
 #fade.on { opacity: 1; pointer-events: auto; }

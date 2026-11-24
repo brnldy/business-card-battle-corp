@@ -1,0 +1,26 @@
+/* ════════════════════════════════════════════════════════════════════════
+   Tokens do design system — fonte única de verdade.
+   Carregado antes de style.css, hud/hud.css e lobby.css (ver build.mjs).
+   As variáveis antigas (--serif, --sans, --h-ui, --h-num…) apontam para cá.
+   Documentação: docs/design-system/03-tokens.md
+   ════════════════════════════════════════════════════════════════════════ */
+:root {
+  /* ── fontes por papel ── */
+  --f-display: "Apple Garamond", Georgia, "Times New Roman", serif;   /* títulos, números, cartas */
+  --f-ui: "Courier New", Consolas, monospace;                          /* interface: botões, rótulos, texto corrido */
+
+  /* ── logo: INTOCÁVEL ──
+     A assinatura "BUSINESS CARD Battle Corp." segue o original do Figma.
+     Não ligue estes tokens a --f-display nem a --f-ui: trocar a fonte da
+     interface nunca pode mudar o logo. */
+  --f-logo: "Apple Garamond", Georgia, "Times New Roman", serif;
+  --f-logo-tag: "Courier New", Consolas, monospace;                    /* a etiqueta "Battle" */
+
+  /* ── escala tipográfica (px a 1600 × 900) ── */
+  --t-cap: 11px;     /* rótulo em caixa alta */
+  --t-sm: 12.5px;    /* apoio */
+  --t-md: 13.5px;    /* texto de interface */
+  --t-lg: 15px;      /* ênfase, botões grandes */
+  --t-xl: 20px;      /* título de painel */
+  --t-num: 34px;     /* números grandes (CAIXA) */
+}
