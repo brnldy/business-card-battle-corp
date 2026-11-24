@@ -126,16 +126,16 @@ export class UI {
     this.onModalClose = onClose ?? null;
     this.modal(`
       <div class="memo">Manual do colaborador</div><h2>Como jogar</h2>
-      <div class="help-grid">
-        <section><h3>1 · O objetivo</h3><p>Cada empresa começa com <b>$ 8.000 de CAIXA</b> — é a sua vida, na pasta com o seu nome. Zere o CAIXA do rival antes que ele zere o seu.</p></section>
-        <section><h3>2 · O seu turno</h3><p>Você compra 1 carta. Depois <b>joga cartas</b> (as de contorno verde), <b>vai para a batalha</b> e <b>encerra o turno</b>. É <b>1 invocação por turno</b>.</p></section>
-        <section><h3>3 · Criaturas</h3><p>Têm <span class="ic">${ICON.atk}</span> <b>ATQ</b> e <span class="ic">${ICON.def}</span> <b>DEF</b>. Em <b>ataque</b> (em pé) podem atacar; em <b>defesa</b> (deitadas) só protegem.</p></section>
-        <section><h3>4 · Custo</h3><p>Cada <span class="pip">✕</span> no nome da carta é uma criatura sua que você <b>sacrifica</b> para invocá-la. Sem ✕, entra de graça.</p></section>
-        <section><h3>5 · Combate</h3><p>O número maior vence e destrói a outra carta. Contra criatura em <b>ataque</b>, quem perde paga a diferença em CAIXA. Contra <b>defesa</b>, só você paga — se atacar com menos. Sem criaturas na frente, o ataque vai <b>direto no CAIXA</b>.</p></section>
-        <section><h3>6 · Efeitos e armadilhas</h3><p><b>Efeitos</b> valem na hora. <b>Armadilhas</b> ficam viradas para baixo e disparam quando o rival ataca. O <b>Morto</b> é a pilha de descarte.</p></section>
+      <div class="help-grid help-grid--ico">
+        <section><span class="hg-ico">${ICON.coin}</span><h3>Zere o CAIXA do rival</h3><p>Cada empresa começa com <b>$ 8.000</b>.</p></section>
+        <section><span class="hg-ico">${ICON.card}</span><h3>Seu turno</h3><p class="hg-steps"><b>Compra</b><i>›</i><b>Joga</b><i>›</i><b>Batalha</b><i>›</i><b>Encerra</b></p><p>1 invocação por turno.</p></section>
+        <section><span class="hg-ico">${ICON.atk}</span><h3>Em pé ataca, deitada defende</h3><p><span class="ic">${ICON.atk}</span> <b>ATQ</b> · <span class="ic">${ICON.def}</span> <b>DEF</b></p></section>
+        <section><span class="hg-ico"><span class="pip">✕</span></span><h3>Cada ✕ = 1 sacrifício</h3><p>Sem ✕, entra de graça.</p></section>
+        <section><span class="hg-ico">${ICON.swap}</span><h3>O maior número vence</h3><ul class="hg-rows"><li><span class="ic">${ICON.atk}</span> vs em pé: quem perde paga a diferença</li><li><span class="ic">${ICON.def}</span> vs deitada: só o atacante paga, se perder</li><li><span class="ic">${ICON.coin}</span> mesa vazia: direto no CAIXA</li></ul></section>
+        <section><span class="hg-ico">${ICON.trap}</span><h3>Efeitos e armadilhas</h3><ul class="hg-rows"><li><span class="ic">${ICON.fx}</span> efeito: vale na hora</li><li><span class="ic">${ICON.trap}</span> armadilha: dispara no ataque do rival</li><li><span class="ic">${ICON.dead}</span> Morto: o descarte</li></ul></section>
       </div>
-      <p class="fine">Atalhos: <kbd>B</kbd> batalha · <kbd>Espaço</kbd> encerrar turno · <kbd>L</kbd> relatório · <kbd>Esc</kbd> ou botão direito cancela. Passe o mouse em qualquer carta para ler o que ela faz.</p>
-      <nav><button data-close class="primary">Entendido</button></nav>`, 'wide');
+      <p class="fine hg-keys"><kbd>B</kbd> batalha <kbd>Espaço</kbd> encerrar <kbd>L</kbd> relatório <kbd>Esc</kbd> cancelar <span class="ic">${ICON.card}</span> mouse na carta: ficha</p>
+      <nav><button data-close class="primary">Entendido</button></nav>`, 'full');
   }
   settings() {
     const s = settings.get();
