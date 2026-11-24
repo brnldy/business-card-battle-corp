@@ -8,7 +8,7 @@ O projeto passou a viver neste repositório, juntando as duas frentes:
 - **De lá:** o remake visual em three.js (`remake/`), com o visual Buckshot e o HUD em design system. É a cara oficial do jogo.
 - **Ponte:** o remake usa o motor oficial (`remake/src/engine.js` e `cards.js` reexportam `src/engine`). Antes da troca, os dois motores foram comparados em 300 partidas (51.890 jogadas) e 10.730 previsões de ataque: nenhuma diferença.
 - A previsão de ataque criada lá virou `src/engine/preview.ts`, com testes. As constantes de regra estão em `src/engine/rules.ts`.
-- **Áudio:** as trilhas do autor são o padrão. Os efeitos gravados pelo autor tocam onde existe arquivo e os gerados por código preenchem o resto (Configurações → Trilha / Efeitos).
+- **Áudio:** as trilhas do autor são o padrão. Os efeitos gravados pelo autor tocam onde existe arquivo e os gerados por código preenchem o resto, sempre (a opção "Efeitos: gravados / gerados" saiu das configurações em 24/11). A trilha ainda pode ser trocada em Configurações → Trilha.
 - A versão Phaser e a 3D feita aqui (descritas abaixo) ficaram guardadas num ramo local, `historico-yugioro`, que não sobe para o GitHub. A estética oficial é a do remake.
 - Regra de trabalho: tudo que fizermos sobe neste repositório.
 

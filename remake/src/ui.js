@@ -145,7 +145,6 @@ export class UI {
         <label>Música e ambiente <input type="range" min="0" max="1" step="0.05" value="${s.music}" data-k2="music"></label>
         <label>Efeitos sonoros <input type="range" min="0" max="1" step="0.05" value="${s.sfx}" data-k2="sfx"></label>
         <label>Trilha <span class="seg" data-s="soundtrack"><button data-v="original">Original</button><button data-v="procedural">Gerada</button></span></label>
-        <label>Efeitos <span class="seg" data-s="sfxSource"><button data-v="files">Gravados</button><button data-v="procedural">Gerados</button></span></label>
         <label>Imagem <span class="seg" data-s="pixel"><button data-v="1">Nítida</button><button data-v="2">Retrô</button><button data-v="3">Pixelada</button></span></label>
         <label>Tamanho da interface <span class="seg" data-s="uiSize"><button data-v="0.85">Pequena</button><button data-v="1">Média</button><button data-v="1.15">Grande</button></span></label>
         <label>Velocidade das animações <span class="seg" data-s="speed"><button data-v="1">Normal</button><button data-v="1.6">Rápida</button><button data-v="2.5">Turbo</button></span></label>

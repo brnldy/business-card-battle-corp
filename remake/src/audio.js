@@ -1,6 +1,6 @@
 // Áudio (WebAudio): efeitos sintetizados, ambiente de escritório e trilha generativa,
 // mais os efeitos gravados pelo autor (remake/assets/sfx): onde existe arquivo para o momento, toca o arquivo;
-// onde não existe, toca o sintetizado. Configurações → "Efeitos: seus arquivos / gerados".
+// onde não existe, toca o sintetizado.
 import { settings } from './settings.js';
 import { asset } from './assets.js';
 
@@ -93,7 +93,6 @@ function loadFileSfx() {
 }
 // from/to (s) recortam um trecho do arquivo; rate acelera. O recorte ganha 4 ms de entrada e 30 ms de saída para não estalar.
 function playFile(name) {
-  if (settings.get().sfxSource === 'procedural') return false;
   const spec = FILE_SFX[name];
   const buf = spec && fileBufs.get(spec.file);
   if (!buf) return false;

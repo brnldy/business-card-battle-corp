@@ -3,7 +3,6 @@ const KEY = 'bcbc:settings';
 const DEFAULTS = {
   companyName: null, music: 0.8, sfx: 0.9, muted: false,
   soundtrack: 'original',   // 'original' (trilhas do autor) | 'procedural'
-  sfxSource: 'files',       // 'files' (efeitos gravados do autor + gerados onde não há arquivo) | 'procedural'
   uiSize: 1,               // tamanho da interface: 0.85 | 1 | 1.15
   pixel: 3,                 // 1 = nítida, 2 = retrô, 3 = pixelada (cartas sempre nítidas)
   shake: true, speed: 1, seenHelp: false, tipsOff: false, tips: {},
