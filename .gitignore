@@ -17,3 +17,6 @@ LEIA-ME.txt
 .DS_Store
 Thumbs.db
 .claude/
+
+# fonte comercial da interface (Colophon Foundry): fora do Git até a licença ser confirmada
+remake/assets/fonts/BasisGrotesquePro-*

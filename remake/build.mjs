@@ -9,7 +9,7 @@ import { fileURLToPath } from 'node:url';
 
 const root = path.dirname(fileURLToPath(import.meta.url));
 const dev = process.argv.includes('--dev');
-const MIME = { '.png': 'image/png', '.ttf': 'font/ttf', '.mp3': 'audio/mpeg', '.m4a': 'audio/mp4', '.glb': 'model/gltf-binary' };
+const MIME = { '.png': 'image/png', '.ttf': 'font/ttf', '.otf': 'font/otf', '.mp3': 'audio/mpeg', '.m4a': 'audio/mp4', '.glb': 'model/gltf-binary' };
 const dataUri = (f) => `data:${MIME[path.extname(f)]};base64,${fs.readFileSync(f).toString('base64')}`;
 // modelos usados (manter igual a MODEL_LIST em src/assets.js)
 const MODELS = ['business_man', 'Television_01', 'hanging_industrial_lamp', 'mounted_fluorescent_lights', 'drawer_cabinet', 'wall_clock', 'vintage_stapler', 'binder_notebook', 'metal_office_desk', 'metal_trash_can', 'modern_arm_chair_01'];
@@ -22,10 +22,19 @@ const fonts = [
   ['Apple Garamond', 400, 'normal', 'AppleGaramond-400-normal.ttf'], ['Apple Garamond', 700, 'normal', 'AppleGaramond-700-normal.ttf'],
   ['Apple Garamond', 400, 'italic', 'AppleGaramond-400-italic.ttf'], ['Apple Garamond', 700, 'italic', 'AppleGaramond-700-italic.ttf'],
   ['Helvena', 400, 'normal', 'Helvena-400-normal.ttf'],
+  // Fonte da interface (Sprint 4). Comercial (Colophon Foundry): os arquivos ficam fora do Git até a licença ser confirmada.
+  // Sem eles, o build segue e a interface cai na Helvena (ver --f-ui em src/tokens.css).
+  ['Basis Grotesque Pro', 400, 'normal', 'BasisGrotesquePro-400-normal.otf'], ['Basis Grotesque Pro', 500, 'normal', 'BasisGrotesquePro-500-normal.otf'],
+  ['Basis Grotesque Pro', 700, 'normal', 'BasisGrotesquePro-700-normal.otf'], ['Basis Grotesque Pro', 400, 'italic', 'BasisGrotesquePro-400-italic.otf'],
 ];
-const fontCss = fonts.map(([fam, w, st, file]) => {
+const fontCss = fonts.filter(([fam, , , file]) => {
+  const ok = fs.existsSync(path.join(root, 'assets/fonts', file));
+  if (!ok) console.warn(`fonte ausente: ${file} (${fam} usa o fallback)`);
+  return ok;
+}).map(([fam, w, st, file]) => {
   const src = dev ? `../assets/fonts/${file}` : dataUri(path.join(root, 'assets/fonts', file));
-  return `@font-face{font-family:'${fam}';src:url('${src}') format('truetype');font-weight:${w};font-style:${st};font-display:block}`;
+  const format = file.endsWith('.otf') ? 'opentype' : 'truetype';
+  return `@font-face{font-family:'${fam}';src:url('${src}') format('${format}');font-weight:${w};font-style:${st};font-display:block}`;
 }).join('\n');
 
 const html = (head, script) => `<!DOCTYPE html>
