@@ -1,11 +1,11 @@
-// Áudio (WebAudio): efeitos sintetizados, ambiente de escritório e trilha generativa,
+// Áudio (WebAudio): efeitos sintetizados, ambiente de escritório e as trilhas do autor,
 // mais os efeitos gravados pelo autor (remake/assets/sfx): onde existe arquivo para o momento, toca o arquivo;
 // onde não existe, toca o sintetizado.
 import { settings } from './settings.js';
 import { asset } from './assets.js';
 
-let ctx = null, master, sfxBus, musicBus, ambBus, reverb, noiseBuf, brownBuf;
-let started = false, musicTimer = null, ambTimer = null, tension = 0, mode = 'menu';
+let ctx = null, master, sfxBus, ambBus, reverb, noiseBuf, brownBuf;
+let started = false, ambTimer = null, mode = 'menu';
 let origEl = null;
 
 const now = () => ctx.currentTime;
@@ -43,12 +43,12 @@ export function initAudio() {
   const comp = ctx.createDynamicsCompressor();
   comp.threshold.value = -16; comp.ratio.value = 5; comp.attack.value = 0.004; comp.release.value = 0.2;
   master.connect(comp).connect(ctx.destination);
-  sfxBus = ctx.createGain(); musicBus = ctx.createGain(); ambBus = ctx.createGain();
+  sfxBus = ctx.createGain(); ambBus = ctx.createGain();
   reverb = ctx.createConvolver();
   reverb.buffer = makeImpulse(2.8, 2.6);
   const revGain = ctx.createGain(); revGain.gain.value = 0.55;
   reverb.connect(revGain).connect(master);
-  sfxBus.connect(master); musicBus.connect(master); ambBus.connect(master);
+  sfxBus.connect(master); ambBus.connect(master);
   noiseBuf = makeNoise(false); brownBuf = makeNoise(true);
   applyVolumes();
 }
@@ -56,7 +56,7 @@ export function unlockAudio() {
   initAudio();
   if (!ctx) return;
   if (ctx.state === 'suspended') ctx.resume();
-  if (!started) { started = true; startAmbience(); startMusicLoop(); loadFileSfx(); }
+  if (!started) { started = true; startAmbience(); loadFileSfx(); }
   syncOriginal();
 }
 
@@ -115,13 +115,12 @@ export function applyVolumes() {
   const s = settings.get(), m = s.muted ? 0 : 1;
   master.gain.setTargetAtTime(m, now(), 0.05);
   sfxBus.gain.setTargetAtTime(s.sfx * 0.9, now(), 0.05);
-  musicBus.gain.setTargetAtTime(s.soundtrack === 'procedural' ? s.music * 0.5 : 0, now(), 0.3);
   ambBus.gain.setTargetAtTime(s.music * 0.55 + 0.1 * s.sfx, now(), 0.3);
   syncOriginal();
 }
 function syncOriginal() {
   const s = settings.get();
-  const want = started && s.soundtrack === 'original' && !s.muted && s.music > 0;
+  const want = started && !s.muted && s.music > 0;
   if (!want) { if (origEl) origEl.pause(); return; }
   const src = asset(mode === 'duel' ? 'music/BASE_SOUNDTRACK.mp3' : 'music/MENU_BG.m4a');
   if (!origEl) { origEl = new Audio(); origEl.loop = true; }
@@ -130,7 +129,6 @@ function syncOriginal() {
   origEl.play().catch(() => {});
 }
 export function setMusicMode(m) { mode = m; if (ctx) syncOriginal(); }
-export function setTension(t) { tension = Math.max(0, Math.min(1, t)); }
 
 // ───────── blocos de síntese ─────────
 function env(g, t, a, peak, d, sustain = 0.0001) {
@@ -298,55 +296,4 @@ function startAmbience() {
     ambTimer = setTimeout(far, rnd(9000, 26000));
   };
   ambTimer = setTimeout(far, 6000);
-}
-
-// ───────── trilha generativa: piano de caixinha em compasso manco + pulso corporativo ─────────
-const SCALE = [0, 2, 3, 5, 7, 8, 10]; // menor natural
-const midi = (n) => 440 * Math.pow(2, (n - 69) / 12);
-function pianoNote(n, t, vol, long = 1) {
-  const f = midi(n);
-  tone({ f, type: 'triangle', t, a: 0.004, d: 1.6 * long, vol, bus: musicBus, rev: 0.9 });
-  tone({ f: f * 2.003, type: 'sine', t, a: 0.003, d: 0.5 * long, vol: vol * 0.35, bus: musicBus, rev: 0.6 });
-  tone({ f: f * 3.01, type: 'sine', t, a: 0.002, d: 0.18, vol: vol * 0.12, bus: musicBus });
-}
-function startMusicLoop() {
-  let bar = 0, mel = 4;
-  const root = 50; // ré
-  const prog = [0, 0, 5, 3, 0, 6, 5, 4]; // graus da escala para o baixo
-  const deg = (d, oct = 0) => root + SCALE[((d % 7) + 7) % 7] + 12 * (Math.floor(d / 7) + oct);
-  const step = () => {
-    const duel = mode === 'duel', bpm = duel ? 76 + tension * 22 : 62, beat = 60 / bpm;
-    const t0 = now() + 0.08, d = prog[bar % prog.length];
-    if (settings.get().soundtrack === 'procedural' && !settings.get().muted) {
-      // ostinato em 5 tempos: 1-5-8-5-3 com variação
-      const pat = [0, 4, 7, 4, 2];
-      pat.forEach((p, i) => {
-        if (Math.random() < 0.08) return;
-        pianoNote(deg(d + p, 0), t0 + i * beat, 0.055 + (i === 0 ? 0.035 : 0), 1);
-      });
-      // baixo
-      tone({ f: midi(deg(d, -2)), type: 'sine', t: t0, a: 0.04, d: beat * 4.6, vol: 0.16, bus: musicBus });
-      tone({ f: midi(deg(d, -1)), type: 'triangle', t: t0, a: 0.3, d: beat * 4.4, vol: 0.035, bus: musicBus, rev: 0.6 });
-      // melodia esparsa (passeio aleatório), mais frequente fora do menu
-      const n = duel ? 2 : 1;
-      for (let k = 0; k < n; k++) if (Math.random() < (duel ? 0.75 : 0.55)) {
-        mel += [-2, -1, -1, 1, 1, 2, 0][Math.floor(Math.random() * 7)];
-        mel = Math.max(0, Math.min(9, mel));
-        pianoNote(deg(d + mel, 1), t0 + (Math.floor(Math.random() * 5) + (Math.random() < 0.3 ? 0.5 : 0)) * beat, 0.07, 1.7);
-      }
-      if (duel) {
-        // relógio de parede + pulso
-        for (let i = 0; i < 5; i++) noise({ t: t0 + i * beat, f: i === 0 ? 3200 : 4600, q: 9, d: 0.02, vol: 0.05 + tension * 0.03, bus: musicBus });
-        if (tension > 0.35) for (let i = 0; i < 5; i += 1) {
-          tone({ f: 58, f2: 38, t: t0 + i * beat, d: 0.13, vol: 0.2 * tension, bus: musicBus });
-          tone({ f: 54, f2: 36, t: t0 + i * beat + beat * 0.28, d: 0.1, vol: 0.12 * tension, bus: musicBus });
-        }
-        if (tension > 0.6) tone({ f: midi(deg(d + 1, 0)), type: 'sawtooth', t: t0, a: beat * 2, d: beat * 3, vol: 0.02 * tension, bus: musicBus, rev: 0.8, detune: 30 });
-      }
-      if (bar % 8 === 7) noise({ type: 'bandpass', f: 800, f2: 3000, q: 2, a: beat * 3, d: beat * 2, vol: 0.02, bus: musicBus, rev: 1, t: t0 });
-    }
-    bar++;
-    musicTimer = setTimeout(step, beat * 5 * 1000);
-  };
-  step();
 }

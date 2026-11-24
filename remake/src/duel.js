@@ -12,7 +12,7 @@ import { RIVALS } from './cards.js';
 import { CARD, LAYOUT, TABLE, cardFaceTexture, cardBackTexture, money, coinTexture } from './textures.js';
 import { cardMaterial, glowMaterial, tween, wait, ease, LAYER, cardMats } from './gfx.js';
 import { T as TH } from './theme.js';
-import { sfx, setTension, setMusicMode } from './audio.js';
+import { sfx, setMusicMode } from './audio.js';
 import { settings } from './settings.js';
 import { describeEvent } from './log.js';
 
@@ -67,7 +67,7 @@ export class Duel {
     this.deckShown = [RULES.DECK_SIZE, RULES.DECK_SIZE];
     this.R.opp.face.uDead.value = 0; this.R.opp.face.uOn.value = 1; this.oppMood = 0;
     this.gfx.u.uFade.value = 0; this.lampOn = 1;
-    setMusicMode('duel'); setTension(0); this.R.setBadge(rival);
+    setMusicMode('duel'); this.R.setBadge(rival);
     this.ui.log(this.training ? 'Treino com o estagiário · não vale PATRIMÔNIO' : `Partida contra ${rival} · protocolo ${seed.toString(36).toUpperCase()}`);
     this.indexCards();
     this.refreshHud();
@@ -391,7 +391,7 @@ export class Duel {
           this.caixaShown[e.player] = e.caixa;
           sfx('damage'); this.bump(e.player === ME ? 0.45 : 0.2);
           this.coins(e.player === ME ? V(0, 0.2, 2.0) : V(0, 0.5, -2.0), Math.min(40, 8 + e.amount / 60));
-          if (e.player === ME) { this.pulse('uFlash', 0.5, 650, [0.93, 0.23, 0.19]); this.pulse('uAberr', 0.012, 600); this.oppMood = -0.8; this.lampFlicker(0.5); setTension(1 - e.caixa / RULES.STARTING_CAIXA); }
+          if (e.player === ME) { this.pulse('uFlash', 0.5, 650, [0.93, 0.23, 0.19]); this.pulse('uAberr', 0.012, 600); this.oppMood = -0.8; this.lampFlicker(0.5); }
           else { this.oppGlitch = 1; this.oppMood = 1; sfx('glitch'); this.pulse('uGlitch', 0.5, 280); }
           this.refreshHud();
           await wait(D(620));
@@ -400,7 +400,6 @@ export class Duel {
         case 'heal': {
           this.caixaShown[e.player] = e.caixa; sfx('heal');
           this.sparkle(e.player === ME ? V(0, 0.4, 1.9) : V(0, 0.6, -1.9), [0.5, 1, 0.55], 28);
-          if (e.player === ME) setTension(1 - e.caixa / RULES.STARTING_CAIXA);
           this.refreshHud(); await wait(D(520));
           break;
         }
