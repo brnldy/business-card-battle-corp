@@ -13,7 +13,7 @@ Objetivo: todas as telas do Business Card Battle Corp. falarem a mesma língua v
 | Sprint | Tema | Documento |
 |---|---|---|
 | 1 | Estruturação das referências | [01-referencias.md](01-referencias.md) |
-| 2 | Auditoria de telas e de texto | [02-auditoria.md](02-auditoria.md) |
+| 2 | Auditoria de telas e de texto | [02-auditoria.md](02-auditoria.md) · script: `scripts/design-system/audit-texto.cjs` |
 | 3 | Fundamentos e tokens | [03-tokens.md](03-tokens.md) |
 | 4 | Tipografia | [04-tipografia.md](04-tipografia.md) |
 | 5 | Iconografia e redução de texto | a fazer |
