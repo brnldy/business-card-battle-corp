@@ -217,7 +217,7 @@
 .h-hud { position: absolute; inset: 0; pointer-events: none; font-family: var(--h-ui); }
 .h-hud > * { position: absolute; }
 .h-hud :is(button, .h-menu, .h-coach, .h-log) { pointer-events: auto; }
-.h-slot--opp { left: 16px; top: 16px; }
+.h-slot--opp { left: 16px; top: 60px; } /* desce o bastante para a etiqueta de dano/cura, que sobe ~45px acima da pasta, não sair da tela */
 .h-slot--me { left: 16px; bottom: 16px; }
 .h-slot--sheet { left: 16px; top: 50%; transform: translateY(-50%); max-height: calc(100% - 330px); display: flex; }
 .h-slot--sheet .h-sheet { max-height: 100%; }

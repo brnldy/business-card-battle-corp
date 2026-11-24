@@ -441,6 +441,10 @@ function doSummon(
         ev.push({ type: 'mill', player: side, uid: milled.uid, cardId: milled.cardId });
       }
     }
+    // Tênia: compra cartas do topo do próprio deck para a mão. Com a mão no limite, o resto fica no deck.
+    if (typeof eff.drawSelf === 'number') {
+      for (let i = 0; i < eff.drawSelf && p.deck.length && p.hand.length < RULES.HAND_LIMIT; i++) draw(s, ev, side);
+    }
     if (ab.choose && target) {
       const tLoc = findCreature(s, target);
       if (!tLoc) continue;

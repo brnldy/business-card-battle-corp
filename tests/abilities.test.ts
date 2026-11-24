@@ -174,13 +174,28 @@ test('Roger: Nath (qualquer lado) perde $400 de ATQ e DEF', () => {
   assert.deepEqual(stats(s, nath), { atk: ATK(NATH) - 400, def: DEF(NATH) - 400 });
 });
 
-test('Tênia: ao entrar, come as 3 cartas do topo do seu próprio deck', () => {
+test('Tênia: ao entrar, come as 3 cartas do topo do seu deck para a sua mão', () => {
   let s = newGame();
   const top = s.players[0].deck.slice(0, 3).map((c) => c.uid);
   const tenia = hand(s, 0, TENIA);
+  const before = s.players[0].hand.length;
   s = act(s, { type: 'summon', uid: tenia, mode: 'ATK', sacrifices: [] });
-  for (const uid of top) assert.ok(inDead(s, 0, uid));
-  assert.equal(s.players[1].dead.length, 0);
+  for (const uid of top) assert.ok(s.players[0].hand.some((c) => c.uid === uid));
+  assert.equal(s.players[0].hand.length, before - 1 + 3);
+  assert.equal(s.players[0].dead.length, 0);
+  assert.equal(s.players[1].hand.length, 0);
+});
+
+test('Tênia: com a mão perto do limite, compra só até 10 e o resto fica no deck', () => {
+  let s = newGame();
+  const p = s.players[0];
+  const tenia = hand(s, 0, TENIA);
+  while (p.hand.length < 10) p.hand.push(p.deck.pop()!);
+  const deckBefore = p.deck.length;
+  s = act(s, { type: 'summon', uid: tenia, mode: 'ATK', sacrifices: [] });
+  assert.equal(s.players[0].hand.length, 10);
+  assert.equal(s.players[0].deck.length, deckBefore - 1);
+  assert.equal(s.players[0].dead.length, 0);
 });
 
 test('Siamesas: dano que causam ao CAIXA volta como cura', () => {

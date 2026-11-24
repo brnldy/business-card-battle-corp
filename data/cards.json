@@ -310,7 +310,7 @@
           "trigger": "on_summon",
           "optional": false,
           "effect": {
-            "millSelf": 3
+            "drawSelf": 3
           }
         }
       ],

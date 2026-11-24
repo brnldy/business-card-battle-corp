@@ -22,7 +22,7 @@ Reexporte com **o mesmo nome de arquivo** (ex.: `BW_0002.png`) e substitua na pa
 - [ ] **C1. Caio Batera (BW_0002):** "Cada ataque do Caio esfria a sala: no início de cada turno do inimigo, ele perde $100 para cada ataque já feito pelo Caio."
 - [ ] **C2. Nath, a Redatora (BW_0004):** "Enquanto Bruno, o Estrondoso estiver na mesa, Nath entra em modo de fúria e ganha +$300 de ataque e defesa."
 - [ ] **C3. Ralph, o Pai (BW_0007):** "Quando Ralph vence um combate, a diferença descontada do inimigo é dobrada. Não vale para ataque direto."
-- [ ] **C4. Tênia do Lucas (BW_0010):** "Ao entrar na mesa, o verme come as 3 cartas do topo do seu baralho."
+- [ ] **C4. Tênia do Lucas (BW_0010):** "Ao entrar na mesa, o verme come as 3 cartas do topo do seu baralho e as traz para a sua mão."
 - [ ] **C5. Paulo, o Crente (BW_0016):** "Quando esta carta está em modo de defesa, as outras cartas do seu campo ganham +$300 de defesa."
 - [ ] **C6. Thays Kiryu (BW_0017):** "Quando essa carta é invocada, você pode fazer uma carta da mesa inimiga voltar para a mão dele."
 

@@ -16,6 +16,10 @@ O projeto passou a viver neste repositório, juntando as duas frentes:
 - O lobby e as janelas (abrir área, abas, filtros, configurações, registro) ganharam um som próprio, gerado por código: um "toc" abafado de pasta de papelão, curto e grave, com leve variação de altura para não cansar (`nav`; ao fechar, `navBack`, um tom abaixo). Antes usavam o som de escolher carta.
 - O som de escolher carta (`CHOSING_CARD.mp3`) crescia devagar por ~0,3 s e soava arrastado. Agora toca só o trecho perto do pico, 25% mais rápido (~0,17 s). O arquivo original não foi alterado; o recorte fica em `FILE_SFX` (`from`, `to`, `rate`) em `remake/src/audio.js`.
 
+### Correções de 24/11/2026
+- **Tênia do Lucas:** o verme come as 3 cartas do topo do seu deck **para a sua mão** (antes iam para o Morto, leitura errada da carta). Com a mão no limite de 10, as que sobram ficam no deck. Efeito `drawSelf` em `data/cards.json`.
+- **Pasta de CAIXA do rival** desceu (de 16 px para 60 px do topo) para a etiqueta vermelha/verde de dano/cura, que sobe por trás da pasta, não sair da tela.
+
 ### Lobby 3D (23/11/2026)
 Entre o menu (a rua) e o duelo agora existe o **lobby**: a recepção da empresa por dentro, em 3D, no clima de escritório decadente, pós-apocalíptico e amaldiçoado. Cada área é um objeto clicável da sala (e também um atalho numérico na barra de baixo):
 
