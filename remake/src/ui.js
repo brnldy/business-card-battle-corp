@@ -96,7 +96,7 @@ export class UI {
     this.show('hud', on);
     if (!on) { this.show('slot-log', false); this.renderBar(); ['slot-ticker', 'slot-prompt', 'slot-limit', 'slot-coach', 'slot-toast'].forEach((id) => this.show(id, false)); this.chips([]); this.menu(null); this.detail(null); this.preview(null); this.tip(null); this.tutorQ = []; }
   }
-  closeModal() { const m = $('#modal'); if (m.classList.contains('hidden')) return; m.classList.add('hidden'); m.innerHTML = ''; sfx('cancel'); const cb = this.onModalClose; this.onModalClose = null; cb?.(); }
+  closeModal() { const m = $('#modal'); if (m.classList.contains('hidden')) return; m.classList.add('hidden'); m.innerHTML = ''; sfx('navBack'); const cb = this.onModalClose; this.onModalClose = null; cb?.(); }
   modal(html, cls = '') {
     const m = $('#modal'); m.innerHTML = `<div class="modal-box ${cls}">${html}</div>`; m.classList.remove('hidden');
     m.onclick = (e) => { if (e.target === m || e.target.closest('[data-close]')) this.closeModal(); };
@@ -156,11 +156,11 @@ export class UI {
       <nav><button data-close class="primary">Voltar</button></nav>`);
     const syncSeg = () => box.querySelectorAll('.seg').forEach((sg) => sg.querySelectorAll('button').forEach((b) => b.classList.toggle('on', String(settings.get()[sg.dataset.s]) === b.dataset.v)));
     syncSeg();
-    box.addEventListener('input', (e) => { const k = e.target.dataset?.k2; if (!k) return; settings.set({ [k]: Number(e.target.value) }); applyVolumes(); if (k === 'sfx') sfx('select'); });
+    box.addEventListener('input', (e) => { const k = e.target.dataset?.k2; if (!k) return; settings.set({ [k]: Number(e.target.value) }); applyVolumes(); if (k === 'sfx') sfx('nav'); });
     box.addEventListener('click', (e) => {
       const b = e.target.closest('.seg button'); if (!b) return;
       const k = b.parentElement.dataset.s, raw = b.dataset.v, v = raw === 'true' ? true : raw === 'false' ? false : isNaN(Number(raw)) ? raw : Number(raw);
-      settings.set(k === 'tipsOff' && v === false ? { tipsOff: false, tips: {} } : { [k]: v }); applyVolumes(); if (k === 'uiSize') this.setScale(); this.renderBar(); syncSeg(); sfx('select');
+      settings.set(k === 'tipsOff' && v === false ? { tipsOff: false, tips: {} } : { [k]: v }); applyVolumes(); if (k === 'uiSize') this.setScale(); this.renderBar(); syncSeg(); sfx('nav');
     });
   }
   gallery() {
@@ -195,7 +195,7 @@ export class UI {
     this.tutorQ = this.tutorQ.filter((t) => !t.ctx || t.ctx === ctx);
     if (this._tipCtx && this._tipCtx !== ctx && !$('#slot-coach').classList.contains('hidden')) this.tutorNext();
   }
-  toggleLog() { const l = $('#slot-log'); l.classList.toggle('hidden'); this.renderBar(); if (!l.classList.contains('hidden')) $('.h-log__list', l).scrollTop = 1e6; sfx('select'); }
+  toggleLog() { const l = $('#slot-log'); l.classList.toggle('hidden'); this.renderBar(); if (!l.classList.contains('hidden')) $('.h-log__list', l).scrollTop = 1e6; sfx('nav'); }
   clearLog() { $('.h-log__list').innerHTML = ''; }
   log(text, type = '', who = 'sys') {
     const list = $('.h-log__list'), tmp = el('div', '', C.logLine({ text, type, who }));

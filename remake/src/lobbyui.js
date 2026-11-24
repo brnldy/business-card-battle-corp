@@ -122,14 +122,14 @@ export class LobbyUI {
 
   // ───────── janelas ─────────
   open(id, opts = {}) {
-    if (id === 'settings') { sfx('select'); this.ui.settings(); return; }
+    if (id === 'settings') { sfx('nav'); this.ui.settings(); return; }
     if (!TITLES[id]) return;
-    sfx('select'); this.panel = id; this.lobby.setHover(id); this.canvas.style.cursor = '';
+    sfx('nav'); this.panel = id; this.lobby.setHover(id); this.canvas.style.cursor = '';
     if (opts.tab) this.tab[id] = opts.tab;
     if (id === 'deck') { const s = this.s; this.loadDeck(this.ed?.index ?? s.activeDeck); }
     this.win.classList.remove('hidden'); this.render();
   }
-  close() { if (!this.panel) return; if (this.panel === 'deck' && this.ed?.dirty && !this._leaving) { this._leaving = true; this.toast('Deck com mudanças não salvas. Feche de novo para descartar.', 'bad'); sfx('deny'); return; } this._leaving = false; this.panel = null; this.win.classList.add('hidden'); this.lobby.setHover(null); sfx('cancel'); }
+  close() { if (!this.panel) return; if (this.panel === 'deck' && this.ed?.dirty && !this._leaving) { this._leaving = true; this.toast('Deck com mudanças não salvas. Feche de novo para descartar.', 'bad'); sfx('deny'); return; } this._leaving = false; this.panel = null; this.win.classList.add('hidden'); this.lobby.setHover(null); sfx('navBack'); }
   render() {
     const id = this.panel, [memo, title] = TITLES[id], s = this.s;
     const body = { deck: () => this.vDeck(s), recycle: () => this.vRecycle(s), duel: () => this.vDuel(s), training: () => this.vTraining(s), missions: () => this.vMissions(s), shop: () => this.vShop(s), achievements: () => this.vAchievements(s), profile: () => this.vProfile(s) }[id]();
@@ -150,17 +150,17 @@ export class LobbyUI {
     switch (a) {
       case 'open': return this.open(id, { tab: b.dataset.tab });
       case 'close': return this.close();
-      case 'exit': sfx('cancel'); return this.actions.exit();
-      case 'tab': this.tab[this.panel] = id; sfx('select'); return this.render();
-      case 'filter': this.filter = id; sfx('select'); return this.render();
+      case 'exit': sfx('navBack'); return this.actions.exit();
+      case 'tab': this.tab[this.panel] = id; sfx('nav'); return this.render();
+      case 'filter': this.filter = id; sfx('nav'); return this.render();
       // decks
-      case 'deck-pick': if (this.ed?.dirty) { this.toast('Salve ou descarte as mudanças antes de trocar de deck.', 'bad'); return sfx('deny'); } this.loadDeck(Number(id)); sfx('select'); return this.render();
-      case 'deck-new': if (this.ed?.dirty) { this.toast('Salve ou descarte as mudanças antes de criar outro deck.', 'bad'); return sfx('deny'); } this.ed = { index: -1, name: `Deck ${this.s.decks.length + 1}`, cards: [], dirty: true }; sfx('select'); return this.render();
+      case 'deck-pick': if (this.ed?.dirty) { this.toast('Salve ou descarte as mudanças antes de trocar de deck.', 'bad'); return sfx('deny'); } this.loadDeck(Number(id)); sfx('nav'); return this.render();
+      case 'deck-new': if (this.ed?.dirty) { this.toast('Salve ou descarte as mudanças antes de criar outro deck.', 'bad'); return sfx('deny'); } this.ed = { index: -1, name: `Deck ${this.s.decks.length + 1}`, cards: [], dirty: true }; sfx('nav'); return this.render();
       case 'deck-add': return this.deckAdd(b.dataset.card);
       case 'deck-rem': return this.deckRemove(b.dataset.card);
       case 'deck-save': return this.deckSave();
       case 'deck-undo': this.loadDeck(this.ed.index < 0 ? this.s.activeDeck : this.ed.index); sfx('cancel'); return this.render();
-      case 'deck-use': if (this.commit(Meta.setActiveDeck(this.s, this.ed.index), 'Este é o deck que vai para o duelo.')) sfx('select'); return undefined;
+      case 'deck-use': if (this.commit(Meta.setActiveDeck(this.s, this.ed.index), 'Este é o deck que vai para o duelo.')) sfx('nav'); return undefined;
       case 'deck-del': return this.ui.confirm('Apagar este deck?', `"${this.ed.name}" sai do arquivo. As cartas continuam na sua coleção.`, 'APAGAR', () => { const i = this.ed.index; this.ed = null; if (this.commit(Meta.deleteDeck(this.s, i))) { this.loadDeck(this.s.activeDeck); this.render(); } });
       // reciclar
       case 'recycle': { const r = Meta.recycle(this.s, id || null, Date.now()); if (this.commit(r)) { sfx('sacrifice'); this.toast(`<b>${r.count} carta${r.count > 1 ? 's' : ''} triturada${r.count > 1 ? 's' : ''}</b><span>+ ${money(r.gained)} de PATRIMÔNIO</span>`, 'good'); } return undefined; }
@@ -169,7 +169,7 @@ export class LobbyUI {
       case 'buy-pack': { const r = Meta.buyBooster(this.s, Date.now()); if (this.commit(r)) this.openPack(r.cards); return undefined; }
       case 'buy-deck': { const d = META.readyDecks.find((x) => x.id === id), r = Meta.buyReadyDeck(this.s, id, Date.now()); if (this.commit(r, `<b>${esc(d.name)}</b><span>já está no arquivo e escolhido para o duelo</span>`)) { sfx('summon'); this.ed = null; } return undefined; }
       case 'buy-cos': if (this.commit(Meta.buyCosmetic(this.s, id, Date.now()), 'Item comprado. Vista na recepção, aba Visual.')) sfx('draw'); return undefined;
-      case 'equip': if (this.commit(Meta.equipCosmetic(this.s, id, Date.now()))) sfx('select'); return undefined;
+      case 'equip': if (this.commit(Meta.equipCosmetic(this.s, id, Date.now()))) sfx('nav'); return undefined;
       case 'pack-next': return this.packNext();
       // metas
       case 'claim': { const r = Meta.claimMission(this.s, Number(id), Date.now()); if (this.commit(r)) { sfx('heal'); this.toast(`<b>Meta resgatada</b><span>+ ${money(r.reward)} de PATRIMÔNIO</span>`, 'good'); } return undefined; }
@@ -202,7 +202,7 @@ export class LobbyUI {
     if (!r.ok) return this.commit(r);
     ed.index = r.index; ed.dirty = false;
     const errs = Meta.deckErrors(r.save, ed.cards);
-    this.commit(r, errs.length ? 'Deck salvo como rascunho (ainda não pode duelar).' : 'Deck salvo.'); sfx('select');
+    this.commit(r, errs.length ? 'Deck salvo como rascunho (ainda não pode duelar).' : 'Deck salvo.'); sfx('nav');
     return undefined;
   }
   syncDeckButtons() { const b = $('[data-a="deck-save"]', this.win); if (b) b.disabled = !this.ed.dirty; }
@@ -314,7 +314,7 @@ export class LobbyUI {
   packNext() {
     const p = this.pack; if (!p) return;
     const el = $('.lb-pack', this.root);
-    if (p.i >= p.cards.length - 1) { this.pack = null; el.classList.add('hidden'); el.innerHTML = ''; sfx('select'); return; }
+    if (p.i >= p.cards.length - 1) { this.pack = null; el.classList.add('hidden'); el.innerHTML = ''; sfx('navBack'); return; }
     p.i++;
     const c = p.cards[p.i]; $(`.lb-flip[data-i="${p.i}"]`, el).classList.add('on');
     sfx(c.rarity === 'legendary' ? 'effect' : c.rarity === 'rare' ? 'summon' : 'draw');

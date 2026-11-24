@@ -71,7 +71,8 @@ const FILE_SFX = {
   trapSet: { file: 'TRAP.mp3', gain: 2.6 },
   sacrifice: { file: 'SACRIFICE.mp3', gain: 3.2 },    // -28,2 dB
   draw: { file: 'CARD.mp3', gain: 4 },                // -43,2 dB (baixinho de propósito)
-  select: { file: 'CHOSING_CARD.mp3', gain: 4.7 },    // -37,5 dB
+  // O arquivo cresce devagar por ~0,3 s antes do pico, e isso soava arrastado: começa já perto do pico e toca 25% mais rápido (~0,2 s).
+  select: { file: 'CHOSING_CARD.mp3', gain: 4, from: 0.26, to: 0.47, rate: 1.25 }, // -37,5 dB
   start: { file: 'START_BUTTON.mp3', gain: 2.6 },     // -26,4 dB
   battle: { file: 'BATTLE_BUTTON.mp3', gain: 4.5 },   // -31 dB
   bell: { file: 'END_TURN_BUTTON.mp3', gain: 1.5 },   // -21,8 dB (encerrar turno)
@@ -90,16 +91,24 @@ function loadFileSfx() {
       .catch(() => { /* sem o arquivo, fica o som sintetizado */ });
   }
 }
+// from/to (s) recortam um trecho do arquivo; rate acelera. O recorte ganha 4 ms de entrada e 30 ms de saída para não estalar.
 function playFile(name) {
   if (settings.get().sfxSource === 'procedural') return false;
   const spec = FILE_SFX[name];
   const buf = spec && fileBufs.get(spec.file);
   if (!buf) return false;
-  const src = ctx.createBufferSource(), g = ctx.createGain();
+  const src = ctx.createBufferSource(), g = ctx.createGain(), t = now();
   src.buffer = buf;
-  g.gain.value = spec.gain;
+  src.playbackRate.value = spec.rate || 1;
+  const from = spec.from || 0, len = ((spec.to || buf.duration) - from) / (spec.rate || 1);
+  if (spec.from || spec.to) {
+    g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(spec.gain, t + 0.004);
+    g.gain.setValueAtTime(spec.gain, t + Math.max(0.005, len - 0.03));
+    g.gain.linearRampToValueAtTime(0, t + len);
+  } else g.gain.value = spec.gain;
   src.connect(g).connect(sfxBus);
-  src.start();
+  src.start(t, from, spec.to ? spec.to - from : undefined);
   return true;
 }
 export function applyVolumes() {
@@ -162,6 +171,9 @@ const SFX = {
   hover() { tone({ f: rnd(1900, 2100), type: 'square', d: 0.018, vol: 0.025 }); },
   select() { tone({ f: 1250, type: 'square', d: 0.03, vol: 0.06 }); tone({ f: 1870, type: 'square', t: now() + 0.03, d: 0.04, vol: 0.05 }); },
   cancel() { tone({ f: 620, f2: 310, type: 'square', d: 0.09, vol: 0.06 }); },
+  // Interface do lobby e das janelas: "toc" abafado de pasta de papelão, curto e grave, com leve variação para não cansar.
+  nav() { const p = rnd(0.94, 1.06); tone({ f: 330 * p, f2: 250 * p, d: 0.06, vol: 0.07 }); noise({ type: 'lowpass', f: 1500 * p, f2: 500, d: 0.035, vol: 0.05 }); },
+  navBack() { const p = rnd(0.94, 1.06); tone({ f: 260 * p, f2: 190 * p, d: 0.06, vol: 0.055 }); noise({ type: 'lowpass', f: 1100 * p, f2: 400, d: 0.03, vol: 0.04 }); },
   deny() { tone({ f: 140, type: 'sawtooth', d: 0.11, vol: 0.12 }); tone({ f: 140, type: 'sawtooth', t: now() + 0.14, d: 0.13, vol: 0.12 }); },
   card() { noise({ f: 3200, f2: 900, q: 0.8, d: 0.11, vol: 0.2 }); },
   draw() { noise({ f: 1800, f2: 4200, q: 0.7, d: 0.12, vol: 0.17 }); tone({ f: 190, f2: 120, d: 0.05, vol: 0.05 }); },

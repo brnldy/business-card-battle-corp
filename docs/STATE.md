@@ -12,6 +12,10 @@ O projeto passou a viver neste repositório, juntando as duas frentes:
 - A versão Phaser e a 3D feita aqui (descritas abaixo) ficaram guardadas num ramo local, `historico-yugioro`, que não sobe para o GitHub. A estética oficial é a do remake.
 - Regra de trabalho: tudo que fizermos sobe neste repositório.
 
+### Sons de interface (24/11/2026)
+- O lobby e as janelas (abrir área, abas, filtros, configurações, registro) ganharam um som próprio, gerado por código: um "toc" abafado de pasta de papelão, curto e grave, com leve variação de altura para não cansar (`nav`; ao fechar, `navBack`, um tom abaixo). Antes usavam o som de escolher carta.
+- O som de escolher carta (`CHOSING_CARD.mp3`) crescia devagar por ~0,3 s e soava arrastado. Agora toca só o trecho perto do pico, 25% mais rápido (~0,17 s). O arquivo original não foi alterado; o recorte fica em `FILE_SFX` (`from`, `to`, `rate`) em `remake/src/audio.js`.
+
 ### Lobby 3D (23/11/2026)
 Entre o menu (a rua) e o duelo agora existe o **lobby**: a recepção da empresa por dentro, em 3D, no clima de escritório decadente, pós-apocalíptico e amaldiçoado. Cada área é um objeto clicável da sala (e também um atalho numérico na barra de baixo):
 
