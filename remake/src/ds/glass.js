@@ -1,56 +1,47 @@
-// Vidro curvo: as peças presas às margens da tela são deformadas como se estivessem num monitor de tubo.
-// É UMA lente para a tela inteira (barril): cada peça recebe o pedaço da lente que corresponde à sua posição,
-// então o que está no canto curva mais e o que está no centro quase nada. Os três canais de cor são
-// deslocados com forças um pouco diferentes, o que cria a franja vermelha/ciano perto das bordas.
-// Uso: glass.attach(elemento). Recalcula sozinho quando a peça ou a janela muda de tamanho.
-const NS = 'http://www.w3.org/2000/svg';
-const STRENGTH = 0.028;     // deslocamento máximo no canto, em fração da largura da tela
-const FRINGE = 0.028;       // diferença de força entre vermelho e azul
-const PAD = 26;             // folga em volta da peça, para a curva não ser cortada
-let svg, seq = 0;
-const items = new Map();
+// Vidro: as peças presas às margens da tela são deformadas por UMA lente da tela inteira.
+// A lente é uma "almofada" (pincushion): quanto mais perto do canto, mais o ponto é esticado para fora;
+// o meio das bordas recua para dentro. Cada peça recebe a transformação projetiva (matrix3d) que leva
+// seus quatro cantos às posições deformadas.
+// Por que transformação CSS e não filtro de pixels: a transformação é desenhada pela placa de vídeo com
+// suavização (sem serrilhado) e o navegador acompanha os cliques, então a área clicável coincide com o desenho.
+// Limite: dentro de uma peça as bordas continuam retas; a curva aparece no conjunto das peças.
+// Uso: glass.attach(elemento).
+const K = 0.13;        // força da lente (0 = desligada)
+const R0 = 0.8;        // raio que fica parado: além dele estica para fora, antes dele recua para dentro
+const items = new Set();
+let bound = false;
 
-function host() {
-  if (svg) return svg;
-  svg = document.createElementNS(NS, 'svg'); svg.setAttribute('width', '0'); svg.setAttribute('height', '0'); svg.style.position = 'absolute';
-  svg.appendChild(document.createElementNS(NS, 'defs')); document.body.appendChild(svg);
-  window.addEventListener('resize', () => items.forEach((_, el) => update(el)));
-  return svg;
+function warp(x, y) {
+  const W = window.innerWidth, H = window.innerHeight, nx = (x / W) * 2 - 1, ny = (y / H) * 2 - 1;
+  const s = 1 + K * ((nx * nx + ny * ny) / 2 - R0);
+  return [((nx * s + 1) / 2) * W, ((ny * s + 1) / 2) * H];
 }
-function lens(rect, scale) {
-  const N = 48, c = document.createElement('canvas'); c.width = N; c.height = N;
-  const g = c.getContext('2d'), d = g.createImageData(N, N), W = window.innerWidth, H = window.innerHeight;
-  for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) {
-    const sx = (rect.left - PAD + (i / (N - 1)) * (rect.width + PAD * 2)) * scale, sy = (rect.top - PAD + (j / (N - 1)) * (rect.height + PAD * 2)) * scale;
-    const nx = (sx / W) * 2 - 1, ny = (sy / H) * 2 - 1, r2 = Math.min(1, (nx * nx + ny * ny) / 2), k = (j * N + i) * 4;
-    d.data[k] = 127.5 + 127.5 * nx * r2; d.data[k + 1] = 127.5 + 127.5 * ny * r2 * (H / W) * 1.3; d.data[k + 2] = 127; d.data[k + 3] = 255;
+// homografia que leva (0,0),(w,0),(w,h),(0,h) aos quatro pontos q
+function homography(w, h, q) {
+  const src = [[0, 0], [w, 0], [w, h], [0, h]], A = [], b = [];
+  for (let i = 0; i < 4; i++) { const [x, y] = src[i], [u, v] = q[i]; A.push([x, y, 1, 0, 0, 0, -u * x, -u * y]); b.push(u); A.push([0, 0, 0, x, y, 1, -v * x, -v * y]); b.push(v); }
+  for (let c = 0; c < 8; c++) {               // eliminação de Gauss com pivô
+    let p = c; for (let r = c + 1; r < 8; r++) if (Math.abs(A[r][c]) > Math.abs(A[p][c])) p = r;
+    [A[c], A[p]] = [A[p], A[c]]; [b[c], b[p]] = [b[p], b[c]];
+    for (let r = 0; r < 8; r++) { if (r === c) continue; const f = A[r][c] / A[c][c]; for (let k = c; k < 8; k++) A[r][k] -= f * A[c][k]; b[r] -= f * b[c]; }
   }
-  g.putImageData(d, 0, 0); return c.toDataURL();
+  const m = b.map((v, i) => v / A[i][i]);
+  return `matrix3d(${m[0]},${m[3]},0,${m[6]},${m[1]},${m[4]},0,${m[7]},0,0,1,0,${m[2]},${m[5]},0,1)`;
 }
 function update(el) {
-  const it = items.get(el); if (!it) return;
-  const z = Number(getComputedStyle(document.getElementById('ui') ?? document.body).zoom) || 1;
-  const r = el.getBoundingClientRect(); if (!r.width || !r.height) return;
-  const w = r.width / z, h = r.height / z, amount = (STRENGTH * window.innerWidth * 2) / z;
-  const f = it.filter;
-  for (const [k, v] of [['x', -PAD], ['y', -PAD], ['width', w + PAD * 2], ['height', h + PAD * 2]]) { f.setAttribute(k, v); it.img.setAttribute(k, v); }
-  it.img.setAttribute('href', lens({ left: r.left / z, top: r.top / z, width: w, height: h }, z));
-  it.maps.forEach((m, i) => m.setAttribute('scale', amount * (1 + (1 - i) * FRINGE)));
+  el.style.transform = 'none';
+  const r = el.getBoundingClientRect(), w = el.offsetWidth, h = el.offsetHeight;
+  if (!w || !h || !r.width) return;
+  const sx = r.width / w, sy = r.height / h;      // px de tela por px da peça (cobre o zoom da interface)
+  const q = [[r.left, r.top], [r.right, r.top], [r.right, r.bottom], [r.left, r.bottom]].map(([x, y]) => { const [u, v] = warp(x, y); return [(u - r.left) / sx, (v - r.top) / sy]; });
+  el.style.transformOrigin = '0 0';
+  el.style.transform = homography(w, h, q);
 }
+export function refresh() { items.forEach(update); }
 export function attach(el) {
   if (!el || items.has(el)) return;
-  const id = `ds-glass-${++seq}`, f = document.createElementNS(NS, 'filter');
-  f.setAttribute('id', id); f.setAttribute('filterUnits', 'userSpaceOnUse'); f.setAttribute('color-interpolation-filters', 'sRGB');
-  const mk = (tag, attrs) => { const n = document.createElementNS(NS, tag); for (const k in attrs) n.setAttribute(k, attrs[k]); f.appendChild(n); return n; };
-  const img = mk('feImage', { preserveAspectRatio: 'none', result: 'lens' });
-  const maps = ['r', 'g', 'b'].map((c) => mk('feDisplacementMap', { in: 'SourceGraphic', in2: 'lens', xChannelSelector: 'R', yChannelSelector: 'G', result: `d${c}` }));
-  mk('feColorMatrix', { in: 'dr', values: '1 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0', result: 'r' });
-  mk('feColorMatrix', { in: 'dg', values: '0 0 0 0 0  0 1 0 0 0  0 0 0 0 0  0 0 0 1 0', result: 'g' });
-  mk('feColorMatrix', { in: 'db', values: '0 0 0 0 0  0 0 0 0 0  0 0 1 0 0  0 0 0 1 0', result: 'b' });
-  mk('feBlend', { in: 'r', in2: 'g', mode: 'screen', result: 'rg' }); mk('feBlend', { in: 'rg', in2: 'b', mode: 'screen' });
-  host().firstChild.appendChild(f);
-  items.set(el, { filter: f, img, maps });
-  el.style.filter = `url(#${id})`;
+  items.add(el); el.classList.add('ds-glass');
   new ResizeObserver(() => update(el)).observe(el);
+  if (!bound) { bound = true; window.addEventListener('resize', refresh); }
   update(el);
 }

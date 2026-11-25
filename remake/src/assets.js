@@ -37,7 +37,7 @@ export async function loadAll(onProgress) {
   ];
   let done = 0;
   const total = keys.length + MODEL_LIST.length, tick = () => onProgress?.(++done / total);
-  const fonts = ['400 1em "Apple Garamond"', '700 1em "Apple Garamond"', 'italic 400 1em "Apple Garamond"', '400 1em Helvena', '400 1em "Basis Grotesque Pro"', '700 1em "Basis Grotesque Pro"'];
+  const fonts = ['400 1em "Apple Garamond"', '700 1em "Apple Garamond"', 'italic 400 1em "Apple Garamond"', '400 1em Helvena', '400 1em VT323', '400 1em "Basis Grotesque Pro"', '700 1em "Basis Grotesque Pro"'];
   const fontWait = Promise.race([
     Promise.all(fonts.map((f) => document.fonts.load(f))).catch(() => {}),
     new Promise((r) => setTimeout(r, 3000)),

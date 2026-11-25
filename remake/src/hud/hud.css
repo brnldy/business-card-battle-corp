@@ -25,7 +25,7 @@
   --h-go-ink: #1d7a3e; --h-stop-ink: #a8231a; --h-warn-ink: #7a5d0c;
   /* tipografia */
   --h-ui: var(--f-ui);
-  --h-num: var(--f-display);
+  --h-num: var(--f-title);
   --h-fs-cap: var(--t-cap); --h-fs-sm: var(--t-sm); --h-fs-md: var(--t-md); --h-fs-lg: var(--t-lg); --h-fs-xl: var(--t-xl); --h-fs-num: var(--t-num);
   /* espaço, raio, elevação, movimento */
   --h-1: 4px; --h-2: 8px; --h-3: 12px; --h-4: 16px; --h-5: 24px;

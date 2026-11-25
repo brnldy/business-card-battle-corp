@@ -21,17 +21,19 @@
 .ds-duel .ds-rows.ds-body { gap: 0; padding: var(--ds-2) var(--ds-4); }
 
 /* ── partida · peças presas às margens ── */
-.h-hud .h-slot--opp, .h-hud .h-slot--me { left: 0; } .h-hud .h-slot--turn, .h-hud .h-slot--bar { right: 0; }
-.h-hud .h-slot--opp { top: 10px; } .h-hud .h-slot--me { bottom: 22px; }
-.h-hud .h-slot--turn { top: 78px; } .h-hud .h-slot--bar { top: 14px; }
+.h-hud .h-slot--opp, .h-hud .h-slot--me, .h-hud .h-slot--sheet { left: 40px; } .h-hud .h-slot--turn, .h-hud .h-slot--bar { right: 40px; }
+.h-hud .h-slot--opp { top: 34px; } .h-hud .h-slot--me { bottom: 44px; }
+.h-hud .h-slot--turn { top: 104px; } .h-hud .h-slot--bar { top: 34px; }
+/* vidro: franja de cor e halo quente em volta da peça (não muda a área clicável) */
+.ds-glass { will-change: transform; filter: drop-shadow(1px 0 0 rgba(255, 70, 45, 0.3)) drop-shadow(-1px 0 0 rgba(60, 215, 255, 0.26)) drop-shadow(0 0 16px rgba(255, 214, 150, 0.16)); }
 
 /* pasta de CAIXA = ds-folder */
 .h-folder { width: 270px; }
 .h-folder__shape { filter: none; }
-.h-folder__tab { height: 28px; top: var(--ds-line); background: var(--ds-tex-lines), #c2a26b; color: var(--ds-ink); border: var(--ds-line) solid var(--ds-ink); border-bottom: none; border-left: none; border-radius: 0 10px 0 0; font: 700 var(--t-cap)/1 var(--f-ui); letter-spacing: 0.14em; padding: 0 16px 0 14px; }
+.h-folder__tab { height: 28px; top: var(--ds-line); background: var(--ds-tex-lines), #c2a26b; color: var(--ds-ink); border: var(--ds-line) solid var(--ds-ink); border-bottom: none; border-radius: 6px 10px 0 0; font: 700 var(--t-cap)/1 var(--f-ui); letter-spacing: 0.14em; padding: 0 16px 0 14px; }
 body.theme-buckshot .h-folder__name { text-transform: uppercase; }
-.h-folder__body { background: var(--ds-tex-kraft); border: var(--ds-line) solid var(--ds-ink); border-left: none; border-radius: 0 var(--ds-r) var(--ds-r) 0; padding: 8px 16px 12px 18px; box-shadow: 0 5px 0 0 var(--ds-kraft-lo), 0 6px 0 1px var(--ds-ink), 6px 13px 0 0 rgba(0, 0, 0, 0.55); }
-.h-folder__value, body.theme-buckshot .h-folder__value { color: var(--ds-ink); font-size: 52px; justify-content: flex-start; text-shadow: none; }
+.h-folder__body { background: var(--ds-tex-kraft); border: var(--ds-line) solid var(--ds-ink); border-radius: 0 var(--ds-r) var(--ds-r) var(--ds-r); padding: 8px 16px 12px 18px; box-shadow: 0 5px 0 0 var(--ds-kraft-lo), 0 6px 0 1px var(--ds-ink), 6px 13px 0 0 rgba(0, 0, 0, 0.55); }
+.h-folder__value, body.theme-buckshot .h-folder__value { color: var(--ds-ink); font-size: 60px; justify-content: flex-start; text-shadow: none; }
 .h-folder__cur { font-size: 0.5em; opacity: 0.7; }
 .h-folder__bar { height: 12px; margin: 10px 2px 2px; border-radius: 0; background: #2a2118; border: var(--ds-line) solid var(--ds-ink); box-shadow: 0 0 0 2px #d6bd8a; } .h-folder__bar i { background: var(--ds-amber); }
 .h-folder__light { background: rgba(27, 20, 13, 0.3); }
@@ -41,14 +43,14 @@ body.theme-buckshot .h-folder__name { text-transform: uppercase; }
 .h-folder__meta { font-size: var(--t-md); color: var(--ds-paper); margin-top: 16px; padding-left: 18px; }
 
 /* painel do turno = ds-sheet + ds-bar */
-.h-turn { position: relative; width: 300px; gap: var(--ds-3); padding: 0 var(--ds-4) var(--ds-4); margin: 5px 0 11px 5px; background: var(--ds-tex-paper); color: var(--ds-ink); border: var(--ds-line) solid var(--ds-ink); border-right: none; border-radius: 0; box-shadow: var(--ds-frame);
+.h-turn { position: relative; width: 300px; gap: var(--ds-3); padding: 0 var(--ds-4) var(--ds-4); margin: 5px 5px 11px; background: var(--ds-tex-paper); color: var(--ds-ink); border: var(--ds-line) solid var(--ds-ink); border-radius: 0; box-shadow: var(--ds-frame);
   --h-term-line: rgba(27, 20, 13, 0.3); --h-t1: var(--ds-ink); --h-t2: var(--ds-ink-2); --h-t3: var(--ds-ink-3); --h-mdr: var(--ds-ink); --h-go: var(--ds-green); }
 .h-turn__head { gap: 10px; }
 .h-turn__head .h-cap { margin: 0 calc(-1 * var(--ds-4)); padding: 9px var(--ds-4) 8px; background: var(--ds-tex-ink); color: var(--ds-paper); border-bottom: var(--ds-line) solid var(--ds-ink); font-weight: 700; letter-spacing: 0.14em; }
 .h-turn__who, body.theme-buckshot .h-turn__who { font-size: 36px; text-shadow: none; color: var(--ds-ink); } .h-turn.is-foe .h-turn__who { color: var(--ds-ink-2); }
 .h-dots { top: 9px; } .h-dots i { background: var(--ds-amber); }
 .h-steps__item { font-weight: 700; letter-spacing: 0.08em; } .h-steps__bar { height: 6px; border-radius: 0; background: rgba(150, 118, 78, 0.35); } .h-steps__item.is-on .h-steps__bar { background: var(--ds-amber); box-shadow: 0 0 0 1.5px var(--ds-ink); } .h-steps__item.is-on b { color: var(--ds-ink); }
-.h-turn__coach { font: 400 21px/1.2 var(--f-display); }
+.h-turn__coach { font: 400 21px/1.2 var(--f-title); }
 .h-res { gap: 0; padding: 4px 12px; border: none; background: rgba(150, 118, 78, 0.18); }
 .h-res__row { padding: 7px 0; border-bottom: 1.5px dotted rgba(27, 20, 13, 0.45); } .h-res__row:last-child { border-bottom: none; } .h-res__row dt { font-weight: 700; }
 .h-res__row dd { font: 700 var(--t-cap)/1 var(--f-ui); letter-spacing: 0.1em; text-transform: uppercase; padding: 5px 8px 4px; border: var(--ds-line) solid currentColor; background: var(--ds-card); }
@@ -62,10 +64,10 @@ body.theme-buckshot .h-folder__name { text-transform: uppercase; }
 /* barra de cima = ds-btn */
 .h-topbar .h-ibtn { height: 36px; min-width: 36px; background: var(--ds-tex-card); color: var(--ds-ink); border: var(--ds-line) solid var(--ds-ink); border-radius: 0; font-weight: 700; letter-spacing: 0.08em; box-shadow: 0 3px 0 0 var(--ds-band-lo), 0 4px 0 1px var(--ds-ink), 4px 8px 0 0 rgba(0, 0, 0, 0.5); }
 .h-topbar .h-ibtn:hover, .h-topbar .h-ibtn.is-on { background: var(--ds-tex-ink); color: var(--ds-paper); border-color: var(--ds-ink); }
-.h-slot--bar .h-topbar { padding-right: 16px; }
+
 
 /* ficha da carta = ds-sheet--card + ds-stat */
-.h-sheet { width: 300px; margin: 5px 5px 11px 0; background: var(--ds-tex-card); color: var(--ds-ink); border: var(--ds-line) solid var(--ds-ink); border-left: none; border-radius: 0; box-shadow: var(--ds-frame); overflow: visible; }
+.h-sheet { width: 300px; margin: 5px 5px 11px; background: var(--ds-tex-card); color: var(--ds-ink); border: var(--ds-line) solid var(--ds-ink); border-radius: 0; box-shadow: var(--ds-frame); overflow: visible; }
 .h-sheet__art { border-bottom: var(--ds-line) solid var(--ds-ink); }
 .h-sheet__where { background: var(--ds-tex-ink); color: var(--ds-paper); font-weight: 700; letter-spacing: 0.12em; border-radius: 0; left: 0; top: 0; padding: 7px 10px 6px; }
 .h-sheet__body { padding: 12px 16px 14px; gap: 8px; }
@@ -73,3 +75,4 @@ body.theme-buckshot .h-folder__name { text-transform: uppercase; }
 .h-stat { border: none; border-top: 3px solid var(--ds-ink); border-radius: 0; padding: 5px 0 0; } .h-stat__label { color: var(--ds-ink-2); font-weight: 700; } .h-stat__value { font-size: 26px; }
 .h-sheet .h-gloss { background: rgba(150, 118, 78, 0.18); border: none; border-radius: 0; } .h-sheet .h-gloss dt { color: var(--ds-ink); font-weight: 700; } .h-sheet .h-gloss dd { color: var(--ds-ink-2); }
 .h-sheet__status { border-top: var(--ds-line) solid var(--ds-ink); font-weight: 700; }
+.h-hud .h-slot--sheet { transform: none; translate: 0 -50%; }   /* centraliza com 'translate' para o vidro poder usar 'transform' */

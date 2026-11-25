@@ -22,6 +22,8 @@ const fonts = [
   ['Apple Garamond', 400, 'normal', 'AppleGaramond-400-normal.ttf'], ['Apple Garamond', 700, 'normal', 'AppleGaramond-700-normal.ttf'],
   ['Apple Garamond', 400, 'italic', 'AppleGaramond-400-italic.ttf'], ['Apple Garamond', 700, 'italic', 'AppleGaramond-700-italic.ttf'],
   ['Helvena', 400, 'normal', 'Helvena-400-normal.ttf'],
+  // Títulos da interface (teste da Sprint 6). SIL OFL. O 5º item aumenta a fonte, que é pequena por desenho.
+  ['VT323', 400, 'normal', 'VT323-400-normal.ttf', '112%'],
   // Fonte da interface (Sprint 4). Comercial (Colophon Foundry): os arquivos ficam fora do Git até a licença ser confirmada.
   // Sem eles, o build segue e a interface cai na Helvena (ver --f-ui em src/tokens.css).
   ['Basis Grotesque Pro', 400, 'normal', 'BasisGrotesquePro-400-normal.otf'], ['Basis Grotesque Pro', 500, 'normal', 'BasisGrotesquePro-500-normal.otf'],
@@ -31,10 +33,10 @@ const fontCss = fonts.filter(([fam, , , file]) => {
   const ok = fs.existsSync(path.join(root, 'assets/fonts', file));
   if (!ok) console.warn(`fonte ausente: ${file} (${fam} usa o fallback)`);
   return ok;
-}).map(([fam, w, st, file]) => {
+}).map(([fam, w, st, file, adjust]) => {
   const src = dev ? `../assets/fonts/${file}` : dataUri(path.join(root, 'assets/fonts', file));
   const format = file.endsWith('.otf') ? 'opentype' : 'truetype';
-  return `@font-face{font-family:'${fam}';src:url('${src}') format('${format}');font-weight:${w};font-style:${st};font-display:block}`;
+  return `@font-face{font-family:'${fam}';src:url('${src}') format('${format}');font-weight:${w};font-style:${st};font-display:block${adjust ? `;size-adjust:${adjust}` : ''}}`;
 }).join('\n');
 
 const html = (head, script) => `<!DOCTYPE html>

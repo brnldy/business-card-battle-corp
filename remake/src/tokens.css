@@ -6,7 +6,8 @@
    ════════════════════════════════════════════════════════════════════════ */
 :root {
   /* ── fontes por papel ── */
-  --f-display: "Apple Garamond", Georgia, "Times New Roman", serif;   /* títulos, números, cartas */
+  --f-display: "Apple Garamond", Georgia, "Times New Roman", serif;   /* faces das cartas (canvas) */
+  --f-title: "VT323", "Courier New", monospace;                        /* títulos e números da interface (teste: era Apple Garamond) */
   --f-ui: "Basis Grotesque Pro", Helvena, "Segoe UI", system-ui, sans-serif;   /* interface: botões, rótulos, texto corrido */
 
   /* ── logo: INTOCÁVEL ──

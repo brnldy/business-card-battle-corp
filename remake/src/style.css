@@ -2,7 +2,7 @@
   --bg: #1f2b25; --bg-deep: #141d18; --folder: #5d705f; --folder-hi: #6b7f6c; --cream: #cfcab2; --paper: #f3f8f0; --ink: #17211c;
   --mute: #9fb0a2; --line: rgba(243, 248, 240, 0.16); --panel: rgba(25, 36, 30, 0.94);
   --red: #ee3a30; --red-deep: #7a1410; --green: #7fcf86; --green-deep: #14401c; --blue: #9fe8ff;
-  --serif: var(--f-display); --sans: var(--f-ui);
+  --serif: var(--f-title); --sans: var(--f-ui);
   --r: 12px;
 }
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -39,7 +39,7 @@ button.danger { background: var(--red); border-color: var(--red); color: #fff; }
 .title-block h1 { font: 400 clamp(60px, 7.6vw, 112px)/0.88 var(--f-logo); color: var(--paper); }
 .title-block h1 .tag-word { font: 400 0.26em var(--f-logo-tag); background: var(--paper); color: var(--ink); padding: 0.14em 0.55em; border-radius: 0.34em; display: inline-block; transform: rotate(-6deg) translateY(-0.45em); margin-left: 0.3em; }
 .title-block h1 small { font: 400 0.26em var(--f-logo); margin-left: 0.3em; color: var(--cream); }
-.tagline { font: italic 400 21px var(--serif); color: var(--cream); margin: 16px 0 28px; }
+.tagline { font: italic 400 21px var(--f-logo); color: var(--cream); margin: 16px 0 28px; }
 .title-block nav { display: grid; gap: 8px; width: min(320px, 100%); }
 .title-block nav button { text-align: left; padding: 13px 18px; font-size: 15.5px; display: flex; justify-content: space-between; align-items: center; }
 .company { margin-top: 20px; font-size: var(--t-md); color: var(--mute); } .company b { color: var(--paper); font-weight: 400; }
