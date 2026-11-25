@@ -16,7 +16,7 @@ const MODELS = ['business_man', 'Television_01', 'hanging_industrial_lamp', 'mou
 
 const result = await build({ entryPoints: [path.join(root, 'src/main.js')], bundle: true, format: 'iife', minify: !dev, write: false, target: 'es2022', legalComments: 'none' });
 const js = result.outputFiles[0].text;
-const css = fs.readFileSync(path.join(root, 'src/tokens.css'), 'utf8') + '\n' + fs.readFileSync(path.join(root, 'src/style.css'), 'utf8') + '\n' + fs.readFileSync(path.join(root, 'src/hud/hud.css'), 'utf8') + '\n' + fs.readFileSync(path.join(root, 'src/lobby.css'), 'utf8') + '\n' + fs.readFileSync(path.join(root, 'src/ds-pilot.css'), 'utf8');
+const css = fs.readFileSync(path.join(root, 'src/tokens.css'), 'utf8') + '\n' + fs.readFileSync(path.join(root, 'src/style.css'), 'utf8') + '\n' + fs.readFileSync(path.join(root, 'src/hud/hud.css'), 'utf8') + '\n' + fs.readFileSync(path.join(root, 'src/lobby.css'), 'utf8') + '\n' + fs.readFileSync(path.join(root, 'src/ds/ds.css'), 'utf8') + '\n' + fs.readFileSync(path.join(root, 'src/ds/ds-game.css'), 'utf8');
 
 const fonts = [
   ['Apple Garamond', 400, 'normal', 'AppleGaramond-400-normal.ttf'], ['Apple Garamond', 700, 'normal', 'AppleGaramond-700-normal.ttf'],
@@ -68,6 +68,12 @@ if (dev) {
 ${fs.readFileSync(path.join(root, 'src/tokens.css'), 'utf8')}
 ${fs.readFileSync(path.join(root, 'src/hud/hud.css'), 'utf8')}
 ${fs.readFileSync(path.join(root, 'src/lab.css'), 'utf8')}</style></head><body class="theme-buckshot"><div id="app"></div><script>window.__ASSET_BASE__="../"</script><script src="lab.js"></script></body></html>`);
+  // catálogo do design system: os componentes sozinhos, fora do jogo
+  const rd = (f) => fs.readFileSync(path.join(root, f), 'utf8');
+  fs.writeFileSync(path.join(root, 'dist/ds.html'), `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Design system · BCBC</title><style>${fontCss}
+${rd('src/tokens.css')}
+${rd('src/ds/ds.css')}
+${rd('src/ds/catalog.css')}</style></head><body>${rd('src/ds/catalog.html')}</body></html>`);
   console.log('dev build ok', (js.length / 1024).toFixed(0) + 'KB', '+ lab');
 } else {
   const shared = {};

@@ -1,0 +1,131 @@
+/* ════════════════════════════════════════════════════════════════════════
+   DESIGN SYSTEM · Business Card Battle Corp.
+   Papelaria de escritório, chapada: papel creme, tinta preta, contorno grosso,
+   sombra dura (sem desfoque) e faixa de cabeçalho escura. Sem textura realista.
+   Referências: Dispatch (fichas e painéis) e Papers, Please (documentos na mesa).
+   Catálogo vivo: dist/ds.html (build de desenvolvimento). Docs: docs/design-system/06-componentes.md
+   Depende de tokens.css (--f-display, --f-ui, --t-*).
+   ════════════════════════════════════════════════════════════════════════ */
+:root {
+  /* tinta e papel */
+  --ds-ink: #1b140d; --ds-ink-2: #5a4c36; --ds-ink-3: #8f7f62;
+  --ds-paper: #eadfc3; --ds-paper-2: #d9cba6; --ds-card: #f6efdc;
+  --ds-kraft: #b8975f; --ds-kraft-2: #a08049;
+  /* cor com significado (nunca decorativa) */
+  --ds-amber: #f2b94c;   /* destaque, dinheiro, sua vez */
+  --ds-green: #2f7a43;   /* pode, pronto, ganho */
+  --ds-red: #b8291c;     /* não pode, perda, perigo */
+  /* traço, sombra, raio */
+  --ds-line: 2px; --ds-r: 2px;
+  --ds-shadow: 6px 7px 0 rgba(0, 0, 0, 0.55);          /* peça sobre a cena */
+  --ds-shadow-in: 3px 3px 0 var(--ds-ink);              /* botão sobre papel */
+  /* espaço */
+  --ds-1: 4px; --ds-2: 8px; --ds-3: 12px; --ds-4: 18px; --ds-5: 26px;
+  /* ── acabamento (ver docs/design-system/06-acabamento.md) ── */
+  --ds-band: #cdbb95; --ds-band-lo: #a8946c;      /* faixa da moldura e espessura do cartão */
+  --ds-kraft-lo: #8a6d3f;
+  --ds-tex-speck: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='s'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.6' numOctaves='1' seed='11'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 3 -1.7'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23s)' opacity='.6'/%3E%3C/svg%3E");
+  --ds-tex-lines: repeating-linear-gradient(to bottom, rgba(70, 45, 15, 0.05) 0 1px, transparent 1px 3px);
+  /* papel = salpico + linhas finas + cunha diagonal + canto escurecido + degradê vertical */
+  --ds-tex-paper: var(--ds-tex-speck), var(--ds-tex-lines), linear-gradient(118deg, rgba(150, 118, 78, 0.14) 0 32%, rgba(150, 118, 78, 0) 32.2%), radial-gradient(70% 60% at 100% 100%, rgba(120, 90, 50, 0.14), transparent 70%), linear-gradient(to bottom, #f4ead2, var(--ds-paper) 45%, #e2d2b0);
+  --ds-tex-card: var(--ds-tex-speck), var(--ds-tex-lines), linear-gradient(to bottom, #fbf5e4, var(--ds-card) 50%, #efe4c8);
+  --ds-tex-kraft: var(--ds-tex-speck), var(--ds-tex-lines), linear-gradient(118deg, rgba(255, 235, 190, 0.12) 0 28%, rgba(255, 235, 190, 0) 28.2%), radial-gradient(80% 70% at 100% 100%, rgba(70, 45, 15, 0.22), transparent 70%), linear-gradient(to bottom, #c2a26b, var(--ds-kraft) 45%, #a88750);
+  --ds-tex-ink: var(--ds-tex-lines), linear-gradient(90deg, var(--ds-ink), #3a2b1c);
+  /* moldura em camadas: traço 2 px (border) + faixa 4 px + fio 1 px + espessura 5 px embaixo + sombra dura */
+  --ds-frame: 0 0 0 4px var(--ds-band), 0 0 0 5px var(--ds-ink), 0 5px 0 5px var(--ds-band-lo), 0 6px 0 5px var(--ds-ink), 7px 13px 0 4px rgba(0, 0, 0, 0.5);
+  --ds-frame-in: 0 0 0 3px var(--ds-band), 0 0 0 4px var(--ds-ink), 0 4px 0 4px var(--ds-band-lo), 0 5px 0 4px var(--ds-ink);   /* folha dentro de pasta: sem sombra longa */
+}
+
+/* ── texto ── */
+.ds-title { font: 400 34px/1 var(--f-display); color: var(--ds-ink); margin: 0; letter-spacing: -0.005em; }
+.ds-title--xl { font-size: 52px; } .ds-title--sm { font-size: 24px; }
+.ds-label { font: 700 var(--t-cap)/1.2 var(--f-ui); letter-spacing: 0.14em; text-transform: uppercase; color: var(--ds-ink-2); margin: 0; }
+.ds-text { font: 400 var(--t-md)/1.45 var(--f-ui); color: var(--ds-ink); margin: 0; }
+.ds-num { font: 400 30px/1 var(--f-display); font-variant-numeric: tabular-nums; }
+
+/* ── folha: a superfície padrão ── */
+.ds-sheet { position: relative; display: flex; flex-direction: column; min-width: 0; margin: 5px 5px 11px; background: var(--ds-tex-paper); color: var(--ds-ink); border: var(--ds-line) solid var(--ds-ink); border-radius: 0; box-shadow: var(--ds-frame); }
+.ds-sheet::after { content: ""; position: absolute; right: 0; bottom: 0; width: 44%; height: 30%; pointer-events: none; opacity: 0.55; background: conic-gradient(rgba(150, 118, 78, 0.32) 25%, transparent 0 50%, rgba(150, 118, 78, 0.32) 0 75%, transparent 0) 0 0 / 8px 8px; -webkit-mask: radial-gradient(100% 100% at 100% 100%, #000, transparent 72%); mask: radial-gradient(100% 100% at 100% 100%, #000, transparent 72%); }   /* retícula que some para o centro */
+.ds-sheet > * { position: relative; z-index: 1; }
+.ds-sheet--card { background: var(--ds-tex-card); }
+.ds-sheet--flat { box-shadow: var(--ds-frame-in); margin: 4px 4px 9px; }
+.ds-bar { display: flex; align-items: center; justify-content: space-between; gap: var(--ds-3); min-height: 30px; padding: 0 var(--ds-3); background: var(--ds-tex-ink); color: var(--ds-paper); border-bottom: var(--ds-line) solid var(--ds-ink); font: 700 var(--t-cap)/1 var(--f-ui); letter-spacing: 0.14em; text-transform: uppercase; }
+.ds-bar b { color: var(--ds-amber); font-weight: 700; }
+.ds-bar--amber { background: var(--ds-tex-lines), linear-gradient(90deg, #dc9a2f, var(--ds-amber)); color: var(--ds-ink); border-bottom: var(--ds-line) solid var(--ds-ink); } .ds-bar--amber b { color: var(--ds-ink); }
+.ds-bar--red { background: var(--ds-tex-lines), linear-gradient(90deg, #8f2218, var(--ds-red)); color: #fff; }
+.ds-body { display: grid; gap: var(--ds-4); padding: var(--ds-4); min-width: 0; }
+
+/* ── pasta: janela que guarda folhas ── */
+.ds-folder { position: relative; background: var(--ds-tex-kraft); color: var(--ds-ink); border: var(--ds-line) solid var(--ds-ink); border-radius: var(--ds-r); box-shadow: 0 5px 0 0 var(--ds-kraft-lo), 0 6px 0 1px var(--ds-ink), 8px 14px 0 0 rgba(0, 0, 0, 0.5); }
+.ds-folder__tab { position: absolute; left: 22px; bottom: 100%; margin-bottom: calc(-1 * var(--ds-line)); padding: 8px 16px 6px; background: var(--ds-tex-lines), #c2a26b; border: var(--ds-line) solid var(--ds-ink); border-bottom: none; border-radius: 6px 10px 0 0; font: 700 var(--t-cap)/1 var(--f-ui); letter-spacing: 0.14em; text-transform: uppercase; }
+
+/* ── botão ── */
+.ds-btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; height: 40px; padding: 0 16px; font: 700 var(--t-sm)/1 var(--f-ui); letter-spacing: 0.1em; text-transform: uppercase; white-space: nowrap; background: var(--ds-card); color: var(--ds-ink); border: var(--ds-line) solid var(--ds-ink); border-radius: var(--ds-r); box-shadow: var(--ds-shadow-in); cursor: pointer; pointer-events: auto; transition: transform 0.06s, box-shadow 0.06s, background 0.1s; }
+.ds-btn:hover:not(:disabled) { transform: translate(-1px, -1px); box-shadow: 4px 4px 0 var(--ds-ink); background: #fff; }
+.ds-btn:active:not(:disabled) { transform: translate(3px, 3px); box-shadow: 0 0 0 var(--ds-ink); }
+.ds-btn:focus-visible { outline: 3px solid var(--ds-amber); outline-offset: 3px; }
+.ds-btn--primary { background: var(--ds-ink); color: var(--ds-paper); box-shadow: 3px 3px 0 var(--ds-amber); }
+.ds-btn--primary:hover:not(:disabled) { background: var(--ds-ink); color: var(--ds-amber); box-shadow: 4px 4px 0 var(--ds-amber); }
+.ds-btn--primary:active:not(:disabled) { box-shadow: 0 0 0 var(--ds-amber); }
+.ds-btn--accent { background: var(--ds-amber); } .ds-btn--accent:hover:not(:disabled) { background: #ffd27a; }
+.ds-btn--danger { background: var(--ds-red); color: #fff; } .ds-btn--danger:hover:not(:disabled) { background: #d23324; }
+.ds-btn--link { height: auto; padding: 3px 0; background: none; border: none; border-bottom: var(--ds-line) solid currentColor; border-radius: 0; box-shadow: none; }
+.ds-btn--link:hover:not(:disabled) { transform: none; box-shadow: none; background: none; color: var(--ds-red); }
+.ds-btn--lg { height: 56px; padding: 0 24px; font-size: 16px; }
+.ds-btn--sq { width: 40px; padding: 0; }
+.ds-btn:disabled { cursor: default; background: none; color: var(--ds-ink-3); border-style: dashed; border-color: var(--ds-ink-3); box-shadow: none; }
+.ds-key { font: 700 11px/1 var(--f-ui); letter-spacing: 0.06em; padding: 5px 7px 4px; background: var(--ds-amber); color: var(--ds-ink); border-radius: 4px; box-shadow: 0 0 0 1.5px var(--ds-card), 0 0 0 3px var(--ds-ink); margin: 0 3px; text-transform: uppercase; }   /* tecla: cápsula âmbar, anel claro, contorno escuro */
+
+/* ── etiqueta de valor, carimbo, estado ── */
+.ds-tag { display: inline-flex; align-items: baseline; gap: 8px; padding: 7px 12px 6px 24px; background: var(--ds-card); color: var(--ds-ink-2); font: 700 var(--t-cap)/1 var(--f-ui); letter-spacing: 0.12em; text-transform: uppercase; clip-path: polygon(13px 0, 100% 0, 100% 100%, 13px 100%, 0 50%); filter: drop-shadow(3px 3px 0 rgba(0, 0, 0, 0.4)); position: relative; white-space: nowrap; }
+.ds-tag::before { content: ""; position: absolute; left: 10px; top: 50%; width: 6px; height: 6px; margin-top: -3px; border-radius: 50%; background: var(--ds-ink); }
+.ds-tag b { font: 400 24px/1 var(--f-display); color: var(--ds-ink); letter-spacing: 0; }
+.ds-stamp { display: inline-block; font: 700 14px/1 var(--f-ui); font-style: normal; letter-spacing: 0.16em; text-transform: uppercase; padding: 6px 9px 5px; border: 3px solid currentColor; border-radius: 3px; transform: rotate(-6deg); color: var(--ds-ink); }
+.ds-stamp--ok { color: var(--ds-green); } .ds-stamp--no { color: var(--ds-red); }
+.ds-chip { display: inline-flex; align-items: center; gap: 7px; height: 26px; padding: 0 9px; background: var(--ds-card); color: var(--ds-ink); border: var(--ds-line) solid var(--ds-ink); border-radius: var(--ds-r); font: 700 var(--t-cap)/1 var(--f-ui); letter-spacing: 0.1em; text-transform: uppercase; white-space: nowrap; }
+.ds-chip::before { content: ""; width: 9px; height: 9px; border-radius: 50%; background: var(--ds-ink-3); }
+.ds-chip--ok::before { background: var(--ds-green); } .ds-chip--no::before { background: var(--ds-red); } .ds-chip--now::before { background: var(--ds-amber); box-shadow: 0 0 0 2px var(--ds-ink); }
+.ds-chip--plain::before { display: none; }
+
+/* ── abas, campo, seletor ── */
+.ds-tabs { display: flex; gap: 4px; padding: 0 var(--ds-3); border-bottom: var(--ds-line) solid var(--ds-ink); }
+.ds-tabs button { padding: 9px 14px 7px; margin-bottom: calc(-1 * var(--ds-line)); background: var(--ds-paper-2); color: var(--ds-ink-2); border: var(--ds-line) solid var(--ds-ink); border-radius: 5px 8px 0 0; font: 700 var(--t-cap)/1 var(--f-ui); letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer; pointer-events: auto; }
+.ds-tabs button.is-on { background: var(--ds-paper); color: var(--ds-ink); border-bottom-color: var(--ds-paper); padding-top: 12px; margin-top: -3px; }
+.ds-field { display: grid; gap: 6px; }
+.ds-field input { font: 400 28px/1.1 var(--f-display); color: var(--ds-ink); background: var(--ds-card); border: var(--ds-line) solid var(--ds-ink); border-radius: var(--ds-r); padding: 9px 12px 7px; outline: none; box-shadow: inset 3px 3px 0 rgba(27, 20, 13, 0.1); pointer-events: auto; }
+.ds-field input:focus { box-shadow: inset 3px 3px 0 rgba(27, 20, 13, 0.1), 0 0 0 3px var(--ds-amber); }
+.ds-seg { display: inline-flex; border: var(--ds-line) solid var(--ds-ink); border-radius: var(--ds-r); background: var(--ds-card); }
+.ds-seg button { padding: 8px 12px 7px; background: none; color: var(--ds-ink-2); border: none; border-right: var(--ds-line) solid var(--ds-ink); font: 700 var(--t-cap)/1 var(--f-ui); letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; pointer-events: auto; }
+.ds-seg button:last-child { border-right: none; } .ds-seg button.is-on { background: var(--ds-ink); color: var(--ds-paper); }
+
+/* ── linhas, números, medidor ── */
+.ds-rows { list-style: none; margin: 0; padding: 0; display: grid; }
+.ds-rows > * { display: flex; align-items: baseline; justify-content: space-between; gap: var(--ds-3); padding: 8px 0 7px; border-bottom: 1.5px dotted rgba(27, 20, 13, 0.5); font: 400 19px/1.1 var(--f-display); color: var(--ds-ink); }
+.ds-rows > *:last-child { border-bottom: none; }
+.ds-rows > .is-off { color: var(--ds-ink-3); }
+.ds-rows > .is-on > :first-child::after { content: "✓"; margin-left: 8px; font: 700 14px var(--f-ui); color: var(--ds-green); }
+.ds-rows em { font: 700 var(--t-cap)/1 var(--f-ui); font-style: normal; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ds-ink-2); white-space: nowrap; }
+.ds-rows em b { font: 400 19px/1 var(--f-display); color: inherit; letter-spacing: 0; margin: 0 1px 0 8px; }
+.ds-rows--form > * { border-bottom: 1.5px solid var(--ds-ink); padding: 12px 0 10px; } .ds-rows--form > *:first-child { border-top: 3px solid var(--ds-ink); }
+.ds-inset { background: rgba(150, 118, 78, 0.18); padding: 10px 14px; }   /* caixa rebaixada: um tom abaixo do papel, sem borda */
+.ds-rows--form dt { font: 700 var(--t-cap)/1 var(--f-ui); letter-spacing: 0.14em; text-transform: uppercase; color: var(--ds-ink-2); flex: 0 0 100px; } .ds-rows--form dd { margin: 0; flex: 1; font: 400 26px/1.1 var(--f-display); }
+.ds-stat { display: grid; gap: 3px; padding-top: 6px; border-top: 3px solid var(--ds-ink); min-width: 0; }
+.ds-stat b { font: 400 30px/1 var(--f-display); font-variant-numeric: tabular-nums; }
+.ds-meter { height: 12px; background: #2a2118; border: var(--ds-line) solid var(--ds-ink); box-shadow: 0 0 0 2px var(--ds-card); margin: 2px; } .ds-meter i { display: block; height: 100%; background: var(--ds-amber); }
+.ds-meter--amber i { background: var(--ds-amber); } .ds-meter--red i { background: var(--ds-red); }
+
+/* ── aviso, placa ── */
+.ds-slip { display: grid; gap: 3px; padding: 10px 14px 9px 12px; background: var(--ds-card); color: var(--ds-ink); border: var(--ds-line) solid var(--ds-ink); border-left-width: 10px; border-radius: var(--ds-r); box-shadow: var(--ds-shadow); font: 700 var(--t-sm)/1.3 var(--f-ui); }
+.ds-slip b { font: 400 20px/1.1 var(--f-display); } .ds-slip--ok { border-left-color: var(--ds-green); } .ds-slip--no { border-left-color: var(--ds-red); } .ds-slip--gold { border-left-color: var(--ds-amber); }
+.ds-plate { display: inline-block; padding: 8px 16px 7px; background: var(--ds-ink); color: var(--ds-amber); border: var(--ds-line) solid var(--ds-ink); outline: 1.5px solid var(--ds-amber); outline-offset: -6px; font: 700 var(--t-md)/1 var(--f-ui); letter-spacing: 0.16em; text-transform: uppercase; box-shadow: var(--ds-shadow); }
+
+/* ── ficha de deck ── */
+.ds-deckcard { position: relative; display: grid; grid-template-columns: 86px 1fr auto; align-items: center; gap: var(--ds-4); padding: var(--ds-3) var(--ds-4); background: var(--ds-tex-card); border: var(--ds-line) solid var(--ds-ink); border-radius: 0; box-shadow: 0 0 0 2px var(--ds-card), 0 0 0 3px var(--ds-ink-3); margin: 3px; }
+.ds-deckcard__fan { position: relative; height: 80px; } .ds-deckcard__fan img { position: absolute; left: 14px; top: 0; height: 80px; border: 1.5px solid var(--ds-ink); transform: rotate(-9deg) translateX(-12px); }
+.ds-deckcard__fan img:nth-child(2) { transform: rotate(-2deg); } .ds-deckcard__fan img:nth-child(3) { transform: rotate(6deg) translateX(12px); }
+.ds-deckcard__txt { display: grid; gap: 3px; min-width: 0; } .ds-deckcard__txt b { font: 400 28px/1.05 var(--f-display); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ds-deckcard__side { display: grid; gap: 10px; justify-items: end; }
+.ds-deckcard.is-bad { border-color: var(--ds-red); }
+
+/* ── margem da tela: a curvatura de vidro vem de src/ds/glass.js (uma lente só para a tela inteira) ── */
+.ds-actions { display: flex; align-items: center; gap: var(--ds-5); flex-wrap: wrap; }

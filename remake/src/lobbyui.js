@@ -255,27 +255,27 @@ export class LobbyUI {
   deckLine(s) { const d = Meta.activeDeck(s), ok = Meta.activeDeckValid(s); return `<div class="lb-deckline ${ok ? '' : 'bad'}"><span class="memo">Deck escolhido</span><b>${esc(d.name)}</b><span>${ok ? `${d.cards.length} cartas · pronto` : esc(Meta.deckErrors(s, d.cards)[0] ?? 'Deck inválido')}</span><button data-a="open" data-id="deck">Trocar no arquivo</button></div>`; }
   vDuel(s) {
     const won = RIVALS.filter((r) => (s.stats.rivals[r]?.w ?? 0) > 0).length;
-    const rv = RIVALS.map((r) => { const x = s.stats.rivals[r] ?? { w: 0, l: 0 }; return `<li class="${x.w ? 'won' : ''}"><span>${esc(r)}</span><em><b>${x.w}</b>V<b>${x.l}</b>D</em></li>`; }).join('');
+    const rv = RIVALS.map((r) => { const x = s.stats.rivals[r] ?? { w: 0, l: 0 }; return `<li class="${x.w ? 'is-on' : x.l ? '' : 'is-off'}"><span>${esc(r)}</span><em><b>${x.w}</b>V<b>${x.l}</b>D</em></li>`; }).join('');
     const d = Meta.activeDeck(s), ok = Meta.activeDeckValid(s), back = backUrl(s.cosmetics.back, s.cosmetics.logo, asset('cards/back.png'));
     return `<div class="ds-duel">
-      <section class="ds-sheet ds-sheet--main">
-        <dl class="ds-stakes">
-          <div class="win"><dt>Vitória</dt><dd>CAIXA que sobrar <i>→</i> PATRIMÔNIO</dd></div>
-          <div class="loss"><dt>Derrota</dt><dd>${money(0)}</dd></div>
-        </dl>
-        <div class="ds-deck ${ok ? '' : 'bad'}">
-          <div class="ds-deck__fan"><img src="${back}" alt=""><img src="${back}" alt=""><img src="${back}" alt=""></div>
-          <div class="ds-deck__txt"><span class="memo">Deck</span><b>${esc(d.name)}</b><span class="ds-deck__n">${ok ? `${d.cards.length} cartas` : esc(Meta.deckErrors(s, d.cards)[0] ?? 'Deck inválido')}</span></div>
-          <i class="ds-stamp ${ok ? 'ok' : 'no'}">${ok ? 'Pronto' : 'Inválido'}</i>
-          <button data-a="open" data-id="deck" class="ds-link">Trocar</button>
+      <section class="ds-sheet">
+        <div class="ds-bar"><span>Pauta</span><span>Sequência <b>${s.stats.streak}</b> · Recorde <b>${s.stats.bestStreak}</b></span></div>
+        <div class="ds-body">
+          <dl class="ds-rows ds-rows--form">
+            <div><dt>Vitória</dt><dd>CAIXA que sobrar → PATRIMÔNIO</dd></div>
+            <div><dt>Derrota</dt><dd style="color:var(--ds-red)">${money(0)}</dd></div>
+          </dl>
+          <div class="ds-deckcard ${ok ? '' : 'is-bad'}">
+            <div class="ds-deckcard__fan"><img src="${back}" alt=""><img src="${back}" alt=""><img src="${back}" alt=""></div>
+            <div class="ds-deckcard__txt"><span class="ds-label">Deck</span><b>${esc(d.name)}</b><span class="ds-text">${ok ? `${d.cards.length} cartas` : esc(Meta.deckErrors(s, d.cards)[0] ?? 'Deck inválido')}</span></div>
+            <div class="ds-deckcard__side"><span class="ds-chip ${ok ? 'ds-chip--ok' : 'ds-chip--no'}">${ok ? 'Pronto' : 'Inválido'}</span><button data-a="open" data-id="deck" class="ds-btn ds-btn--link">Trocar</button></div>
+          </div>
+          <div class="ds-actions"><button data-a="duel" class="ds-btn ds-btn--primary ds-btn--lg" ${ok ? '' : 'disabled'}>Entrar na reunião <span class="ds-key">Enter</span></button><button data-a="open" data-id="training" class="ds-btn ds-btn--link">Treinar antes</button></div>
         </div>
-        <div class="ds-cta"><button data-a="duel" class="primary big" ${ok ? '' : 'disabled'}>Entrar na reunião <kbd>Enter</kbd></button><button data-a="open" data-id="training" class="ds-link">Treinar antes</button></div>
-        <p class="ds-foot">Sequência <b>${s.stats.streak}</b> · Recorde <b>${s.stats.bestStreak}</b></p>
       </section>
-      <section class="ds-sheet ds-sheet--side">
-        <header><span class="memo">Concorrência</span><b>${won}<i>/${RIVALS.length}</i></b></header>
-        <ul class="ds-rivals">${rv}</ul>
-        <p class="ds-foot">Rival sorteado a cada reunião</p>
+      <section class="ds-sheet">
+        <div class="ds-bar"><span>Concorrência · rival sorteado</span><b>${won}/${RIVALS.length}</b></div>
+        <ul class="ds-rows ds-body">${rv}</ul>
       </section></div>`;
   }
   vTraining(s) {

@@ -8,13 +8,13 @@
 #over .reward.good { color: var(--green); }
 
 #lobby { position: absolute; inset: 0; pointer-events: none; }
-#lobby button { font: 700 var(--t-sm) var(--sans); letter-spacing: 0.07em; text-transform: uppercase; color: var(--paper); background: rgba(228, 220, 192, 0.06); border: 1px solid rgba(228, 220, 192, 0.3); border-radius: 2px; padding: 9px 14px; cursor: pointer; pointer-events: auto; transition: background 0.14s, color 0.14s, border-color 0.14s; }
-#lobby button:hover:not(:disabled) { background: var(--paper); color: var(--ink); border-color: var(--paper); }
-#lobby button:disabled { opacity: 0.38; cursor: default; }
-#lobby button.primary { background: var(--paper); color: var(--ink); border-color: var(--paper); }
-#lobby button.primary:hover:not(:disabled) { background: #fff; }
-#lobby button.ghost { border-color: transparent; background: none; color: var(--mute); }
-#lobby button.big { padding: 14px 22px; font-size: var(--t-md); }
+#lobby button:not([class*="ds-"]) { font: 700 var(--t-sm) var(--sans); letter-spacing: 0.07em; text-transform: uppercase; color: var(--paper); background: rgba(228, 220, 192, 0.06); border: 1px solid rgba(228, 220, 192, 0.3); border-radius: 2px; padding: 9px 14px; cursor: pointer; pointer-events: auto; transition: background 0.14s, color 0.14s, border-color 0.14s; }
+#lobby button:not([class*="ds-"]):hover:not(:disabled) { background: var(--paper); color: var(--ink); border-color: var(--paper); }
+#lobby button:not([class*="ds-"]):disabled { opacity: 0.38; cursor: default; }
+#lobby button:not([class*="ds-"]).primary { background: var(--paper); color: var(--ink); border-color: var(--paper); }
+#lobby button:not([class*="ds-"]).primary:hover:not(:disabled) { background: #fff; }
+#lobby button:not([class*="ds-"]).ghost { border-color: transparent; background: none; color: var(--mute); }
+#lobby button:not([class*="ds-"]).big { padding: 14px 22px; font-size: var(--t-md); }
 #lobby .fine { font-size: var(--t-cap); color: var(--mute); text-transform: uppercase; letter-spacing: 0.08em; }
 #lobby kbd { margin-left: 8px; }
 

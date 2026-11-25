@@ -17,8 +17,6 @@ import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment
 import { T } from './theme.js';
 
 document.body.classList.add('theme-buckshot');
-// piloto da Sprint 6: material das janelas (?ds=papel | ?ds=maquina)
-document.body.classList.add('ds-' + (new URLSearchParams(location.search).get('ds') === 'maquina' ? 'maquina' : 'papel'));
 {
   const film = document.createElement('div'); film.id = 'film';
   const c = document.createElement('canvas'); c.width = c.height = 180; const g = c.getContext('2d'), im = g.createImageData(180, 180);
