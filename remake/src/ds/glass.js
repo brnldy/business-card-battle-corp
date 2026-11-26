@@ -7,10 +7,11 @@
 //      passa por um desfoque de meio pixel, que é o que evita o serrilhado.
 // Uso: glass.attach(elemento).
 const NS = 'http://www.w3.org/2000/svg';
-const K = -0.15;       // força da lente: negativo = barril (centro para fora, cantos recolhidos); positivo = almofada; 0 = desligada
+const K = -0.08;       // força da lente: negativo = barril (centro para fora, cantos recolhidos); positivo = almofada; 0 = desligada
 const R0 = 0.5;        // raio que fica parado (0,5 = meio das bordas): nada é empurrado para fora da tela
 const PAD = 22;        // folga em volta da peça para a curva não ser cortada
-const SOFT = 0.45;     // desfoque antes de curvar, em px
+const SOFT = 0.55;     // desfoque antes de curvar, em px
+const AFTER = 0.4;     // desfoque depois de curvar: desmancha o degrau de 1 px que a curva deixa nas bordas
 const N = 40;          // resolução do mapa de curvatura
 const items = new Map();
 let svg, seq = 0;
@@ -72,7 +73,8 @@ export function attach(el) {
   const mk = (tag, attrs) => { const n = document.createElementNS(NS, tag); for (const k in attrs) n.setAttribute(k, attrs[k]); f.appendChild(n); return n; };
   const img = mk('feImage', { preserveAspectRatio: 'none', result: 'lens' });
   mk('feGaussianBlur', { in: 'SourceGraphic', stdDeviation: SOFT, result: 'soft' });
-  const map = mk('feDisplacementMap', { in: 'soft', in2: 'lens', xChannelSelector: 'R', yChannelSelector: 'G' });
+  const map = mk('feDisplacementMap', { in: 'soft', in2: 'lens', xChannelSelector: 'R', yChannelSelector: 'G', result: 'bent' });
+  mk('feGaussianBlur', { in: 'bent', stdDeviation: AFTER });
   host().firstChild.appendChild(f);
   items.set(el, { filter: f, img, map });
   el.classList.add('ds-glass'); el.style.setProperty('--ds-glass', `url(#${id})`);
