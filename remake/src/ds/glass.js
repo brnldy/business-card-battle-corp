@@ -17,7 +17,7 @@ import { settings } from '../settings.js';
 // Desligada, o HUD volta a ser desenhado pelo navegador, sem nenhum efeito sobre o texto.
 export const isUhd = () => Math.max(screen.width, screen.height) * (window.devicePixelRatio || 1) >= 3600;
 export const curveOn = () => settings.get().hudCurve ?? isUhd();
-let enabled = false;
+let enabled = false, wasAnim = false;
 export function setEnabled(on) {
   on = !!on; if (on === enabled) return; enabled = on;
   for (const el of items) { if (on) { el.classList.add('ds-glass'); el.dataset.glassRoot = '1'; } else { el.classList.remove('ds-glass'); delete el.dataset.glassRoot; el.style.transform = ''; el.style.transformOrigin = ''; } }
@@ -83,6 +83,7 @@ function bmpGlyph(css, ch) {
 }
 
 // ───────── atlas de imagens e ícones ─────────
+const svgSrc = new Map();
 const images = new Map(); let ix = 1, iy = 1, ih = 0;
 function image(src, maxW = 640) {
   let e = images.get(src); if (e) return e.ok ? e : null;
@@ -199,7 +200,7 @@ let ROTA = 0;
 function ownAngle(cs) { let a = 0; const t = cs.transform; if (t && t !== 'none') { const m = /matrix\(([^)]+)\)/.exec(t); if (m) { const v = m[1].split(',').map(Number); a += Math.atan2(v[1], v[0]); } } if (cs.rotate && cs.rotate !== 'none') a += (parseFloat(cs.rotate) * Math.PI) / 180; return a; }
 function paintEl(el, alpha) {
   const cs = getComputedStyle(el); if (cs.display === 'none' || cs.visibility === 'hidden') return;
-  const root = !!el.dataset.glassRoot, a = alpha * (root ? 1 : parseFloat(cs.opacity)); if (a <= 0.01) return;
+  const root = !!el.dataset.glassRoot, a = alpha * parseFloat(cs.opacity); if (a <= 0.01) return;
   const prevRot = ROTA; if (!root) ROTA += ownAngle(cs);
   let r = el.getBoundingClientRect();
   if (ROTA && el.offsetWidth) { const w = el.offsetWidth * KROOT, h = el.offsetHeight * KROOT, cx = r.left + r.width / 2, cy = r.top + r.height / 2; r = { left: cx - w / 2, top: cy - h / 2, width: w, height: h, right: cx + w / 2, bottom: cy + h / 2 }; }
@@ -211,8 +212,8 @@ function paintEl(el, alpha) {
       im.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(new XMLSerializer().serializeToString(cl)); }
     if (g.ok) { const col = rgba(cs.color) ?? [1, 1, 1, 1], [lx, ly] = warp(r.left, r.top); quad(Math.round(lx * DPR) / DPR, Math.round(ly * DPR) / DPR, dw / DPR, dh / DPR, fade(col, a), undefined, 5, [g.u / AW, g.v / AH, (g.u + dw) / AW, (g.v + dh) / AH]); }
     ROTA = prevRot; return; }
-  if (el.tagName === 'svg') { const c = cs.color, key = 'svg|' + c + '|' + el.outerHTML; let src = images.get(key)?.src; if (!src) { const cl = el.cloneNode(true); cl.setAttribute('xmlns', 'http://www.w3.org/2000/svg'); cl.setAttribute('width', 64); cl.setAttribute('height', 64); cl.style.color = c; src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(new XMLSerializer().serializeToString(cl)); }
-    const e = image(src, 128); setRot(ROTA, r.left + r.width / 2, r.top + r.height / 2); if (e) quad(r.left, r.top, r.width, r.height, [1, 1, 1, a], undefined, 2, [e.x / AW, e.y / AH, (e.x + e.w) / AW, (e.y + e.h) / AH]); setRot(0, 0, 0); ROTA = prevRot; return; }
+  if (el.tagName === 'svg') { const c = cs.color + '|' + (el.firstElementChild ? getComputedStyle(el.firstElementChild).fill : ''), key = 'svg|' + c + '|' + el.clientWidth + '|' + el.outerHTML; let src = svgSrc.get(key); if (!src) { const cl = el.cloneNode(true); cl.setAttribute('xmlns', 'http://www.w3.org/2000/svg'); cl.setAttribute('width', Math.max(8, Math.round(el.clientWidth * 2) || 64)); cl.setAttribute('height', Math.max(8, Math.round(el.clientHeight * 2) || 64)); cl.style.color = c; const so = [...el.querySelectorAll('*')], sd = [...cl.querySelectorAll('*')]; so.forEach((n, i) => { const k = getComputedStyle(n); sd[i].setAttribute('style', `fill:${k.fill};stroke:${k.stroke};stroke-width:${k.strokeWidth}`); }); src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(new XMLSerializer().serializeToString(cl)); }
+    svgSrc.set(key, src); const e = image(src, 512); setRot(ROTA, r.left + r.width / 2, r.top + r.height / 2); if (e) quad(r.left, r.top, r.width, r.height, [1, 1, 1, a], undefined, 2, [e.x / AW, e.y / AH, (e.x + e.w) / AW, (e.y + e.h) / AH]); setRot(0, 0, 0); ROTA = prevRot; return; }
   if (el.tagName === 'IMG') { const e = el.currentSrc || el.src ? image(el.currentSrc || el.src) : null; setRot(ROTA, r.left + r.width / 2, r.top + r.height / 2); if (e) quad(r.left, r.top, r.width, r.height, [1, 1, 1, a], undefined, 2, [e.x / AW, e.y / AH, (e.x + e.w) / AW, (e.y + e.h) / AH]); setRot(0, 0, 0); ROTA = prevRot; return; }
   if (r.width && r.height) { setRot(ROTA, r.left + r.width / 2, r.top + r.height / 2); paintBox(cs, r.left, r.top, r.width, r.height, a); paintPseudo(el, '::before', r, cs, a); setRot(0, 0, 0); }
   const prevClip = CLIP;
@@ -263,7 +264,8 @@ const scene = new THREE.Scene(), cam = new THREE.Camera();
 export function render(renderer) {
   if (!mesh || !enabled) return;
   const bw = renderer.getDrawingBufferSize(new THREE.Vector2()).x; if (bw !== BUFW) { BUFW = bw; dirty = true; }
-  if (!dirty) for (const el of items) { if (el.offsetWidth && el.getAnimations && el.getAnimations({ subtree: true }).some((a) => a.playState === 'running')) { dirty = true; break; } }
+  let anim = false; for (const el of items) { if (el.getAnimations && el.getAnimations({ subtree: true }).some((a) => a.playState === 'running')) { anim = true; break; } }
+  if (anim || wasAnim) dirty = true; wasAnim = anim;
   if (dirty) { dirty = false; try { repaint(); } catch (e) { console.warn('hud webgl: falha ao desenhar', e); } }
   if (!nVert) return;
   mesh.material.uniforms.uRes.value.set(innerWidth, innerHeight);

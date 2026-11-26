@@ -171,4 +171,4 @@ body.theme-buckshot .h-folder__name { text-transform: uppercase; }
 .h-folder__stamp span { font: 400 34px/1 var(--f-title); font-style: normal; white-space: nowrap; }
 @keyframes h-stamp { 0% { opacity: 0; transform: translateY(8px) rotate(6deg) scale(1.25); } 10%, 84% { opacity: 1; transform: translateY(-46px) rotate(6deg) scale(1); } 100% { opacity: 0; transform: translateY(-46px) rotate(6deg) scale(1); } }
 
-.ds-glass { opacity: 0 !important; }   /* interface curva ligada: o HTML fica invisível e clicável; quem desenha é src/ds/glass.js */
+.ds-glass { filter: opacity(0) !important; }   /* interface curva ligada: o HTML fica invisível e clicável; quem desenha é src/ds/glass.js */
