@@ -78,7 +78,7 @@
 .ds-btn--lg { height: 58px; padding: 0 26px; font-size: 17px; }
 .ds-btn--sq { width: 44px; padding: 0; }
 .ds-btn:disabled { cursor: default; color: var(--ds-ink-3); background: var(--ds-tex-lines), #cdbb95; border-color: #8f7f62; box-shadow: inset 0 0 0 1.5px rgba(255, 252, 240, 0.35), 0 4px 0 0 #a8946c, 0 4px 0 3px #8f7f62; }
-.ds-btn:disabled .ds-key { filter: saturate(0.2); opacity: 0.6; }
+.ds-btn:disabled .ds-key { background: #8f7f62; color: #e2d6b8; box-shadow: 0 0 0 1.5px #cdbb95, 0 0 0 3.5px #8f7f62; }
 .ds-key { font: 700 12px/1 var(--f-ui); letter-spacing: 0.06em; padding: 6px 8px 5px; background: var(--ds-amber); color: var(--ds-ink); border-radius: 5px; box-shadow: 0 0 0 1.5px var(--ds-card), 0 0 0 3.5px var(--ds-ink); text-transform: uppercase; }   /* tecla: cápsula âmbar, anel claro, contorno escuro */
 
 /* ── etiqueta de valor, carimbo, estado ── */
@@ -132,7 +132,7 @@
 .ds-deckcard__side { display: grid; gap: 10px; justify-items: end; }
 .ds-deckcard.is-bad { border-color: var(--ds-red); }
 
-/* ── margem da tela: a curvatura de vidro vem de src/ds/glass.js (uma lente só para a tela inteira) ── */
+/* ── margem da tela: peças a 40 px das bordas, sem curvatura (legibilidade primeiro) ── */
 .ds-actions { display: flex; align-items: center; gap: var(--ds-5); flex-wrap: wrap; }
 
 /* ════════════════════════════════════════════════════════════════════════

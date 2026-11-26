@@ -115,3 +115,20 @@ O HUD só é redesenhado quando algo muda (texto, classe, rolagem, mouse, anima�
 
 - Testado só no Chromium.
 - O atlas de glifos e o de imagens têm 2048 × 2048. Muitas fontes ou tamanhos novos podem enchê-lo; hoje ele reinicia quando as fontes terminam de carregar.
+
+
+---
+
+## Decisão final (27/11/2026): abandonado
+
+O autor pediu uma resposta definitiva: resolver a legibilidade de vez junto com a curvatura, ou desistir e voltar à renderização normal. **Desistimos da curvatura no HUD.**
+
+**Por quê.** Texto pequeno legível depende do que o navegador faz e um desenho próprio não reproduz com segurança: encaixe das letras na grade de pixels (hinting), adaptação à escala da tela (100%, 125%, 150%, zoom) e às fontes do sistema. Nas quatro tentativas (filtro de pixels, foto do HTML em textura, desenho nativo com campo de distância e desenho nativo com bitmap) cada correção abriu outro defeito, e o ambiente de desenvolvimento não tem placa de vídeo nem a tela do autor para conferir. Não havia como garantir o resultado.
+
+**O que ficou.**
+- O HUD é renderizado pelo navegador, **sem transformação e sem filtro sobre nenhuma peça com texto**. Verificado em 27/11 no arquivo final, em escala 100% e 125%: zero peças do HUD com filtro ou transformação 3D, e 5 de 5 pontos de clique certos em cada botão.
+- As peças continuam a 40 px das bordas, com todo o acabamento do design system (papel, molduras, materiais de escritório).
+- O efeito de tubo (grão, linhas, curvatura, aberração) continua **na cena 3D** (`gfx.js`), que não tem texto para ler.
+- `remake/src/ds/glass.js` foi removido.
+
+**Regra que fica.** Nenhum efeito visual pode passar por cima de texto do HUD (filtro, transformação 3D, reamostragem). Se um dia a curvatura voltar, ela entra só em formas sem texto (contorno do papel, sombra) ou numa tecnologia em que o navegador continue desenhando o texto.
