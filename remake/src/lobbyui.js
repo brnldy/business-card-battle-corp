@@ -8,6 +8,7 @@ import { sfx } from './audio.js';
 import { save } from './save.js';
 import { logoUrl, backUrl } from './cosmetics.js';
 import * as C from './hud/components.js';
+import { RULES_TEXT, DEPT } from './cardtext.js';
 import * as Meta from '../../src/meta/meta.ts';
 
 const { META, DECK_RULES, RARITY_PT } = Meta;
@@ -153,7 +154,10 @@ export class LobbyUI {
       case 'exit': sfx('cancel'); return this.actions.exit();
       case 'tab': this.tab[this.panel] = id; sfx('select'); return this.render();
       case 'filter': this.filter = id; sfx('select'); return this.render();
-      case 'vm-pick': this.vmSel[this.tab.shop] = id; sfx('select'); return this.render();
+      case 'vm-pick': this.vmSel[this.tab.shop] = id; this.vmPeek = null; sfx('select'); return this.render();
+      case 'vm-peek': this.vmPeek = { t: this.tab.shop, id }; sfx('select'); return this.render();
+      case 'vm-back': this.vmPeek = null; sfx('select'); return this.render();
+      case 'vm-filter': this.vmF = id; sfx('select'); return this.render();
       // decks
       case 'deck-pick': if (this.ed?.dirty) { this.toast('Salve ou descarte antes de trocar.', 'bad'); return sfx('deny'); } this.loadDeck(Number(id)); sfx('select'); return this.render();
       case 'deck-new': if (this.ed?.dirty) { this.toast('Salve ou descarte antes de criar outro.', 'bad'); return sfx('deny'); } this.ed = { index: -1, name: `Deck ${this.s.decks.length + 1}`, cards: [], dirty: true }; sfx('select'); return this.render();
@@ -337,41 +341,67 @@ export class LobbyUI {
   // ───────── máquina de benefícios: loja ─────────
   /** produtos da prateleira aberta na máquina (cada um com o código do nicho, como numa máquina de salgadinho) */
   vmItems(s, t) {
-    const can = (p) => s.patrimonio >= p, back = (id) => backUrl(id, s.cosmetics.logo, asset('cards/back.png')), n2 = (i) => String(i + 1).padStart(2, '0');
-    if (t === 'packs') return [{ code: 'A01', id: 'pack', act: 'buy-pack', kind: 'pack', name: 'Envelope pardo', price: META.booster.price, img: back(s.cosmetics.back), state: can(META.booster.price) ? 'ok' : 'poor' }];
-    if (t === 'cards') return CARDS.map((c, i) => { const own = Meta.owned(s, c.id), p = Meta.priceOf(c.id); return { code: 'B' + n2(i), id: c.id, act: 'buy-card', kind: 'card', name: c.name, price: p, img: asset(c.art), own, state: own >= DECK_RULES.maxCopies ? 'full' : can(p) ? 'ok' : 'poor' }; });
-    if (t === 'decks') return META.readyDecks.map((d, i) => ({ code: 'C' + n2(i), id: d.id, act: 'buy-deck', kind: 'deck', name: d.name, price: d.price, deck: d, faces: Object.keys(d.cards).filter((id) => Meta.rarityOf(id) !== 'common').slice(0, 3), state: can(d.price) ? 'ok' : 'poor' }));
-    return META.cosmetics.map((c, i) => { const own = s.cosmetics.owned.includes(c.id), on = s.cosmetics[c.kind] === c.id; return { code: 'D' + n2(i), id: c.id, act: own ? 'equip' : 'buy-cos', kind: c.kind, name: c.name, price: c.price, img: c.kind === 'logo' ? logoUrl(c.id) : back(c.id), state: on ? 'on' : own ? 'own' : can(c.price) ? 'ok' : 'poor' }; });
+    const can = (p) => s.patrimonio >= p, back = (id) => backUrl(id, s.cosmetics.logo, asset('cards/back.png'));
+    if (t === 'packs') return [{ id: 'pack', act: 'buy-pack', kind: 'pack', name: 'Envelope pardo', price: META.booster.price, state: can(META.booster.price) ? 'ok' : 'poor' }];
+    if (t === 'cards') return CARDS.map((c) => { const own = Meta.owned(s, c.id), p = Meta.priceOf(c.id); return { id: c.id, act: 'buy-card', kind: 'card', name: c.name, price: p, img: asset(c.art), own, fx: isFx(c), state: own >= DECK_RULES.maxCopies ? 'full' : can(p) ? 'ok' : 'poor' }; });
+    if (t === 'decks') return META.readyDecks.map((d) => ({ id: d.id, act: 'buy-deck', kind: 'deck', name: d.name, price: d.price, deck: d, faces: Object.keys(d.cards).filter((id) => Meta.rarityOf(id) !== 'common').slice(0, 3),
+      state: s.decks.length >= META.maxDecks && !s.decks.some((x) => x.name === d.name) ? 'nospace' : can(d.price) ? 'ok' : 'poor' }));
+    return META.cosmetics.map((c) => { const own = s.cosmetics.owned.includes(c.id), on = s.cosmetics[c.kind] === c.id; return { id: c.id, act: own ? 'equip' : 'buy-cos', kind: c.kind, name: c.name, price: c.price, img: c.kind === 'logo' ? logoUrl(c.id) : back(c.id), state: on ? 'on' : own ? 'own' : can(c.price) ? 'ok' : 'poor' }; });
+  }
+  /** ficha de uma carta: o que ela é, quanto bate, quanto custa pôr na mesa e o que cada habilidade faz */
+  vmCard(s, id) {
+    const c = byId.get(id), fx = isFx(c), own = Math.min(Meta.owned(s, id), DECK_RULES.maxCopies);
+    const kind = [KIND[c.kind], c.element, c.department ? `depto. ${DEPT[c.department] ?? c.department}` : ''].filter(Boolean).join(' · ');
+    const stats = fx ? `<p class="vm-fx">${c.kind === 'effect_trap' ? 'Fica virada para baixo na mesa até disparar.' : c.durationTurns ? `Fica na mesa por ${c.durationTurns} turnos seus.` : 'Vale na hora e vai para o Morto.'}</p>`
+      : `<dl class="vm-stats"><div><dt>Ataque</dt><dd>${money(c.atk)}</dd></div><div><dt>Defesa</dt><dd>${money(c.def)}</dd></div><div><dt>Custo</dt><dd>${c.cost ? `${c.cost} <small>sacrifício${c.cost > 1 ? 's' : ''}</small>` : '<small>grátis</small>'}</dd></div></dl>`;
+    const rules = RULES_TEXT[id] ?? [];
+    return `<div class="vm-cardtop"><img src="${asset(c.art)}" alt=""><div>
+        <h3 class="ds-title">${esc(c.name)}</h3><p class="vm-kind">${esc(kind)}</p><p class="vm-rar">${rarityTag(id)} ${RARITY_PT[Meta.rarityOf(id)]}</p>${stats}
+        <p class="vm-own"><span class="vm-pips">${Array.from({ length: DECK_RULES.maxCopies }, (_, k) => `<i class="${k < own ? 'on' : ''}"></i>`).join('')}</span>Você tem <b>${own} de ${DECK_RULES.maxCopies}</b></p></div></div>
+      <h4 class="vm-h">O que ela faz</h4><ul class="vm-rules">${rules.map(([n, txt]) => `<li><b>${esc(n)}</b>${esc(txt)}</li>`).join('') || '<li>Sem habilidade.</li>'}</ul>`;
   }
   vShop(s) {
-    const SHELVES = [['packs', 'A', 'Pacotes'], ['cards', 'B', 'Cartas'], ['decks', 'C', 'Decks'], ['look', 'D', 'Visual']];
-    const t = (this.tab.shop ??= 'packs'), items = this.vmItems(s, t); this.vmSel ??= {};
-    const sel = items.find((x) => x.code === this.vmSel[t]) ?? items.find((x) => x.state === 'ok') ?? items[0]; this.vmSel[t] = sel.code;
-    const TAG = { full: 'esgotada', own: 'seu', on: 'em uso' };
+    const CATS = [['packs', 'Envelope', '3 cartas sorteadas'], ['cards', 'Cartas avulsas', 'Você escolhe a carta'], ['decks', 'Decks prontos', 'Lista montada para duelar'], ['look', 'Visual', 'Logo e verso das cartas']];
+    const t = (this.tab.shop ??= 'packs'), all = this.vmItems(s, t); this.vmSel ??= {}; this.vmF ??= 'all';
+    const F = [['all', 'Todas'], ['creature', 'Criaturas'], ['fx', 'Efeitos'], ['open', 'Faltam para mim']];
+    const items = t !== 'cards' ? all : all.filter((x) => (this.vmF === 'creature' ? !x.fx : this.vmF === 'fx' ? x.fx : this.vmF === 'open' ? x.state !== 'full' : true));
+    const sel = all.find((x) => x.id === this.vmSel[t] && items.includes(x)) ?? items.find((x) => x.state === 'ok') ?? items[0] ?? all[0]; this.vmSel[t] = sel.id;
+    const peek = this.vmPeek?.t === t && byId.has(this.vmPeek.id) ? this.vmPeek.id : null;
+    const TAG = { full: 'você tem 3', own: 'seu', on: 'em uso' };
     const prod = (x) => x.kind === 'pack' ? `<span class="vm-prod vm-prod--pack"><i></i><i></i><i></i></span>`
       : x.kind === 'deck' ? `<span class="vm-prod vm-prod--deck">${x.faces.map((id) => `<img src="${asset(byId.get(id).art)}" alt="">`).join('')}<b></b></span>`
       : `<span class="vm-prod vm-prod--${x.kind}"><img loading="lazy" src="${x.img}" alt=""></span>`;
-    const slot = (x, i) => `<button class="vm-slot ${x.code === sel.code ? 'is-sel' : ''} is-${x.state} ${i && items[i - 1].kind !== x.kind ? 'vm-slot--brk' : ''}" data-a="vm-pick" data-id="${x.code}" ${x.kind === 'card' ? `data-card="${x.id}"` : ''} title="${esc(x.name)}">
+    const slot = (x, i) => `${t === 'look' && (!i || items[i - 1].kind !== x.kind) ? `<p class="vm-group">${x.kind === 'logo' ? 'Logo da empresa' : 'Verso das suas cartas'}</p>` : ''}<button class="vm-slot ${x.id === sel.id ? 'is-sel' : ''} is-${x.state}" data-a="vm-pick" data-id="${x.id}">
         ${prod(x)}<i class="vm-coil"></i>
-        <span class="vm-rail"><b>${x.code}</b><em>${TAG[x.state] ?? (x.price ? money(x.price) : 'grátis')}</em></span></button>`;
-    // ficha do produto escolhido: um papel colado na máquina com fita
-    let info = '';
-    if (sel.kind === 'pack') { const b = META.booster, o = b.odds, tot = o.common + o.rare + o.legendary, miss = CARDS.reduce((n, c) => n + Math.max(0, DECK_RULES.maxCopies - Meta.owned(s, c.id)), 0), bar = (k, n, v) => `<li><span>${n}</span><i class="vm-bar vm-bar--${k}"><b style="width:${Math.round((v / tot) * 100)}%"></b></i><em>${Math.round((v / tot) * 100)}%</em></li>`;
-      info = `<p><b>${b.size} cartas</b> sorteadas.</p><ul class="vm-odds">${bar('common', 'Comum', o.common)}${bar('rare', 'Rara', o.rare)}${bar('legendary', 'Lendária', o.legendary)}</ul><p class="vm-fine">${miss ? `Enquanto faltar carta, <span class="ds-hl">não vem sobra</span>. Faltam ${miss}.` : 'Arquivo completo: agora só vem sobra.'}</p>`; }
-    else if (sel.kind === 'card') { const c = byId.get(sel.id); info = `<div class="vm-card"><img src="${sel.img}" alt=""><div><p>${rarityTag(c.id)} <b>${RARITY_PT[Meta.rarityOf(c.id)]}</b></p><p>${isFx(c) ? KIND[c.kind] : `Criatura · ${c.atk} / ${c.def}`}</p><p class="vm-fine">No arquivo</p><p class="vm-pips">${Array.from({ length: DECK_RULES.maxCopies }, (_, k) => `<i class="${k < sel.own ? 'on' : ''}"></i>`).join('')}<b>${sel.own}/${DECK_RULES.maxCopies}</b></p></div></div>`; }
-    else if (sel.kind === 'deck') { const miss = Meta.readyDeckMissing(s, sel.id), n = Object.values(miss).reduce((a, b) => a + b, 0); info = `<div class="vm-faces">${sel.faces.map((id) => `<img src="${asset(byId.get(id).art)}" alt="">`).join('')}</div><p>${esc(sel.deck.text)}</p><p class="vm-fine">${n ? `Entrega as <span class="ds-hl">${n} cartas</span> que faltam.` : 'Você já tem todas: só guarda a lista.'}</p>`; }
-    else info = `<p>${sel.kind === 'logo' ? 'Logo da empresa' : 'Verso das cartas'}</p><div class="vm-big vm-big--${sel.kind}"><img src="${sel.img}" alt=""></div>`;
-    const BUY = { ok: sel.kind === 'pack' ? 'Comprar e abrir' : 'Comprar', poor: 'Sem saldo', full: 'Esgotada', own: 'Usar', on: 'Em uso' }, dis = ['poor', 'full', 'on'].includes(sel.state);
-    const lcd = sel.state === 'poor' ? `<p class="bad">SALDO INSUFICIENTE</p>` : sel.state === 'full' ? `<p class="bad">NICHO ESGOTADO</p>` : sel.state === 'on' ? `<p>EM USO</p>` : sel.state === 'own' ? `<p>JA E SEU</p>` : `<p>PRECO <b>${sel.price ? money(sel.price) : 'GRATIS'}</b></p>`;
+        <span class="vm-rail"><b>${esc(x.name)}</b><span><em>${TAG[x.state] ?? (x.price ? money(x.price) : 'grátis')}</em>${x.kind === 'card' && x.state !== 'full' ? `<small>tem ${x.own}</small>` : ''}</span></span></button>`;
+    // ficha: tudo o que a pessoa precisa saber antes de pagar
+    const mini = (id, extra = '') => { const c = byId.get(id); return `<button class="vm-row" data-a="vm-peek" data-id="${id}">${extra}<span>${esc(c.name)}</span><em>${isFx(c) ? KIND[c.kind] : `ATQ ${money(c.atk).replace('$ ', '')} · DEF ${money(c.def).replace('$ ', '')}`}</em><u>ver</u></button>`; };
+    let info = '', note = '';
+    if (peek) info = `<button class="vm-back" data-a="vm-back">← Voltar para ${sel.kind === 'deck' ? 'o deck' : 'o envelope'}</button>${this.vmCard(s, peek)}`;
+    else if (sel.kind === 'card') info = this.vmCard(s, sel.id);
+    else if (sel.kind === 'pack') { const b = META.booster, o = b.odds, tot = o.common + o.rare + o.legendary, pool = CARDS.filter((c) => Meta.owned(s, c.id) < DECK_RULES.maxCopies), pct = (v) => Math.round((v / tot) * 100);
+      const bar = (k, n, v) => `<li><span>${n}</span><i class="vm-bar vm-bar--${k}"><b style="width:${pct(v)}%"></b></i><em>${pct(v)}%</em></li>`;
+      info = `<h3 class="ds-title">Envelope pardo</h3><p class="vm-lead">Você paga e recebe <b>${b.size} cartas sorteadas</b>. Não dá para escolher.</p>
+        <h4 class="vm-h">Chance de cada carta</h4><ul class="vm-odds">${bar('common', 'Comum', o.common)}${bar('rare', 'Rara', o.rare)}${bar('legendary', 'Lendária', o.legendary)}</ul>
+        <h4 class="vm-h">${pool.length ? `O que pode vir (${pool.length})` : 'Seu arquivo está completo'}</h4>${pool.length ? `<p class="vm-fine">Só vêm cartas que você ainda não tem ${DECK_RULES.maxCopies} cópias. Clique para ler a carta.</p><div class="vm-list">${pool.map((c) => mini(c.id, rarityTag(c.id))).join('')}</div>` : `<p class="vm-fine">Agora o envelope só traz cópia sobrando, que serve para triturar.</p>`}`; }
+    else if (sel.kind === 'deck') { const d = sel.deck, miss = Meta.readyDeckMissing(s, sel.id), n = Object.values(miss).reduce((x, y) => x + y, 0), tot = Object.values(d.cards).reduce((x, y) => x + y, 0);
+      info = `<h3 class="ds-title">${esc(d.name)}</h3><p class="vm-lead">${esc(d.text)}</p>
+        <p class="vm-sum">${n ? `Deck de <b>${tot} cartas</b>. Você recebe as <span class="ds-hl">${n} que faltam</span> e ele já fica escolhido para o duelo.` : `Você <b>já tem as ${tot} cartas</b>. A compra só guarda a lista como deck seu.`}</p>
+        <h4 class="vm-h">Cartas do deck · clique para ler</h4><div class="vm-list">${Object.entries(d.cards).map(([id, q]) => mini(id, `<i>${q}×</i>`).replace('<u>ver</u>', `${miss[id] ? `<s class="no">falta ${miss[id]}</s>` : '<s>você tem</s>'}<u>ver</u>`)).join('')}</div>`;
+      if (sel.state === 'nospace') note = `Você já tem ${META.maxDecks} decks. Apague um no arquivo para abrir espaço.`; }
+    else info = `<h3 class="ds-title">${esc(sel.name)}</h3><p class="vm-lead">${sel.kind === 'logo' ? 'Logo da sua empresa.' : 'Verso das suas cartas no duelo.'}</p><div class="vm-big vm-big--${sel.kind}"><img src="${sel.img}" alt=""></div>`;
+    const left = s.patrimonio - sel.price;
+    note ||= { ok: sel.price ? `Depois da compra você fica com <b>${money(left)}</b>.` : 'É de graça.', poor: `Faltam <b>${money(-left)}</b> para comprar.`, full: `Você já tem as <b>${DECK_RULES.maxCopies} cópias</b> que cabem num deck.`, own: 'Já é seu. Clique para usar.', on: 'É o que você está usando.' }[sel.state];
+    const BUY = { ok: `${sel.kind === 'pack' ? 'Comprar e abrir' : 'Comprar'}${sel.price ? ` · ${money(sel.price)}` : ''}`, poor: `Custa ${money(sel.price)}`, nospace: 'Sem espaço', full: 'Completa', own: 'Usar', on: 'Em uso' }, dis = ['poor', 'full', 'on', 'nospace'].includes(sel.state);
     const last = this.vmLast ? `<img src="${this.vmLast}" alt="">` : '';
     return `<div class="vm">
-      <div class="vm-glass vm-glass--${t}"><div class="lb-scroll vm-shelf">${items.map(slot).join('')}</div></div>
+      <nav class="vm-keys">${CATS.map(([k, n, d]) => `<button data-a="tab" data-id="${k}" class="${k === t ? 'on' : ''}"><b>${n}</b><span>${d}</span></button>`).join('')}</nav>
+      <div class="vm-glass vm-glass--${t}">${t === 'cards' ? `<div class="vm-filter">${F.map(([k, n]) => `<button data-a="vm-filter" data-id="${k}" class="${k === this.vmF ? 'on' : ''}">${n}</button>`).join('')}</div>` : ''}
+        <div class="lb-scroll vm-shelf">${items.map(slot).join('') || '<p class="vm-none">Nada aqui.</p>'}</div></div>
       <aside class="vm-panel">
-        <div class="vm-lcd"><p class="cred"><span>CREDITO</span><b>${money(s.patrimonio)}</b></p><p class="pick ${sel.name.length > 23 ? 'xlong' : sel.name.length > 17 ? 'long' : ''}"><b>${sel.code}</b> ${esc(sel.name)}</p>${lcd}</div>
-        <div class="vm-keys">${SHELVES.map(([k, l, n]) => `<button data-a="tab" data-id="${k}" class="${k === t ? 'on' : ''}"><b>${l}</b><span>${n}</span></button>`).join('')}</div>
-        <div class="vm-info"><i class="ds-tape ds-tape--top"></i><h3 class="ds-title ds-title--sm">${esc(sel.name)}</h3>${info}</div>
-        <button data-a="${sel.act}" data-id="${sel.kind === 'pack' ? '' : sel.id}" class="ds-btn ${sel.state === 'own' ? '' : 'ds-btn--primary'} vm-buy" ${dis ? 'disabled' : ''}>${BUY[sel.state]}${sel.state === 'ok' && sel.price ? ` · ${money(sel.price)}` : ''}</button>
-        <div class="vm-coin"><i></i><span class="vm-warn">Não devolve troco</span></div>
+        <div class="vm-info"><i class="ds-tape ds-tape--top"></i><div class="vm-scroll">${info}</div></div>
+        <p class="vm-note is-${sel.state}">${note}</p>
+        <button data-a="${sel.act}" data-id="${sel.kind === 'pack' ? '' : sel.id}" class="ds-btn ${sel.state === 'own' ? '' : 'ds-btn--primary'} vm-buy" ${dis ? 'disabled' : ''}>${BUY[sel.state]}</button>
       </aside>
       <div class="vm-tray ${last ? 'has' : ''}"><span>Retire aqui</span>${last}</div>
     </div>`;
