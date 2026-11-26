@@ -24,11 +24,13 @@ export class UI {
         <div class="title-block">
           <h1>BUSINESS<br>CARD<span class="tag-word">Battle</span><small>Corp.</small></h1>
           <p class="tagline">O mundo acabou. Os investidores, não.</p>
-          <nav>
-            <button data-act="start" class="primary">Iniciar expediente <kbd>Enter</kbd></button>
-            <button data-act="help">Como jogar</button>
-            <button data-act="gallery">Arquivo de cartas</button>
-            <button data-act="settings">Configurações</button>
+          <nav class="mn-card">
+            <i class="ds-clip"></i>
+            <div class="ds-bar"><span>Cartão de ponto</span><b id="mn-clock">--:--</b></div>
+            <button data-act="start" class="mn-punch"><span class="ds-key">Enter</span><span>Iniciar expediente</span><i>Entrada</i></button>
+            <button data-act="help" class="mn-row"><b>01</b><span>Como jogar</span><i>manual</i></button>
+            <button data-act="gallery" class="mn-row"><b>02</b><span>Arquivo de cartas</span><i>fichas</i></button>
+            <button data-act="settings" class="mn-row"><b>03</b><span>Configurações</span><i>quadro de luz</i></button>
           </nav>
           <div class="company" id="menu-company"></div>
         </div>
@@ -94,7 +96,7 @@ export class UI {
   mainMenu(on) {
     this.show('menu', on);
     const n = settings.get().companyName;
-    $('#menu-company').innerHTML = n ? `Empresa registrada: <b>${esc(n)}</b>` : '';
+    $('#menu-company').innerHTML = n ? `<span class="ds-dymo">${esc(n)}</span><i>empresa registrada</i>` : ''; const d = new Date(), ck = $('#mn-clock'); if (ck) ck.textContent = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
   }
   hud(on) {
     this.show('hud', on);

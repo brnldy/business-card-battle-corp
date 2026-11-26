@@ -1,0 +1,63 @@
+/* ════════════════════════════════════════════════════════════════════════
+   Menu inicial e lobby com o design system.
+   Menu: um cartão de ponto preso com clipe (começar o jogo = bater o ponto de entrada).
+   Lobby: crachá da empresa, objetos da sala etiquetados com rotuladora, régua de atalhos como teclas.
+   O logo "BUSINESS CARD Battle Corp." e o slogan não são tocados aqui.
+   ════════════════════════════════════════════════════════════════════════ */
+
+/* ───────── menu inicial ───────── */
+.title-block nav.mn-card { position: relative; display: grid; gap: 0; width: min(360px, 100%); margin: 5px 5px 11px; background: var(--ds-tex-card); border: var(--ds-line) solid var(--ds-ink); box-shadow: var(--ds-frame); transform: rotate(-1deg); }
+.mn-card .ds-bar { min-height: 32px; } .mn-card .ds-bar b { font: 400 22px/1 var(--f-title); letter-spacing: 0.04em; }
+.mn-card .ds-clip { right: auto; left: 214px; }
+#menu .mn-card button { all: unset; box-sizing: border-box; display: grid; align-items: center; cursor: pointer; pointer-events: auto; color: var(--ds-ink); font: 700 var(--t-md)/1 var(--f-ui); letter-spacing: 0.08em; text-transform: uppercase; }
+/* a batida do ponto: a ação principal, em âmbar, com o carimbo "ENTRADA" esperando */
+#menu .mn-card .mn-punch { grid-template-columns: auto 1fr auto; gap: 14px; min-height: 72px; padding: 0 16px; font-size: 18px; background: var(--ds-tex-lines), linear-gradient(to bottom, #f9cf7c, var(--ds-amber) 60%, #dc9a2f); border-bottom: var(--ds-line) solid var(--ds-ink); }
+#menu .mn-card .mn-punch .ds-key { background: var(--ds-ink); color: var(--ds-amber); box-shadow: 0 0 0 1.5px var(--ds-amber), 0 0 0 3.5px var(--ds-ink); }
+#menu .mn-card .mn-punch i { font: 700 12px/1 var(--f-ui); font-style: normal; letter-spacing: 0.16em; padding: 6px 8px 5px; border: 2px dashed rgba(27, 20, 13, 0.55); color: rgba(27, 20, 13, 0.6); transform: rotate(-6deg); }
+#menu .mn-card .mn-punch:hover, #menu .mn-card .mn-punch:focus-visible { background: var(--ds-tex-lines), linear-gradient(to bottom, #ffe2a3, #f7c466); }
+#menu .mn-card .mn-punch:hover i, #menu .mn-card .mn-punch:focus-visible i { border: 3px solid var(--ds-red); color: var(--ds-red); background: rgba(255, 255, 255, 0.35); }
+/* linhas do cartão: número da linha, nome, anotação */
+#menu .mn-card .mn-row { grid-template-columns: 44px 1fr auto; min-height: 48px; padding-right: 16px; border-bottom: 1.5px solid rgba(27, 20, 13, 0.45); }
+#menu .mn-card .mn-row:last-child { border-bottom: none; }
+#menu .mn-card .mn-row b { align-self: stretch; display: grid; place-items: center; border-right: 1.5px solid rgba(27, 20, 13, 0.45); font: 400 22px/1 var(--f-title); color: var(--ds-ink-2); margin-right: 14px; }
+#menu .mn-card .mn-row i { font: 500 var(--t-cap)/1 var(--f-ui); font-style: normal; letter-spacing: 0.06em; text-transform: none; color: var(--ds-ink-3); }
+#menu .mn-card .mn-row:hover, #menu .mn-card .mn-row:focus-visible { background: var(--ds-amber); } #menu .mn-card .mn-row:hover b, #menu .mn-card .mn-row:hover i { color: var(--ds-ink); }
+#menu .company { display: flex; align-items: center; gap: 10px; margin-top: 26px; } #menu .company i { font-style: normal; }
+#menu .company .ds-dymo { transform: rotate(-1.5deg); }
+/* aviso de som: post-it pequeno */
+#unlock { bottom: 30px; padding: 10px 14px 8px; background: var(--ds-tex-lines), linear-gradient(160deg, #ffe680, #f4cf4a); color: var(--ds-ink); border: var(--ds-line) solid var(--ds-ink); box-shadow: 4px 5px 0 rgba(0, 0, 0, 0.45); font: 700 var(--t-sm)/1 var(--f-ui); letter-spacing: 0.06em; text-transform: uppercase; transform: translateX(-50%) rotate(-2deg); animation: none; }
+
+/* ───────── lobby ───────── */
+/* crachá da empresa */
+.lb-badge { left: 34px; top: 30px; gap: 14px; padding: 22px 18px 12px 12px; background: var(--ds-tex-card); border: var(--ds-line) solid var(--ds-ink); box-shadow: var(--ds-frame); margin: 5px; transform: rotate(-1.2deg); }
+.lb-badge::before { content: ""; position: absolute; left: 50%; top: 7px; width: 42px; height: 8px; margin-left: -21px; background: #141a16; border: 1.5px solid var(--ds-ink); border-radius: 4px; }   /* furo do cordão */
+.lb-badge:hover { border-color: var(--ds-ink); background: var(--ds-tex-lines), #fff6dc; }
+.lb-badge img { width: 54px; height: 54px; background: var(--ds-ink); border: var(--ds-line) solid var(--ds-ink); padding: 4px; }
+.lb-badge b { font: 400 28px/1 var(--f-title); color: var(--ds-ink); text-shadow: none; text-transform: uppercase; word-spacing: -0.28em; }
+.lb-badge span { color: var(--ds-ink-2); font-weight: 700; display: block; margin-top: 5px; }
+.lb-badge em { font: 400 24px/1 var(--f-title); color: var(--ds-ink); background: var(--ds-amber); padding: 1px 7px 0; margin-left: 6px; border: 1.5px solid var(--ds-ink); }
+/* sair */
+.lb-top { right: 34px; top: 34px; }
+#lobby .lb-exit { height: 44px; padding: 0 18px; background: var(--ds-tex-card) !important; color: var(--ds-ink) !important; border: 3px solid var(--ds-ink) !important; border-radius: 0; box-shadow: inset 0 0 0 1.5px rgba(255, 252, 240, 0.9), 0 4px 0 0 var(--ds-band-lo), 0 4px 0 3px var(--ds-ink); font: 700 var(--t-sm)/1 var(--f-ui); letter-spacing: 0.1em; }
+#lobby .lb-exit:hover { background: var(--ds-tex-lines), linear-gradient(to bottom, #ffe2a3, #f7c466) !important; color: var(--ds-ink); }
+/* etiquetas dos objetos: fita de rotuladora (nome) + tira de papel (o que faz) */
+#lobby .lb-label { gap: 0; padding: 0; background: none !important; border: none !important; justify-items: center; }
+#lobby .lb-label b { padding: 6px 12px 3px; background: linear-gradient(to bottom, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0) 30%, rgba(0, 0, 0, 0.2)), #23201c; color: #f4efe2; font: 400 22px/1 var(--f-title); letter-spacing: 0.14em; text-shadow: 0 1px 0 rgba(0, 0, 0, 0.6); border-radius: 2px; box-shadow: 3px 4px 0 rgba(0, 0, 0, 0.5); transform: rotate(-1.5deg); }
+#lobby .lb-label:nth-child(even) b { transform: rotate(1.2deg); }
+#lobby .lb-label span { margin-top: -1px; padding: 4px 9px 3px; background: var(--ds-card); color: var(--ds-ink); border: 1.5px solid var(--ds-ink); font: 700 var(--t-cap)/1 var(--f-ui); letter-spacing: 0.08em; text-transform: uppercase; box-shadow: 3px 4px 0 rgba(0, 0, 0, 0.45); }
+#lobby .lb-label::after { bottom: -12px; height: 12px; width: 2px; background: var(--ds-card); }
+#lobby .lb-label.is-hot, #lobby .lb-label:hover { background: none; }
+#lobby .lb-label.is-hot b, #lobby .lb-label:hover b { background: var(--ds-amber); color: var(--ds-ink); text-shadow: none; }
+#lobby .lb-label.is-hot span, #lobby .lb-label:hover span { background: var(--ds-ink); color: var(--ds-paper); }
+#lobby .lb-label .lb-dot, #lobby .lb-nav .lb-dot { right: -8px; top: -8px; width: 16px; height: 16px; background: var(--ds-red); border: 2px solid var(--ds-ink); box-shadow: 2px 3px 0 rgba(0, 0, 0, 0.4); }
+/* régua de atalhos: uma tira de papelão com teclas */
+.lb-nav { bottom: 30px; gap: 8px; padding: 10px 12px 14px; background: var(--ds-tex-kraft); border: var(--ds-line) solid var(--ds-ink); box-shadow: 0 5px 0 0 var(--ds-kraft-lo), 0 6px 0 1px var(--ds-ink), 6px 13px 0 0 rgba(0, 0, 0, 0.5); }
+#lobby .lb-nav button { gap: 9px; height: 40px; padding: 0 12px 0 8px; margin-bottom: 4px; background: var(--ds-tex-card); color: var(--ds-ink); border: var(--ds-line) solid var(--ds-ink); border-radius: 0; box-shadow: 0 4px 0 0 var(--ds-band-lo), 0 4px 0 2px var(--ds-ink); font: 700 var(--t-cap)/1 var(--f-ui); letter-spacing: 0.08em; }
+#lobby .lb-nav button:hover { background: var(--ds-tex-lines), linear-gradient(to bottom, #ffe2a3, #f7c466); color: var(--ds-ink); }
+#lobby .lb-nav button:active { transform: translateY(4px); box-shadow: 0 0 0 2px var(--ds-ink); }
+#lobby .lb-nav kbd { min-width: 22px; text-align: center; font: 400 20px/1 var(--f-title); padding: 3px 5px 1px; background: linear-gradient(to bottom, #4a443d, #26221e); color: #f4efe2; border: none; border-radius: 4px; opacity: 1; box-shadow: 0 2px 0 #0f0d0b; }
+.lb-hint { bottom: 104px; padding: 7px 12px 6px; background: var(--ds-tex-lines), linear-gradient(160deg, #ffe680, #f4cf4a); color: var(--ds-ink); border: var(--ds-line) solid var(--ds-ink); opacity: 1; box-shadow: 3px 4px 0 rgba(0, 0, 0, 0.45); transform: translateX(-50%) rotate(-1deg); }
+/* avisos do lobby: tira de papel com tarja */
+.lb-toast { background: var(--ds-tex-card); color: var(--ds-ink); border: var(--ds-line) solid var(--ds-ink); border-left: 12px solid var(--ds-ink-3); border-radius: 0; box-shadow: 5px 6px 0 rgba(0, 0, 0, 0.45); font-weight: 700; }
+.lb-toast b { font: 400 26px/1 var(--f-title); text-transform: uppercase; word-spacing: -0.28em; } .lb-toast span { color: var(--ds-ink-2); }
+.lb-toast.good { border-left-color: var(--ds-green); } .lb-toast.bad { border-left-color: var(--ds-red); } .lb-toast.gold { border-left-color: var(--ds-amber); background: var(--ds-tex-card); } .lb-toast.gold b { color: var(--ds-ink); }
