@@ -9,7 +9,7 @@ Objetivo: todas as telas do Business Card Battle Corp. falarem a mesma língua v
 3. **Courier New sai da interface.** O texto de interface passa a usar uma sem-serifa: Basis Grotesque Pro (escolha do autor). A licença da Colophon Foundry ainda precisa ser confirmada; até lá os arquivos da fonte ficam fora do Git.
 
 4. **O sistema nunca limita a tela** (decisão do autor, 26/11/2026). Ao criar uma tela ou funcionalidade nova, usamos as peças que existem quando elas servem. Quando não servem, **criamos a peça que falta** (elemento, botão, material) e ela entra no sistema e no catálogo. Nunca se força uma necessidade nova dentro de um componente antigo.
-5. **Legibilidade vem antes do efeito.** Nenhum filtro que amoleça o texto. A curva das peças das margens é feita em WebGL, a partir de fotos do HTML ([07-hud-webgl.md](07-hud-webgl.md)).
+5. **Legibilidade vem antes do efeito.** Nenhum filtro que amoleça o texto. Todo o HUD da partida é desenhado em WebGL, com texto por campo de distância e a curva aplicada na geometria ([07-hud-webgl.md](07-hud-webgl.md)).
 6. **Títulos em caixa alta, em VT323.** Texto de interface em Basis Grotesque. O logo fica em Apple Garamond.
 7. **Materiais de escritório com função**: prender (clipe, grampo, fita, alfinete, prendedor), anotar (post-it, caneta, marca-texto), registrar (formulário contínuo, recibo, cartão de ponto, ficha) e decidir (carimbo). Desenho chapado, sem realismo.
 
@@ -23,7 +23,7 @@ Objetivo: todas as telas do Business Card Battle Corp. falarem a mesma língua v
 | 4 | Tipografia | [04-tipografia.md](04-tipografia.md) · aprovada |
 | 5 | Redução de texto | [05-texto.md](05-texto.md) · aprovada |
 | 6 | Componentes, acabamento e materiais de escritório | [06-acabamento.md](06-acabamento.md) · em andamento, por sub-sprints |
-| 7 | HUD curvo em WebGL | [07-hud-webgl.md](07-hud-webgl.md) · primeira etapa |
+| 7 | HUD curvo em WebGL | [07-hud-webgl.md](07-hud-webgl.md) · HUD inteiro nativo |
 | 8 | Motion e som | a fazer |
 | 9 | Acessibilidade e validação com jogadores | a fazer |
 

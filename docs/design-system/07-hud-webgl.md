@@ -73,3 +73,44 @@ O autor pediu o caminho completo, não o atalho. A etapa 1 (fotografar o HTML) f
 **Tamanho estimado:** continua sendo o de `FUTURO.md` (2.000 a 3.000 linhas, 4 a 6 sessões). É ordem de grandeza, não medida.
 
 **Risco principal:** o design system passa a ter duas implementações (CSS para o lobby, nativa para a partida). Para não divergirem, os valores vêm sempre dos mesmos tokens e cada peça nativa é comparada com a versão CSS no catálogo.
+
+
+---
+
+## Etapa 3 · HUD inteiro nativo em WebGL (feito em 26/11/2026)
+
+O autor pediu para redesenhar todo o HUD em WebGL. Foi feito assim, em `remake/src/ds/glass.js`:
+
+- **O HTML continua sendo o esqueleto, invisível.** Ele dá posição, cliques, teclado e leitor de tela, e as regras visuais continuam em CSS (`tokens.css`, `ds.css`, `ds-game.css`). O design system segue único: uma peça nova é escrita em HTML e CSS e aparece desenhada em WebGL sem código extra.
+- **Tudo o que aparece é desenhado pela placa de vídeo**, num passe final do renderizador do jogo (`gfx.js` → `glass.render`), por cima da cena:
+  - caixas, bordas, degradês, contornos e molduras em camadas viram geometria;
+  - papel ganha grão, linhas finas e salpico no próprio shader;
+  - **texto por campo de distância (SDF)**, gerado no processador a partir das fontes do jogo (algoritmo do TinySDF), nítido em qualquer tamanho e curvatura;
+  - imagens das cartas e ícones vão para um atlas;
+  - círculos (pinos, luzes, selos) são desenhados no shader.
+- **A lente (barril) é aplicada nos vértices.** A geometria nasce curva; nada é reamostrado.
+- **Cliques:** uma transformação projetiva no HTML invisível mantém a área clicável junto do desenho. Teste de 26/11: 5 de 5 pontos em cada botão do HUD.
+- **Camadas desenhadas:** pastas de CAIXA, ficha da carta, painel de turno, botões do topo, relatório (com rolagem e recorte), anúncio de turno, pedido de escolha, tira da jogada, avisos, dicas, etiquetas da mesa, números flutuantes e a tela de fim de partida.
+
+### O que o desenho nativo ainda não faz (e o que acontece no lugar)
+
+| Recurso de CSS | No lugar |
+|---|---|
+| Padrões em `radial-gradient` (furos do formulário contínuo, retícula do papel) | não aparecem |
+| `clip-path` (dobra do post-it, ponta da etiqueta, serrilha do recibo) | a forma sai retangular |
+| Cantos arredondados que não são círculo | saem retos (o design system quase não usa) |
+| `text-shadow` | ignorado |
+| Texto em `content` de pseudo-elemento | não aparece |
+| Bordas tracejadas ou pontilhadas | saem contínuas e mais claras |
+| Rotação | aproximada: cada peça gira em torno do próprio centro (serve para os ângulos pequenos que usamos) |
+
+Quando uma peça nova precisar de um desses recursos, ele é implementado em `glass.js` (regra do autor: o sistema não limita a tela).
+
+### Desempenho
+
+O HUD só é redesenhado quando algo muda (texto, classe, rolagem, mouse, animação CSS em curso). Cada redesenho levou de 10 a 14 ms no ambiente de teste, que não tem placa de vídeo e roda tudo no processador. Em máquina real deve ser menor, mas **não foi medido**. Se pesar, o próximo passo é redesenhar só a peça que mudou, em vez de todas.
+
+### Riscos
+
+- Testado só no Chromium.
+- O atlas de glifos e o de imagens têm 2048 × 2048. Muitas fontes ou tamanhos novos podem enchê-lo; hoje ele reinicia quando as fontes terminam de carregar.

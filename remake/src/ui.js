@@ -55,7 +55,8 @@ export class UI {
       <div id="modal" class="screen hidden"></div>
       <div id="unlock" class="hidden">clique para ligar o som</div>
       <div id="fade"></div>`;
-    for (const id of ['slot-opp', 'slot-me', 'slot-turn', 'slot-bar', 'slot-sheet']) glass.attach(root.querySelector('#' + id));
+    // HUD inteiro desenhado em WebGL (src/ds/glass.js): o HTML abaixo fica invisível, como esqueleto
+    for (const id of ['chips', 'floats', 'slot-opp', 'slot-me', 'slot-turn', 'slot-bar', 'slot-sheet', 'slot-log', 'slot-center', 'slot-banner', 'slot-toast', 'slot-coach', 'over']) glass.attach(root.querySelector('#' + id));
     this.folders = { me: $('#slot-me .h-folder'), opp: $('#slot-opp .h-folder') };
     this.renderBar();
     root.addEventListener('click', (e) => {
