@@ -132,3 +132,18 @@ O autor pediu uma resposta definitiva: resolver a legibilidade de vez junto com 
 - `remake/src/ds/glass.js` foi removido.
 
 **Regra que fica.** Nenhum efeito visual pode passar por cima de texto do HUD (filtro, transformação 3D, reamostragem). Se um dia a curvatura voltar, ela entra só em formas sem texto (contorno do papel, sombra) ou numa tecnologia em que o navegador continue desenhando o texto.
+
+
+---
+
+## Retomado como opção (27/11/2026)
+
+O autor abriu a versão curva (commit `cdab543`) num monitor 4K e o resultado foi perfeito: com 4 vezes mais pixels, o texto curvado fica nítido. Nas telas comuns a legibilidade continua sendo o problema descrito acima. Decisão: **a curva vira uma opção**.
+
+- **Configurações → Interface curva**, com "Ligada" e "Desligada". Fica salva no navegador (`hudCurve` em `settings.js`).
+- **Padrão automático:** ligada em telas 4K, desligada nas demais. "4K" é medido como `maior lado da tela × devicePixelRatio ≥ 3600` (`isUhd()` em `glass.js`); cobre 4K a 100%, 150% e 200% de escala. O zoom do navegador também conta: 1080p com zoom de 200% é tratado como 4K.
+- **Desligada:** o navegador desenha o HUD normalmente, sem transformação nem filtro sobre o texto (a regra da seção anterior continua valendo para esse modo).
+- **Ligada:** o HUD é desenhado em WebGL por `glass.js`, como na etapa 3.
+- A troca vale na hora, sem recarregar.
+
+Verificado em 27/11 no arquivo final: em 1600 × 900 (escala 1) começa desligada e em 1920 × 1080 com escala 2 (3840 px) começa ligada; o interruptor troca nos dois sentidos, e os cliques acertam todos os botões do HUD nos dois modos.

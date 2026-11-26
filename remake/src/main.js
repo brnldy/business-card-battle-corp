@@ -1,3 +1,4 @@
+import * as glass from './ds/glass.js';
 import * as THREE from 'three';
 import { loadAll } from './assets.js';
 import { Gfx, Particles, timeUniform, updateTweens } from './gfx.js';
@@ -137,5 +138,6 @@ function loop(nowMs) {
   cam.lookAt(camLook.x + mx * 0.35, camLook.y - my * (mode === 'duel' ? 0.55 : 0.2), camLook.z);
   cam.rotation.z += (Math.random() - 0.5) * sh * 0.15;
   gfx.render(R.scene, cam);
+  glass.render(gfx.renderer);   // interface curva (quando ligada): passe final, por cima da cena
 }
 boot().catch((e) => { console.error(e); document.getElementById('boot-line').textContent = `Erro ao abrir o caixa: ${e.message}`; });

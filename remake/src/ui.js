@@ -1,5 +1,6 @@
 // Interface em DOM por cima do canvas. O HUD do duelo é montado só com os componentes do design system
 // (src/hud/components.js + hud.css); as telas (menu, janelas, fim de jogo) usam style.css.
+import * as glass from './ds/glass.js';
 import { CARDS } from './cards.js';
 import { asset } from './assets.js';
 import { settings, cleanName, MAX_NAME } from './settings.js';
@@ -54,6 +55,9 @@ export class UI {
       <div id="modal" class="screen hidden"></div>
       <div id="unlock" class="hidden">clique para ligar o som</div>
       <div id="fade"></div>`;
+    // interface curva (src/ds/glass.js): estas camadas podem ser desenhadas em WebGL, com a curva do tubo
+    for (const id of ['chips', 'floats', 'slot-opp', 'slot-me', 'slot-turn', 'slot-bar', 'slot-sheet', 'slot-log', 'slot-center', 'slot-banner', 'slot-toast', 'slot-coach', 'over']) glass.attach(root.querySelector('#' + id));
+    glass.setEnabled(glass.curveOn()); settings.onChange(() => glass.setEnabled(glass.curveOn()));
     this.folders = { me: $('#slot-me .h-folder'), opp: $('#slot-opp .h-folder') };
     this.renderBar();
     root.addEventListener('click', (e) => {
@@ -148,12 +152,13 @@ export class UI {
         <label>Imagem <span class="seg" data-s="pixel"><button data-v="1">Nítida</button><button data-v="2">Retrô</button><button data-v="3">Pixelada</button></span></label>
         <label>Tamanho <span class="seg" data-s="uiSize"><button data-v="0.85">Pequena</button><button data-v="1">Média</button><button data-v="1.15">Grande</button></span></label>
         <label>Animações <span class="seg" data-s="speed"><button data-v="1">Normal</button><button data-v="1.6">Rápida</button><button data-v="2.5">Turbo</button></span></label>
+        <label><span>Interface curva <small class="fine">${glass.isUhd() ? '· tela 4K: ligada por padrão' : '· ligada por padrão só em 4K'}</small></span> <span class="seg" data-s="hudCurve"><button data-v="true">Ligada</button><button data-v="false">Desligada</button></span></label>
         <label>Tremor e clarões <span class="seg" data-s="shake"><button data-v="true">Ligado</button><button data-v="false">Reduzido</button></span></label>
         <label>Dicas <span class="seg" data-s="tipsOff"><button data-v="false">Ligadas</button><button data-v="true">Desligadas</button></span></label>
         <label>Som <span class="seg" data-s="muted"><button data-v="false">Ligado</button><button data-v="true">Mudo</button></span></label>
       </div>
       <nav><button data-close class="primary">Voltar</button></nav>`);
-    const syncSeg = () => box.querySelectorAll('.seg').forEach((sg) => sg.querySelectorAll('button').forEach((b) => b.classList.toggle('on', String(settings.get()[sg.dataset.s]) === b.dataset.v)));
+    const syncSeg = () => box.querySelectorAll('.seg').forEach((sg) => sg.querySelectorAll('button').forEach((b) => b.classList.toggle('on', String(sg.dataset.s === 'hudCurve' ? glass.curveOn() : settings.get()[sg.dataset.s]) === b.dataset.v)));
     syncSeg();
     box.addEventListener('input', (e) => { const k = e.target.dataset?.k2; if (!k) return; settings.set({ [k]: Number(e.target.value) }); applyVolumes(); if (k === 'sfx') sfx('select'); });
     box.addEventListener('click', (e) => {
