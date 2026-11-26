@@ -74,6 +74,7 @@ async function boot() {
   requestAnimationFrame(loop);
   // ganchos de depuração/teste
   window.__DUEL__ = duel; duel.aiChoose = aiChoose;
+  window.__STEP__ = async (ms = 1000) => { for (let t = 0; t < ms; t += 16) { updateTweens(16); for (let i = 0; i < 8; i++) await null; } }; // avança as animações sem depender da tela (testes)
   window.render_game_to_text = () => JSON.stringify({ mode, lobbyPanel: lobbyUi?.panel ?? null, patrimonio: save.get().patrimonio, turn: duel.state?.turn, active: duel.state?.active, phase: duel.state?.phase, busy: duel.busy, sel: duel.sel?.stage ?? null, cards: CARDS.length });
 }
 // troca de cena com um corte para o preto (a porta fecha atrás de você)

@@ -235,6 +235,19 @@ const SFX = {
   debuff() { tone({ f: 440, f2: 196, type: 'triangle', d: 0.26, vol: 0.1, rev: 0.4 }); },
   glitch() { for (let i = 0; i < 6; i++) tone({ f: rnd(90, 2400), type: 'square', t: now() + i * 0.028, d: 0.025, vol: 0.06 }); noise({ f: 2000, q: 0.5, d: 0.16, vol: 0.12 }); },
   flicker() { noise({ type: 'bandpass', f: 120, q: 9, d: 0.09, vol: 0.5 }); noise({ type: 'highpass', f: 5000, d: 0.03, vol: 0.08 }); },
+  // ── animações próprias das cartas (cardfx.js) ──
+  clap() { noise({ type: 'bandpass', f: 1400, q: 0.9, a: 0.001, d: 0.09, vol: 0.9, rev: 0.6 }); tone({ f: 170, f2: 90, d: 0.12, vol: 0.4, rev: 0.5 }); noise({ type: 'lowpass', f: 600, d: 0.25, vol: 0.2, rev: 0.9, t: now() + 0.04 }); },
+  choir() { [261.6, 329.6, 392, 523.3].forEach((f, i) => { tone({ f, type: 'triangle', a: 0.35, d: 1.3, vol: 0.07, rev: 1, detune: rnd(-12, 12) }); tone({ f: f * 1.003, type: 'sine', t: now() + 0.05 * i, a: 0.4, d: 1.2, vol: 0.05, rev: 1 }); }); bell(1568, now() + 0.1, 0.04, 1.8); },
+  acBeep() { [0, 0.16].forEach((dt) => tone({ f: 2730, type: 'square', t: now() + dt, d: 0.07, vol: 0.06 })); noise({ type: 'lowpass', f: 300, a: 0.2, d: 1.1, vol: 0.3, brown: true, t: now() + 0.25 }); },
+  shutter() { noise({ type: 'highpass', f: 3000, d: 0.03, vol: 0.35 }); noise({ type: 'bandpass', f: 1600, q: 3, d: 0.05, vol: 0.3, t: now() + 0.06 }); tone({ f: 3800, f2: 900, type: 'sine', t: now() + 0.07, d: 0.25, vol: 0.05 }); },
+  stare() { tone({ f: 55, d: 1.4, vol: 0.45, rev: 0.6 }); tone({ f: 58.3, type: 'sawtooth', a: 0.3, d: 1.1, vol: 0.06, rev: 0.6 }); for (let i = 0; i < 5; i++) tone({ f: rnd(1800, 3200), type: 'sine', t: now() + 0.2 + i * 0.12, d: 0.3, vol: 0.02, rev: 1 }); },
+  chomp() { noise({ type: 'lowpass', f: 900, f2: 200, d: 0.12, vol: 0.6 }); tone({ f: 120, f2: 60, d: 0.1, vol: 0.4 }); noise({ type: 'bandpass', f: 2200, q: 4, d: 0.04, vol: 0.2, t: now() + 0.05 }); },
+  register() { bell(2637, now(), 0.12, 0.9); bell(3520, now() + 0.09, 0.1, 1.1); noise({ type: 'highpass', f: 4000, d: 0.05, vol: 0.2 }); tone({ f: 90, f2: 60, t: now() + 0.12, d: 0.12, vol: 0.35 }); },
+  powerDown() { tone({ f: 620, f2: 38, type: 'sawtooth', a: 0.01, d: 0.8, vol: 0.12 }); tone({ f: 310, f2: 22, type: 'square', a: 0.01, d: 0.8, vol: 0.05 }); },
+  zap() { for (let i = 0; i < 8; i++) noise({ type: 'highpass', f: rnd(2500, 7000), t: now() + i * rnd(0.01, 0.03), d: 0.02, vol: 0.3 }); tone({ f: 60, type: 'sawtooth', d: 0.25, vol: 0.25 }); },
+  sip() { noise({ type: 'bandpass', f: 900, f2: 2400, q: 3, a: 0.08, d: 0.35, vol: 0.25 }); noise({ type: 'highpass', f: 5000, a: 0.3, d: 0.6, vol: 0.06, t: now() + 0.3 }); },
+  stamp() { tone({ f: 110, f2: 45, d: 0.2, vol: 0.85 }); noise({ type: 'lowpass', f: 1800, f2: 300, d: 0.1, vol: 0.5 }); noise({ type: 'bandpass', f: 3000, q: 2, d: 0.03, vol: 0.2, t: now() + 0.02 }); },
+  notify() { tone({ f: 1568, type: 'sine', d: 0.09, vol: 0.09 }); tone({ f: 2093, type: 'sine', t: now() + 0.1, d: 0.14, vol: 0.09 }); },
   win() {
     [0, 0.16, 0.32, 0.6].forEach((dt, i) => bell([784, 988, 1175, 1568][i], now() + dt, 0.13, 2.4));
     for (let i = 0; i < 16; i++) tone({ f: rnd(2600, 5200), type: 'triangle', t: now() + 0.5 + i * 0.05, d: 0.06, vol: 0.05 });

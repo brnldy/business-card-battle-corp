@@ -15,6 +15,7 @@ import { T as TH } from './theme.js';
 import { sfx, setMusicMode } from './audio.js';
 import { settings } from './settings.js';
 import { describeEvent } from './log.js';
+import { CardFX } from './cardfx.js';
 
 const ME = 0, OP = 1;
 const C_money = (n) => `$ ${Math.round(n).toLocaleString('pt-BR')}`;
@@ -43,7 +44,7 @@ export class Duel {
     this.ray = new THREE.Raycaster(); this.ray.layers.enableAll(); this.caixaShown = [RULES.STARTING_CAIXA, RULES.STARTING_CAIXA]; this.group = new THREE.Group(); this.R.scene.add(this.group);
     this.slotGlow = new THREE.Mesh(glowGeo, glowMaterial()); this.slotGlow.rotation.x = -Math.PI / 2; this.slotGlow.position.y = 0.006; this.slotGlow.visible = false; this.slotGlow.layers.set(LAYER.GLOW);
     this.slotGlow.material.uniforms.uAspect.value = CARD.w / CARD.h; this.R.scene.add(this.slotGlow);
-    this.buildArrow(); this.buildCoin();
+    this.buildArrow(); this.buildCoin(); this.fx = new CardFX(this);
     this.oppMood = 0; this.oppGlitch = 0; this.oppTalk = 0; this.oppNod = 0; this.blinkT = 2;
     this.bindInput();
   }
@@ -52,7 +53,7 @@ export class Duel {
   // opts: { training, deck, pool } — treino é contra o estagiário (IA fraca) e não vale nada;
   // deck = lista de 40 ids do lobby; pool = cartas que o rival pode usar (as que o jogador já tem)
   async newGame(opts = {}) {
-    this.clearCards();
+    this.clearCards(); this.fx.clear();
     this.ui.gameOver(null); this.ui.hud(true); this.ui.clearLog();
     this.training = !!opts.training;
     const rival = this.training ? 'ESTAGIÁRIO' : RIVALS[Math.floor(Math.random() * RIVALS.length)];
@@ -75,7 +76,7 @@ export class Duel {
     await this.play(events, new Map());
     this.afterAction();
   }
-  stop() { this.active = false; this.clearCards(); this.ui.hud(false); this.ui.gameOver(null); this.setSel(null); }
+  stop() { this.active = false; this.fx.clear(); this.clearCards(); this.ui.hud(false); this.ui.gameOver(null); this.setSel(null); }
   clearCards() {
     for (const uid of [...this.cards.keys()]) this.removeCard(uid);
     this.cards.clear(); this.cardIndex.clear();
@@ -231,7 +232,7 @@ export class Duel {
     const rel = (uid, opts) => { this.setPlace(uid, next.get(uid) ?? null, opts); };
     const ctx = { human: ME, names: this.names, cardOf: (u) => this.cardIndex.get(u) };
     const posOf = (uid) => this.cards.get(uid)?.group.position.clone();
-    let lastCombat = null;
+    let lastCombat = null, tchan = false; // tchan: a Thays acabou de entrar (o próximo "volta pra mão" é dela)
 
     for (let i = 0; i < events.length; i++) {
       if (!this.active) return;
@@ -273,6 +274,9 @@ export class Duel {
           sfx('summon'); this.bump(0.16); this.lampKick(0.5);
           this.puff(p, 26, [0.75, 0.72, 0.6]);
           await wait(D(260));
+          if (e.cardId === 'BCB-013' && e.mode === 'DEF') await this.fx.cross(p);      // Paulo orando
+          if (e.cardId === 'BCB-010') await this.fx.worm(this.deckPos(e.player));       // Tênia come o topo do deck
+          if (e.cardId === 'BCB-017') tchan = true;
           break;
         }
         case 'sacrifice': case 'destroy': case 'effectExpired': case 'discard': {
@@ -288,11 +292,14 @@ export class Duel {
           await wait(D(120));
           break;
         }
-        case 'toHand': { rel(e.uid, { hop: 0.9 }); sfx('whoosh'); this.floatAt(posOf(e.uid), 'de volta pra mão', 'info'); await wait(D(450)); break; }
+        case 'toHand': {
+          if (tchan) { tchan = false; const p0 = posOf(e.uid); if (p0) await this.fx.stamp(p0, 'FALTOU UM', 'TCHAN!'); }
+          rel(e.uid, { hop: 0.9 }); sfx('whoosh'); this.floatAt(posOf(e.uid), 'de volta pra mão', 'info'); await wait(D(450)); break; }
         case 'toDeck': {
           const c = this.cards.get(e.uid);
           if (c) {
             const owner = this.state.players.findIndex((p) => p.deck.some((d) => d.uid === e.uid));
+            if (e.cardId === 'BCB-005') await this.fx.cloud(c);                           // Chat GPT sobe pra nuvem
             this.floatAt(posOf(e.uid), 'voltou pra nuvem', 'info'); sfx('glitch');
             c.place = { kind: 'free' }; c.tPos.copy(this.deckPos(owner < 0 ? ME : owner)); c.tQuat.copy(Q_DOWN); c.hop = 1; c.hopH = 0.8;
             await wait(D(480)); this.removeCard(e.uid); this.deckShown[owner < 0 ? ME : owner]++;
@@ -317,6 +324,8 @@ export class Duel {
           c.place = { kind: 'show', x: 0 }; c.hop = 1; c.hopH = 0.3;
           sfx('effect'); await wait(D(360));
           this.sparkle(c.group.position, [0.6, 1, 0.85], 34); this.pulse('uAberr', 0.006, 500);
+          if (e.cardId === 'BCB-003') await this.fx.airConditioner();
+          else if (e.cardId === 'BCB-014') await this.fx.priceTag(c.group.position.clone());
           await wait(D(700));
           if (next.get(e.uid)?.kind === 'dead') { await this.dissolve(c, 0, 1, D(380)); rel(e.uid, { noHop: true }); this.snap(c); this.dissolve(c, 1, 0, D(200)); }
           else { rel(e.uid, { hop: 0.6 }); await wait(D(380)); sfx('place'); }
@@ -325,11 +334,16 @@ export class Duel {
         case 'trapTriggered': {
           const c = this.cards.get(e.uid);
           this.ui.banner('Armadilha!', cardDef(e.cardId).name, 'trap'); this.ui.detail({ cardId: e.cardId, where: 'show', owner: e.player === ME ? 'me' : 'opp', status: { tone: e.player === ME ? 'go' : 'stop', text: e.player === ME ? 'Sua armadilha disparou.' : `Armadilha de ${this.names[OP]} disparou.` } }); sfx('trap'); this.bump(0.3); this.pulse('uFlash', 0.5, 500, [1, 0.75, 0.1]); this.pulse('uGlitch', 1, 450);
+          if (e.cardId === 'BCB-015') { const pa = posOf(e.against); if (pa) await this.fx.battery(pa); }   // a pilha de quem atacou morre
           if (c) { c.place = { kind: 'show', x: 0 }; c.hop = 1; c.hopH = 0.5; await wait(D(1000)); await this.dissolve(c, 0, 1, D(380)); rel(e.uid, { noHop: true }); this.snap(c); this.dissolve(c, 1, 0, D(200)); }
           break;
         }
         case 'controlChange': { rel(e.uid, { hop: 1.0 }); sfx('whoosh'); this.floatAt(posOf(e.uid), 'pegou carona', 'info'); await wait(D(520)); break; }
-        case 'modeChange': { rel(e.uid, { noHop: true }); const c = this.cards.get(e.uid); if (c) { c.hop = 1; c.hopH = 0.16; } sfx('card'); await wait(D(300)); sfx('place'); break; }
+        case 'modeChange': {
+          rel(e.uid, { noHop: true }); const c = this.cards.get(e.uid); if (c) { c.hop = 1; c.hopH = 0.16; } sfx('card'); await wait(D(300)); sfx('place');
+          if (e.mode === 'DEF' && this.cardIndex.get(e.uid) === 'BCB-013') { await wait(D(200)); const p = posOf(e.uid); if (p) await this.fx.cross(p); }
+          break;
+        }
         case 'attack': {
           const c = this.cards.get(e.attacker); if (!c) break;
           const side = this.sideOf(e.attacker, prev), to = e.target ? posOf(e.target) : this.directTarget(side);
@@ -343,7 +357,7 @@ export class Duel {
         case 'attackRedirected': {
           // Filipe conta uma fake news: o ataque muda de rumo e vai para um colega de quem atacou
           const a = this.atkCtx, f = posOf(e.from);
-          if (f) { this.floatAt(f, 'fake news!', 'info'); this.sparkle(f, [1, 0.85, 0.4], 18); }
+          if (f) { await this.fx.fakeNews(f); this.sparkle(f, [1, 0.85, 0.4], 18); }
           this.ui.banner('Fake news!', 'o ataque foi desviado', 'trap'); sfx('glitch'); this.oppGlitch = 0.6;
           if (a) { const to = posOf(e.to); if (to) a.to = to; }
           await wait(D(650));
@@ -353,9 +367,10 @@ export class Duel {
           const a = this.atkCtx; if (a) { this.floatAt(a.c.group.position, 'ataque anulado', 'bad'); await tween(D(300), (k) => a.c.offset.multiplyScalar(1 - k)); a.c.offset.set(0, 0, 0); a.c.glowT = 0; this.atkCtx = null; }
           break;
         }
-        case 'coin': await this.coinFlip(e.result, D); break;
+        case 'coin': { const b = this.cards.get(e.source); if (b) await this.fx.clap(b.group.position.clone()); await this.coinFlip(e.result, D); break; }
         case 'statMod': {
           const p = posOf(e.uid), parts = [];
+          if (e.source === 'BCB-016' && p) await this.fx.mug(p);                            // café com gosto de cigarro
           if (e.mul !== undefined && e.mul !== 1) parts.push(e.mul < 1 ? 'força pela metade' : `×${e.mul}`);
           if (e.atk) parts.push(`ATQ ${e.atk > 0 ? '+' : ''}${e.atk}`);
           if (e.def) parts.push(`DEF ${e.def > 0 ? '+' : ''}${e.def}`);
@@ -388,6 +403,7 @@ export class Duel {
           break;
         }
         case 'damage': {
+          if (e.source === 'BCB-007' && lastCombat?.defender) this.fx.stamp(e.player === ME ? V(0.9, 0.3, 1.7) : V(0.9, 0.5, -1.7), 'PAI DE GÊMEOS', '×2', { hold: 700 });
           this.caixaShown[e.player] = e.caixa;
           sfx('damage'); this.bump(e.player === ME ? 0.45 : 0.2);
           this.coins(e.player === ME ? V(0, 0.2, 2.0) : V(0, 0.5, -2.0), Math.min(40, 8 + e.amount / 60));
@@ -403,7 +419,7 @@ export class Duel {
           this.refreshHud(); await wait(D(520));
           break;
         }
-        case 'lock': { const p = posOf(e.uid); if (p) { this.floatAt(p, 'travada: não ataca', 'bad'); sfx('lock'); this.sparkle(p, [1, 0.8, 0.3], 14); } this.refreshChips(); await wait(D(400)); break; }
+        case 'lock': { const p = posOf(e.uid); if (p && e.source === 'BCB-008') await this.fx.phoneRec(p); else if (p && e.source === 'BCB-018') await this.fx.eye(p); if (p) { this.floatAt(p, 'travada: não ataca', 'bad'); sfx('lock'); this.sparkle(p, [1, 0.8, 0.3], 14); } this.refreshChips(); await wait(D(400)); break; }
         case 'frio': {
           sfx('frost'); this.pulse('uFrost', 0.75, 900);
           this.snow(e.player); this.floatAt(e.player === ME ? V(0, 0.3, 1.0) : V(0, 0.3, -1.0), `frio ×${e.counters}: −$${e.counters * 100} por turno`, 'cold');
