@@ -403,6 +403,24 @@ export function buildLobby() {
       return h ? h.object.userData.hot : null;
     },
     setHover(id) { hoverId = id; },
+    /** retrato 3×4 do estagiário, renderizado do modelo real da sala (para a ficha dele) */
+    internPortrait(renderer, w = 368, h = 448) {
+      if (!intern || !renderer) return null;
+      if (this._portrait) return this._portrait;
+      const rt = new THREE.WebGLRenderTarget(w, h), cam = new THREE.PerspectiveCamera(15, w / h, 0.1, 50), c = new THREE.Vector3();
+      intern.headBox.getWorldPosition(c);
+      cam.position.set(c.x + 0.55, c.y + 0.1, c.z + 3.2); cam.lookAt(c.x, c.y - 0.16, c.z);
+      const key = new THREE.PointLight(0xfff4e4, 7, 9); key.position.set(c.x + 1.4, c.y + 0.9, c.z + 2.2);
+      const fill = new THREE.PointLight(0xbfe0d6, 2.5, 9); fill.position.set(c.x - 1.6, c.y, c.z + 1.6); scene.add(key, fill);
+      const fog = scene.fog, bg = scene.background, target = renderer.getRenderTarget(); scene.fog = null; scene.background = new THREE.Color(0x8d9a90);
+      const vis = hits.map((o) => o.visible); hits.forEach((o) => { o.visible = false; });
+      renderer.setRenderTarget(rt); renderer.clear(); renderer.render(scene, cam);
+      const px = new Uint8Array(w * h * 4); renderer.readRenderTargetPixels(rt, 0, 0, w, h, px);
+      renderer.setRenderTarget(target); scene.fog = fog; scene.background = bg; scene.remove(key, fill); hits.forEach((o, i) => { o.visible = vis[i]; }); rt.dispose();
+      const cv = document.createElement('canvas'); cv.width = w; cv.height = h; const g = cv.getContext('2d'), im = g.createImageData(w, h);
+      for (let y = 0; y < h; y++) im.data.set(px.subarray((h - 1 - y) * w * 4, (h - y) * w * 4), y * w * 4);
+      g.putImageData(im, 0, 0); return (this._portrait = cv.toDataURL('image/jpeg', 0.9));
+    },
     get hover() { return hoverId; },
     /** posição na tela (0..1) da etiqueta de cada área */
     anchors() {

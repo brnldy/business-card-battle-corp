@@ -253,6 +253,22 @@ export class LobbyUI {
 
   // ───────── sala de reunião e treino ─────────
   deckLine(s) { const d = Meta.activeDeck(s), ok = Meta.activeDeckValid(s); return `<div class="lb-deckline ${ok ? '' : 'bad'}"><span class="memo">Deck escolhido</span><b>${esc(d.name)}</b><span>${ok ? `${d.cards.length} cartas · pronto` : esc(Meta.deckErrors(s, d.cards)[0] ?? 'Deck inválido')}</span><button data-a="open" data-id="deck">Trocar no arquivo</button></div>`; }
+  /** maço do deck escolhido: três cartas de verdade em leque, presas por uma cinta de papel com nome e contagem */
+  deckCard(s) {
+    const d = Meta.activeDeck(s), ok = Meta.activeDeckValid(s), order = { legendary: 0, rare: 1, common: 2 };
+    const top = [...new Set(d.cards)].sort((x, y) => order[Meta.rarityOf(x)] - order[Meta.rarityOf(y)]).slice(0, 3);
+    const cr = d.cards.filter((id) => !isFx(byId.get(id))).length, fx = d.cards.length - cr, pct = d.cards.length ? Math.round((cr / d.cards.length) * 100) : 0;
+    return `<div class="dk ${ok ? '' : 'is-bad'}">
+      <div class="dk-fan">${top.map((id) => `<img src="${asset(byId.get(id).art)}" alt="">`).join('')}</div>
+      <div class="dk-band">
+        <span class="ds-label">Deck escolhido</span>
+        <b>${esc(d.name)}</b>
+        ${ok ? `<div class="dk-split"><i style="width:${pct}%"></i></div><p><span><b>${cr}</b> criaturas</span><span><b>${fx}</b> efeitos</span></p>` : `<p class="dk-err">${esc(Meta.deckErrors(s, d.cards)[0] ?? 'Deck inválido')}</p>`}
+      </div>
+      <i class="ds-stamp ${ok ? 'ds-stamp--ok' : 'ds-stamp--no'}">${ok ? 'Pronto' : 'Inválido'}</i>
+      <button data-a="open" data-id="deck" class="ds-btn dk-swap">Trocar</button>
+    </div>`;
+  }
   vDuel(s) {
     const won = RIVALS.filter((r) => (s.stats.rivals[r]?.w ?? 0) > 0).length;
     const rv = RIVALS.map((r) => { const x = s.stats.rivals[r] ?? { w: 0, l: 0 }; return `<li class="${x.w ? 'is-on' : x.l ? '' : 'is-off'}"><span>${esc(r)}</span><em><b>${x.w}</b>V<b>${x.l}</b>D</em></li>`; }).join('');
@@ -265,12 +281,8 @@ export class LobbyUI {
             <div><dt>Vitória</dt><dd>CAIXA que sobrar → PATRIMÔNIO</dd></div>
             <div><dt>Derrota</dt><dd style="color:var(--ds-red)">${money(0)}</dd></div>
           </dl>
-          <div class="ds-deckcard ${ok ? '' : 'is-bad'}">
-            <div class="ds-deckcard__fan"><img src="${back}" alt=""><img src="${back}" alt=""><img src="${back}" alt=""></div>
-            <div class="ds-deckcard__txt"><span class="ds-label">Deck</span><b>${esc(d.name)}</b><span class="ds-text">${ok ? `${d.cards.length} cartas` : esc(Meta.deckErrors(s, d.cards)[0] ?? 'Deck inválido')}</span></div>
-            <div class="ds-deckcard__side"><span class="ds-chip ${ok ? 'ds-chip--ok' : 'ds-chip--no'}">${ok ? 'Pronto' : 'Inválido'}</span><button data-a="open" data-id="deck" class="ds-btn ds-btn--link">Trocar</button></div>
-          </div>
-          <div class="ds-actions"><button data-a="duel" class="ds-btn ds-btn--primary ds-btn--lg" ${ok ? '' : 'disabled'}>Entrar na reunião <span class="ds-key">Enter</span></button><button data-a="open" data-id="training" class="ds-btn ds-btn--link">Treinar antes</button></div>
+          ${this.deckCard(s)}
+          <footer class="dk-foot"><button data-a="duel" class="ds-btn ds-btn--primary ds-btn--lg" ${ok ? '' : 'disabled'}>Entrar na reunião <span class="ds-key">Enter</span></button><button data-a="open" data-id="training" class="ds-btn">Treinar antes</button></footer>
         </div>
       </section>
       <section class="ds-sheet">
@@ -287,16 +299,12 @@ export class LobbyUI {
         <div class="ds-bar"><span>Termo de estágio</span><b>não remunerado</b></div>
         <div class="ds-body">
           <div class="tr-id">
-            <div class="tr-photo"><i></i><i></i><b></b></div>
+            <div class="tr-photo"><img src="${this.lobby.internPortrait(this.lobby.renderer) ?? ''}" alt="Estagiário"><i class="ds-clip"></i></div>
             <div><span class="ds-label">Funcionário</span><h3 class="ds-title">Estagiário</h3><p class="ds-text">Ele <span class="ds-hl">erra de propósito</span>. Bom para testar um deck.</p></div>
           </div>
           <div><span class="ds-label">Esta partida não vale</span><ul class="tr-no">${no('Patrimônio')}${no('Metas')}${no('Conquistas')}${no('Histórico')}</ul></div>
-          <div class="ds-deckcard ${ok ? '' : 'is-bad'}">
-            <div class="ds-deckcard__fan"><img src="${back}" alt=""><img src="${back}" alt=""><img src="${back}" alt=""></div>
-            <div class="ds-deckcard__txt"><span class="ds-label">Deck</span><b>${esc(d.name)}</b><span class="ds-text">${ok ? `${d.cards.length} cartas` : esc(Meta.deckErrors(s, d.cards)[0] ?? 'Deck inválido')}</span></div>
-            <div class="ds-deckcard__side"><span class="ds-chip ${ok ? 'ds-chip--ok' : 'ds-chip--no'}">${ok ? 'Pronto' : 'Inválido'}</span><button data-a="open" data-id="deck" class="ds-btn ds-btn--link">Trocar</button></div>
-          </div>
-          <div class="ds-actions"><button data-a="train" class="ds-btn ds-btn--primary ds-btn--lg" ${ok ? '' : 'disabled'}>Treinar</button><button data-a="open" data-id="duel" class="ds-btn ds-btn--link">Duelo valendo</button></div>
+          ${this.deckCard(s)}
+          <footer class="dk-foot"><button data-a="train" class="ds-btn ds-btn--primary ds-btn--lg" ${ok ? '' : 'disabled'}>Treinar com ele</button><button data-a="open" data-id="duel" class="ds-btn">Duelo valendo</button></footer>
         </div>
       </section>
       <div class="ds-postit tr-note"><i class="ds-tape ds-tape--top"></i><b>Chefe,</b>posso jogar com vc? prometo perder.<em>— o estagiário</em></div>

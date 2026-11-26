@@ -41,7 +41,7 @@ async function boot() {
   R.scene.environment = pm.fromScene(new RoomEnvironment(), 0.04).texture; R.scene.environmentIntensity = 0.16; pm.dispose();
   window.__R__ = R;
   street = buildStreet(); window.__STREET__ = street; // fundo do menu: a sede da empresa e a fila de candidatos
-  lobby = buildLobby(); window.__LOBBY__ = lobby;     // o lobby: a recepção por dentro, com as áreas clicáveis
+  lobby = buildLobby(); window.__LOBBY__ = lobby; lobby.renderer = gfx.renderer;     // o lobby: a recepção por dentro, com as áreas clicáveis
   lobby.scene.environment = R.scene.environment; lobby.scene.environmentIntensity = 0.12;
   particles = new Particles(R.scene);
   duel = new Duel({ gfx, R, particles, ui });

@@ -64,12 +64,11 @@
 .tr-term .ds-staple { left: auto; right: 16px; top: 44px; transform: rotate(32deg); }
 .tr-id { display: grid; grid-template-columns: 92px 1fr; gap: var(--ds-4); align-items: center; }
 .tr-id > div:last-child { display: grid; gap: 5px; }
-/* foto 3×4 do estagiário: a caixa de papelão na cabeça */
-.tr-photo { position: relative; width: 92px; height: 112px; background: #cfd6cc; border: var(--ds-line) solid var(--ds-ink); box-shadow: 0 0 0 3px var(--ds-card), 0 0 0 4px var(--ds-ink-3); margin: 4px; transform: rotate(-2deg); overflow: hidden; }
-.tr-photo::before { content: ""; position: absolute; left: 18px; top: 22px; width: 54px; height: 50px; background: var(--ds-kraft); border: var(--ds-line) solid var(--ds-ink); }
-.tr-photo::after { content: ""; position: absolute; left: 6px; right: 6px; top: 76px; bottom: -4px; background: #3a3f3c; border: var(--ds-line) solid var(--ds-ink); border-radius: 14px 14px 0 0; }
-.tr-photo i { position: absolute; top: 40px; width: 7px; height: 9px; background: var(--ds-ink); z-index: 1; } .tr-photo i:nth-child(1) { left: 33px; } .tr-photo i:nth-child(2) { left: 51px; }
-.tr-photo b { position: absolute; left: 35px; top: 58px; width: 20px; height: 3px; background: var(--ds-ink); z-index: 1; }
+/* foto 3×4 do estagiário: render do modelo real da sala, presa com clipe */
+.tr-id { grid-template-columns: 124px 1fr; }
+.tr-photo { position: relative; width: 116px; height: 142px; margin: 4px; background: #8d9a90; border: var(--ds-line) solid var(--ds-ink); box-shadow: 0 0 0 4px #fbf6e8, 0 0 0 5px var(--ds-ink-3), 4px 6px 0 4px rgba(40, 24, 6, 0.25); transform: rotate(-2.5deg); }
+.tr-photo img { width: 100%; height: 100%; object-fit: cover; display: block; filter: saturate(0.75) contrast(1.08); }
+.tr-photo .ds-clip { top: -26px; right: 10px; width: 18px; height: 46px; }
 /* o que não vale: caixinhas riscadas a caneta vermelha */
 .tr-no { list-style: none; margin: 8px 0 0; padding: 0; display: grid; grid-template-columns: repeat(4, auto); justify-content: start; gap: 8px 22px; }
 .tr-no li { display: flex; align-items: center; gap: 8px; font: 700 var(--t-md)/1 var(--f-ui); color: var(--ds-ink-2); }
@@ -78,3 +77,22 @@
 .tr-note { width: 200px; min-height: 170px; margin-top: 46px; transform: rotate(3deg); font: 700 var(--t-md)/1.35 var(--f-ui); }
 .tr-note em { font: 500 var(--t-cap)/1 var(--f-ui); font-style: normal; color: var(--ds-ink-2); margin-top: 8px; }
 .tr-note .ds-tape--top { top: -13px; }
+
+/* ───────── maço do deck (janelas de duelo e de treino) ───────── */
+.dk { position: relative; display: grid; grid-template-columns: 150px 1fr; align-items: center; min-height: 128px; margin-top: 6px; }
+.dk-fan { position: relative; height: 128px; z-index: 1; }
+.dk-fan img { position: absolute; left: 34px; top: 4px; height: 120px; border: 1.5px solid var(--ds-ink); box-shadow: 2px 3px 0 rgba(27, 20, 13, 0.3); transform-origin: 50% 100%; transform: rotate(-13deg) translateX(-22px); }
+.dk-fan img:nth-child(2) { transform: rotate(-1deg); z-index: 1; } .dk-fan img:nth-child(3) { transform: rotate(11deg) translateX(22px); z-index: 2; }
+/* cinta de papel que abraça o maço */
+.dk-band { position: relative; display: grid; gap: 4px; margin-left: -26px; padding: 12px 150px 12px 44px; background: var(--ds-tex-card); border: var(--ds-line) solid var(--ds-ink); border-left: none; box-shadow: 3px 4px 0 rgba(27, 20, 13, 0.22); }
+.dk-band::before { content: ""; position: absolute; left: -118px; right: 100%; top: 58%; height: 16px; margin-right: -1px; background: var(--ds-tex-lines), var(--ds-amber); border: var(--ds-line) solid var(--ds-ink); border-right: none; z-index: 3; }   /* a cinta passa por cima das cartas */
+.dk-band > b { font: 400 30px/1 var(--f-title); text-transform: uppercase; word-spacing: -0.28em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dk-band p { margin: 0; display: flex; gap: 16px; font: 500 var(--t-sm)/1 var(--f-ui); color: var(--ds-ink-2); } .dk-band p b { font: 400 20px/1 var(--f-title); color: var(--ds-ink); margin-right: 3px; }
+.dk-split { height: 8px; background: var(--ds-ink-3); border: 1.5px solid var(--ds-ink); } .dk-split i { display: block; height: 100%; background: var(--ds-ink); border-right: 1.5px solid var(--ds-card); }
+.dk-err { color: var(--ds-red) !important; font-weight: 700 !important; }
+.dk .ds-stamp { position: absolute; right: 14px; top: -6px; z-index: 4; background: rgba(246, 239, 220, 0.6); }
+#lobby .dk-swap { position: absolute; right: 14px; bottom: 12px; height: 34px; padding: 0 14px; z-index: 4; font-size: var(--t-cap); }
+.dk.is-bad .dk-band { border-color: var(--ds-red); }
+/* rodapé destacável: linha picotada e as ações */
+.dk-foot { display: flex; align-items: center; gap: 14px; margin: 6px calc(-1 * var(--ds-4)) calc(-1 * var(--ds-4) + 6px); padding: 16px var(--ds-4) 12px; border-top: 2px dashed rgba(27, 20, 13, 0.5); background: rgba(150, 118, 78, 0.14); }
+.dk-foot .ds-btn--primary { flex: 1; }
