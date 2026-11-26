@@ -148,6 +148,7 @@ function loop(nowMs) {
   cam.position.set(camPos.x + mx * 0.3 + Math.sin(t * 0.5) * 0.02 + (Math.random() - 0.5) * sh, camPos.y - my * 0.14 + Math.sin(t * 0.8) * 0.015 + (Math.random() - 0.5) * sh, camPos.z);
   cam.lookAt(camLook.x + mx * 0.35, camLook.y - my * (mode === 'duel' ? 0.55 : 0.2), camLook.z);
   cam.rotation.z += (Math.random() - 0.5) * sh * 0.15;
+  if (window.__CAMOVR__) { const o = window.__CAMOVR__; cam.position.set(...o.pos); cam.lookAt(...o.look); } // testes: câmera fixa
   gfx.render(R.scene, cam);
 }
 boot().catch((e) => { console.error(e); document.getElementById('boot-line').textContent = `Erro ao abrir o caixa: ${e.message}`; });

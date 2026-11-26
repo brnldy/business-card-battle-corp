@@ -96,21 +96,84 @@ function bulged(w, h, depth) {
 // tinge os materiais PBR de um modelo (escurecer, limpar, etc.)
 function tune(o, fn) { o.traverse((c) => { if (c.isMesh) (Array.isArray(c.material) ? c.material : [c.material]).forEach((m) => fn(m, c)); }); return o; }
 
-// ───────── o Rival: corpo de terno (esqueleto posado) + aparelho de tubo no lugar da cabeça ─────────
+// ───────── o Rival: corpo de terno (esqueleto posado) + cabeça ─────────
+// A cada partida o rival é sorteado entre 8 "looks": o cabeça de monitor de sempre e 7 pessoas (3 homens, 3 mulheres,
+// 1 idoso), todos com o mesmo terno escuro e o crachá da empresa rival. Os homens usam o corpo Business Man e as
+// mulheres o Formal Woman (Quaternius, CC0, mesmo esqueleto e animações). Barba, bigode, óculos e penteados extras
+// são peças low poly presas ao osso da cabeça.
 // tela (em unidades locais do modelo): centro x/y, largura, altura, z da frente
 const HEADS = {
   Television_01: { scale: 4.4, screen: [-0.062, 0.243, 0.372, 0.3, 0.2], bulge: 0.018 },
 };
+export const RIVAL_LOOKS = {
+  tv:      { body: 'business_man', tv: true },
+  barba:   { body: 'business_man', skin: '#7a4a2a', hair: '#15110e', bald: true, beard: '#15110e' },                    // careca, barba preta, pele marrom
+  loiro:   { body: 'business_man', skin: '#f0d2b6', hair: '#d8b25a' },                                    // cabelo curto loiro, sem barba, pele branca
+  oculos:  { body: 'business_man', skin: '#c08a60', hair: '#17120e', glasses: '#0e0c0a' },                // cabelo curto preto, óculos, pele marrom clara
+  chanel:  { body: 'business_woman', skin: '#f2d6be', hair: '#a8401c', style: 'bob' },                     // chanel ruivo, pele branca
+  preso:   { body: 'business_woman', skin: '#7a4a2a', hair: '#141010', style: 'tied' },                    // cabelo preso preto, pele marrom
+  longo:   { body: 'business_woman', skin: '#c08a60', hair: '#141010', style: 'long' },                    // cabelo longo preto, pele marrom clara
+  idoso:   { body: 'business_man', skin: '#e2c48e', hair: '#e6e2d6', mustache: '#e6e2d6', old: true },    // pele amarela, cabelo e bigode brancos
+};
+const LOOK_UP = -0.45; // quanto as pessoas levantam o rosto para encarar o jogador (radianos)
+const SUIT = '#1d2026', SHIRT = '#a9a5a0', TIE = '#4a1512';
+// paleta do Business Man: 8 faixas (terno, camisa, gravata, pele, cabelo, cabelo, …); troca só pele e cabelo
+function manPalette(srcMap, look) {
+  const img = srcMap?.image, W = 32, H = 4, c = document.createElement('canvas'); c.width = W; c.height = H;
+  const g = c.getContext('2d'); if (img) g.drawImage(img, 0, 0, W, H);
+  const hair = look.hair === 'skin' ? look.skin : look.hair;
+  [[3, look.skin], [4, hair], [5, hair]].forEach(([k, col]) => { if (col) { g.fillStyle = col; g.fillRect(k * 4, 0, 4, H); } });
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.magFilter = t.minFilter = THREE.NearestFilter; t.flipY = false; t.generateMipmaps = false;
+  return t;
+}
 function buildRival(R) {
+  // crachá com o nome da empresa rival (uma textura só, usada por todos os looks)
+  const bc = document.createElement('canvas'); bc.width = 96; bc.height = 128;
+  const badgeTex = new THREE.CanvasTexture(bc); badgeTex.colorSpace = THREE.SRGBColorSpace;
+  R.badgeMat = new THREE.MeshLambertMaterial({ map: badgeTex, emissive: 0xffffff, emissiveMap: badgeTex, emissiveIntensity: 0.25 });
+  R.setBadge = (name) => {
+    const g = bc.getContext('2d'); g.fillStyle = '#eef2ea'; g.fillRect(0, 0, 96, 128);
+    g.fillStyle = '#6d1410'; g.fillRect(0, 0, 96, 22); g.fillStyle = '#eef2ea'; g.font = `700 11px ${TX.SANS}`; g.textAlign = 'center'; g.fillText('RIVAL', 48, 15);
+    g.fillStyle = '#c9d2c5'; g.fillRect(24, 32, 48, 44); g.fillStyle = '#1f2b25'; g.fillRect(32, 40, 32, 22); g.fillStyle = '#9fe8ff'; g.fillRect(38, 47, 6, 5); g.fillRect(52, 47, 6, 5); g.fillStyle = '#1f2b25'; g.fillRect(44, 64, 8, 8);
+    g.fillStyle = '#1f2b25'; g.font = `700 10px ${TX.SANS}`; let n = name; while (g.measureText(n).width > 84 && n.length > 3) n = n.slice(0, -1); g.fillText(n, 48, 94);
+    for (let i = 0; i < 16; i++) g.fillRect(14 + i * 4.4, 106, i % 3 ? 2 : 3, 12);
+    badgeTex.needsUpdate = true;
+  };
+  R.setBadge('—');
+  const cache = new Map();
+  /** troca o rival da mesa (monta na primeira vez e guarda) */
+  R.setRivalLook = (key) => {
+    if (!RIVAL_LOOKS[key]) key = 'tv';
+    if (R.opp) R.opp.group.visible = false;
+    let o = cache.get(key); if (!o) { o = makeRival(R, RIVAL_LOOKS[key]); cache.set(key, o); }
+    o.group.visible = true; R.opp = o; R.oppLook = key;
+    return o;
+  };
+  R.setRivalLook('tv');
+  // testes: monta um look avulso, sem guardar (window.__R__.previewLook({...}))
+  R.previewLook = (look) => { if (R.opp) R.opp.group.visible = false; const o = makeRival(R, look); o.group.visible = true; R.opp = o; return o; };
+}
+function makeRival(R, look) {
   const opp = new THREE.Group(); R.scene.add(opp);
   const S = 7.0, baseY = -9.0;
   opp.position.set(0, baseY, -(TABLE.d / 2 + 1.55));
-  const man = model('business_man'); man.scale.setScalar(S); opp.add(man);
+  const man = model(look.body); man.scale.setScalar(S); opp.add(man);
   const bones = {};
   man.traverse((c) => {
     if (c.isBone) bones[c.name] = c;
-    if (c.isSkinnedMesh) { c.frustumCulled = false; if (/Head/.test(c.name)) c.visible = false; }
+    if (c.isSkinnedMesh) { c.frustumCulled = false; if (look.tv && /Head/.test(c.name)) c.visible = false; }
   });
+  // roupa igual para todos (terno escuro); pele e cabelo de cada pessoa
+  if (look.body === 'business_man' && !look.tv) { let pal = null; man.traverse((c) => { if (c.isMesh) { pal ??= manPalette(c.material.map, look); c.material.map = pal; } }); }
+  // Formal Woman: "Red" é o cabelo (na cabeça) e o sapato (nos pés); "Brown" são sobrancelhas e olhos
+  if (look.body === 'business_woman') tune(man, (m, c) => { const col = { Skin: look.skin, Red: /Head/.test(c.name) ? look.hair : '#141210', Brown: '#1c1512', LimeGreen: SUIT, Gold: SHIRT }[m.name]; if (col) m.color.set(col); });
+  // peças da cabeça: pele e cabelo (no Business Man, pela faixa da paleta; na Formal Woman, pelo material)
+  const headParts = []; man.traverse((c) => { if (c.isSkinnedMesh && /Head/.test(c.name)) headParts.push(c); });
+  const band = (c) => Math.floor(c.geometry.attributes.uv.getX(0) * 8);
+  const skinPart = headParts.find((c) => (look.body === 'business_woman' ? c.material.name === 'Skin' : band(c) === 3));
+  const hairPart = headParts.find((c) => (look.body === 'business_woman' ? c.material.name === 'Red' : band(c) === 5));
+  if (!look.tv && look.bald && hairPart) hairPart.visible = false;
+  if (!look.tv && (look.style === 'bob' || look.style === 'tied') && hairPart && skinPart) cutHair(hairPart, skinPart, look.style);
   tune(man, (m) => { m.roughness = 0.9; m.metalness = 0; m.color.multiplyScalar(0.7); });
   // pose por cinemática inversa: em pé atrás da mesa, levemente curvado, mãos apoiadas no tampo
   const v1 = new THREE.Vector3(), v2 = new THREE.Vector3(), q1 = new THREE.Quaternion(), q2 = new THREE.Quaternion();
@@ -134,7 +197,7 @@ function buildRival(R) {
     aim(a.lo, wpos(a.wr), S.clone().addScaledVector(dir, d));
     if (a.tip) { const W = wpos(a.wr); aim(a.wr, wpos(a.tip), W.clone().add(handDir)); rotWorld(a.wr, new THREE.Quaternion().setFromAxisAngle(handDir.clone().normalize(), roll)); }
   };
-  R.armCfg = { target: [1.34, 0.3, -3.3], pole: [0.9, -0.5, -1.0], hand: [-0.25, -0.05, 1.0], roll: 1.45 };
+  R.armCfg ??= { target: [1.34, 0.3, -3.3], pole: [0.9, -0.5, -1.0], hand: [-0.25, -0.05, 1.0], roll: 1.45 };
   const poseArms = (g0 = 0, g1 = 0) => {
     const C = R.armCfg;
     ARM.forEach((a, i) => {
@@ -142,61 +205,125 @@ function buildRival(R) {
       solveArm(a, new THREE.Vector3(C.target[0] * sx - sx * 0.35 * g, C.target[1] + 0.55 * g, C.target[2] + 0.55 * g), new THREE.Vector3(C.pole[0] * sx, C.pole[1], C.pole[2]), new THREE.Vector3(C.hand[0] * sx, C.hand[1], C.hand[2]), C.roll * sx);
     });
   };
-  R.poseArms = poseArms;
   poseArms();
 
-  // cabeça
-  const key = 'Television_01', H = HEADS[key];
-  const head = new THREE.Group();
-  const tv = model(key); tv.scale.setScalar(H.scale); head.add(tv);
-  tune(tv, (m) => { m.envMapIntensity = 0.6; m.color.multiplyScalar(0.9); });
-  const [sx, sy, sw, shh, sz] = H.screen, faceMat = faceMaterial();
-  const screen = mesh(bulged(sw * H.scale, shh * H.scale, H.bulge * H.scale), faceMat); screen.position.set(sx * H.scale, sy * H.scale, sz * H.scale);
-  const glass = mesh(bulged(sw * H.scale, shh * H.scale, H.bulge * H.scale * 1.1), glassMaterial()); glass.position.copy(screen.position); glass.position.z += 0.01;
-  head.add(screen, glass);
-  const neck = cyl(0.26, 0.32, 0.5, 12, M(0x3a403c)); neck.position.y = -0.2; head.add(neck);
-  const plateR = cyl(0.62, 0.72, 0.1, 18, M(0x2a2620)); plateR.position.y = 0.0; head.add(plateR);
-  [[-0.5, 0x15181a], [0.42, 0x15181a], [0.08, 0x6d1410]].forEach(([x, c], i) => {
-    const zb = -0.9 - i * 0.05, curve = new THREE.CatmullRomCurve3([new THREE.Vector3(x, 0.9, zb), new THREE.Vector3(x * 1.3, 0.2, zb - 0.45), new THREE.Vector3(x * 0.9, -0.5, zb - 0.1), new THREE.Vector3(x * 0.5, -1.0, -0.35)]);
-    head.add(mesh(new THREE.TubeGeometry(curve, 14, 0.04, 6), M(c)));
-  });
-  shadow(head); screen.castShadow = false; glass.castShadow = false;
-  const hb = bones.Head ?? bones.Neck, hp = new THREE.Vector3();
-  opp.updateMatrixWorld(true);
-  if (hb) hb.getWorldPosition(hp); else hp.set(0, 1.6, opp.position.z);
-  head.position.copy(opp.worldToLocal(hp.clone())); head.position.y += 0.1;
-  opp.add(head);
-  // crachá com o nome da empresa rival
-  const bc = document.createElement('canvas'); bc.width = 96; bc.height = 128;
-  const badgeTex = new THREE.CanvasTexture(bc); badgeTex.colorSpace = THREE.SRGBColorSpace;
-  const badge = mesh(new THREE.PlaneGeometry(0.4, 0.53), new THREE.MeshLambertMaterial({ map: badgeTex, emissive: 0xffffff, emissiveMap: badgeTex, emissiveIntensity: 0.25 }));
+  let head, faceU, headRest, headBone = bones.Head ?? bones.Neck ?? null, headQ0 = headBone?.quaternion.clone();
+  if (look.tv) {
+    const key = 'Television_01', H = HEADS[key];
+    head = new THREE.Group();
+    const tv = model(key); tv.scale.setScalar(H.scale); head.add(tv);
+    tune(tv, (m) => { m.envMapIntensity = 0.6; m.color.multiplyScalar(0.9); });
+    const [sx, sy, sw, shh, sz] = H.screen, faceMat = faceMaterial();
+    const screen = mesh(bulged(sw * H.scale, shh * H.scale, H.bulge * H.scale), faceMat); screen.position.set(sx * H.scale, sy * H.scale, sz * H.scale);
+    const glass = mesh(bulged(sw * H.scale, shh * H.scale, H.bulge * H.scale * 1.1), glassMaterial()); glass.position.copy(screen.position); glass.position.z += 0.01;
+    head.add(screen, glass);
+    const neck = cyl(0.26, 0.32, 0.5, 12, M(0x3a403c)); neck.position.y = -0.2; head.add(neck);
+    const plateR = cyl(0.62, 0.72, 0.1, 18, M(0x2a2620)); plateR.position.y = 0.0; head.add(plateR);
+    [[-0.5, 0x15181a], [0.42, 0x15181a], [0.08, 0x6d1410]].forEach(([x, c], i) => {
+      const zb = -0.9 - i * 0.05, curve = new THREE.CatmullRomCurve3([new THREE.Vector3(x, 0.9, zb), new THREE.Vector3(x * 1.3, 0.2, zb - 0.45), new THREE.Vector3(x * 0.9, -0.5, zb - 0.1), new THREE.Vector3(x * 0.5, -1.0, -0.35)]);
+      head.add(mesh(new THREE.TubeGeometry(curve, 14, 0.04, 6), M(c)));
+    });
+    shadow(head); screen.castShadow = false; glass.castShadow = false;
+    const hb = bones.Head ?? bones.Neck, hp = new THREE.Vector3();
+    opp.updateMatrixWorld(true);
+    if (hb) hb.getWorldPosition(hp); else hp.set(0, 1.6, opp.position.z);
+    head.position.copy(opp.worldToLocal(hp.clone())); head.position.y += 0.1;
+    opp.add(head);
+
+    faceU = faceMat.uniforms; headRest = head.position.clone();
+  } else {
+    // cabeça de verdade: um "pivô" invisível recebe os movimentos do duelo (acenar, olhar) e o tick passa para o osso
+    head = new THREE.Object3D(); opp.add(head);
+    const v = (x) => ({ value: x });
+    faceU = { uDead: v(0), uOn: v(1), uThink: v(0), uBlink: v(0), uLook: v(new THREE.Vector2()), uGlitch: v(0), uTalk: v(0), uMood: v(0) };
+    opp.updateMatrixWorld(true);
+    const hb = new THREE.Box3().expandByObject(skinPart ?? headParts[0], true);
+    headRest = opp.worldToLocal(hb.getCenter(new THREE.Vector3()));
+    if (headBone) addHeadParts(headBone, hb, look);
+  }
+  // crachá preso no peito
+  const badge = mesh(new THREE.PlaneGeometry(0.4, 0.53), R.badgeMat);
   const cb = bones.Chest ?? bones.Torso; const cp = new THREE.Vector3(); if (cb) cb.getWorldPosition(cp);
   badge.position.copy(opp.worldToLocal(cp.clone())).add(new THREE.Vector3(-0.72, 0.55, 0.98)); badge.rotation.x = -0.22; opp.add(badge);
-  R.badge = badge;
-  R.setBadge = (name) => {
-    const g = bc.getContext('2d'); g.fillStyle = '#eef2ea'; g.fillRect(0, 0, 96, 128);
-    g.fillStyle = '#6d1410'; g.fillRect(0, 0, 96, 22); g.fillStyle = '#eef2ea'; g.font = `700 11px ${TX.SANS}`; g.textAlign = 'center'; g.fillText('RIVAL', 48, 15);
-    g.fillStyle = '#c9d2c5'; g.fillRect(24, 32, 48, 44); g.fillStyle = '#1f2b25'; g.fillRect(32, 40, 32, 22); g.fillStyle = '#9fe8ff'; g.fillRect(38, 47, 6, 5); g.fillRect(52, 47, 6, 5); g.fillStyle = '#1f2b25'; g.fillRect(44, 64, 8, 8);
-    g.fillStyle = '#1f2b25'; g.font = `700 10px ${TX.SANS}`; let n = name; while (g.measureText(n).width > 84 && n.length > 3) n = n.slice(0, -1); g.fillText(n, 48, 94);
-    for (let i = 0; i < 16; i++) g.fillRect(14 + i * 4.4, 106, i % 3 ? 2 : 3, 12);
-    badgeTex.needsUpdate = true;
-  };
-  R.setBadge('—');
   // âncora da mão de cartas: entre os dois punhos
   const wl = new THREE.Vector3(), wr = new THREE.Vector3();
   bones.WristL?.getWorldPosition(wl); bones.WristR?.getWorldPosition(wr);
   const anchor = new THREE.Vector3(0, 0.6, Math.min(-1.95, (wl.z + wr.z) / 2 + 0.8));
   const arms = [new THREE.Object3D(), new THREE.Object3D()];
   const chestRest = bones.Chest?.quaternion.clone(), qx = new THREE.Quaternion(), X = new THREE.Vector3(1, 0, 0);
-  R.opp = {
-    group: opp, head, face: faceMat.uniforms, arms, bones, baseY, handAnchor: anchor, headRest: head.position.clone(),
+  const qh = new THREE.Quaternion(), eh = new THREE.Euler();
+  return {
+    group: opp, head, face: faceU, arms, bones, baseY, handAnchor: anchor, headRest, tv: !!look.tv,
     // respiração no peito; as mãos ficam plantadas na mesa (IK) e sobem no gesto de jogar carta
     tick(t) {
       if (chestRest && bones.Chest) { bones.Chest.quaternion.copy(chestRest).multiply(qx.setFromAxisAngle(X, Math.sin(t * 1.1) * 0.014)); }
       opp.updateMatrixWorld(true);
       poseArms(Math.min(1, -arms[0].rotation.x * 4.5), Math.min(1, -arms[1].rotation.x * 4.5));
+      // pessoas: a cabeça segue o pivô (duel.js) e, derrotada, tomba para a frente
+      if (!look.tv && headBone && headQ0) {
+        const dead = faceU.uDead.value;
+        eh.set((head.rotation.x - 0.14) * 0.8 + LOOK_UP * (1 - dead) + dead * 0.55, head.rotation.y * 0.8, head.rotation.z * 0.8); // encara o jogador; derrotada, tomba
+        headBone.quaternion.copy(headQ0).multiply(qh.setFromEuler(eh));
+      }
     },
   };
+}
+
+
+// corta o cabelo longo da Formal Woman: tudo abaixo da linha de corte sobe até ela (chanel na altura do queixo;
+// preso na altura das orelhas, mais rente à cabeça). Mexe numa cópia da malha, na pose de origem.
+function cutHair(hair, skin, style) {
+  hair.updateMatrixWorld(true); skin.updateMatrixWorld(true);
+  const v = new THREE.Vector3(), sb = new THREE.Box3(), sp = skin.geometry.attributes.position;
+  for (let i = 0; i < sp.count; i++) sb.expandByPoint(v.fromBufferAttribute(sp, i).applyMatrix4(skin.matrixWorld));
+  const low = sb.min.y, H = sb.max.y - low, cc = sb.getCenter(new THREE.Vector3());
+  const cut = style === 'bob' ? low + H * 0.2 : low + H * 0.55;
+  hair.geometry = hair.geometry.clone();
+  const p = hair.geometry.attributes.position, M = hair.matrixWorld, Mi = M.clone().invert();
+  for (let i = 0; i < p.count; i++) {
+    v.fromBufferAttribute(p, i).applyMatrix4(M);
+    if (v.y < cut) {
+      v.y = cut + (v.y - cut) * 0.06;
+      if (style === 'tied') { v.x = cc.x + (v.x - cc.x) * 0.88; v.z = cc.z + (v.z - cc.z) * 0.88; }
+    }
+    v.applyMatrix4(Mi); p.setXYZ(i, v.x, v.y, v.z);
+  }
+  p.needsUpdate = true; hair.geometry.computeVertexNormals(); hair.geometry.computeBoundingSphere();
+}
+
+// peças low poly da cabeça das pessoas (presas ao osso: acompanham os movimentos). hb = caixa da cabeça no mundo.
+function addHeadParts(bone, hb, look) {
+  const c = hb.getCenter(new THREE.Vector3()), sz = hb.getSize(new THREE.Vector3());
+  const W = sz.x, H = sz.y, D = sz.z, front = hb.max.z, low = hb.min.y;
+  const parts = new THREE.Group();
+  const mat = (col) => new THREE.MeshLambertMaterial({ color: new THREE.Color(col).multiplyScalar(0.75), flatShading: true });
+  const add = (geo, col, x, y, z, rx = 0, ry = 0, rz = 0) => { const m = mesh(geo, mat(col)); m.position.set(x, y, z); m.rotation.set(rx, ry, rz); m.castShadow = true; parts.add(m); return m; };
+  const bx = (w, h, d) => new THREE.BoxGeometry(w, h, d);
+  if (look.beard) { // barba cheia: queixo, bochechas e bigode
+    add(bx(W * 0.78, H * 0.2, D * 0.3), look.beard, c.x, low + H * 0.1, front - D * 0.12);
+    add(bx(W * 0.16, H * 0.3, D * 0.5), look.beard, c.x - W * 0.38, low + H * 0.2, front - D * 0.28);
+    add(bx(W * 0.16, H * 0.3, D * 0.5), look.beard, c.x + W * 0.38, low + H * 0.2, front - D * 0.28);
+    add(bx(W * 0.46, H * 0.07, D * 0.12), look.beard, c.x, low + H * 0.3, front - D * 0.02);
+  }
+  if (look.mustache) { // bigode branco
+    add(bx(W * 0.5, H * 0.07, D * 0.14), look.mustache, c.x, low + H * 0.3, front - D * 0.02);
+    add(bx(W * 0.12, H * 0.12, D * 0.1), look.mustache, c.x - W * 0.25, low + H * 0.26, front - D * 0.06, 0, 0, 0.4);
+    add(bx(W * 0.12, H * 0.12, D * 0.1), look.mustache, c.x + W * 0.25, low + H * 0.26, front - D * 0.06, 0, 0, -0.4);
+  }
+  if (look.glasses) { // armação quadrada
+    const y = low + H * 0.47, z = front + D * 0.02, lw = W * 0.26, lh = H * 0.12, t = W * 0.03;
+    for (const sx of [-1, 1]) {
+      const x = c.x + sx * W * 0.17;
+      add(bx(lw, t, t), look.glasses, x, y + lh / 2, z); add(bx(lw, t, t), look.glasses, x, y - lh / 2, z);
+      add(bx(t, lh, t), look.glasses, x - lw / 2, y, z); add(bx(t, lh, t), look.glasses, x + lw / 2, y, z);
+      add(bx(t, t, D * 0.5), look.glasses, c.x + sx * W * 0.31, y + lh / 2, z - D * 0.25);
+    }
+    add(bx(W * 0.08, t, t), look.glasses, c.x, y + lh * 0.25, z);
+  }
+  if (look.style === 'tied') { // coque alto atrás
+    add(new THREE.IcosahedronGeometry(W * 0.3, 0), look.hair, c.x, low + H * 0.86, hb.min.z - D * 0.1);
+  }
+  bone.attach(parts);
 }
 
 // ───────── salas ─────────

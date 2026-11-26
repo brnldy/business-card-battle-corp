@@ -1,6 +1,6 @@
 # Estado do projeto
 
-> Atualizado em 23/11/2026. Lido no começo de cada sessão de trabalho.
+> Atualizado em 26/11/2026. Lido no começo de cada sessão de trabalho.
 
 ## Repositório unificado (23/11/2026) — github.com/brnldy/business-card-battle-corp
 O projeto passou a viver neste repositório, juntando as duas frentes:
@@ -11,6 +11,15 @@ O projeto passou a viver neste repositório, juntando as duas frentes:
 - **Áudio:** as trilhas do autor são o padrão. Os efeitos gravados pelo autor tocam onde existe arquivo e os gerados por código preenchem o resto, sempre (a opção "Efeitos: gravados / gerados" saiu das configurações em 24/11). A opção "Trilha: original / gerada" também saiu, junto com a trilha gerada por código: a música é sempre a do autor.
 - A versão Phaser e a 3D feita aqui (descritas abaixo) ficaram guardadas num ramo local, `historico-yugioro`, que não sobe para o GitHub. A estética oficial é a do remake.
 - Regra de trabalho: tudo que fizermos sobe neste repositório.
+
+### Saves, animações, campanha e rivais (26/11/2026)
+- **Saves em 3 gavetas** (`remake/src/save.js`): menu com *Continuar expediente*, *Novo jogo* e *Carregar*; no lobby, botão *Salvar / Carregar* (tecla S). Cada gaveta é uma empresa inteira (nome, cartas, PATRIMÔNIO, campanha). A gaveta em uso salva sozinha a cada mudança; *Salvar aqui* copia para outra gaveta. Salvar só no lobby (decisão do autor). O progresso antigo virou a gaveta 1.
+- **Animações próprias das cartas** (`remake/src/cardfx.js`), em 3D low poly, só as aprovadas pelo autor: palma do Bruno, cruz do Paulo (em defesa), celular REC do Lucas, bocarra da Tênia, carimbo "FALTOU UM TCHAN!" da Thays, nuvem do Chat GPT, pilha AA descarregando e caneca de café. Saíram: olho da Duda, post do Filipe, ×2 do Ralph e etiqueta do pão.
+- **Ar Condicionado no Talo** (`remake/src/frost.js`): a tela esfria e congela mais a cada turno do dono (4 níveis) e descongela ao contrário quando a carta sai. Usa as imagens de gelo do autor (`assets-originais/ui/1..4.png` → `remake/assets/img/FROZEN_1..4.jpg`) em modo *screen*, dentro do filtro de imagem.
+- **Campanha de 30 batalhas** (`src/meta/campaign.ts`, `data/campaign.json`, 6 testes em `tests/campaign.test.ts`): 29 empresas fictícias sorteadas por Novo jogo + **O CONSELHO** como chefe na 30ª. 1–10: deck das suas cartas e IA que erra 22%; 11–20: decks do mercado; 21–29: decks temáticos e IA afiada (`SHARP_WEIGHTS` em `src/ai/ai.ts`); 30: deck mais forte achado pelo simulador e trilha do duelo mais lenta e grave. Derrota = tenta de novo. Recompensa ×1 / ×1,5 / ×2 / ×4. Calibragem em `docs/CAMPAIGN.md`.
+- **Cutscene final: MARCAÇÃO.** `ui.ending()` mostra "[CUTSCENE FINAL · EM PRODUÇÃO]" quando a campanha termina; o autor vai mandar a ideia. Depois, a sala de reunião vira "reuniões livres".
+- **Rivais da mesa** (`remake/src/scene.js → RIVAL_LOOKS`): sorteados a cada partida entre o cabeça de monitor e 7 pessoas de terno com o crachá da empresa: careca de barba preta (pele marrom), loiro sem barba (pele branca), cabelo preto de óculos (pele marrom clara), chanel ruivo (pele branca), cabelo preso preto (pele marrom), cabelo longo preto (pele marrom clara) e idoso de pele amarela, cabelo e bigode brancos. Mulheres usam o modelo Formal Woman (Quaternius, CC0, baixado de poly.pizza), mesmo esqueleto do Business Man. Careca = malha do cabelo escondida; chanel e preso = cabelo longo "cortado" na malha; barba, bigode, óculos e coque são peças low poly presas ao osso da cabeça.
+- Ganchos de teste novos: `window.__STEP__(ms)` avança as animações sem a tela, `window.__CAMOVR__` fixa a câmera, `window.__R__.previewLook({...})` monta um rival avulso.
 
 ### Sons de interface (24/11/2026)
 - O lobby e as janelas (abrir área, abas, filtros, configurações, registro) ganharam um som próprio, gerado por código: um "toc" abafado de pasta de papelão, curto e grave, com leve variação de altura para não cansar (`nav`; ao fechar, `navBack`, um tom abaixo). Antes usavam o som de escolher carta.

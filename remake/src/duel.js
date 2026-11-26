@@ -16,6 +16,7 @@ import { sfx, setMusicMode } from './audio.js';
 import { settings } from './settings.js';
 import { describeEvent } from './log.js';
 import { CardFX } from './cardfx.js';
+import { RIVAL_LOOKS } from './scene.js';
 import { FrostScreen } from './frost.js';
 
 const ME = 0, OP = 1;
@@ -71,6 +72,8 @@ export class Duel {
     this.deckShown = [RULES.DECK_SIZE, RULES.DECK_SIZE];
     this.R.opp.face.uDead.value = 0; this.R.opp.face.uOn.value = 1; this.oppMood = 0;
     this.gfx.u.uFade.value = 0; this.lampOn = 1;
+    // o rival da mesa é sorteado a cada partida: o cabeça de monitor ou uma das 7 pessoas (scene.js → RIVAL_LOOKS)
+    const looks = Object.keys(RIVAL_LOOKS); this.R.setRivalLook(looks[Math.floor(Math.random() * looks.length)]);
     setMusicMode(this.plan?.boss ? 'boss' : 'duel'); this.R.setBadge(rival);
     const where = this.plan ? (this.plan.free ? 'reunião livre' : `batalha ${this.plan.stage} de ${this.plan.total} · ${this.plan.tierName}`) : '';
     this.ui.log(this.training ? 'Treino com o estagiário · não vale PATRIMÔNIO' : `Partida contra ${rival}${where ? ` · ${where}` : ''} · protocolo ${seed.toString(36).toUpperCase()}`);
@@ -1008,7 +1011,7 @@ export class Duel {
     this.oppNod = Math.max(0, this.oppNod - dt * 2.4);
     o.head.rotation.set(0.14 + Math.sin(this.oppNod * Math.PI) * 0.14 + Math.sin(t * 0.7) * 0.015, f.uLook.value.x * 0.16 + Math.sin(t * 0.43) * 0.03, Math.sin(t * 0.31) * 0.035 + this.oppGlitch * (Math.random() - 0.5) * 0.1);
     R.crtLight.position.set(o.group.position.x, o.group.position.y + o.headRest.y + 1.2, o.group.position.z + 2.4);
-    R.crtLight.intensity = (4 + Math.sin(t * 40) * 0.25 + this.oppGlitch * 6) * f.uOn.value;
+    R.crtLight.intensity = (4 + Math.sin(t * 40) * 0.25 + this.oppGlitch * 6) * f.uOn.value * (o.tv ? 1 : 0.25); // pessoas: só um resto da luz do monitor
     R.crtLight.color.setRGB(0.62 + Math.max(0, f.uMood.value) * 0.4, 0.92 - Math.max(0, f.uMood.value) * 0.6, 1 - Math.max(0, f.uMood.value) * 0.7);
     // luz: no porão a luminária é um pêndulo amortecido que balança com os impactos; no andar seccionado ela é fixa
     if (TH.lamp.sway) {
