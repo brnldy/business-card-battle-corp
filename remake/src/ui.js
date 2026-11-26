@@ -3,6 +3,7 @@
 import { CARDS } from './cards.js';
 import { asset } from './assets.js';
 import { settings, cleanName, MAX_NAME } from './settings.js';
+import { save } from './save.js';
 import { sfx, applyVolumes, unlockAudio } from './audio.js';
 import * as C from './hud/components.js';
 
@@ -10,6 +11,9 @@ const $ = (sel, root = document) => root.querySelector(sel);
 const el = (tag, cls, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html !== undefined) e.innerHTML = html; return e; };
 const esc = C.esc;
 const { ICON } = C;
+const stamp = (ms) => { const d = new Date(ms), p = (n) => String(n).padStart(2, '0'); return `${p(d.getDate())}/${p(d.getMonth() + 1)}/${d.getFullYear()} às ${p(d.getHours())}:${p(d.getMinutes())}`; };
+/** Em que ponto da campanha um slot está, em uma linha. */
+export const slotStage = (x) => (x.done ? 'Campanha concluída' : `Batalha ${Math.min(30, (x.stage ?? 0) + 1)} de 30`);
 // jogadas que aparecem na faixa do topo (o resto fica só no relatório)
 const TICKER = new Set(['summon', 'effectPlayed', 'trapSet', 'trapTriggered', 'attack', 'attackNegated', 'attackRedirected', 'destroy', 'sacrifice', 'toHand', 'toDeck', 'controlChange', 'modeChange', 'coin', 'effectExpired', 'discard', 'mill']);
 
@@ -24,7 +28,9 @@ export class UI {
           <h1>BUSINESS<br>CARD<span class="tag-word">Battle</span><small>Corp.</small></h1>
           <p class="tagline">O mundo acabou. Os investidores, não.</p>
           <nav>
-            <button data-act="start" class="primary">Iniciar expediente <kbd>Enter</kbd></button>
+            <button data-act="continue" class="primary" id="mm-continue">Continuar expediente <kbd>Enter</kbd></button>
+            <button data-act="newgame" id="mm-new">Novo jogo</button>
+            <button data-act="load" id="mm-load">Carregar</button>
             <button data-act="help">Como jogar</button>
             <button data-act="gallery">Arquivo de cartas</button>
             <button data-act="settings">Configurações</button>
@@ -89,8 +95,55 @@ export class UI {
   bootDone() { this.show('boot', false); }
   mainMenu(on) {
     this.show('menu', on);
-    const n = settings.get().companyName;
-    $('#menu-company').innerHTML = n ? `Empresa registrada: <b>${esc(n)}</b>` : '';
+    // sem nenhum slot salvo, "Novo jogo" vira o botão principal e "Continuar"/"Carregar" somem
+    const last = save.lastSlot(), info = last ? save.slots()[last - 1] : null, any = save.hasAny();
+    $('#mm-continue').classList.toggle('hidden', !info);
+    $('#mm-load').classList.toggle('hidden', !any);
+    const nb = $('#mm-new'); nb.classList.toggle('primary', !info); nb.innerHTML = info ? 'Novo jogo' : 'Novo jogo <kbd>Enter</kbd>';
+    $('#menu-company').innerHTML = info ? `Último expediente: <b>${esc(info.name)}</b> · ${esc(slotStage(info))}` : '';
+  }
+  /**
+   * As 3 gavetas de progresso. mode: 'new' (Novo jogo), 'load' (Carregar, no menu) ou 'lobby' (Salvar/Carregar no lobby).
+   * on: { pick(n) → começar empresa nova no slot n, load(n) → passar a jogar no slot n, saved(n) → depois de salvar }
+   */
+  slots(mode, on = {}) {
+    const T = { new: ['Novo jogo · escolha uma gaveta', 'Onde abrir a empresa?'], load: ['Arquivo de empresas', 'Carregar expediente'], lobby: ['Arquivo de empresas · o slot em uso salva sozinho', 'Salvar ou carregar'] }[mode];
+    const card = (x) => {
+      const head = `<p class="memo">Gaveta ${x.n}${x.current ? ' · em uso' : ''}</p>`;
+      if (x.empty) {
+        const btn = mode === 'new' ? `<button class="primary" data-sl="pick" data-n="${x.n}">Abrir empresa aqui</button>` : mode === 'lobby' ? `<button data-sl="copy" data-n="${x.n}">Salvar aqui</button>` : '';
+        return `<article class="sl-card is-empty">${head}<h3>Gaveta vazia</h3><p class="fine">Só poeira e um clipe enferrujado.</p><footer>${btn}</footer></article>`;
+      }
+      let btns = '';
+      if (mode === 'new') btns = `<button data-sl="over" data-n="${x.n}">Sobrescrever</button>`;
+      else if (mode === 'load') btns = `<button class="primary" data-sl="load" data-n="${x.n}">Carregar</button><button class="ghost" data-sl="del" data-n="${x.n}">Apagar</button>`;
+      else if (x.current) btns = `<button class="primary" data-sl="save" data-n="${x.n}">Salvar agora</button>`;
+      else btns = `<button class="primary" data-sl="load" data-n="${x.n}">Carregar</button><button data-sl="copy" data-n="${x.n}">Salvar aqui</button>`;
+      return `<article class="sl-card ${x.current ? 'is-current' : ''}">${head}<h3>${esc(x.name)}</h3>
+        <dl><div><dt>Campanha</dt><dd>${esc(slotStage(x))}</dd></div><div><dt>Patrimônio</dt><dd>$ ${Math.round(x.patrimonio).toLocaleString('pt-BR')}</dd></div><div><dt>Vitórias</dt><dd>${x.wins}</dd></div></dl>
+        <p class="fine">Salvo em ${esc(stamp(x.savedAt))}</p><footer>${btns}</footer></article>`;
+    };
+    const render = () => {
+      const box = this.modal(`<div class="memo">${esc(T[0])}</div><h2>${esc(T[1])}</h2><div class="sl-grid">${save.slots().map(card).join('')}</div><nav><button data-close>Voltar</button></nav>`, 'wide slots');
+      box.onclick = (e) => {
+        const b = e.target.closest('[data-sl]'); if (!b) return;
+        const n = Number(b.dataset.n), x = save.slots()[n - 1], back = () => { this.slots(mode, on); };
+        sfx('nav');
+        switch (b.dataset.sl) {
+          case 'pick': return on.pick?.(n);
+          case 'over': return this.confirm(`Sobrescrever a gaveta ${n}?`, `${x.name} e todo o progresso dela vão para a trituradora. Não tem volta.`, 'SOBRESCREVER', () => on.pick?.(n), 'Voltar');
+          case 'load': return on.load?.(n);
+          case 'del': return this.confirm(`Apagar a gaveta ${n}?`, `${x.name} e todo o progresso dela serão apagados para sempre.`, 'APAGAR', () => { save.remove(n); this.mainMenu(!$('#menu').classList.contains('hidden')); back(); }, 'Voltar');
+          case 'save': { const t = save.commit(); sfx('trapSet'); render(); on.saved?.(n, t); return undefined; }
+          case 'copy': {
+            const go = () => { const t = save.copyTo(n); sfx('trapSet'); back(); on.saved?.(n, t); };
+            return x.empty ? go() : this.confirm(`Salvar por cima da gaveta ${n}?`, `${x.name} será substituída pelo progresso atual, e você passa a jogar nessa gaveta.`, 'SALVAR POR CIMA', go, 'Voltar');
+          }
+          default: return undefined;
+        }
+      };
+    };
+    render();
   }
   hud(on) {
     this.show('hud', on);
@@ -106,8 +159,7 @@ export class UI {
     const box = this.modal(`<h2>${esc(title)}</h2><p>${esc(body)}</p><nav><button data-close>${esc(no)}</button><button id="cf-yes" class="primary">${esc(yes)}</button></nav>`);
     $('#cf-yes', box).onclick = () => { $('#modal').classList.add('hidden'); $('#modal').innerHTML = ''; onYes(); };
   }
-  nameEntry(onDone) {
-    const cur = settings.get().companyName ?? '';
+  nameEntry(onDone, cur = '') {
     const box = this.modal(`
       <div class="memo">Formulário 01-A · registro de empresa</div>
       <h2>Como se chama a sua empresa?</h2>
@@ -117,7 +169,7 @@ export class UI {
       <nav><button data-close>Voltar</button><button id="name-ok" class="primary">Assinar e entrar</button></nav>`, 'form');
     const inp = $('#name-in', box), ok = $('#name-ok', box);
     const sync = () => { ok.disabled = !cleanName(inp.value); };
-    const go = () => { const n = cleanName(inp.value); if (!n) return; settings.set({ companyName: n }); sfx('start'); this.onModalClose = null; $('#modal').classList.add('hidden'); $('#modal').innerHTML = ''; onDone(n); };
+    const go = () => { const n = cleanName(inp.value); if (!n) return; sfx('start'); this.onModalClose = null; $('#modal').classList.add('hidden'); $('#modal').innerHTML = ''; onDone(n); };
     inp.addEventListener('input', () => { sfx('type'); sync(); });
     inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') go(); e.stopPropagation(); });
     ok.onclick = go; sync(); setTimeout(() => { inp.focus(); inp.select(); }, 30);

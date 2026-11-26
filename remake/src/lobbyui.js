@@ -38,7 +38,7 @@ export class LobbyUI {
     const root = document.createElement('div'); root.id = 'lobby'; root.className = 'hidden';
     root.innerHTML = `
       <div class="lb-badge" data-a="open" data-id="profile" title="Perfil da empresa"></div>
-      <div class="lb-top"><button class="lb-exit" data-a="exit">← Sair para a rua</button></div>
+      <div class="lb-top"><button class="lb-exit" data-a="slots" title="Salvar ou carregar (S)">Salvar / Carregar</button><button class="lb-exit" data-a="exit">← Sair para a rua</button></div>
       <div class="lb-labels"></div>
       <nav class="lb-nav"></nav>
       <div class="lb-hint">Clique num objeto da sala ou use os números do teclado</div>
@@ -65,6 +65,7 @@ export class LobbyUI {
       if (!this.on || e.target.tagName === 'INPUT' || !$('#modal').classList.contains('hidden')) return;
       if (e.key === 'Escape') { if (this.pack) return; if (this.panel) { this.close(); e.stopPropagation(); } return; }
       if (this.pack) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); this.packNext(); } return; }
+      if (!this.panel && (e.key === 's' || e.key === 'S')) return this.openSlots();
       const n = Number(e.key); if (!this.panel && n >= 1 && n <= AREAS.length) this.open(AREAS[n - 1][0]);
       if (this.panel === 'duel' && e.key === 'Enter') this.startDuel(false);
     });
@@ -79,7 +80,7 @@ export class LobbyUI {
     this.sync();
   }
   get s() { return save.get(); }
-  company() { return settings.get().companyName ?? 'SUA EMPRESA'; }
+  company() { return save.company() ?? 'SUA EMPRESA'; }
   /** atualiza crachá, avisos de "tem coisa nova" e a tela aberta */
   sync() {
     const s = this.s;
@@ -151,6 +152,7 @@ export class LobbyUI {
       case 'open': return this.open(id, { tab: b.dataset.tab });
       case 'close': return this.close();
       case 'exit': sfx('navBack'); return this.actions.exit();
+      case 'slots': return this.openSlots();
       case 'tab': this.tab[this.panel] = id; sfx('nav'); return this.render();
       case 'filter': this.filter = id; sfx('nav'); return this.render();
       // decks
@@ -177,10 +179,19 @@ export class LobbyUI {
       case 'duel': return this.startDuel(false);
       case 'train': return this.startDuel(true);
       // perfil
-      case 'rename': return this.ui.nameEntry(() => { this.sync(); this.toast('Razão social alterada.', 'good'); });
-      case 'wipe': return this.ui.confirm('Recomeçar do zero?', 'Coleção, decks, PATRIMÔNIO, histórico e conquistas serão apagados para sempre.', 'APAGAR TUDO', () => { this.ed = null; save.reset(); this.toast('Ficha cadastral apagada. Bem-vindo de novo.', 'bad'); });
+      case 'rename': return this.ui.nameEntry((n) => { save.rename(n); this.toast('Razão social alterada.', 'good'); }, save.company() ?? '');
+      case 'wipe': return this.ui.confirm('Recomeçar do zero?', 'Coleção, decks, PATRIMÔNIO, histórico, conquistas e a campanha desta gaveta serão apagados para sempre. As outras gavetas não mudam.', 'APAGAR TUDO', () => { this.ed = null; save.reset(); this.toast('Ficha cadastral apagada. Bem-vindo de novo.', 'bad'); });
       default: return undefined;
     }
+  }
+  /** Salvar / Carregar: as 3 gavetas. Carregar troca a empresa inteira sem sair do lobby. */
+  openSlots() {
+    if (this.ed?.dirty) { sfx('deny'); this.toast('Salve ou descarte as mudanças do deck antes.', 'bad'); return; }
+    sfx('nav');
+    this.ui.slots('lobby', {
+      load: (n) => { this.ui.closeModal(); this.ed = null; this.panel = null; this.win.classList.add('hidden'); save.use(n); sfx('summon'); this.toast(`<b>${esc(this.company())}</b><span>expediente carregado da gaveta ${n}</span>`, 'good'); },
+      saved: (n) => this.toast(`<b>Progresso salvo</b><span>gaveta ${n} · ${new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span>`, 'good'),
+    });
   }
   startDuel(training) {
     if (!Meta.activeDeckValid(this.s)) { sfx('deny'); this.toast('O deck escolhido não está válido. Arrume no arquivo antes de entrar.', 'bad'); return; }

@@ -54,17 +54,19 @@ async function boot() {
   window.addEventListener('resize', onResize);
   settings.onChange(() => { onResize(); });
   ui.on({
-    // "Iniciar expediente": na primeira vez registra a empresa; depois entra direto no lobby
-    start: () => {
-      sfx('start');
-      if (settings.get().companyName) return fade(toLobby);
-      ui.mainMenu(false); ui.nameEntry(() => fade(toLobby)); ui.onModalClose = () => { if (mode === 'menu') ui.mainMenu(true); };
-      return undefined;
+    // menu: Continuar (último slot), Novo jogo (escolhe a gaveta e registra a empresa) e Carregar
+    continue: () => {
+      const n = save.lastSlot(); if (!n) return ui.h.newgame();
+      sfx('start'); save.use(n);
+      if (save.company()) return fade(toLobby);
+      return askName();
     },
+    newgame: () => { sfx('nav'); keepMenu(); ui.slots('new', { pick: (n) => askName((name) => save.create(n, name)) }); },
+    load: () => { sfx('nav'); keepMenu(); ui.slots('load', { load: (n) => { ui.closeModal(); save.use(n); sfx('start'); if (save.company()) fade(toLobby); else askName(); } }); },
     quit: () => (duel.over ? fade(toLobby) : ui.confirm('Abandonar a partida?', duel.training ? 'O treino acaba aqui. Não vale nada mesmo.' : 'A partida conta como derrota e o rival fica com o investimento.', 'ABANDONAR', () => { duel.forfeit(); fade(toLobby); }, 'Continuar jogando')),
     quit2: () => fade(toLobby),
   });
-  window.addEventListener('keydown', (e) => { if (mode === 'menu' && e.key === 'Enter' && document.getElementById('modal').classList.contains('hidden')) { unlockAudio(); ui.h.start(); } });
+  window.addEventListener('keydown', (e) => { if (mode === 'menu' && e.key === 'Enter' && document.getElementById('modal').classList.contains('hidden')) { unlockAudio(); if (save.lastSlot()) ui.h.continue(); else ui.h.newgame(); } });
   const unlock = () => { unlockAudio(); document.getElementById('unlock').classList.add('hidden'); };
   window.addEventListener('pointerdown', unlock); window.addEventListener('keydown', unlock);
   initAudio(); applyVolumes();
@@ -75,6 +77,12 @@ async function boot() {
   window.render_game_to_text = () => JSON.stringify({ mode, lobbyPanel: lobbyUi?.panel ?? null, patrimonio: save.get().patrimonio, turn: duel.state?.turn, active: duel.state?.active, phase: duel.state?.phase, busy: duel.busy, sel: duel.sel?.stage ?? null, cards: CARDS.length });
 }
 // troca de cena com um corte para o preto (a porta fecha atrás de você)
+// o menu volta a aparecer quando a janela fecha sem escolha
+function keepMenu() { ui.onModalClose = () => { if (mode === 'menu') ui.mainMenu(true); }; }
+// registro da empresa (nome); `onName` decide onde gravar (slot novo ou o slot carregado sem nome)
+function askName(onName = (name) => save.rename(name)) {
+  ui.mainMenu(false); ui.nameEntry((name) => { onName(name); fade(toLobby); }); keepMenu();
+}
 function fade(fn) {
   const f = document.getElementById('fade');
   f.classList.add('on'); sfx('whoosh');

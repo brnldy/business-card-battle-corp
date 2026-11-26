@@ -56,7 +56,7 @@ export class Duel {
     this.ui.gameOver(null); this.ui.hud(true); this.ui.clearLog();
     this.training = !!opts.training;
     const rival = this.training ? 'ESTAGIÁRIO' : RIVALS[Math.floor(Math.random() * RIVALS.length)];
-    this.names = [settings.get().companyName ?? 'SUA EMPRESA', rival];
+    this.names = [save.company() ?? 'SUA EMPRESA', rival];
     const { state, events, seed } = createGame(this.names, { myDeck: opts.deck ?? null, rivalPool: opts.pool ?? null });
     // acompanha o que o jogador faz (metas, conquistas, estatísticas) e veste as cartas dele com o verso escolhido
     this.tracker = newTracker(state, ME); track(this.tracker, events, state);
