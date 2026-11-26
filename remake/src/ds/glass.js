@@ -54,6 +54,20 @@ function glyph(f, ch) {
   g = { adv, w, h, u: penX, v: penY }; penX += w + 1; rowH = Math.max(rowH, h); glyphs.set(key, g); sdfTex.needsUpdate = true; return g;
 }
 
+// ───────── texto pequeno: glifo em bitmap no tamanho exato de tela ─────────
+// Abaixo de ~18 px o campo de distância perde traços finos (sem hinting). O texto pequeno é rasterizado pelo
+// próprio navegador no tamanho exato em pixels de tela e colocado em posição inteira. A lente move cada letra
+// (as linhas acompanham a curva), mas não a deforma: num glifo de 12 px a curva seria menor que um pixel.
+const BMP_MAX = 18; const bmp = new Map(); let bx = 1, by = 1, bh = 0, bmpCanvas, bmpCtx, bmpTex, DPR = 1;
+function bmpGlyph(css, ch) {
+  const key = css + '|' + ch; let g = bmp.get(key); if (g) return g;
+  const c = bmpCtx; c.font = css; const m = c.measureText(ch), fm = c.measureText('Hg'), asc = Math.ceil(fm.fontBoundingBoxAscent), desc = Math.ceil(fm.fontBoundingBoxDescent), pad = 3;
+  const w = Math.ceil(Math.max(m.width, m.actualBoundingBoxRight || 0)) + pad * 2 + Math.ceil(Math.max(0, m.actualBoundingBoxLeft || 0)), h = asc + desc + pad * 2;
+  if (bx + w + 1 > AW) { bx = 1; by += bh + 1; bh = 0; } if (by + h + 1 > AH) return (g = { adv: m.width, w: 0 });
+  c.save(); c.beginPath(); c.rect(bx, by, w, h); c.clip(); c.clearRect(bx, by, w, h); c.fillStyle = '#fff'; c.textBaseline = 'alphabetic'; c.fillText(ch, bx + pad + Math.ceil(Math.max(0, m.actualBoundingBoxLeft || 0)), by + pad + asc); c.restore();
+  g = { adv: m.width, w, h, u: bx, v: by, ox: pad + Math.ceil(Math.max(0, m.actualBoundingBoxLeft || 0)), oy: pad + asc, asc, desc }; bx += w + 1; bh = Math.max(bh, h); bmp.set(key, g); bmpTex.needsUpdate = true; return g;
+}
+
 // ───────── atlas de imagens e ícones ─────────
 const images = new Map(); let ix = 1, iy = 1, ih = 0;
 function image(src, maxW = 640) {
@@ -136,6 +150,20 @@ function paintText(node, cs, alpha) {
   const col = rgba(cs.color); if (!col) return; const fs = px(cs.fontSize); if (fs < 4) return;
   const f = fontInfo(`${cs.fontStyle} ${cs.fontWeight} ${SDF.size}px ${cs.fontFamily}`), s = fs / SDF.size, ls = cs.letterSpacing === 'normal' ? 0 : px(cs.letterSpacing), up = cs.textTransform === 'uppercase';
   const range = document.createRange(), txt = node.data, re = /\S+/g; let m;
+  const devPx = Math.round(fs * KROOT * DPR);
+  if (!ROTA && devPx <= BMP_MAX * DPR) {             // texto pequeno: bitmap nítido, em pixel inteiro
+    const css = `${cs.fontStyle} ${cs.fontWeight} ${devPx}px ${cs.fontFamily}`, lsd = ls * KROOT;
+    while ((m = re.exec(txt))) {
+      range.setStart(node, m.index); range.setEnd(node, m.index + m[0].length); const rs = range.getClientRects(); if (!rs.length) continue; const r = rs[0]; if (!r.width) continue;
+      const word = up ? m[0].toUpperCase() : m[0], gl = [...word].map((ch) => bmpGlyph(css, ch)), nat = gl.reduce((n, g) => n + g.adv / DPR + lsd, 0) - lsd, kx = nat > 0 ? Math.min(1.25, Math.max(0.8, r.width / nat)) : 1;
+      const asc = (gl.find((g) => g.w)?.asc ?? devPx * 0.8) / DPR, desc = (gl.find((g) => g.w)?.desc ?? devPx * 0.2) / DPR, base = r.top + (r.height - asc - desc) / 2 + asc;
+      // altura: a palavra inteira anda junto (a linha não "pula" letra a letra); largura: cada letra segue a lente,
+      // para o aperto da curva nas bordas se espalhar entre as letras em vez de engolir o espaço entre palavras
+      let pen = r.left; const oy = Math.round((warp(r.left + r.width / 2, base)[1] - base) * DPR) / DPR;
+      for (const g of gl) { if (g.w) { const X = Math.round(warp(pen, base)[0] * DPR) - g.ox, Y = Math.round((base + oy) * DPR) - g.oy; quad(X / DPR, Y / DPR, g.w / DPR, g.h / DPR, fade(col, alpha), undefined, 5, [g.u / AW, g.v / AH, (g.u + g.w) / AW, (g.v + g.h) / AH]); } pen += (g.adv / DPR + lsd) * kx; }
+    }
+    return;
+  }
   while ((m = re.exec(txt))) {
     range.setStart(node, m.index); range.setEnd(node, m.index + m[0].length); const rs = range.getClientRects(); if (!rs.length) continue; const r = rs[0]; if (!r.width) continue;
     const word = up ? m[0].toUpperCase() : m[0], gl = [...word].map((ch) => glyph(f, ch)), zoom = KROOT;   // zoom: escala da peça
@@ -175,6 +203,7 @@ function paintEl(el, alpha) {
 function repaint() {
   nVert = 0;
   for (const el of items) { el.style.transform = 'none'; }
+  const dpr = Math.min(2, window.devicePixelRatio || 1); if (dpr !== DPR) { DPR = dpr; bmp.clear(); bmpCtx.clearRect(0, 0, AW, AH); bx = by = 1; bh = 0; bmpTex.needsUpdate = true; }
   const t0 = performance.now();
   for (const el of items) { if (!el.offsetWidth || !el.offsetHeight) continue; KROOT = el.getBoundingClientRect().width / el.offsetWidth || 1; ROTA = 0; CLIP = null; paintEl(el, 1); }
   STATS.ms = performance.now() - t0; STATS.frames++;
@@ -187,22 +216,25 @@ function init() {
   buf = new Float32Array(MAXV * F); const ib = new THREE.InterleavedBuffer(buf, F); ib.setUsage(THREE.DynamicDrawUsage);
   geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.InterleavedBufferAttribute(ib, 2, 0)); geo.setAttribute('uv', new THREE.InterleavedBufferAttribute(ib, 2, 2)); geo.setAttribute('aColor', new THREE.InterleavedBufferAttribute(ib, 4, 4)); geo.setAttribute('aMode', new THREE.InterleavedBufferAttribute(ib, 1, 8));
   sdfData = new Uint8Array(AW * AH); sdfTex = new THREE.DataTexture(sdfData, AW, AH, THREE.RedFormat); sdfTex.minFilter = sdfTex.magFilter = THREE.LinearFilter; sdfTex.needsUpdate = true;
+  bmpCanvas = document.createElement('canvas'); bmpCanvas.width = AW; bmpCanvas.height = AH; bmpCtx = bmpCanvas.getContext('2d'); bmpTex = new THREE.CanvasTexture(bmpCanvas); bmpTex.flipY = false; bmpTex.colorSpace = THREE.NoColorSpace; bmpTex.minFilter = bmpTex.magFilter = THREE.NearestFilter; bmpTex.generateMipmaps = false;
   imgCanvas = document.createElement('canvas'); imgCanvas.width = AW; imgCanvas.height = AH; imgCtx = imgCanvas.getContext('2d'); imgTex = new THREE.CanvasTexture(imgCanvas); imgTex.flipY = false; imgTex.colorSpace = THREE.NoColorSpace; imgTex.minFilter = THREE.LinearFilter; imgTex.generateMipmaps = false;
-  const mat = new THREE.ShaderMaterial({ transparent: true, depthTest: false, depthWrite: false, side: THREE.DoubleSide,
-    uniforms: { uRes: { value: new THREE.Vector2(1, 1) }, uSdf: { value: sdfTex }, uImg: { value: imgTex } },
+  // mistura separada para o alfa: o canal alfa da tela fica sempre opaco (sem 'buracos' onde letras se sobrepõem)
+  const mat = new THREE.ShaderMaterial({ transparent: true, depthTest: false, depthWrite: false, side: THREE.DoubleSide, blending: THREE.CustomBlending, blendSrc: THREE.SrcAlphaFactor, blendDst: THREE.OneMinusSrcAlphaFactor, blendSrcAlpha: THREE.OneFactor, blendDstAlpha: THREE.OneMinusSrcAlphaFactor,
+    uniforms: { uRes: { value: new THREE.Vector2(1, 1) }, uSdf: { value: sdfTex }, uImg: { value: imgTex }, uBmp: { value: bmpTex } },
     vertexShader: `attribute vec4 aColor; attribute float aMode; uniform vec2 uRes; varying vec2 vUv; varying vec4 vColor; varying float vMode;
-      void main() { vUv = uv; vColor = aColor; vMode = aMode; vec2 n = position.xy / uRes * 2.0 - 1.0; float r2 = dot(n, n) / 2.0; n *= 1.0 + (${K.toFixed(3)}) * (r2 - ${R0.toFixed(2)}); gl_Position = vec4(n.x, -n.y, 0.0, 1.0); }`,
-    fragmentShader: `uniform sampler2D uSdf, uImg; varying vec2 vUv; varying vec4 vColor; varying float vMode;
+      void main() { vUv = uv; vColor = aColor; vMode = aMode; vec2 n = position.xy / uRes * 2.0 - 1.0; if (aMode < 4.5) { float r2 = dot(n, n) / 2.0; n *= 1.0 + (${K.toFixed(3)}) * (r2 - ${R0.toFixed(2)}); } gl_Position = vec4(n.x, -n.y, 0.0, 1.0); }`,   // modo 5 já vem posicionado pela lente (texto pequeno)
+    fragmentShader: `uniform sampler2D uSdf, uImg, uBmp; varying vec2 vUv; varying vec4 vColor; varying float vMode;
       float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
       void main() { vec4 c = vColor;
-        if (vMode > 2.5) { vec2 f = floor(gl_FragCoord.xy); c.rgb += (hash(f) - 0.5) * 0.035; c.rgb -= step(mod(f.y, 3.0), 0.5) * 0.022; c.rgb += step(0.965, hash(f * 0.5 + 7.0)) * 0.06; }   // papel: grão, linhas finas, salpico
+        if (vMode > 4.5) { c.a *= texture2D(uBmp, vUv).a; }
         else if (vMode > 3.5) { float r = length(vUv * 2.0 - 1.0), w = max(fwidth(r), 0.0001); c.a *= 1.0 - smoothstep(1.0 - w, 1.0, r); }
+        else if (vMode > 2.5) { vec2 f = floor(gl_FragCoord.xy); c.rgb += (hash(f) - 0.5) * 0.035; c.rgb -= step(mod(f.y, 3.0), 0.5) * 0.022; c.rgb += step(0.965, hash(f * 0.5 + 7.0)) * 0.06; }   // papel: grão, linhas finas, salpico
         else if (vMode > 1.5) { vec4 t = texture2D(uImg, vUv); c = vec4(t.rgb, t.a * vColor.a); }
-        else if (vMode > 0.5) { float d = texture2D(uSdf, vUv).r, w = max(fwidth(d) * 0.7, 0.0001), e = ${(1 - SDF.cutoff).toFixed(2)} - min(0.07, fwidth(d) * 0.55); c.a *= smoothstep(e - w, e + w, d); }   // texto pequeno: borda um pouco para fora, para não afinar
+        else if (vMode > 0.5) { float d = texture2D(uSdf, vUv).r, fw = max(fwidth(d), 0.0001), e = ${(1 - SDF.cutoff).toFixed(2)} - min(0.25, fw * 0.4); c.a *= clamp((d - e) / fw + 0.5, 0.0, 1.0); }   // cobertura por pixel; texto pequeno ganha ~0,4 px de espessura para traços finos não sumirem
         if (c.a < 0.004) discard; gl_FragColor = c; }` });
   mesh = new THREE.Mesh(geo, mat); mesh.frustumCulled = false;
   window.addEventListener('resize', () => { dirty = true; });
-  document.fonts?.addEventListener?.('loadingdone', () => { glyphs.clear(); fonts.clear(); sdfData.fill(0); penX = penY = 1; rowH = 0; dirty = true; });
+  document.fonts?.addEventListener?.('loadingdone', () => { glyphs.clear(); fonts.clear(); sdfData.fill(0); penX = penY = 1; rowH = 0; bmp.clear(); bmpCtx.clearRect(0, 0, AW, AH); bx = by = 1; bh = 0; sdfTex.needsUpdate = bmpTex.needsUpdate = true; dirty = true; });
 }
 const scene = new THREE.Scene(), cam = new THREE.Camera();
 /** chamado a cada quadro, depois de a cena do jogo ter sido desenhada */

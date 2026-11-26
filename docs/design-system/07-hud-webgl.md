@@ -85,7 +85,8 @@ O autor pediu para redesenhar todo o HUD em WebGL. Foi feito assim, em `remake/s
 - **Tudo o que aparece é desenhado pela placa de vídeo**, num passe final do renderizador do jogo (`gfx.js` → `glass.render`), por cima da cena:
   - caixas, bordas, degradês, contornos e molduras em camadas viram geometria;
   - papel ganha grão, linhas finas e salpico no próprio shader;
-  - **texto por campo de distância (SDF)**, gerado no processador a partir das fontes do jogo (algoritmo do TinySDF), nítido em qualquer tamanho e curvatura;
+  - **texto grande (acima de 18 px na tela) por campo de distância (SDF)**, gerado no processador a partir das fontes do jogo (algoritmo do TinySDF), curvado junto com a geometria;
+  - **texto pequeno (até 18 px) em bitmap no tamanho exato da tela**, rasterizado pelo próprio navegador e colocado em pixel inteiro. O campo de distância perde traços finos nesse tamanho (letras com pedaços faltando, testado em 26/11); o bitmap não. A lente move cada letra (na horizontal, letra a letra; na vertical, palavra a palavra), então as linhas acompanham a curva sem a letra ser deformada nem reamostrada;
   - imagens das cartas e ícones vão para um atlas;
   - círculos (pinos, luzes, selos) são desenhados no shader.
 - **A lente (barril) é aplicada nos vértices.** A geometria nasce curva; nada é reamostrado.
@@ -108,7 +109,7 @@ Quando uma peça nova precisar de um desses recursos, ele é implementado em `gl
 
 ### Desempenho
 
-O HUD só é redesenhado quando algo muda (texto, classe, rolagem, mouse, animação CSS em curso). Cada redesenho levou de 10 a 14 ms no ambiente de teste, que não tem placa de vídeo e roda tudo no processador. Em máquina real deve ser menor, mas **não foi medido**. Se pesar, o próximo passo é redesenhar só a peça que mudou, em vez de todas.
+O HUD só é redesenhado quando algo muda (texto, classe, rolagem, mouse, animação CSS em curso). Cada redesenho levou de 10 a 14 ms (13,6 ms na última medição) no ambiente de teste, que não tem placa de vídeo e roda tudo no processador. Em máquina real deve ser menor, mas **não foi medido**. Se pesar, o próximo passo é redesenhar só a peça que mudou, em vez de todas.
 
 ### Riscos
 
