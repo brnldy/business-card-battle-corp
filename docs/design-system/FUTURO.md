@@ -2,7 +2,7 @@
 
 ## HUD da partida em WebGL (curva real com texto nítido)
 
-> Anotado em 26/11/2026 a pedido do autor. Não iniciado.
+> Anotado em 26/11/2026 a pedido do autor. **Atualização do mesmo dia:** o autor decidiu fazer já, e um teste mostrou um caminho bem mais barato que o descrito abaixo (o HTML continua sendo a fonte e é fotografado para o WebGL). Ver [07-hud-webgl.md](07-hud-webgl.md). O texto abaixo fica como registro da alternativa de redesenhar tudo em canvas, que não foi a escolhida.
 
 **Por que existe.** O autor quer as peças da partida com curvatura real de monitor de tubo. Com a interface em HTML, só há dois jeitos de curvar: inclinar a peça inteira (nítido, mas sem curva por dentro) ou empurrar os pixels com um filtro (curva real, mas com serrilhado, que só some desfocando o texto até ficar ilegível). Testamos os dois em 25 e 26/11. Ficamos com a inclinação (`remake/src/ds/glass.js`). Para ter curva e nitidez juntas, o HUD precisa ser desenhado dentro da cena 3D, onde o filtro de tela do jogo (`gfx.js`) já curva e suaviza tudo de uma vez.
 

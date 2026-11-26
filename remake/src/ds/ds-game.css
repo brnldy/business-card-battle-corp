@@ -25,7 +25,7 @@
 .h-hud .h-slot--opp { top: 34px; } .h-hud .h-slot--me { bottom: 44px; }
 .h-hud .h-slot--turn { top: 104px; } .h-hud .h-slot--bar { top: 34px; }
 /* vidro: franja de cor e halo quente em volta da peça (não muda a área clicável) */
-.ds-glass { backface-visibility: hidden; }   /* sem filtro nenhum: qualquer filtro faz o navegador redesenhar a peça como imagem e amolece o texto */
+.ds-glass { opacity: 0; }   /* o HTML fica invisível e clicável; quem desenha é o WebGL (src/ds/glass.js) */
 
 /* pasta de CAIXA = ds-folder */
 .h-folder { width: 270px; }
