@@ -16,6 +16,7 @@ import { sfx, setMusicMode } from './audio.js';
 import { settings } from './settings.js';
 import { describeEvent } from './log.js';
 import { CardFX } from './cardfx.js';
+import { FrostScreen } from './frost.js';
 
 const ME = 0, OP = 1;
 const C_money = (n) => `$ ${Math.round(n).toLocaleString('pt-BR')}`;
@@ -44,7 +45,7 @@ export class Duel {
     this.ray = new THREE.Raycaster(); this.ray.layers.enableAll(); this.caixaShown = [RULES.STARTING_CAIXA, RULES.STARTING_CAIXA]; this.group = new THREE.Group(); this.R.scene.add(this.group);
     this.slotGlow = new THREE.Mesh(glowGeo, glowMaterial()); this.slotGlow.rotation.x = -Math.PI / 2; this.slotGlow.position.y = 0.006; this.slotGlow.visible = false; this.slotGlow.layers.set(LAYER.GLOW);
     this.slotGlow.material.uniforms.uAspect.value = CARD.w / CARD.h; this.R.scene.add(this.slotGlow);
-    this.buildArrow(); this.buildCoin(); this.fx = new CardFX(this);
+    this.buildArrow(); this.buildCoin(); this.fx = new CardFX(this); this.frost = new FrostScreen();
     this.oppMood = 0; this.oppGlitch = 0; this.oppTalk = 0; this.oppNod = 0; this.blinkT = 2;
     this.bindInput();
   }
@@ -53,7 +54,7 @@ export class Duel {
   // opts: { training, deck, pool } — treino é contra o estagiário (IA fraca) e não vale nada;
   // deck = lista de 40 ids do lobby; pool = cartas que o rival pode usar (as que o jogador já tem)
   async newGame(opts = {}) {
-    this.clearCards(); this.fx.clear();
+    this.clearCards(); this.fx.clear(); this.frost.clear();
     this.ui.gameOver(null); this.ui.hud(true); this.ui.clearLog();
     this.training = !!opts.training;
     const rival = this.training ? 'ESTAGIÁRIO' : RIVALS[Math.floor(Math.random() * RIVALS.length)];
@@ -76,7 +77,7 @@ export class Duel {
     await this.play(events, new Map());
     this.afterAction();
   }
-  stop() { this.active = false; this.fx.clear(); this.clearCards(); this.ui.hud(false); this.ui.gameOver(null); this.setSel(null); }
+  stop() { this.active = false; this.fx.clear(); this.frost.clear(); this.clearCards(); this.ui.hud(false); this.ui.gameOver(null); this.setSel(null); }
   clearCards() {
     for (const uid of [...this.cards.keys()]) this.removeCard(uid);
     this.cards.clear(); this.cardIndex.clear();
@@ -258,6 +259,7 @@ export class Duel {
           this.ui.banner(mine ? 'Sua vez' : `Vez de ${this.names[OP]}`, `turno ${e.turn}`, mine ? 'me' : 'foe');
           sfx(mine ? 'turn' : 'turnFoe');
           this.refreshHud(e.player, 'main');
+          if (this.frost.level && this.frostLevel() > this.frost.level) this.frost.set(this.frostLevel()); // o vidro trinca mais um pouco
           await wait(D(mine ? 820 : 620));
           break;
         }
@@ -275,11 +277,12 @@ export class Duel {
           this.puff(p, 26, [0.75, 0.72, 0.6]);
           await wait(D(260));
           if (e.cardId === 'BCB-013' && e.mode === 'DEF') await this.fx.cross(p);      // Paulo orando
-          if (e.cardId === 'BCB-010') await this.fx.worm(this.deckPos(e.player));       // Tênia come o topo do deck
+          if (e.cardId === 'BCB-010') await this.fx.jaws(this.deckPos(e.player));       // a bocarra da Tênia morde o topo do deck
           if (e.cardId === 'BCB-017') tchan = true;
           break;
         }
         case 'sacrifice': case 'destroy': case 'effectExpired': case 'discard': {
+          if (e.type === 'effectExpired' && e.cardId === 'BCB-003') this.frost.set(this.frostLevel()); // o disjuntor caiu: descongela ao contrário
           const c = this.cards.get(e.uid);
           if (c) {
             sfx(e.type === 'sacrifice' ? 'sacrifice' : e.type === 'discard' ? 'card' : 'destroy');
@@ -324,8 +327,7 @@ export class Duel {
           c.place = { kind: 'show', x: 0 }; c.hop = 1; c.hopH = 0.3;
           sfx('effect'); await wait(D(360));
           this.sparkle(c.group.position, [0.6, 1, 0.85], 34); this.pulse('uAberr', 0.006, 500);
-          if (e.cardId === 'BCB-003') await this.fx.airConditioner();
-          else if (e.cardId === 'BCB-014') await this.fx.priceTag(c.group.position.clone());
+          if (e.cardId === 'BCB-003') await this.frost.set(this.frostLevel());           // ar no 16: a tela congela e trinca
           await wait(D(700));
           if (next.get(e.uid)?.kind === 'dead') { await this.dissolve(c, 0, 1, D(380)); rel(e.uid, { noHop: true }); this.snap(c); this.dissolve(c, 1, 0, D(200)); }
           else { rel(e.uid, { hop: 0.6 }); await wait(D(380)); sfx('place'); }
@@ -357,7 +359,7 @@ export class Duel {
         case 'attackRedirected': {
           // Filipe conta uma fake news: o ataque muda de rumo e vai para um colega de quem atacou
           const a = this.atkCtx, f = posOf(e.from);
-          if (f) { await this.fx.fakeNews(f); this.sparkle(f, [1, 0.85, 0.4], 18); }
+          if (f) { this.floatAt(f, 'fake news!', 'info'); this.sparkle(f, [1, 0.85, 0.4], 18); }
           this.ui.banner('Fake news!', 'o ataque foi desviado', 'trap'); sfx('glitch'); this.oppGlitch = 0.6;
           if (a) { const to = posOf(e.to); if (to) a.to = to; }
           await wait(D(650));
@@ -403,7 +405,6 @@ export class Duel {
           break;
         }
         case 'damage': {
-          if (e.source === 'BCB-007' && lastCombat?.defender) this.fx.stamp(e.player === ME ? V(0.9, 0.3, 1.7) : V(0.9, 0.5, -1.7), 'PAI DE GÊMEOS', '×2', { hold: 700 });
           this.caixaShown[e.player] = e.caixa;
           sfx('damage'); this.bump(e.player === ME ? 0.45 : 0.2);
           this.coins(e.player === ME ? V(0, 0.2, 2.0) : V(0, 0.5, -2.0), Math.min(40, 8 + e.amount / 60));
@@ -419,7 +420,7 @@ export class Duel {
           this.refreshHud(); await wait(D(520));
           break;
         }
-        case 'lock': { const p = posOf(e.uid); if (p && e.source === 'BCB-008') await this.fx.phoneRec(p); else if (p && e.source === 'BCB-018') await this.fx.eye(p); if (p) { this.floatAt(p, 'travada: não ataca', 'bad'); sfx('lock'); this.sparkle(p, [1, 0.8, 0.3], 14); } this.refreshChips(); await wait(D(400)); break; }
+        case 'lock': { const p = posOf(e.uid); if (p && e.source === 'BCB-008') await this.fx.phoneRec(p); if (p) { this.floatAt(p, 'travada: não ataca', 'bad'); sfx('lock'); this.sparkle(p, [1, 0.8, 0.3], 14); } this.refreshChips(); await wait(D(400)); break; }
         case 'frio': {
           sfx('frost'); this.pulse('uFrost', 0.75, 900);
           this.snow(e.player); this.floatAt(e.player === ME ? V(0, 0.3, 1.0) : V(0, 0.3, -1.0), `frio ×${e.counters}: −$${e.counters * 100} por turno`, 'cold');
@@ -440,6 +441,12 @@ export class Duel {
     this.caixaShown = [this.state.players[0].caixa, this.state.players[1].caixa];
     this.oppMood *= 0.4;
     this.refreshChips();
+  }
+  /** nível do gelo na tela: 1 no turno em que o Ar Condicionado entra, +1 a cada turno do dono, até 4 (0 = sem ar na mesa) */
+  frostLevel() {
+    let lv = 0;
+    for (const p of this.state.players) for (const fx of p.effects) if (fx && fx.cardId === 'BCB-003' && !fx.faceDown && fx.turnsLeft !== null) lv = Math.max(lv, 4 - fx.turnsLeft + 1);
+    return Math.min(4, lv);
   }
   sideOf(uid, prev) { return prev.get(uid)?.side ?? findCreature(this.state, uid)?.side ?? ME; }
   zonePos(kind, side, idx) { const r = kind === 'cr' ? (side === ME ? LAYOUT.myCr : LAYOUT.oppCr) : (side === ME ? LAYOUT.myFx : LAYOUT.oppFx); return V(r[idx].x, 0.02, r[idx].z); }

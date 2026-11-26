@@ -1,7 +1,8 @@
-// Animações próprias de algumas cartas: só onde o efeito pede uma imagem (palma do Bruno, cruz do Paulo,
-// ar-condicionado no talo, nuvem do Chat GPT, celular do Lucas, olho da Duda, verme da Tênia, etiqueta do pão,
-// pilha morrendo, café com gosto de cigarro, carimbo da Thays, post do Filipe e o ×2 do Ralph).
-// Tudo desenhado por código em canvas (estilo escritório amaldiçoado) e mostrado como sprites virados para a câmera.
+// Animações próprias das cartas aprovadas pelo autor (26/11/2026): palma do Bruno, cruz do Paulo, celular do Lucas,
+// bocarra da Tênia, carimbo da Thays, nuvem do Chat GPT, pilha morrendo e café com gosto de cigarro.
+// O Ar Condicionado no Talo não é objeto: congela e trinca a tela (frost.js).
+// São objetos 3D low poly, feitos de caixas, cilindros e esferas como o resto da sala, iluminados pela luminária
+// e passando pelo mesmo filtro pixelado. Textos (visor, tela do celular, etiqueta, carimbo) são texturas de canvas.
 // Quem chama é a linha do tempo de eventos do duelo (duel.js → play), que espera cada animação terminar.
 import * as THREE from 'three';
 import { tween, wait, ease, LAYER } from './gfx.js';
@@ -10,12 +11,12 @@ import { sfx } from './audio.js';
 import { settings } from './settings.js';
 
 const V = (x = 0, y = 0, z = 0) => new THREE.Vector3(x, y, z);
-const INK = '#14110c', PAPER = '#e4dcc0', AMBER = '#f2b94c', RED = '#b3261e', SKIN = '#d6ad86', SKIN_D = '#a87a58';
+const INK = '#14110c', RED = '#b3261e';
 const D = (ms) => ms / (Number(settings.get().speed) || 1);
 const lerp = (a, b, k) => a + (b - a) * k;
-const K = 1.5; // tamanho geral dos desenhos na mesa
+const K = 2.1; // tamanho geral dos objetos na mesa
 
-// ───────── desenho ─────────
+// ───────── texturas (só onde há texto ou tela) ─────────
 function rr(g, x, y, w, h, r) { g.beginPath(); g.roundRect(x, y, w, h, r); }
 function inked(g, fill, lw = 6) { g.fillStyle = fill; g.fill(); g.lineWidth = lw; g.strokeStyle = INK; g.lineJoin = 'round'; g.stroke(); }
 /** manchas e sujeira por cima do desenho (só onde já tem tinta) */
@@ -33,53 +34,6 @@ function wornOut(g, W, H, n = 260, seed = 3) {
   g.restore();
 }
 
-// mão aberta com punho de camisa e manga de terno (Bruno)
-function drawHand(g, W, H, mirror) {
-  g.save(); if (mirror) { g.translate(W, 0); g.scale(-1, 1); }
-  rr(g, 46, 206, 104, 60, 6); inked(g, '#26282b');               // manga do terno
-  rr(g, 50, 186, 96, 26, 4); inked(g, '#d9d3b8', 5);              // punho da camisa
-  g.fillStyle = INK; g.beginPath(); g.arc(98, 199, 4, 0, 7); g.fill(); // abotoadura
-  const fingers = [[52, 64], [74, 80], [96, 76], [118, 62]];
-  for (const [x, h] of fingers) { rr(g, x, 118 - h, 22, h + 20, 11); inked(g, SKIN, 5); }
-  g.save(); g.translate(146, 150); g.rotate(-0.75); rr(g, -12, -46, 24, 58, 12); inked(g, SKIN, 5); g.restore(); // polegar
-  rr(g, 50, 108, 98, 84, 18); inked(g, SKIN, 6);                  // palma
-  g.strokeStyle = SKIN_D; g.lineWidth = 3; g.beginPath(); g.moveTo(66, 140); g.quadraticCurveTo(98, 128, 132, 138); g.moveTo(70, 160); g.quadraticCurveTo(100, 150, 124, 166); g.stroke();
-  grime(g, W, H, 30, mirror ? 2 : 1);
-  g.restore();
-}
-// onda de choque (anel)
-function drawRing(g, W, H) { g.strokeStyle = 'rgba(255,236,190,0.95)'; g.lineWidth = 10; g.beginPath(); g.arc(W / 2, H / 2, W / 2 - 12, 0, 7); g.stroke(); g.strokeStyle = 'rgba(242,185,76,0.5)'; g.lineWidth = 22; g.beginPath(); g.arc(W / 2, H / 2, W / 2 - 26, 0, 7); g.stroke(); }
-// cruz brilhante (Paulo)
-function drawCross(g, W, H) {
-  const x = W / 2, w = 34, top = 18, bot = H - 18, armY = 82, arm = 66;
-  g.shadowColor = '#ffd98a'; g.shadowBlur = 36;
-  g.fillStyle = '#f6d27a'; g.fillRect(x - w / 2, top, w, bot - top); g.fillRect(x - arm, armY, arm * 2, w);
-  g.shadowBlur = 0; g.fillStyle = '#fff6d8'; g.fillRect(x - 6, top + 8, 12, bot - top - 16); g.fillRect(x - arm + 8, armY + 11, arm * 2 - 16, 12);
-}
-// ar-condicionado velho, com visor verde no 16° (Ar Condicionado no Talo)
-function drawAC(g, W, H) {
-  rr(g, 10, 14, W - 20, H - 40, 18); inked(g, '#d4cdb6', 7);
-  g.fillStyle = 'rgba(0,0,0,0.12)'; g.fillRect(18, H - 74, W - 36, 10);
-  g.fillStyle = '#2b2a24'; rr(g, 30, H - 62, W - 60, 30, 6); g.fill();
-  g.strokeStyle = '#6b665a'; g.lineWidth = 3; for (let i = 0; i < 18; i++) { const x = 44 + i * ((W - 88) / 17); g.beginPath(); g.moveTo(x, H - 58); g.lineTo(x - 8, H - 36); g.stroke(); }
-  rr(g, W - 168, 40, 120, 62, 6); inked(g, '#0c1a10', 5);
-  g.fillStyle = '#86ff9a'; g.shadowColor = '#86ff9a'; g.shadowBlur = 12; g.font = `700 46px ${MONO}`; g.textAlign = 'center'; g.fillText('16°', W - 108, 88); g.shadowBlur = 0;
-  g.fillStyle = '#ff3a22'; g.beginPath(); g.arc(W - 186, 56, 6, 0, 7); g.fill();
-  g.fillStyle = '#5a5546'; g.font = `700 18px ${MONO}`; g.textAlign = 'left'; g.fillText('TURBO · NÃO DESLIGAR', 40, 56);
-  g.fillText('MANUTENÇÃO: 03/2009', 40, 80);
-  // escorridos de ferrugem e mofo
-  g.save(); g.globalCompositeOperation = 'source-atop';
-  for (let i = 0; i < 7; i++) { const x = 60 + i * 61 + (i % 3) * 13; g.fillStyle = 'rgba(110,62,20,0.35)'; g.fillRect(x, H - 40, 5, 30 + (i % 4) * 8); }
-  g.restore(); grime(g, W, H, 50, 4);
-}
-// nuvem (Chat GPT)
-function drawCloud(g, W, H) {
-  g.beginPath(); [[70, 100, 46], [124, 70, 58], [186, 92, 50], [100, 118, 40], [160, 120, 42]].forEach(([x, y, r]) => { g.moveTo(x + r, y); g.arc(x, y, r, 0, 7); });
-  g.fillStyle = '#cfd3cc'; g.fill(); g.lineWidth = 7; g.strokeStyle = INK; g.stroke();
-  g.fillStyle = '#cfd3cc'; [[70, 100, 42], [124, 70, 54], [186, 92, 46], [100, 118, 36], [160, 120, 38]].forEach(([x, y, r]) => { g.beginPath(); g.arc(x, y, r, 0, 7); g.fill(); });
-  g.fillStyle = INK; g.font = `700 15px ${MONO}`; g.textAlign = 'center'; g.fillText('SINCRONIZANDO…', 128, 104);
-  g.fillRect(70, 112, 116, 8); g.fillStyle = '#86d98f'; g.fillRect(72, 114, 104, 4);
-}
 // celular (Lucas e Filipe); mode: 'rec' | 'recOff' | 'post'
 function drawPhone(g, W, H, mode) {
   rr(g, 8, 8, W - 16, H - 16, 22); inked(g, '#151515', 6);
@@ -107,67 +61,6 @@ function drawPhone(g, W, H, mode) {
   // tela trincada
   g.strokeStyle = 'rgba(240,240,230,0.55)'; g.lineWidth = 1.5; g.beginPath(); g.moveTo(sx + sw * 0.8, sy + 4); g.lineTo(sx + sw * 0.62, sy + sh * 0.3); g.lineTo(sx + sw * 0.9, sy + sh * 0.5); g.moveTo(sx + sw * 0.62, sy + sh * 0.3); g.lineTo(sx + sw * 0.3, sy + sh * 0.36); g.stroke();
 }
-// olho que encara (Duda); open 0..1, look −1..1
-function drawEye(g, W, H, open, look) {
-  g.clearRect(0, 0, W, H);
-  const cx = W / 2, cy = H / 2, rx = W / 2 - 14, ry = (H / 2 - 12) * Math.max(0.04, open);
-  g.save(); g.beginPath(); g.ellipse(cx, cy, rx, ry, 0, 0, 7); g.clip();
-  g.fillStyle = '#e6dcbf'; g.fillRect(0, 0, W, H);
-  g.strokeStyle = 'rgba(170,30,20,0.7)'; g.lineWidth = 1.6;
-  for (let i = 0; i < 12; i++) { const a = (i / 12) * Math.PI * 2; g.beginPath(); g.moveTo(cx + Math.cos(a) * rx, cy + Math.sin(a) * rx * 0.6); g.quadraticCurveTo(cx + Math.cos(a + 0.3) * rx * 0.6, cy + Math.sin(a + 0.3) * rx * 0.4, cx + Math.cos(a) * rx * 0.35, cy + Math.sin(a) * rx * 0.25); g.stroke(); }
-  const ix = cx + look * rx * 0.38;
-  g.fillStyle = '#5a7a3a'; g.beginPath(); g.arc(ix, cy, H * 0.3, 0, 7); g.fill();
-  g.fillStyle = '#2c3c1c'; g.beginPath(); g.arc(ix, cy, H * 0.3, 0, 7); g.lineWidth = 6; g.strokeStyle = '#2c3c1c'; g.stroke();
-  g.fillStyle = '#050505'; g.beginPath(); g.arc(ix, cy, H * 0.13, 0, 7); g.fill();
-  g.fillStyle = 'rgba(255,255,240,0.85)'; g.beginPath(); g.arc(ix - H * 0.08, cy - H * 0.09, H * 0.045, 0, 7); g.fill();
-  g.restore();
-  g.lineWidth = 8; g.strokeStyle = INK; g.beginPath(); g.ellipse(cx, cy, rx, ry, 0, 0, 7); g.stroke();
-  // cílios de cima
-  g.lineWidth = 4; for (let i = 0; i < 9; i++) { const a = Math.PI + 0.25 + (i / 8) * (Math.PI - 0.5); const x = cx + Math.cos(a) * rx, y = cy + Math.sin(a) * ry; g.beginPath(); g.moveTo(x, y); g.lineTo(x + Math.cos(a) * 16, y + Math.sin(a) * 16 - 4); g.stroke(); }
-}
-// verme da Tênia; mouth: aberta ou fechada
-function drawWorm(g, W, H, openMouth) {
-  for (let i = 5; i >= 0; i--) { const y = H - 30 - i * 30, w = 92 - i * 3 + (i % 2) * 6; g.beginPath(); g.ellipse(W / 2 + Math.sin(i * 1.3) * 8, y, w / 2, 24, 0, 0, 7); inked(g, i % 2 ? '#b88a82' : '#a77870', 5); }
-  const my = 64;
-  g.beginPath(); g.ellipse(W / 2, my, 64, 56, 0, 0, 7); inked(g, '#c4968c', 6);
-  if (openMouth) {
-    g.beginPath(); g.ellipse(W / 2, my, 46, 40, 0, 0, 7); g.fillStyle = '#2a0b0a'; g.fill();
-    g.fillStyle = '#e8e0c4'; for (let i = 0; i < 14; i++) { const a = (i / 14) * Math.PI * 2, x = W / 2 + Math.cos(a) * 44, y = my + Math.sin(a) * 38; g.beginPath(); g.moveTo(x, y); g.lineTo(x - Math.cos(a) * 16 + Math.sin(a) * 6, y - Math.sin(a) * 14 - Math.cos(a) * 6); g.lineTo(x - Math.cos(a) * 16 - Math.sin(a) * 6, y - Math.sin(a) * 14 + Math.cos(a) * 6); g.fill(); }
-    g.fillStyle = 'rgba(200,220,160,0.7)'; g.fillRect(W / 2 + 18, my + 30, 5, 34); // baba
-  } else { g.lineWidth = 7; g.strokeStyle = INK; g.beginPath(); g.moveTo(W / 2 - 40, my); g.quadraticCurveTo(W / 2, my + 18, W / 2 + 40, my); g.stroke(); }
-  grime(g, W, H, 40, 6);
-}
-// etiqueta de preço (Pão com Requeijão)
-function drawTag(g, W, H) {
-  g.strokeStyle = '#3a2c1a'; g.lineWidth = 3; g.beginPath(); g.moveTo(40, 0); g.lineTo(52, 56); g.stroke();
-  g.beginPath(); g.moveTo(24, 48); g.lineTo(W - 16, 48); g.lineTo(W - 16, H - 14); g.lineTo(24, H - 14); g.lineTo(6, (48 + H - 14) / 2); g.closePath(); inked(g, '#d8c79a', 5);
-  g.fillStyle = '#f3ead2'; g.beginPath(); g.arc(30, (48 + H - 14) / 2, 7, 0, 7); g.fill(); g.lineWidth = 3; g.stroke();
-  g.fillStyle = RED; g.font = `700 58px ${SERIF}`; g.textAlign = 'center'; g.fillText('R$ 16,00', W / 2 + 18, 118);
-  g.fillStyle = INK; g.font = `700 17px ${MONO}`; g.fillText('DEZESSEIS REAIS?', W / 2 + 18, 146);
-  g.strokeStyle = 'rgba(179,38,30,0.8)'; g.lineWidth = 3; g.beginPath(); g.moveTo(62, 84); g.lineTo(W - 34, 128); g.stroke();
-  grime(g, W, H, 30, 8);
-}
-// pilha (Onde tem pilha?); level 0..1
-function drawBattery(g, W, H, level) {
-  g.clearRect(0, 0, W, H);
-  rr(g, W / 2 - 18, 6, 36, 18, 4); inked(g, '#9a958a', 5);
-  rr(g, 16, 22, W - 32, H - 34, 12); inked(g, '#2b2b28', 6);
-  const ih = H - 58, lv = Math.max(0, Math.min(1, level));
-  g.fillStyle = lv > 0.5 ? '#7fcf86' : lv > 0.2 ? AMBER : '#ee3a30'; g.fillRect(28, 34 + ih * (1 - lv), W - 56, ih * lv);
-  g.fillStyle = PAPER; g.font = `700 26px ${MONO}`; g.textAlign = 'center'; g.fillText('AA', W / 2, H / 2 + 4);
-  g.font = `700 13px ${MONO}`; g.fillText(`${Math.round(lv * 100)}%`, W / 2, H / 2 + 26);
-  if (lv <= 0.01) { g.fillStyle = '#ffd34a'; g.beginPath(); g.moveTo(W / 2 + 8, 40); g.lineTo(W / 2 - 18, H / 2 + 12); g.lineTo(W / 2 + 2, H / 2 + 12); g.lineTo(W / 2 - 10, H - 30); g.lineTo(W / 2 + 22, H / 2 - 10); g.lineTo(W / 2 + 2, H / 2 - 10); g.closePath(); g.fill(); g.lineWidth = 3; g.strokeStyle = INK; g.stroke(); }
-}
-// caneca de café (Café com 8 colheres)
-function drawMug(g, W, H) {
-  g.beginPath(); g.ellipse(W - 46, H / 2 + 14, 30, 38, 0, 0, 7); g.lineWidth = 16; g.strokeStyle = INK; g.stroke(); g.lineWidth = 8; g.strokeStyle = '#d9d3c4'; g.stroke();
-  rr(g, 30, 50, W - 90, H - 66, 14); inked(g, '#d9d3c4', 6);
-  g.beginPath(); g.ellipse(30 + (W - 90) / 2, 52, (W - 90) / 2 - 2, 12, 0, 0, 7); g.fillStyle = '#2a170c'; g.fill(); g.lineWidth = 5; g.strokeStyle = INK; g.stroke();
-  g.fillStyle = '#6a2420'; g.font = `700 22px ${SERIF}`; g.textAlign = 'center'; g.fillText('Nº 1', 30 + (W - 90) / 2, 110); g.font = `700 11px ${MONO}`; g.fillText('FUNCIONÁRIO', 30 + (W - 90) / 2, 128);
-  g.fillStyle = 'rgba(90,50,20,0.5)'; g.fillRect(56, 62, 6, 40); g.fillRect(96, 62, 5, 26); // escorrido
-  g.fillStyle = INK; g.beginPath(); g.moveTo(30 + W - 96, 50); g.lineTo(30 + W - 108, 60); g.lineTo(30 + W - 96, 64); g.fill(); // lasca
-  grime(g, W, H, 30, 9);
-}
 // carimbo de borracha (Thays, Filipe, Ralph)
 function drawStamp(g, W, H, l1, l2, col = RED) {
   g.strokeStyle = col; g.fillStyle = col; g.lineWidth = 9; rr(g, 12, 12, W - 24, H - 24, 10); g.stroke(); g.lineWidth = 3; rr(g, 26, 26, W - 52, H - 52, 6); g.stroke();
@@ -179,9 +72,46 @@ function drawStamp(g, W, H, l1, l2, col = RED) {
 }
 function fitText(g, t, x, y, max) { const m = g.measureText(t).width; if (m > max) { g.save(); g.translate(x, y); g.scale(max / m, 1); g.fillText(t, 0, 0); g.restore(); } else g.fillText(t, x, y); }
 
-// ───────── a parte 3D ─────────
+// visor verde do ar-condicionado
+function drawLCD(g, W, H) {
+  g.fillStyle = '#0c1a10'; g.fillRect(0, 0, W, H);
+  g.fillStyle = '#86ff9a'; g.shadowColor = '#86ff9a'; g.shadowBlur = 10; g.font = `700 ${Math.round(H * 0.78)}px ${MONO}`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('16°', W / 2, H / 2 + 3);
+}
 function canvasTex(c) { const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; return t; }
 function makeTex(W, H, draw, ...args) { const { c, g } = mkCanvas(W, H); draw(g, W, H, ...args); return canvasTex(c); }
+
+// ───────── peças low poly ─────────
+const mat = (color, o = {}) => new THREE.MeshLambertMaterial({ color, emissive: color, emissiveIntensity: 0.05, flatShading: true, ...o });
+const glow = (color, k = 1) => new THREE.MeshLambertMaterial({ color, emissive: color, emissiveIntensity: k, flatShading: true });
+function part(geo, m, x = 0, y = 0, z = 0) { const o = new THREE.Mesh(geo, m); o.position.set(x, y, z); o.castShadow = true; return o; }
+const B = (w, h, d, m, x, y, z) => part(new THREE.BoxGeometry(w, h, d), m, x, y, z);
+const C = (rt, rb, h, seg, m, x, y, z) => part(new THREE.CylinderGeometry(rt, rb, h, seg), m, x, y, z);
+const S = (r, m, x, y, z, ws = 7, hs = 5) => part(new THREE.SphereGeometry(r, ws, hs), m, x, y, z);
+const screen = (w, h, map, x, y, z) => part(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ map, toneMapped: false }), x, y, z);
+
+// mão com punho de camisa e manga de terno; palma fina no eixo x, dedos para cima, polegar para a câmera
+function hand() {
+  const g = new THREE.Group(), skin = mat(0xd6ad86), suit = mat(0x26282b), shirt = mat(0xd9d3b8);
+  g.add(B(0.05, 0.2, 0.17, skin, 0, 0, 0));
+  [[-0.062, 0.1], [-0.021, 0.125], [0.021, 0.12], [0.062, 0.095]].forEach(([z, h]) => g.add(B(0.045, h, 0.036, skin, 0, 0.1 + h / 2, z)));
+  const th = B(0.045, 0.1, 0.04, skin, 0.005, 0.0, 0.1); th.rotation.x = 0.7; g.add(th);
+  g.add(C(0.07, 0.07, 0.05, 7, shirt, 0, -0.12, 0), C(0.085, 0.085, 0.16, 7, suit, 0, -0.22, 0));
+  return g;
+}
+// carimbo de borracha: pegador de madeira e base com borracha vermelha
+function stampTool() {
+  const g = new THREE.Group(), wood = mat(0x6a4a2a), dark = mat(0x3a2a1a);
+  g.add(S(0.065, wood, 0, 0.3, 0), C(0.03, 0.045, 0.2, 7, dark, 0, 0.17, 0), B(0.36, 0.07, 0.24, wood, 0, 0.04, 0), B(0.34, 0.02, 0.22, mat(0x8a1d14), 0, -0.005, 0));
+  return g;
+}
+// celular deitado em pé; tela com textura
+function phone(map) {
+  const g = new THREE.Group();
+  g.add(B(0.2, 0.38, 0.025, mat(0x151515)));
+  const sc = screen(0.17, 0.33, map, 0, 0, 0.0135); g.add(sc); g.userData.screen = sc;
+  g.add(C(0.018, 0.018, 0.01, 8, mat(0x050505), 0.06, 0.15, -0.015).rotateX(Math.PI / 2));
+  return g;
+}
 
 export class CardFX {
   constructor(duel) {
@@ -189,167 +119,160 @@ export class CardFX {
     this.cache = new Map(); this.live = new Set();
   }
   tex(key, W, H, draw, ...args) { if (!this.cache.has(key)) this.cache.set(key, makeTex(W, H, draw, ...args)); return this.cache.get(key); }
-  sprite(map, w, h, pos) {
-    const m = new THREE.SpriteMaterial({ map, transparent: true, depthTest: false, depthWrite: false, toneMapped: false, fog: false });
-    const s = new THREE.Sprite(m); w *= K; h *= K; s.scale.set(w, h, 1); s.userData.size = [w, h]; s.renderOrder = 60; s.layers.set(LAYER.GLOW);
-    if (pos) s.position.copy(pos);
-    this.group.add(s); this.live.add(s); return s;
+  add(o, pos) { if (pos) o.position.copy(pos); o.scale.setScalar(0.001); this.group.add(o); this.live.add(o); return o; }
+  kill(o) {
+    this.group.remove(o); this.live.delete(o);
+    o.traverse((c) => { if (c.isMesh) { c.geometry.dispose(); (Array.isArray(c.material) ? c.material : [c.material]).forEach((m) => m.dispose()); } if (c.isLight) c.dispose?.(); });
   }
-  size(s, k, ky = k) { const [w, h] = s.userData.size; s.scale.set(Math.max(1e-3, w * k), Math.max(1e-3, h * ky), 1); }
-  kill(s) { this.group.remove(s); s.material.dispose(); this.live.delete(s); }
   /** limpa tudo (fim de partida, sair do duelo) */
-  clear() { for (const s of [...this.live]) this.kill(s); }
-  fadeOut(s, ms, rise = 0.12) { const y0 = s.position.y, o0 = s.material.opacity; return tween(D(ms), (k) => { s.material.opacity = o0 * (1 - k); s.position.y = y0 + rise * k; }, ease.in).then(() => this.kill(s)); }
-  ring(p, col) { const s = this.sprite(this.tex('ring', 256, 256, drawRing), 0.2, 0.2, p); if (col) s.material.color.set(col); tween(D(460), (k) => { this.size(s, 1 + k * 8); s.material.opacity = 1 - k; }, ease.out).then(() => this.kill(s)); }
+  clear() { for (const o of [...this.live]) this.kill(o); }
+  pop(o, ms = 280, to = K) { return tween(D(ms), (k) => o.scale.setScalar(Math.max(0.001, to * k)), ease.back); }
+  vanish(o, ms = 240) { const s0 = o.scale.x; return tween(D(ms), (k) => o.scale.setScalar(Math.max(0.001, s0 * (1 - k))), ease.in).then(() => this.kill(o)); }
+  /** onda de choque: um anel deitado que abre e some */
+  ring(p, color = 0xffecbe) {
+    const m = new THREE.MeshBasicMaterial({ color, transparent: true, depthWrite: false, toneMapped: false });
+    const r = this.add(part(new THREE.TorusGeometry(0.2, 0.025, 4, 14), m), p); r.castShadow = false;
+    tween(D(460), (k) => { r.scale.setScalar(0.3 + k * 3.2); m.opacity = 1 - k; }, ease.out).then(() => this.kill(r));
+  }
+  /** marca de tinta que fica na carta (ou na mesa) depois do carimbo; vai na camada das cartas para sair nítida */
+  ink(p, key, l1, l2, w = 0.5, hold = 700) {
+    const m = new THREE.MeshBasicMaterial({ map: this.tex(key, 360, 224, drawStamp, l1, l2), transparent: true, depthWrite: false, toneMapped: false });
+    const o = part(new THREE.PlaneGeometry(w * K, w * K * 0.62), m, p.x, 0.045, p.z); o.castShadow = false;
+    o.rotation.set(-Math.PI / 2, 0, -0.18); o.renderOrder = 30; o.layers.set(LAYER.CARD);
+    this.group.add(o); this.live.add(o);
+    return wait(D(hold)).then(() => tween(D(320), (k) => { m.opacity = 1 - k; })).then(() => this.kill(o));
+  }
 
   // BRUNO · Palma Oca: duas mãos sobem da carta e batem palma antes da moeda
   async clap(p) {
-    const L = this.sprite(this.tex('handL', 192, 268, drawHand, false), 0.4, 0.56), R = this.sprite(this.tex('handR', 192, 268, drawHand, true), 0.4, 0.56);
-    const base = p.clone(), set = (gap, y, k) => { gap *= K; L.position.set(base.x - gap, base.y + y, base.z); R.position.set(base.x + gap, base.y + y, base.z); this.size(L, k); this.size(R, k); };
-    set(0.34, 0.15, 0.01);
-    await tween(D(340), (k) => set(0.34, lerp(0.15, 0.85, k), k), ease.back);
-    L.material.rotation = -0.12; R.material.rotation = 0.12;
-    await tween(D(150), (k) => set(lerp(0.34, 0.12, k), 0.85, 1), ease.in);
+    const L = this.add(hand()), R = this.add(hand());
+    const base = p.clone(), set = (gap, y, k) => {
+      gap *= K; L.position.set(base.x - gap, base.y + y, base.z); R.position.set(base.x + gap, base.y + y, base.z);
+      L.scale.set(K * k, K * k, K * k); R.scale.set(-K * k, K * k, K * k); // a direita é a esquerda espelhada
+      L.rotation.z = -0.15; R.rotation.z = 0.15;
+    };
+    set(0.3, 0.1, 0.01);
+    await tween(D(340), (k) => set(0.3, lerp(0.1, 0.55, k), Math.max(0.01, k)), ease.back);
+    await tween(D(150), (k) => set(lerp(0.3, 0.035, k), 0.55, 1), ease.in);
     sfx('clap'); this.d.bump(0.2); this.d.pulse('uAberr', 0.009, 320); this.d.lampKick(0.7);
-    this.ring(base.clone().add(V(0, 0.85, 0))); this.d.sparkle(base.clone().add(V(0, 0.85, 0)), [1, 0.9, 0.6], 18);
-    await tween(D(170), (k) => set(lerp(0.12, 0.2, k), 0.85, 1), ease.out);
+    const hit = base.clone().add(V(0, 0.55 + 0.12 * K, 0));
+    this.ring(hit); this.d.sparkle(hit, [1, 0.9, 0.6], 18);
+    await tween(D(170), (k) => set(lerp(0.035, 0.12, k), 0.55, 1), ease.out);
     await wait(D(320));
-    await Promise.all([this.fadeOut(L, 260), this.fadeOut(R, 260)]);
+    await tween(D(240), (k) => set(0.12 + 0.1 * k, 0.55 - 0.4 * k, Math.max(0.001, 1 - k)), ease.in);
+    this.kill(L); this.kill(R);
   }
 
-  // PAULO · Espírito de oração: uma cruz brilhante sobe sobre ele quando fica em defesa
+  // PAULO · Espírito de oração: uma cruz dourada e brilhante sobe sobre ele quando fica em defesa
   async cross(p) {
-    const s = this.sprite(this.tex('cross', 192, 256, drawCross), 0.46, 0.62, p.clone().add(V(0, 0.2, 0)));
-    s.material.opacity = 0; sfx('choir'); this.d.pulse('uTintWarm', 0.45, 1300);
-    const glow = this.sprite(this.tex('ring', 256, 256, drawRing), 0.9, 0.9, s.position); glow.material.opacity = 0; glow.material.color.set('#ffd98a');
-    await tween(D(760), (k) => { s.position.y = p.y + lerp(0.2, 1.0, k); glow.position.copy(s.position); s.material.opacity = Math.min(1, k * 2.5); glow.material.opacity = 0.35 * k; this.size(s, 0.8 + 0.2 * k); }, ease.out);
-    for (let i = 0; i < 3; i++) this.d.sparkle(s.position, [1, 0.88, 0.5], 10);
-    tween(D(900), (k) => { this.size(s, 1 + Math.sin(k * Math.PI * 3) * 0.04); this.size(glow, 1 + k * 0.6); glow.material.opacity = 0.35 * (1 - k); }, ease.lin).then(() => this.kill(glow));
-    await wait(D(500));
-    this.fadeOut(s, 600, 0.3);
+    const gold = glow(0xf6d27a, 0.45), g = new THREE.Group();
+    g.add(B(0.075, 0.5, 0.075, gold, 0, 0, 0), B(0.32, 0.075, 0.075, gold, 0, 0.1, 0));
+    const light = new THREE.PointLight(0xffd98a, 0, 3, 1.6); light.position.set(0, 0.1, 0.25); g.add(light);
+    this.add(g, p.clone().add(V(0, 0.2, 0)));
+    sfx('choir'); this.d.pulse('uTintWarm', 0.45, 1300);
+    await tween(D(760), (k) => { g.position.y = p.y + lerp(0.2, 0.95, k); g.scale.setScalar(Math.max(0.001, K * k)); g.rotation.y = (1 - k) * 2.4; light.intensity = 2 * k; }, ease.out);
+    for (let i = 0; i < 3; i++) this.d.sparkle(g.position, [1, 0.88, 0.5], 10);
+    await tween(D(700), (k) => { g.rotation.y = Math.sin(k * Math.PI * 2) * 0.25; g.position.y = p.y + 0.95 + Math.sin(k * Math.PI) * 0.05; }, ease.lin);
+    await tween(D(420), (k) => { g.position.y = p.y + 0.95 + 0.3 * k; g.scale.setScalar(Math.max(0.001, K * (1 - k))); light.intensity = 2 * (1 - k); }, ease.in);
+    this.kill(g);
   }
 
-  // AR CONDICIONADO NO TALO: o aparelho desce, apita no 16° e sopra frio na mesa toda
-  async airConditioner() {
-    const s = this.sprite(this.tex('ac', 512, 196, drawAC), 1.7, 0.65, V(0, 3.4, -0.4));
-    await tween(D(520), (k) => { s.position.y = lerp(3.4, 1.75, k); }, ease.back);
-    sfx('acBeep'); this.d.bump(0.1);
-    await wait(D(200));
-    sfx('frost'); sfx('whoosh'); this.d.pulse('uFrost', 0.95, 1500); this.d.snow(0); this.d.snow(1);
-    const P = this.d.particles;
-    for (let i = 0; i < 90; i++) P.emit({ x: (Math.random() - 0.5) * 1.5, y: 1.5, z: -0.4 + Math.random() * 0.1, vx: (Math.random() - 0.5) * 2.4, vy: -1.2 - Math.random() * 1.4, vz: (Math.random() - 0.3) * 2.6, r: 0.85, g: 0.97, b: 1, a: 0.7, size: 0.03 + Math.random() * 0.03, life: 0.8 + Math.random() * 0.8, drag: 0.6, floor: 0.02 });
-    await tween(D(900), (k) => { s.position.x = Math.sin(k * 60) * 0.012; }, ease.lin);
-    await tween(D(380), (k) => { s.position.y = lerp(1.75, 3.6, k); s.material.opacity = 1 - k; }, ease.in);
-    this.kill(s);
-  }
-
-  // CHAT GPT · Estou na nuvem, otário: a carta sobe para dentro de uma nuvem antes de voltar ao deck
+  // CHAT GPT · Estou na nuvem, otário: uma nuvem de poliedros baixa e a carta sobe para dentro dela
   async cloud(card) {
-    const p = card.group.position.clone();
-    const s = this.sprite(this.tex('cloud', 256, 176, drawCloud), 0.9, 0.62, p.clone().add(V(0, 1.15, 0)));
-    await tween(D(300), (k) => this.size(s, k), ease.back);
+    const p = card.group.position.clone(), m = mat(0xcfd3cc, { emissiveIntensity: 0.12 }), g = new THREE.Group();
+    [[-0.2, 0, 0, 0.16], [0, 0.07, 0, 0.2], [0.21, 0.01, 0, 0.15], [-0.09, -0.05, 0.09, 0.13], [0.1, -0.05, 0.08, 0.13], [0.02, 0.0, -0.1, 0.15]].forEach(([x, y, z, r]) => g.add(part(new THREE.IcosahedronGeometry(r, 0), m, x, y, z)));
+    this.add(g, p.clone().add(V(0, 1.0, 0)));
+    await this.pop(g, 300);
     sfx('whoosh');
-    await tween(D(420), (k) => { card.offset.set(0, 0.95 * k, 0); }, ease.inOut);
-    this.d.sparkle(s.position, [0.8, 0.95, 1], 20);
+    await tween(D(420), (k) => { card.offset.set(0, 0.85 * k, 0); g.rotation.y = k * 0.8; }, ease.inOut);
+    this.d.sparkle(g.position, [0.8, 0.95, 1], 20);
     card.offset.set(0, 0, 0);
-    this.fadeOut(s, 420, 0.3);
+    tween(D(420), (k) => { g.position.y = p.y + 1.0 + 0.4 * k; }, ease.in);
+    this.vanish(g, 420);
   }
 
   // LUCAS · Máquina de reels: um celular filma a vítima, o REC pisca e o flash trava a carta
   async phoneRec(p) {
     const on = this.tex('recOn', 176, 300, drawPhone, 'rec'), off = this.tex('recOff', 176, 300, drawPhone, 'recOff');
-    const s = this.sprite(on, 0.38, 0.65, p.clone().add(V(0, 0.8, 0)));
-    await tween(D(280), (k) => this.size(s, k), ease.back);
-    for (let i = 0; i < 4; i++) { s.material.map = i % 2 ? on : off; await wait(D(130)); }
-    s.material.map = on; sfx('shutter'); this.d.pulse('uFlash', 0.55, 320, [1, 1, 0.95]); this.d.bump(0.08);
-    await wait(D(260));
-    await tween(D(220), (k) => { this.size(s, 1 - k); s.material.opacity = 1 - k * 0.5; }, ease.in);
-    this.kill(s);
+    const g = this.add(phone(on), p.clone().add(V(0, 0.62, 0.15))); g.rotation.x = -0.35;
+    const flash = new THREE.PointLight(0xffffff, 0, 3, 1.5); flash.position.set(0, 0, -0.2); g.add(flash);
+    await this.pop(g);
+    for (let i = 0; i < 4; i++) { g.userData.screen.material.map = i % 2 ? on : off; await wait(D(130)); }
+    g.userData.screen.material.map = on; sfx('shutter'); this.d.pulse('uFlash', 0.5, 320, [1, 1, 0.95]); this.d.bump(0.08);
+    await tween(D(260), (k) => { flash.intensity = 30 * (1 - k); }, ease.out);
+    await this.vanish(g, 220);
   }
 
-  // DUDA · Quem olhar vai ter que fazer: um olho enorme se abre sobre a vítima e encara
-  async eye(p) {
-    const { c, g } = mkCanvas(256, 160), map = canvasTex(c);
-    const s = this.sprite(map, 0.8, 0.5, p.clone().add(V(0, 0.8, 0)));
-    const draw = (open, look) => { drawEye(g, 256, 160, open, look); map.needsUpdate = true; };
-    draw(0, 0); sfx('stare'); this.d.pulse('uGlitch', 0.5, 500); this.d.oppGlitch = Math.max(this.d.oppGlitch, 0.4);
-    await tween(D(380), (k) => draw(k, 0), ease.out);
-    await tween(D(620), (k) => draw(1, Math.sin(k * Math.PI * 2) * 0.9), ease.inOut);
-    await wait(D(260));
-    await tween(D(140), (k) => draw(1 - k, 0), ease.in);
-    this.kill(s); map.dispose();
-  }
-
-  // TÊNIA · COMER! COMER!: o verme sai de trás do deck e come as cartas do topo (as compras acontecem junto)
-  async worm(deckPos) {
-    const open = this.tex('wormO', 192, 260, drawWorm, true), shut = this.tex('wormC', 192, 260, drawWorm, false);
-    const base = deckPos.clone().add(V(0, 0, -0.15));
-    const s = this.sprite(shut, 0.5, 0.68, base);
+  // TÊNIA · COMER! COMER!: uma bocarra sai de trás do seu deck e morde o topo 3 vezes (as compras acontecem junto)
+  async jaws(deckPos) {
+    const g = new THREE.Group(), gum = mat(0x7a2a26), tooth = mat(0xe8e0c4), lipM = mat(0xa86a60);
+    const jaw = (up) => {
+      const j = new THREE.Group(), sg = up ? 1 : -1;
+      j.add(B(0.46, 0.07, 0.3, lipM, 0, 0.035 * sg, 0), B(0.42, 0.03, 0.26, gum, 0, 0.005 * sg, 0.01));
+      for (let i = 0; i < 7; i++) { const t = part(new THREE.ConeGeometry(0.026, 0.07 + (i % 2) * 0.03, 4), tooth, -0.18 + i * 0.06, -0.035 * sg, 0.11); if (up) t.rotation.z = Math.PI; j.add(t); }
+      for (let i = 0; i < 4; i++) { const t = part(new THREE.ConeGeometry(0.022, 0.06, 4), tooth, i < 2 ? -0.2 : 0.2, -0.03 * sg, -0.05 + (i % 2) * 0.1); if (up) t.rotation.z = Math.PI; j.add(t); }
+      return j;
+    };
+    const top = jaw(true), bot = jaw(false), pivot = new THREE.Group();
+    bot.position.y = -0.01; pivot.add(top); g.add(pivot, bot);
+    g.add(part(new THREE.SphereGeometry(0.17, 8, 5, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2), mat(0x1a0606, { side: THREE.DoubleSide }), 0, 0.02, -0.04)); // goela
+    const base = deckPos.clone().lerp(V(0, 0, 0), 0.38).add(V(0, 0.3, 0)); // entre o deck e o centro, acima da mão de cartas
+    const open = (k) => { pivot.rotation.x = -0.9 * k; top.position.set(0, 0, 0.12 * k); };
+    this.add(g, base); g.rotation.x = 0.35; open(1);
     sfx('chomp');
-    await tween(D(360), (k) => { s.position.y = base.y + lerp(0, 0.6, k); this.size(s, k); }, ease.back);
-    // as mordidas seguem sem segurar a linha do tempo: as cartas compradas passam por baixo
+    await tween(D(320), (k) => { g.scale.setScalar(Math.max(0.001, K * k)); g.position.y = base.y + 0.25 * k; }, ease.back);
+    // as mordidas seguem sem segurar a linha do tempo: as cartas compradas passam pela boca
     (async () => {
       for (let i = 0; i < 3; i++) {
-        s.material.map = open; await tween(D(160), (k) => this.size(s, 1 + 0.12 * k, 1 - 0.05 * k), ease.out);
-        s.material.map = shut; sfx('chomp'); this.d.bump(0.06); this.d.puff(base.clone().add(V(0, 0.4, 0)), 6, [0.75, 0.6, 0.55]);
-        await tween(D(170), (k) => this.size(s, 1.12 - 0.12 * k, 0.95 + 0.05 * k), ease.in);
+        await tween(D(150), (k) => open(1 - k), ease.in);
+        sfx('chomp'); this.d.bump(0.08); this.d.puff(base.clone().add(V(0, 0.25, 0.1)), 8, [0.75, 0.6, 0.55]);
+        await tween(D(190), (k) => open(k), ease.out);
       }
-      await tween(D(320), (k) => { s.position.y = base.y + lerp(0.6, 0, k); s.material.opacity = 1 - k; }, ease.in);
-      this.kill(s);
+      open(0); await wait(D(120));
+      await this.vanish(g, 260);
     })();
   }
 
-  // PÃO COM REQUEIJÃO · Dezesseis reais?: a etiqueta de preço cai balançando
-  async priceTag(p) {
-    const s = this.sprite(this.tex('tag', 300, 176, drawTag), 0.72, 0.42, p.clone().add(V(0.05, 1.6, 0)));
-    s.material.opacity = 0;
-    await tween(D(300), (k) => { s.position.y = p.y + lerp(1.6, 0.85, k); s.material.opacity = k; }, ease.out);
-    sfx('register');
-    await tween(D(900), (k) => { s.material.rotation = Math.sin(k * 14) * 0.25 * (1 - k); }, ease.lin);
-    this.fadeOut(s, 320);
-  }
-
-  // ONDE TEM PILHA?: a pilha sobre quem atacou descarrega e dá curto
+  // ONDE TEM PILHA?: uma pilha AA sobre quem atacou descarrega e dá curto
   async battery(p) {
-    const { c, g } = mkCanvas(128, 224), map = canvasTex(c);
-    const s = this.sprite(map, 0.3, 0.52, p.clone().add(V(0, 0.8, 0)));
-    const draw = (lv) => { drawBattery(g, 128, 224, lv); map.needsUpdate = true; };
-    draw(1); this.size(s, 0.01);
-    await tween(D(220), (k) => this.size(s, k), ease.back);
+    const g = new THREE.Group();
+    g.add(C(0.07, 0.07, 0.3, 10, mat(0x2b2b28), 0, 0, 0), C(0.072, 0.072, 0.09, 10, mat(0xb8732e), 0, 0.105, 0), C(0.028, 0.028, 0.03, 8, mat(0x9a958a), 0, 0.165, 0));
+    const bar = glow(0x7fcf86, 1.1), fill = B(0.05, 0.24, 0.012, bar, 0, 0, 0.068); fill.geometry.translate(0, 0.12, 0); fill.position.y = -0.12; g.add(fill);
+    this.add(g, p.clone().add(V(0, 0.6, 0))); g.rotation.z = 0.25;
+    await this.pop(g, 220);
     sfx('powerDown');
-    await tween(D(760), (k) => draw(1 - k), ease.in);
-    sfx('zap'); this.d.sparks(s.position.clone(), 30); this.d.lampFlicker(0.8); this.d.bump(0.15);
-    await tween(D(300), (k) => { s.position.x = p.x + Math.sin(k * 50) * 0.03 * (1 - k); }, ease.lin);
-    await this.fadeOut(s, 260, 0);
-    map.dispose();
+    const col = new THREE.Color(), G = new THREE.Color(0x7fcf86), A = new THREE.Color(0xf2b94c), Rr = new THREE.Color(0xee3a30);
+    await tween(D(760), (k) => { const lv = 1 - k; fill.scale.y = Math.max(0.02, lv); col.copy(lv > 0.5 ? G : lv > 0.2 ? A : Rr); bar.color.copy(col); bar.emissive.copy(col); g.rotation.y = k * 3; }, ease.in);
+    sfx('zap'); this.d.sparks(g.position.clone(), 30); this.d.lampFlicker(0.8); this.d.bump(0.15);
+    await tween(D(300), (k) => { g.position.x = p.x + Math.sin(k * 50) * 0.03 * (1 - k); }, ease.lin);
+    await this.vanish(g, 240);
   }
 
   // CAFÉ COM 8 COLHERES DE PÓ · Gosto de cigarro: a caneca solta fumaça cinza sobre o alvo
   async mug(p) {
-    const s = this.sprite(this.tex('mug', 200, 180, drawMug), 0.42, 0.38, p.clone().add(V(0, 0.7, 0)));
-    await tween(D(260), (k) => this.size(s, k), ease.back);
+    const g = new THREE.Group(), por = mat(0xd9d3c4);
+    g.add(C(0.11, 0.1, 0.22, 10, por, 0, 0, 0), C(0.1, 0.1, 0.01, 10, mat(0x2a170c), 0, 0.106, 0), C(0.112, 0.112, 0.05, 10, mat(0x6a2420), 0, 0.02, 0));
+    const handle = part(new THREE.TorusGeometry(0.065, 0.02, 4, 8, Math.PI), por, 0.11, 0, 0); handle.rotation.z = -Math.PI / 2; g.add(handle);
+    this.add(g, p.clone().add(V(0, 0.55, 0))); g.rotation.x = 0.25;
+    await this.pop(g, 260);
     sfx('sip');
-    const P = this.d.particles, top = s.position.clone().add(V(-0.04, 0.16, 0));
-    for (let i = 0; i < 46; i++) setTimeout(() => P.emit({ x: top.x + (Math.random() - 0.5) * 0.12, y: top.y, z: top.z, vx: (Math.random() - 0.5) * 0.12, vy: 0.35 + Math.random() * 0.3, vz: 0, r: 0.62, g: 0.6, b: 0.55, a: 0.55, size: 0.05 + Math.random() * 0.05, life: 1.1 + Math.random() * 0.6, drag: 0.4, grav: -0.05 }), D(i * 20));
-    await wait(D(900));
-    this.fadeOut(s, 300);
+    const P = this.d.particles, top = g.position.clone().add(V(0, 0.18, 0));
+    for (let i = 0; i < 46; i++) setTimeout(() => P.emit({ x: top.x + (Math.random() - 0.5) * 0.14, y: top.y, z: top.z, vx: (Math.random() - 0.5) * 0.12, vy: 0.35 + Math.random() * 0.3, vz: 0, r: 0.62, g: 0.6, b: 0.55, a: 0.55, size: 0.05 + Math.random() * 0.05, life: 1.1 + Math.random() * 0.6, drag: 0.4, grav: -0.05 }), D(i * 20));
+    await tween(D(900), (k) => { g.rotation.y = k * 1.4; }, ease.inOut);
+    await this.vanish(g, 260);
   }
 
-  /** carimbo batendo em cima de uma carta: Thays (FALTOU UM TCHAN!), Filipe (FAKE NEWS) e Ralph (×2) */
-  async stamp(p, l1, l2, { w = 0.9, h = 0.56, hold = 600, col } = {}) {
-    const key = `stamp:${l1}|${l2}`, s = this.sprite(this.tex(key, 360, 224, drawStamp, l1, l2, col), w, h, p.clone().add(V(0, 1.1, 0)));
-    s.material.rotation = -0.18; s.material.opacity = 0;
-    await tween(D(170), (k) => { this.size(s, lerp(2.2, 1, k)); s.position.y = p.y + lerp(1.1, 0.3, k); s.material.opacity = k; }, ease.in);
-    sfx('stamp'); this.d.bump(0.24); this.d.puff(p.clone().add(V(0, 0.1, 0)), 16, [0.75, 0.7, 0.6]);
-    await wait(D(hold));
-    this.fadeOut(s, 280, 0.1);
-  }
-  async fakeNews(p) {
-    const s = this.sprite(this.tex('post', 176, 320, drawPhone, 'post'), 0.4, 0.73, p.clone().add(V(0, 0.95, 0)));
-    await tween(D(260), (k) => this.size(s, k), ease.back);
-    sfx('notify');
-    await wait(D(300));
-    await this.stamp(p.clone().add(V(0, 0.65, 0.05)), 'FAKE NEWS', '', { w: 0.62, h: 0.38, hold: 500 });
-    this.fadeOut(s, 260);
+  /** carimbo de borracha batendo de verdade em cima de uma carta (Thays) */
+  async stamp(p, l1, l2, { hold = 700 } = {}) {
+    const g = this.add(stampTool(), p.clone().add(V(0, 1.2, 0))); g.scale.setScalar(K); g.rotation.y = -0.18;
+    await tween(D(260), (k) => { g.position.y = p.y + lerp(1.2, 0.7, k); g.rotation.z = Math.sin(k * Math.PI) * 0.15; }, ease.out);
+    await tween(D(110), (k) => { g.position.y = p.y + lerp(0.7, 0.04, k); }, ease.in);
+    sfx('stamp'); this.d.bump(0.24); this.d.puff(p.clone().add(V(0, 0.08, 0)), 16, [0.75, 0.7, 0.6]);
+    const mark = this.ink(p, `stamp:${l1}|${l2}`, l1, l2, 0.5, hold);
+    await wait(D(120));
+    await tween(D(260), (k) => { g.position.y = p.y + lerp(0.04, 1.0, k); }, ease.out);
+    this.vanish(g, 200);
+    await wait(D(Math.max(0, hold - 300)));
+    return mark;
   }
 }
