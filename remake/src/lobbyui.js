@@ -9,6 +9,7 @@ import { save } from './save.js';
 import { logoUrl, backUrl } from './cosmetics.js';
 import * as C from './hud/components.js';
 import * as Meta from '../../src/meta/meta.ts';
+import { CAMPAIGN, tierOf } from '../../src/meta/campaign.ts';
 
 const { META, DECK_RULES, RARITY_PT } = Meta;
 const $ = (sel, root = document) => root.querySelector(sel);
@@ -22,7 +23,7 @@ const AREAS = [
 ];
 const TITLES = {
   deck: ['Arquivo morto · gaveta 3', 'Decks e coleção'], recycle: ['Trituradora · uso por conta e risco', 'Reciclar repetidas'],
-  duel: ['Sala de reunião · porta entreaberta', 'Iniciar duelo'], training: ['Mesa do estagiário', 'Treino sem valer'],
+  duel: ['Sala de reunião · porta entreaberta', 'Campanha'], training: ['Mesa do estagiário', 'Treino sem valer'],
   missions: ['Mural de avisos · leitura obrigatória', 'Metas do dia'], shop: ['Máquina de benefícios · não devolve troco', 'Loja'],
   achievements: ['Prateleira de troféus · empoeirada', 'Conquistas'], profile: ['Recepção · ficha cadastral', 'Perfil da empresa'],
 };
@@ -117,6 +118,7 @@ export class LobbyUI {
   /** depois de um duelo: recompensa, metas cumpridas e conquistas */
   afterMatch(out) {
     if (!out) return;
+    if (out.finished) setTimeout(() => this.ui.ending(), 600);
     out.missionsDone.forEach((m, i) => setTimeout(() => this.toast(`<b>Meta cumprida</b><span>${esc(m.text)} · resgate ${money(m.reward)} no mural</span>`, 'good'), 300 + i * 700));
     this.announce(out.unlocked);
   }
@@ -265,15 +267,28 @@ export class LobbyUI {
   // ───────── sala de reunião e treino ─────────
   deckLine(s) { const d = Meta.activeDeck(s), ok = Meta.activeDeckValid(s); return `<div class="lb-deckline ${ok ? '' : 'bad'}"><span class="memo">Deck escolhido</span><b>${esc(d.name)}</b><span>${ok ? `${d.cards.length} cartas · pronto` : esc(Meta.deckErrors(s, d.cards)[0] ?? 'Deck inválido')}</span><button data-a="open" data-id="deck">Trocar no arquivo</button></div>`; }
   vDuel(s) {
-    const rv = RIVALS.map((r) => { const x = s.stats.rivals[r] ?? { w: 0, l: 0 }; return `<li class="${x.w ? 'won' : ''}"><span>${esc(r)}</span><em>${x.w}V · ${x.l}D</em></li>`; }).join('');
+    const c = s.campaign, N = CAMPAIGN.length, cleared = c.cleared, st = Math.min(c.stage, N - 1), tier = tierOf(st), boss = !cleared && tier === 3;
+    const tierName = boss ? 'Chefe final' : CAMPAIGN.tiers[tier]?.name ?? '';
+    const rec = (r) => s.stats.rivals[r] ?? { w: 0, l: 0 };
+    // a escada: vencidas com nome, a da vez destacada, as próximas escondidas (o Conselho sempre aparece no topo)
+    const rows = c.order.map((r, i) => {
+      const done = i < c.stage, cur = !cleared && i === c.stage, last = i === N - 1;
+      const head = CAMPAIGN.tiers.find((t) => t.from === i + 1);
+      const label = done || cur || last ? esc(r) : '— — —';
+      return `${head ? `<li class="lb-tier"><span>${esc(head.name)}</span><em>${head.from}–${head.to}</em></li>` : ''}${last ? '<li class="lb-tier"><span>Chefe final</span><em>30</em></li>' : ''}<li class="${done ? 'won' : ''} ${cur ? 'cur' : ''} ${last ? 'boss' : ''}"><span><i>${String(i + 1).padStart(2, '0')}</i> ${label}</span><em>${done ? 'vencida' : cur ? `${rec(r).l ? `${rec(r).l} derrota${rec(r).l > 1 ? 's' : ''}` : 'a seguir'}` : ''}</em></li>`;
+    }).join('');
+    const lead = cleared
+      ? '<p class="lb-lead"><b>Campanha concluída.</b> O Conselho caiu e o mercado é seu. A porta continua aberta para <b>reuniões livres</b> contra qualquer uma das 30 empresas, no nível mais alto. Não avançam nada, mas pagam.</p>'
+      : `<p class="lb-lead">São <b>${N} reuniões</b>, uma de cada vez. A dificuldade sobe de 10 em 10, e a última é contra <b>${esc(CAMPAIGN.boss.name)}</b>. Vença e o <b>CAIXA que restar</b> vira PATRIMÔNIO (multiplicado pela faixa). Perca e você tenta de novo a mesma reunião.</p>
+        <div class="lb-next ${boss ? 'is-boss' : ''}"><p class="memo">Batalha ${st + 1} de ${N} · ${esc(tierName)}</p><h3>${esc(c.order[st])}</h3><p class="fine">${boss ? 'O deck mais forte do mercado e a IA mais afiada. Paga ×' + CAMPAIGN.boss.reward + '.' : tier === 0 ? 'Jogam com as mesmas cartas que você tem, e erram bastante. Paga ×1.' : tier === 1 ? 'Decks sorteados com todas as cartas do mercado. Paga ×1,5.' : 'Decks montados com estratégia e IA afiada. Paga ×2.'}</p></div>`;
     return `<div class="lb-pad lb-two">
       <div>
-        <p class="lb-lead">Do outro lado da porta, uma empresa rival <b>sorteada</b> entre as ${RIVALS.length} que sobraram no mercado, com um deck feito das cartas que você já tem no arquivo. Vença e o <b>CAIXA que restar</b> vira PATRIMÔNIO. Perca e os investidores não pagam nada.</p>
+        ${lead}
         ${this.deckLine(s)}
-        <div class="lb-actions"><button data-a="duel" class="primary big" ${Meta.activeDeckValid(s) ? '' : 'disabled'}>Entrar na reunião <kbd>Enter</kbd></button><button data-a="open" data-id="training">Treinar antes</button></div>
+        <div class="lb-actions"><button data-a="duel" class="primary big" ${Meta.activeDeckValid(s) ? '' : 'disabled'}>${cleared ? 'Reunião livre' : boss ? 'Enfrentar o Conselho' : 'Entrar na reunião'} <kbd>Enter</kbd></button><button data-a="open" data-id="training">Treinar antes</button></div>
         <p class="fine">Vitórias seguidas: ${s.stats.streak} · melhor sequência: ${s.stats.bestStreak}</p>
       </div>
-      <div><p class="memo">Empresas rivais · seu retrospecto</p><ul class="lb-rivals">${rv}</ul></div></div>`;
+      <div><p class="memo">Campanha · ${Math.min(c.stage, N)} de ${N} vencidas</p><ul class="lb-rivals lb-ladder lb-scroll">${rows}</ul></div></div>`;
   }
   vTraining(s) {
     return `<div class="lb-pad">

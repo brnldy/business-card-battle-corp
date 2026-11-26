@@ -19,7 +19,7 @@ export {
   attacksAllowed as maxAttacks,
   canAttackNow as canAttack,
 } from '../../src/engine/stats.ts';
-export { chooseAction as aiChoose } from '../../src/ai/ai.ts';
+export { chooseAction as aiChoose, chooseWithProfile } from '../../src/ai/ai.ts';
 export { previewAttack } from '../../src/engine/preview.ts';
 
 export function isEffect(def) {
@@ -49,10 +49,10 @@ export function aiWeak(state) {
  * Partida nova. O jogador entra com o deck escolhido no lobby (`myDeck`); o rival, com um deck sorteado
  * entre as cartas que o jogador já tem (`rivalPool`), até 3 cópias (exceção de teste do GDD enquanto houver poucas cartas).
  */
-export function createGame(names, { myDeck = null, rivalPool = null } = {}) {
+export function createGame(names, { myDeck = null, rivalPool = null, rivalDeck = null } = {}) {
   const seed = Math.floor(Math.random() * 2 ** 31);
   const r = { rng: seed };
-  const decks = [myDeck ?? randomDeck(r, TEST_DECK_RULES), rivalPool ? deckFromPool(r, rivalPool) : randomDeck(r, TEST_DECK_RULES)];
+  const decks = [myDeck ?? randomDeck(r, TEST_DECK_RULES), rivalDeck ?? (rivalPool ? deckFromPool(r, rivalPool) : randomDeck(r, TEST_DECK_RULES))];
   const { state, events } = baseCreateGame({ seed, decks, names, deckRules: TEST_DECK_RULES });
   return { state, events, seed };
 }

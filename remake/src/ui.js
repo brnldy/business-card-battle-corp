@@ -342,6 +342,16 @@ export class UI {
     f.style.left = `${pos.x / this.scale}px`; f.style.top = `${pos.y / this.scale - 44}px`;
     $('#floats').appendChild(f); setTimeout(() => f.remove(), 1500);
   }
+  /** Fim da campanha. MARCAÇÃO: aqui entra a cutscene final que o autor vai mandar. */
+  ending(onClose) {
+    this.onModalClose = onClose ?? null;
+    this.modal(`
+      <div class="memo">Ata final · reservado ao Conselho</div><h2>O Conselho caiu.</h2>
+      <p>[CUTSCENE FINAL · EM PRODUÇÃO]</p>
+      <p class="fine">Espaço reservado para a cena de encerramento. Depois dela, a sala de reunião continua aberta para reuniões livres.</p>
+      <nav><button data-close class="primary">Voltar ao expediente</button></nav>`, 'ending');
+    sfx('win');
+  }
   gameOver(o) {
     this.show('over', !!o); if (!o) return;
     $('#over').className = `screen ${o.win ? 'win' : o.draw ? 'draw' : 'lose'}`;

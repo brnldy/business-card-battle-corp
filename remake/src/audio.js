@@ -122,10 +122,11 @@ function syncOriginal() {
   const s = settings.get();
   const want = started && !s.muted && s.music > 0;
   if (!want) { if (origEl) origEl.pause(); return; }
-  const src = asset(mode === 'duel' ? 'music/BASE_SOUNDTRACK.mp3' : 'music/MENU_BG.m4a');
+  // chefe final: enquanto o autor não manda uma trilha própria, a do duelo toca mais lenta e grave (sem corrigir o tom)
+  const src = asset(mode === 'duel' || mode === 'boss' ? 'music/BASE_SOUNDTRACK.mp3' : 'music/MENU_BG.m4a');
   if (!origEl) { origEl = new Audio(); origEl.loop = true; }
-  if (origEl.dataset.k !== mode) { origEl.src = src; origEl.dataset.k = mode; }
-  origEl.volume = Math.min(1, s.music * (mode === 'duel' ? 0.25 : 0.35));
+  if (origEl.dataset.k !== mode) { if (origEl.dataset.src !== src) { origEl.src = src; origEl.dataset.src = src; } origEl.dataset.k = mode; origEl.preservesPitch = false; origEl.playbackRate = mode === 'boss' ? 0.8 : 1; }
+  origEl.volume = Math.min(1, s.music * (mode === 'duel' || mode === 'boss' ? 0.25 : 0.35));
   origEl.play().catch(() => {});
 }
 export function setMusicMode(m) { mode = m; if (ctx) syncOriginal(); }

@@ -205,3 +205,13 @@
 .lb-toast.out { opacity: 0; transform: translateX(20px); }
 @keyframes lb-in { from { opacity: 0; transform: translateX(30px); } }
 @media (max-width: 1100px) { .lb-deck { grid-template-columns: 0 1fr 270px; } .lb-preview { display: none; } .lb-nav span { display: none; } }
+
+/* campanha: a próxima reunião e a escada das 30 */
+.lb-next { margin: 4px 0 14px; padding: 12px 14px; background: rgba(0, 0, 0, 0.3); border: 1px solid var(--line); border-left: 3px solid var(--cream); }
+.lb-next h3 { font: 400 30px/1.05 var(--serif); color: var(--paper); margin: 2px 0 4px; }
+.lb-next.is-boss { border-left-color: var(--red); background: rgba(80, 8, 4, 0.35); } .lb-next.is-boss h3 { color: #ff8a80; text-shadow: 1.5px 0 rgba(255, 60, 40, 0.45), -1.5px 0 rgba(60, 220, 255, 0.3); }
+.lb-ladder { max-height: 430px; overflow: auto; }
+.lb-ladder li { font-size: 14.5px; padding: 4px 10px; } .lb-ladder li i { font: 700 10.5px var(--sans); font-style: normal; color: var(--mute); margin-right: 6px; }
+.lb-ladder li.cur { color: var(--cream); border-left-color: var(--cream); background: rgba(242, 185, 76, 0.1); }
+.lb-ladder li.boss span { color: #ff8a80; }
+.lb-ladder li.lb-tier { background: none; padding: 10px 2px 2px; font: 700 10.5px var(--sans); letter-spacing: 0.1em; text-transform: uppercase; color: var(--mute); border: none; }

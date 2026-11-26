@@ -7,6 +7,7 @@ import { buildLobby } from './lobby.js';
 import { LobbyUI } from './lobbyui.js';
 import { save, today } from './save.js';
 import { applyMatch, activeDeck } from '../../src/meta/meta.ts';
+import { rivalPlan } from '../../src/meta/campaign.ts';
 import { Duel } from './duel.js';
 import { UI } from './ui.js';
 import { settings } from './settings.js';
@@ -47,7 +48,7 @@ async function boot() {
   lobbyUi = new LobbyUI({ ui, lobby, canvas, actions: { duel: (training) => fade(() => startDuel(training)), exit: () => fade(() => toMenu()) } });
   window.__LOBBYUI__ = lobbyUi;
   // fim de partida: o lobby paga a recompensa, grava histórico, avança metas e confere conquistas
-  duel.onMatchEnd = (m) => { const out = applyMatch(save.get(), m, Date.now(), today(), RIVALS); if (out.save !== save.get()) save.set(out.save); if (!m.training) lastOutcome = lastOutcome ? { ...out, unlocked: [...lastOutcome.unlocked, ...out.unlocked], missionsDone: [...lastOutcome.missionsDone, ...out.missionsDone] } : out; return out; };
+  duel.onMatchEnd = (m) => { const out = applyMatch(save.get(), m, Date.now(), today(), RIVALS); if (out.save !== save.get()) save.set(out.save); if (!m.training) lastOutcome = lastOutcome ? { ...out, finished: out.finished || lastOutcome.finished, unlocked: [...lastOutcome.unlocked, ...out.unlocked], missionsDone: [...lastOutcome.missionsDone, ...out.missionsDone] } : out; return out; };
   duel.rematch = () => startDuel(duel.training);
   ui.boot(1);
   onResize();
@@ -73,7 +74,7 @@ async function boot() {
   setTimeout(() => { ui.bootDone(); toMenu(true); document.getElementById('unlock').classList.remove('hidden'); const q = new URLSearchParams(location.search); if (q.has('duel')) { settings.set({ seenHelp: true }); startDuel(); } else if (q.has('lobby')) toLobby(); }, 250);
   requestAnimationFrame(loop);
   // ganchos de depuração/teste
-  window.__DUEL__ = duel; duel.aiChoose = aiChoose;
+  window.__DUEL__ = duel; duel.aiChoose = aiChoose; window.__SAVE__ = save;
   window.__STEP__ = async (ms = 1000) => { for (let t = 0; t < ms; t += 16) { updateTweens(16); for (let i = 0; i < 8; i++) await null; } }; // avança as animações sem depender da tela (testes)
   window.render_game_to_text = () => JSON.stringify({ mode, lobbyPanel: lobbyUi?.panel ?? null, patrimonio: save.get().patrimonio, turn: duel.state?.turn, active: duel.state?.active, phase: duel.state?.phase, busy: duel.busy, sel: duel.sel?.stage ?? null, cards: CARDS.length });
 }
@@ -105,7 +106,9 @@ function startDuel(training = false) {
   mode = 'duel'; ui.mainMenu(false); lobbyUi.show(false); document.getElementById('unlock').classList.add('hidden');
   duel.started = false;
   const s = save.get();
-  duel.newGame({ training, deck: [...activeDeck(s).cards], pool: CARDS.filter((c) => (s.collection[c.id] ?? 0) > 0).map((c) => c.id) });
+  const pool = CARDS.filter((c) => (s.collection[c.id] ?? 0) > 0).map((c) => c.id);
+  const plan = training ? null : rivalPlan(s.campaign, pool, Math.floor(Math.random() * 2 ** 31)); // a próxima batalha da campanha
+  duel.newGame({ training, deck: [...activeDeck(s).cards], pool, plan });
   if (!settings.get().seenHelp) { settings.set({ seenHelp: true }); setTimeout(() => ui.help(), 1400); }
 }
 function onResize() {

@@ -148,6 +148,7 @@ export class Gfx {
       uAberr: { value: P.aberr }, uFlash: { value: 0 }, uFlashCol: { value: new THREE.Color(1, 0.1, 0.05) },
       uGrain: { value: 0.03 }, uLevels: { value: 32 }, uVig: { value: P.vig }, uSat: { value: P.sat }, uBloom: { value: P.bloom },
       uFrost: { value: 0 }, uGlitch: { value: 0 }, uFade: { value: 0 }, uBarrel: { value: 0 }, uTintWarm: { value: 0 }, uScan: { value: P.scan },
+      uIce: { value: 0 }, uIceTint: { value: 0 }, uCrack: { value: 0 }, tCrack: { value: new THREE.DataTexture(new Uint8Array(4), 1, 1) },
       uWobble: { value: P.wobble ?? 0 }, uShadow: { value: new THREE.Vector3(...P.shadow) }, uHigh: { value: new THREE.Vector3(...P.high) },
     };
     this.base = { aberr: P.aberr };
@@ -164,7 +165,7 @@ export class Gfx {
         gl_FragColor = vec4(c, 1.0); }`);
     this.postMat = quadMat(this.u, `
       precision highp float;
-      varying vec2 vUv; uniform sampler2D tScene, tBloom; uniform vec2 uRes; uniform vec3 uFlashCol, uShadow, uHigh;
+      varying vec2 vUv; uniform sampler2D tScene, tBloom, tCrack; uniform vec2 uRes; uniform float uIce, uIceTint, uCrack; uniform vec3 uFlashCol, uShadow, uHigh;
       uniform float uTime, uAberr, uFlash, uGrain, uLevels, uVig, uSat, uFrost, uGlitch, uFade, uTintWarm, uBloom, uScan, uWobble;
       float hash(vec2 p){ p = fract(p * vec2(123.34, 456.21)); p += dot(p, p + 45.32); return fract(p.x * p.y); }
       float bayer2(vec2 a){ a = floor(a); return fract(a.x / 2.0 + a.y * a.y * 0.75); }
@@ -193,7 +194,20 @@ export class Gfx {
         col = mix(vec3(l), col, uSat);
         col += (1.0 - l) * uShadow + l * l * uHigh;
         col = mix(col, col * vec3(1.25, 0.8, 0.7), uTintWarm);
-        col = mix(col, vec3(l) * vec3(0.72, 0.95, 1.25) + 0.05, uFrost);
+        col = mix(col, vec3(l) * vec3(0.72, 0.95, 1.25) + 0.05, max(uFrost, uIceTint));
+        // Ar Condicionado no Talo: gelo em blocos de cristal crescendo das bordas e trincas de vidro (frost.js)
+        if (uIce > 0.0) {
+          float ed = min(min(vUv.x, 1.0 - vUv.x) * uRes.x / uRes.y, min(vUv.y, 1.0 - vUv.y));
+          vec2 cell = floor(px / 3.0);
+          float jag = (hash(cell) - 0.5) * 0.05 + (hash(floor(px / 9.0)) - 0.5) * 0.06;
+          float ice = smoothstep(uIce * 0.2 + 0.004, uIce * 0.06, ed + jag * uIce);
+          float sparkle = step(0.93, hash(cell + floor(uTime * 2.0))) * ice;
+          col = mix(col, vec3(0.62, 0.8, 0.95) + 0.12 * hash(cell), ice * 0.7);
+          col += sparkle * 0.25;
+          vec4 ck = texture2D(tCrack, uv);
+          col = mix(col, col * 0.3, ck.g * uCrack);
+          col = mix(col, vec3(0.86, 0.95, 1.0), ck.r * uCrack);
+        }
         col += (hash(px + fract(uTime) * 91.7) - 0.5) * uGrain;
         col = floor(col * uLevels + bayer(px)) / uLevels;
         col *= 1.0 - uScan * mod(px.y, 2.0);

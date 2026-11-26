@@ -3,7 +3,7 @@
 import * as THREE from 'three';
 import {
   RULES, cardDef, isEffect, other, creaturesOf, findCreature, statsOf, canAttack, maxAttacks,
-  legalActions, applyAction, aiChoose, aiWeak, createGame, handLimitStatus, previewAttack,
+  legalActions, applyAction, aiChoose, aiWeak, chooseWithProfile, createGame, handLimitStatus, previewAttack,
 } from './engine.js';
 import { backTexture } from './cosmetics.js';
 import { save } from './save.js';
@@ -45,21 +45,23 @@ export class Duel {
     this.ray = new THREE.Raycaster(); this.ray.layers.enableAll(); this.caixaShown = [RULES.STARTING_CAIXA, RULES.STARTING_CAIXA]; this.group = new THREE.Group(); this.R.scene.add(this.group);
     this.slotGlow = new THREE.Mesh(glowGeo, glowMaterial()); this.slotGlow.rotation.x = -Math.PI / 2; this.slotGlow.position.y = 0.006; this.slotGlow.visible = false; this.slotGlow.layers.set(LAYER.GLOW);
     this.slotGlow.material.uniforms.uAspect.value = CARD.w / CARD.h; this.R.scene.add(this.slotGlow);
-    this.buildArrow(); this.buildCoin(); this.fx = new CardFX(this); this.frost = new FrostScreen();
+    this.buildArrow(); this.buildCoin(); this.fx = new CardFX(this); this.frost = new FrostScreen(this.gfx);
     this.oppMood = 0; this.oppGlitch = 0; this.oppTalk = 0; this.oppNod = 0; this.blinkT = 2;
     this.bindInput();
   }
 
   // ───────── ciclo de partida ─────────
-  // opts: { training, deck, pool } — treino é contra o estagiário (IA fraca) e não vale nada;
-  // deck = lista de 40 ids do lobby; pool = cartas que o rival pode usar (as que o jogador já tem)
+  // opts: { training, deck, pool, plan } — treino é contra o estagiário (IA fraca) e não vale nada;
+  // deck = lista de 40 ids do lobby; pool = cartas que o rival pode usar (as que o jogador já tem);
+  // plan = a batalha da campanha (src/meta/campaign.ts → rivalPlan): rival, deck, IA e recompensa
   async newGame(opts = {}) {
     this.clearCards(); this.fx.clear(); this.frost.clear();
     this.ui.gameOver(null); this.ui.hud(true); this.ui.clearLog();
     this.training = !!opts.training;
-    const rival = this.training ? 'ESTAGIÁRIO' : RIVALS[Math.floor(Math.random() * RIVALS.length)];
+    this.plan = this.training ? null : opts.plan ?? null;
+    const rival = this.training ? 'ESTAGIÁRIO' : this.plan?.name ?? RIVALS[Math.floor(Math.random() * RIVALS.length)];
     this.names = [save.company() ?? 'SUA EMPRESA', rival];
-    const { state, events, seed } = createGame(this.names, { myDeck: opts.deck ?? null, rivalPool: opts.pool ?? null });
+    const { state, events, seed } = createGame(this.names, { myDeck: opts.deck ?? null, rivalPool: opts.pool ?? null, rivalDeck: this.plan?.deck ?? null });
     // acompanha o que o jogador faz (metas, conquistas, estatísticas) e veste as cartas dele com o verso escolhido
     this.tracker = newTracker(state, ME); track(this.tracker, events, state);
     const look = save.get().cosmetics; this.myBack = backTexture(look.back, look.logo);
@@ -69,8 +71,10 @@ export class Duel {
     this.deckShown = [RULES.DECK_SIZE, RULES.DECK_SIZE];
     this.R.opp.face.uDead.value = 0; this.R.opp.face.uOn.value = 1; this.oppMood = 0;
     this.gfx.u.uFade.value = 0; this.lampOn = 1;
-    setMusicMode('duel'); this.R.setBadge(rival);
-    this.ui.log(this.training ? 'Treino com o estagiário · não vale PATRIMÔNIO' : `Partida contra ${rival} · protocolo ${seed.toString(36).toUpperCase()}`);
+    setMusicMode(this.plan?.boss ? 'boss' : 'duel'); this.R.setBadge(rival);
+    const where = this.plan ? (this.plan.free ? 'reunião livre' : `batalha ${this.plan.stage} de ${this.plan.total} · ${this.plan.tierName}`) : '';
+    this.ui.log(this.training ? 'Treino com o estagiário · não vale PATRIMÔNIO' : `Partida contra ${rival}${where ? ` · ${where}` : ''} · protocolo ${seed.toString(36).toUpperCase()}`);
+    if (this.plan && !this.plan.free) setTimeout(() => this.active && this.ui.banner(this.plan.boss ? 'O CONSELHO' : rival, this.plan.boss ? 'batalha final · o conselho não perdoa' : `batalha ${this.plan.stage} de ${this.plan.total}`, 'foe'), 200);
     this.indexCards();
     this.refreshHud();
     await wait(350);
@@ -120,7 +124,7 @@ export class Duel {
     wait(780 / sp).then(() => {
       this.thinking = false;
       if (!this.active || this.state.phase === 'over' || this.state.active !== OP) { this.busy = false; return; }
-      const a = this.training ? aiWeak(this.state) : aiChoose(this.state);
+      const a = this.training ? aiWeak(this.state) : this.plan ? chooseWithProfile(this.state, this.plan.ai) : aiChoose(this.state);
       this.busy = false;
       this.oppNod = 1;
       this.apply(a);
@@ -481,7 +485,8 @@ export class Duel {
     const out = this.closeMatch(draw ? 'draw' : win ? 'win' : 'loss');
     this.ui.gameOver({
       win, draw,
-      reward: this.training ? 'Treino: não vale PATRIMÔNIO nem entra no histórico.' : out?.reward ? `+ ${money(out.reward)} de PATRIMÔNIO` : win ? '' : 'Os investidores não pagam derrota. As metas do mural pagam.',
+      reward: [this.training ? 'Treino: não vale PATRIMÔNIO nem entra no histórico.' : out?.reward ? `+ ${money(out.reward)} de PATRIMÔNIO` : win ? '' : 'Os investidores não pagam derrota. As metas do mural pagam.',
+        this.plan && !this.plan.free ? (out?.finished ? 'Campanha concluída. O Conselho caiu.' : out?.advanced ? `Batalha ${this.plan.stage} de ${this.plan.total} vencida. A próxima porta está aberta.` : `Você continua na batalha ${this.plan.stage} de ${this.plan.total}.`) : ''].filter(Boolean).join(' · '),
       title: draw ? 'EMPATE' : win ? 'VOCÊ VENCEU' : 'VOCÊ FALIU',
       sub: e.reason === 'turn_limit' ? 'Limite de turnos atingido: vence quem tem mais CAIXA.' : win ? `${name} ficou sem CAIXA. Os investidores aprovam.` : `Seu CAIXA zerou. ${name} leva o investimento.`,
       stats: `CAIXA final · você ${money(s.players[ME].caixa)} · ${name} ${money(s.players[OP].caixa)} · ${s.turn} turnos`,
@@ -493,7 +498,7 @@ export class Duel {
     if (this.closed || !this.tracker || !this.state) return null;
     this.closed = true;
     const s = this.state;
-    return this.onMatchEnd?.({ rival: this.names[OP], result, turns: s.turn, caixa: [s.players[ME].caixa, s.players[OP].caixa], counters: this.tracker.c, training: this.training, startingCaixa: RULES.STARTING_CAIXA }) ?? null;
+    return this.onMatchEnd?.({ rival: this.names[OP], result, turns: s.turn, caixa: [s.players[ME].caixa, s.players[OP].caixa], counters: this.tracker.c, training: this.training, startingCaixa: RULES.STARTING_CAIXA, campaignStage: this.plan && !this.plan.free ? this.plan.stage : undefined, rewardMul: this.plan?.reward ?? 1 }) ?? null;
   }
   /** Abandonar uma partida em andamento conta como derrota. */
   forfeit() { if (this.active && !this.over) this.closeMatch('loss'); }

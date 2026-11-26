@@ -7,6 +7,7 @@ import { random } from '../engine/rng.ts';
 import { TEST_DECK_RULES, validateDeck as validateList } from '../engine/setup.ts';
 import type { DeckRules } from '../engine/setup.ts';
 import type { GameEvent, GameState, PlayerId } from '../engine/types.ts';
+import { newCampaign, fixCampaign, advanceCampaign, type CampaignState } from './campaign.ts';
 
 export type Rarity = 'common' | 'rare' | 'legendary';
 export type MissionKind = 'play' | 'win' | 'summon' | 'destroy' | 'damage' | 'effect' | 'trap' | 'sacrifice' | 'direct';
@@ -44,6 +45,8 @@ export interface Save {
   missions: { day: string; list: MissionState[] };
   achievements: Record<string, number>;
   cosmetics: { owned: string[]; logo: string; back: string };
+  /** campanha de 30 batalhas (src/meta/campaign.ts) */
+  campaign: CampaignState;
 }
 
 const expand = (cards: Record<string, number>): string[] => Object.entries(cards).flatMap(([id, n]) => Array<string>(n).fill(id));
@@ -60,6 +63,7 @@ export function newSave(seed = 1): Save {
     decks: [{ name: META.starterDeck.name, cards: expand(META.starterDeck.cards) }], activeDeck: 0,
     history: [], stats: emptyStats(), missions: { day: '', list: [] }, achievements: {},
     cosmetics: { owned: free, logo: free.find((id) => id.startsWith('logo-'))!, back: free.find((id) => id.startsWith('back-'))! },
+    campaign: newCampaign(seed ^ 0x2c1b3c6d),
   };
 }
 /** Conserta saves antigos ou incompletos sem jogar fora o que o jogador já tem. */
@@ -69,6 +73,7 @@ export function migrate(raw: unknown, seed = 1): Save {
   const r = raw as Partial<Save>;
   const s: Save = { ...base, ...r, stats: { ...base.stats, ...(r.stats ?? {}) }, cosmetics: { ...base.cosmetics, ...(r.cosmetics ?? {}) }, missions: r.missions ?? base.missions } as Save;
   s.v = 1;
+  s.campaign = fixCampaign(r.campaign, seed ^ 0x2c1b3c6d);
   // cartas que deixaram de existir saem da coleção e dos decks
   s.collection = Object.fromEntries(Object.entries(s.collection ?? {}).filter(([id, n]) => CARDS_BY_ID.has(id) && n > 0));
   s.decks = (Array.isArray(s.decks) ? s.decks : []).map((d) => ({ name: String(d.name ?? 'Deck'), cards: (d.cards ?? []).filter((id) => CARDS_BY_ID.has(id)) }));
@@ -292,17 +297,21 @@ export function track(t: Tracker, events: GameEvent[], state: GameState): void {
   if (ids.includes('BCB-004') && ids.includes('BCB-019')) c.louro = true;
 }
 
-export interface MatchResult { rival: string; result: 'win' | 'loss' | 'draw'; turns: number; caixa: [number, number]; counters: Counters; training?: boolean; startingCaixa?: number }
-export interface MatchOutcome { save: Save; reward: number; unlocked: AchievementDef[]; missionsDone: MissionDef[] }
+export interface MatchResult {
+  rival: string; result: 'win' | 'loss' | 'draw'; turns: number; caixa: [number, number]; counters: Counters; training?: boolean; startingCaixa?: number;
+  /** batalha da campanha jogada (1 a 30) e multiplicador da recompensa da faixa */
+  campaignStage?: number; rewardMul?: number;
+}
+export interface MatchOutcome { save: Save; reward: number; unlocked: AchievementDef[]; missionsDone: MissionDef[]; advanced?: boolean; finished?: boolean }
 /**
  * Fecha uma partida: paga a recompensa (o CAIXA que sobrou, só na vitória), grava histórico e estatísticas,
  * avança as metas do dia e confere as conquistas. Treino não paga, não grava e não conta para nada.
  */
 export function applyMatch(save: Save, m: MatchResult, now: number, day: string, allRivals: string[] = []): MatchOutcome {
-  if (m.training) return { save, reward: 0, unlocked: [], missionsDone: [] };
+  if (m.training) return { save, reward: 0, unlocked: [], missionsDone: [], advanced: false, finished: false };
   const s = clone(rollMissions(save, day)) as Save & { _last?: MatchResult };
   const win = m.result === 'win';
-  const reward = win ? Math.max(0, m.caixa[0]) : META.lossReward;
+  const reward = win ? Math.round(Math.max(0, m.caixa[0]) * (m.rewardMul ?? 1)) : META.lossReward;
   s.patrimonio += reward;
   s.history.unshift({ at: now, rival: m.rival, result: m.result, turns: m.turns, caixa: m.caixa, reward });
   s.history.length = Math.min(s.history.length, META.historyLimit);
@@ -325,8 +334,11 @@ export function applyMatch(save: Save, m: MatchResult, now: number, day: string,
   }
   s._last = { ...m, startingCaixa: m.startingCaixa ?? 8000 };
   (s as Save & { _rivals?: string[] })._rivals = allRivals;
+  // campanha: vencer a batalha da vez avança uma casa
+  let advanced = false, finished = false;
+  if (m.campaignStage) { const r = advanceCampaign(s.campaign, m.campaignStage, m.result); s.campaign = r.campaign; advanced = r.advanced; finished = r.finished; }
   const unlocked = grantAchievements(s, now);
-  return { save: s, reward, unlocked, missionsDone };
+  return { save: s, reward, unlocked, missionsDone, advanced, finished };
 }
 
 // ───────── conquistas ─────────

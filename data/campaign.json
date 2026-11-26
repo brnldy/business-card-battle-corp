@@ -1,0 +1,33 @@
+{
+  "version": "0.1",
+  "_nota": "Campanha de 30 batalhas (26/11/2026). As 29 empresas são sorteadas em ordem nova a cada Novo jogo; a 30ª é sempre o chefe. A dificuldade sobe de 10 em 10. Perder deixa o jogador na mesma batalha. Números calibrados por simulação em docs/CAMPAIGN.md.",
+  "length": 30,
+  "companies": [
+    "MOCA-COLA", "BORD", "MAÇÃ INC.", "GLOBE", "SAM&SUNG", "FLORP", "MIKE", "ABIDAS S.A.", "POLE STARTION", "MENTENDO", "BADFLIX",
+    "GUGOL", "AMASSOM", "MICROSOFRE", "STARBUGS", "NESTRESS", "MAGAZINE LUTO", "NUNCABANK", "IFOME", "MORTO TELECOM",
+    "ESCURO S.A.", "PETROBRASA", "AMBEBE", "KODARK", "ORÁCULO S.A.", "IKÉIA", "NESCAOS", "XOPII", "FACEBUG"
+  ],
+  "tiers": [
+    { "from": 1, "to": 10, "name": "Varejo de bairro", "ai": "sloppy", "deck": "pool", "reward": 1 },
+    { "from": 11, "to": 20, "name": "Multinacionais", "ai": "normal", "deck": "market", "reward": 1.5 },
+    { "from": 21, "to": 29, "name": "Conglomerados", "ai": "sharp", "deck": "theme", "reward": 2 }
+  ],
+  "boss": {
+    "name": "O CONSELHO",
+    "ai": "sharp",
+    "reward": 4,
+    "deck": {"BCB-001":3,"BCB-002":3,"BCB-003":3,"BCB-004":2,"BCB-005":2,"BCB-007":3,"BCB-010":3,"BCB-012":2,"BCB-013":2,"BCB-014":2,"BCB-015":3,"BCB-016":3,"BCB-017":3,"BCB-018":3,"BCB-019":3}
+  },
+  "ai": {
+    "sloppy": { "mistake": 0.22, "weights": "default" },
+    "normal": { "mistake": 0, "weights": "default" },
+    "sharp": { "mistake": 0, "weights": "sharp" }
+  },
+  "themeDecks": [
+    { "name": "Criação em fúria", "cards": { "BCB-004": 3, "BCB-001": 3, "BCB-019": 3, "BCB-007": 3, "BCB-002": 3, "BCB-016": 3, "BCB-017": 3, "BCB-018": 3, "BCB-010": 3, "BCB-012": 3, "BCB-008": 3, "BCB-015": 3, "BCB-006": 2, "BCB-011": 2 } },
+    { "name": "Frente fria", "cards": { "BCB-002": 3, "BCB-003": 3, "BCB-013": 3, "BCB-011": 3, "BCB-018": 3, "BCB-019": 3, "BCB-004": 3, "BCB-007": 3, "BCB-015": 3, "BCB-010": 3, "BCB-006": 3, "BCB-001": 3, "BCB-016": 2, "BCB-005": 2 } },
+    { "name": "Nuvem corporativa", "cards": { "BCB-005": 3, "BCB-008": 3, "BCB-011": 3, "BCB-017": 3, "BCB-013": 3, "BCB-018": 3, "BCB-004": 3, "BCB-019": 3, "BCB-007": 3, "BCB-010": 3, "BCB-015": 3, "BCB-016": 3, "BCB-006": 2, "BCB-002": 2 } },
+    { "name": "Barulho no Open Space", "cards": { "BCB-001": 3, "BCB-009": 3, "BCB-002": 3, "BCB-007": 3, "BCB-017": 3, "BCB-010": 3, "BCB-004": 3, "BCB-018": 3, "BCB-019": 3, "BCB-012": 3, "BCB-016": 3, "BCB-015": 3, "BCB-008": 2, "BCB-006": 2 } },
+    { "name": "Hora Extra", "cards": { "BCB-016": 3, "BCB-015": 3, "BCB-003": 3, "BCB-014": 3, "BCB-002": 3, "BCB-017": 3, "BCB-005": 3, "BCB-007": 3, "BCB-001": 3, "BCB-012": 3, "BCB-010": 3, "BCB-019": 3, "BCB-004": 2, "BCB-018": 2 } }
+  ]
+}
