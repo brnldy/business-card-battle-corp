@@ -97,3 +97,29 @@
 .dk-foot { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 6px calc(-1 * var(--ds-4)) calc(-1 * var(--ds-4) + 6px); padding: 16px var(--ds-4) 12px; border-top: 2px dashed rgba(27, 20, 13, 0.5); background: rgba(150, 118, 78, 0.14); }
 #lobby .dk-foot .ds-btn { height: 52px; padding: 0 16px; font-size: var(--t-lg); width: 100%; }
 #lobby .dk-foot .ds-btn:not(.ds-btn--primary) { background: var(--ds-tex-lines), linear-gradient(to bottom, #fffdf6, #f3ecd8); }
+
+/* ───────── metas do dia: quadro de cortiça com memorandos presos por alfinete ───────── */
+.lb-box--missions { width: min(1040px, 95%); }
+.ms { display: grid; gap: var(--ds-4); }
+/* cortiça: fundo marrom pontilhado, com moldura de madeira */
+.ms-board { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 26px; padding: 34px 26px 30px; border: 10px solid #5b3d22; outline: var(--ds-line) solid var(--ds-ink); box-shadow: inset 0 0 0 var(--ds-line) var(--ds-ink), inset 0 8px 0 rgba(0, 0, 0, 0.18);
+  background: radial-gradient(circle at 20% 30%, rgba(60, 35, 12, 0.5) 0 1.5px, transparent 2px) 0 0 / 13px 11px, radial-gradient(circle at 70% 60%, rgba(255, 225, 170, 0.28) 0 1.5px, transparent 2px) 0 0 / 17px 15px, linear-gradient(to bottom, #b98652, #a47443); }
+.ms-memo { position: relative; display: grid; grid-template-rows: auto auto 1fr auto auto; gap: 10px; min-height: 250px; padding: 24px 16px 16px; background: var(--ds-tex-card); color: var(--ds-ink); border: var(--ds-line) solid var(--ds-ink); box-shadow: 5px 7px 0 rgba(40, 20, 0, 0.45); transform: rotate(-1.4deg); }
+.ms-memo:nth-child(2) { transform: rotate(1deg) translateY(8px); } .ms-memo:nth-child(3) { transform: rotate(-0.5deg) translateY(-3px); }
+.ms-memo header { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding-bottom: 8px; border-bottom: 3px solid var(--ds-ink); }
+.ms-pay { font: 400 24px/1 var(--f-title); padding: 3px 8px 1px; background: var(--ds-amber); border: 1.5px solid var(--ds-ink); }
+.ms-memo h3 { align-self: start; }
+.ms-tally { display: flex; flex-wrap: wrap; gap: 5px 6px; align-self: end; }
+.ms-tally i { width: 5px; height: 26px; background: rgba(27, 20, 13, 0.16); border-radius: 2px; transform: rotate(4deg); }
+.ms-tally i.on { background: #1f3fa8; } .ms-tally i:nth-child(5n) { margin-right: 10px; }
+.ms-count { margin: 0; font: 500 var(--t-sm)/1 var(--f-ui); color: var(--ds-ink-2); } .ms-count b { font: 400 22px/1 var(--f-title); color: var(--ds-ink); }
+.ms-memo footer { display: flex; align-items: center; min-height: 50px; padding-top: 10px; border-top: 1.5px dotted rgba(27, 20, 13, 0.5); }
+#lobby .ms-memo footer .ds-btn { width: 100%; }
+.ms-memo.is-done { box-shadow: 0 0 0 4px var(--ds-amber), 0 0 0 6px var(--ds-ink), 7px 11px 0 4px rgba(40, 20, 0, 0.45); }
+.ms-memo.is-claimed { background: var(--ds-tex-lines), #d8cdaf; } .ms-memo.is-claimed h3, .ms-memo.is-claimed .ms-count { color: var(--ds-ink-3); text-decoration: line-through; text-decoration-color: #1f3fa8; }
+.ms-memo.is-claimed .ds-stamp { color: var(--ds-green); margin: 0; }
+/* regras: uma tira, sem parágrafo */
+.ms-rules { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px; font: 700 var(--t-sm)/1 var(--f-ui); color: var(--ds-ink); }
+.ms-rules > span:not(.ds-dymo) { padding-left: 18px; position: relative; } .ms-rules > span:not(.ds-dymo)::before { content: ""; position: absolute; left: 0; top: 50%; width: 8px; height: 8px; margin-top: -4px; background: var(--ds-ink); }
+.ms-rules > b { margin-left: auto; font: 400 24px/1 var(--f-title); text-transform: uppercase; }
+.ms-rules { flex-wrap: nowrap; gap: 8px 14px; white-space: nowrap; } .ms-rules .ds-dymo { font-size: 18px; }

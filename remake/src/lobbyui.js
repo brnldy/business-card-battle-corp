@@ -312,14 +312,25 @@ export class LobbyUI {
 
   // ───────── mural: metas do dia ─────────
   vMissions(s) {
+    const left = s.missions.list.filter((m) => { const d = Meta.missionDef(m.id); return d && !m.claimed; }).length;
     const items = s.missions.list.map((m, i) => {
       const d = Meta.missionDef(m.id); if (!d) return '';
-      const done = m.progress >= d.goal, pct = Math.round((Math.min(m.progress, d.goal) / d.goal) * 100), val = d.kind === 'damage' ? `${money(m.progress)} / ${money(d.goal)}` : `${m.progress} / ${d.goal}`;
-      return `<article class="lb-memo ${m.claimed ? 'is-claimed' : done ? 'is-done' : ''}"><i class="lb-pin"></i><p class="memo">Memorando ${String(i + 1).padStart(2, '0')}</p><h3>${esc(d.text)}</h3>
-        <div class="lb-prog"><b style="width:${pct}%"></b></div><p class="lb-progtxt">${val}</p>
-        <footer><span>Paga ${money(d.reward)}</span>${m.claimed ? '<em>Resgatada</em>' : `<button data-a="claim" data-id="${i}" class="${done ? 'primary' : ''}" ${done ? '' : 'disabled'}>${done ? 'Resgatar' : 'Em andamento'}</button>`}</footer></article>`;
+      const done = m.progress >= d.goal, n = Math.min(m.progress, d.goal), money$ = d.kind === 'damage';
+      // contagem em risquinhos a caneta quando a meta é pequena; régua quando é em dinheiro ou grande
+      const tally = !money$ && d.goal <= 10 ? `<div class="ms-tally">${Array.from({ length: d.goal }, (_, k) => `<i class="${k < n ? 'on' : ''}"></i>`).join('')}</div>` : `<div class="ds-meter"><i style="width:${Math.round((n / d.goal) * 100)}%"></i></div>`;
+      return `<article class="ms-memo ${m.claimed ? 'is-claimed' : done ? 'is-done' : ''}">
+        <i class="ds-pin"></i>
+        <header><span class="ds-label">Memorando ${String(i + 1).padStart(2, '0')}</span><span class="ms-pay">${money(d.reward)}</span></header>
+        <h3 class="ds-title ds-title--sm">${esc(d.text)}</h3>
+        ${tally}
+        <p class="ms-count"><b>${money$ ? money(n) : n}</b> de ${money$ ? money(d.goal) : d.goal}</p>
+        <footer>${m.claimed ? '<i class="ds-stamp">Pago</i>' : done ? `<button data-a="claim" data-id="${i}" class="ds-btn ds-btn--primary">Resgatar</button>` : '<span class="ds-chip ds-chip--now">Em andamento</span>'}</footer>
+      </article>`;
     }).join('');
-    return `<div class="lb-pad"><p class="lb-lead">3 metas por dia, trocadas à meia-noite. Treino não conta. Pagam <b>mesmo na derrota</b>.</p><div class="lb-memos">${items}</div></div>`;
+    return `<div class="ms">
+      <div class="ms-board">${items}</div>
+      <div class="ms-rules"><span class="ds-dymo">Regras do mural</span><span>3 metas por dia</span><span>trocam à meia-noite</span><span>treino não conta</span><span><span class="ds-hl">pagam mesmo na derrota</span></span><b>${left} em aberto</b></div>
+    </div>`;
   }
 
   // ───────── máquina de benefícios: loja ─────────
