@@ -58,6 +58,7 @@ function glyph(f, ch) {
 // Abaixo de ~18 px o campo de distância perde traços finos (sem hinting). O texto pequeno é rasterizado pelo
 // próprio navegador no tamanho exato em pixels de tela e colocado em posição inteira. A lente move cada letra
 // (as linhas acompanham a curva), mas não a deforma: num glifo de 12 px a curva seria menor que um pixel.
+let BUFW = 1;
 const BMP_MAX = 18; const bmp = new Map(); let bx = 1, by = 1, bh = 0, bmpCanvas, bmpCtx, bmpTex, DPR = 1;
 function bmpGlyph(css, ch) {
   const key = css + '|' + ch; let g = bmp.get(key); if (g) return g;
@@ -126,7 +127,7 @@ function paintBox(cs, x, y, w, h, alpha) {
     if (/^linear-gradient/.test(last)) { const cols = last.match(/rgba?\([^)]+\)/g); if (cols) { c0 = rgba(cols[0]); c1 = rgba(cols[cols.length - 1]); horiz = /^linear-gradient\((90deg|to right)/.test(last); } }
     if (/^repeating-linear-gradient/.test(last)) { const cols = last.match(/rgba?\([^)]+\)/g), stops = last.match(/(\d+(?:\.\d+)?)px/g); if (cols && stops && rgba(cols[0])[3] === 1) stripes = { a: rgba(cols[0]), b: rgba(cols[cols.length - 1]), p: px(stops[stops.length - 1]) }; }
     if (ls.length > 1) paper = 1;
-    for (const l of ls) { const m = /^url\("?([^")]+)"?\)/.exec(l); if (m && !/feTurbulence|^data:image\/png/.test(m[1])) art = m[1]; }
+    for (const l of ls) { const m = /^url\("?([^")]+)"?\)/.exec(l); if (m && !/feTurbulence/.test(m[1])) art = m[1]; }
   }
   if (stripes) { for (let yy = 0, k = 0; yy < h; yy += stripes.p / 2, k++) quad(x, y + yy, w, Math.min(stripes.p / 2, h - yy), fade(k % 2 ? stripes.b : stripes.a, alpha), undefined, 3); }
   else if (c0 && (c0[3] > 0 || c1[3] > 0)) quad(x, y, w, h, fade(c0, alpha), fade(c1, alpha), paper ? 3 : 0, null, horiz);
@@ -189,12 +190,20 @@ function paintEl(el, alpha) {
   const prevRot = ROTA; if (!root) ROTA += ownAngle(cs);
   let r = el.getBoundingClientRect();
   if (ROTA && el.offsetWidth) { const w = el.offsetWidth * KROOT, h = el.offsetHeight * KROOT, cx = r.left + r.width / 2, cy = r.top + r.height / 2; r = { left: cx - w / 2, top: cy - h / 2, width: w, height: h, right: cx + w / 2, bottom: cy + h / 2 }; }
+  if (el.tagName === 'svg' && !ROTA && el.classList.contains('h-ico')) {
+    const dw = Math.max(1, Math.round(r.width * DPR)), dh = Math.max(1, Math.round(r.height * DPR)), key = 'ico|' + dw + 'x' + dh + '|' + el.innerHTML + '|' + (el.getAttribute('viewBox') || '');
+    let g = bmp.get(key);
+    if (!g) { g = { ok: false }; bmp.set(key, g); const cl = el.cloneNode(true); cl.setAttribute('xmlns', 'http://www.w3.org/2000/svg'); cl.setAttribute('width', dw); cl.setAttribute('height', dh); cl.removeAttribute('class'); const src = [el, ...el.querySelectorAll('*')], dst = [cl, ...cl.querySelectorAll('*')]; src.forEach((n, i) => { const c = getComputedStyle(n); dst[i].setAttribute('style', `fill:${c.fill === 'none' ? 'none' : '#fff'};stroke:${c.stroke === 'none' ? 'none' : '#fff'};stroke-width:${c.strokeWidth};stroke-linecap:${c.strokeLinecap};stroke-linejoin:${c.strokeLinejoin};fill-rule:${c.fillRule}`); });
+      const im = new Image(); im.onload = () => { if (bx + dw + 1 > AW) { bx = 1; by += bh + 1; bh = 0; } if (by + dh + 1 > AH) return; bmpCtx.clearRect(bx, by, dw, dh); bmpCtx.drawImage(im, bx, by, dw, dh); Object.assign(g, { ok: true, u: bx, v: by }); bx += dw + 1; bh = Math.max(bh, dh); bmpTex.needsUpdate = true; dirty = true; };
+      im.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(new XMLSerializer().serializeToString(cl)); }
+    if (g.ok) { const col = rgba(cs.color) ?? [1, 1, 1, 1], [lx, ly] = warp(r.left, r.top); quad(Math.round(lx * DPR) / DPR, Math.round(ly * DPR) / DPR, dw / DPR, dh / DPR, fade(col, a), undefined, 5, [g.u / AW, g.v / AH, (g.u + dw) / AW, (g.v + dh) / AH]); }
+    ROTA = prevRot; return; }
   if (el.tagName === 'svg') { const c = cs.color, key = 'svg|' + c + '|' + el.outerHTML; let src = images.get(key)?.src; if (!src) { const cl = el.cloneNode(true); cl.setAttribute('xmlns', 'http://www.w3.org/2000/svg'); cl.setAttribute('width', 64); cl.setAttribute('height', 64); cl.style.color = c; src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(new XMLSerializer().serializeToString(cl)); }
     const e = image(src, 128); setRot(ROTA, r.left + r.width / 2, r.top + r.height / 2); if (e) quad(r.left, r.top, r.width, r.height, [1, 1, 1, a], undefined, 2, [e.x / AW, e.y / AH, (e.x + e.w) / AW, (e.y + e.h) / AH]); setRot(0, 0, 0); ROTA = prevRot; return; }
   if (el.tagName === 'IMG') { const e = el.currentSrc || el.src ? image(el.currentSrc || el.src) : null; setRot(ROTA, r.left + r.width / 2, r.top + r.height / 2); if (e) quad(r.left, r.top, r.width, r.height, [1, 1, 1, a], undefined, 2, [e.x / AW, e.y / AH, (e.x + e.w) / AW, (e.y + e.h) / AH]); setRot(0, 0, 0); ROTA = prevRot; return; }
   if (r.width && r.height) { setRot(ROTA, r.left + r.width / 2, r.top + r.height / 2); paintBox(cs, r.left, r.top, r.width, r.height, a); paintPseudo(el, '::before', r, cs, a); setRot(0, 0, 0); }
   const prevClip = CLIP;
-  if (!root && !ROTA && /hidden|auto|scroll|clip/.test(cs.overflowX + cs.overflowY)) { const c = [r.left + px(cs.borderLeftWidth), r.top + px(cs.borderTopWidth), r.right - px(cs.borderRightWidth), r.bottom - px(cs.borderBottomWidth)]; CLIP = prevClip ? [Math.max(c[0], prevClip[0]), Math.max(c[1], prevClip[1]), Math.min(c[2], prevClip[2]), Math.min(c[3], prevClip[3])] : c; }
+  if (!root && !ROTA && /hidden|auto|scroll|clip/.test(cs.overflowX + cs.overflowY) && (el.scrollHeight > el.clientHeight + 2 || el.scrollWidth > el.clientWidth + 2)) { const c = [r.left + px(cs.borderLeftWidth), r.top + px(cs.borderTopWidth), r.right - px(cs.borderRightWidth), r.bottom - px(cs.borderBottomWidth)]; CLIP = prevClip ? [Math.max(c[0], prevClip[0]), Math.max(c[1], prevClip[1]), Math.min(c[2], prevClip[2]), Math.min(c[3], prevClip[3])] : c; }
   for (const n of el.childNodes) { if (n.nodeType === 3) { if (n.data.trim()) paintText(n, cs, a); } else if (n.nodeType === 1) paintEl(n, a); }
   CLIP = prevClip;
   if (r.width && r.height) { setRot(ROTA, r.left + r.width / 2, r.top + r.height / 2); paintPseudo(el, '::after', r, cs, a); setRot(0, 0, 0); }
@@ -203,7 +212,7 @@ function paintEl(el, alpha) {
 function repaint() {
   nVert = 0;
   for (const el of items) { el.style.transform = 'none'; }
-  const dpr = Math.min(2, window.devicePixelRatio || 1); if (dpr !== DPR) { DPR = dpr; bmp.clear(); bmpCtx.clearRect(0, 0, AW, AH); bx = by = 1; bh = 0; bmpTex.needsUpdate = true; }
+  const dpr = BUFW / innerWidth; if (Math.abs(dpr - DPR) > 0.001) { DPR = dpr; bmp.clear(); bmpCtx.clearRect(0, 0, AW, AH); bx = by = 1; bh = 0; bmpTex.needsUpdate = true; }
   const t0 = performance.now();
   for (const el of items) { if (!el.offsetWidth || !el.offsetHeight) continue; KROOT = el.getBoundingClientRect().width / el.offsetWidth || 1; ROTA = 0; CLIP = null; paintEl(el, 1); }
   STATS.ms = performance.now() - t0; STATS.frames++;
@@ -230,7 +239,7 @@ function init() {
         else if (vMode > 3.5) { float r = length(vUv * 2.0 - 1.0), w = max(fwidth(r), 0.0001); c.a *= 1.0 - smoothstep(1.0 - w, 1.0, r); }
         else if (vMode > 2.5) { vec2 f = floor(gl_FragCoord.xy); c.rgb += (hash(f) - 0.5) * 0.035; c.rgb -= step(mod(f.y, 3.0), 0.5) * 0.022; c.rgb += step(0.965, hash(f * 0.5 + 7.0)) * 0.06; }   // papel: grão, linhas finas, salpico
         else if (vMode > 1.5) { vec4 t = texture2D(uImg, vUv); c = vec4(t.rgb, t.a * vColor.a); }
-        else if (vMode > 0.5) { float d = texture2D(uSdf, vUv).r, fw = max(fwidth(d), 0.0001), e = ${(1 - SDF.cutoff).toFixed(2)} - min(0.25, fw * 0.4); c.a *= clamp((d - e) / fw + 0.5, 0.0, 1.0); }   // cobertura por pixel; texto pequeno ganha ~0,4 px de espessura para traços finos não sumirem
+        else if (vMode > 0.5) { float d = texture2D(uSdf, vUv).r, fw = max(fwidth(d), 0.0001), e = ${(1 - SDF.cutoff).toFixed(2)}; c.a *= clamp((d - e) / fw + 0.5, 0.0, 1.0); }   // cobertura por pixel; texto pequeno ganha ~0,4 px de espessura para traços finos não sumirem
         if (c.a < 0.004) discard; gl_FragColor = c; }` });
   mesh = new THREE.Mesh(geo, mat); mesh.frustumCulled = false;
   window.addEventListener('resize', () => { dirty = true; });
@@ -240,6 +249,7 @@ const scene = new THREE.Scene(), cam = new THREE.Camera();
 /** chamado a cada quadro, depois de a cena do jogo ter sido desenhada */
 export function render(renderer) {
   if (!mesh) return;
+  const bw = renderer.getDrawingBufferSize(new THREE.Vector2()).x; if (bw !== BUFW) { BUFW = bw; dirty = true; }
   if (!dirty) for (const el of items) { if (el.offsetWidth && el.getAnimations && el.getAnimations({ subtree: true }).some((a) => a.playState === 'running')) { dirty = true; break; } }
   if (dirty) { dirty = false; try { repaint(); } catch (e) { console.warn('hud webgl: falha ao desenhar', e); } }
   if (!nVert) return;
