@@ -1,5 +1,5 @@
 // Vidro curvo: as peças presas às margens da tela são deformadas por UMA lente da tela inteira
-// (almofada: os cantos esticam para fora, o meio das bordas recua).
+// (barril: o centro abaula para fora e os cantos recolhem, como num monitor de tubo).
 // Duas etapas, para ter curva de verdade sem perder os cliques:
 //   1. transformação projetiva (matrix3d) que leva os 4 cantos da peça ao lugar certo. O navegador acompanha
 //      os cliques, então a área clicável coincide com o desenho.
@@ -7,8 +7,8 @@
 //      passa por um desfoque de meio pixel, que é o que evita o serrilhado.
 // Uso: glass.attach(elemento).
 const NS = 'http://www.w3.org/2000/svg';
-const K = 0.2;         // força da lente (0 = desligada)
-const R0 = 0.8;        // raio que fica parado
+const K = -0.15;       // força da lente: negativo = barril (centro para fora, cantos recolhidos); positivo = almofada; 0 = desligada
+const R0 = 0.5;        // raio que fica parado (0,5 = meio das bordas): nada é empurrado para fora da tela
 const PAD = 22;        // folga em volta da peça para a curva não ser cortada
 const SOFT = 0.45;     // desfoque antes de curvar, em px
 const N = 40;          // resolução do mapa de curvatura
