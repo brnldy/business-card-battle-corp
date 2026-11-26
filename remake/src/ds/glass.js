@@ -14,7 +14,7 @@ const K = -0.12;       // força da lente: negativo = barril; positivo = almofad
 const R0 = 0.5;        // raio que fica parado (0,5 = meio das bordas)
 const PAD = 28;        // folga em volta da peça (sombras e moldura)
 const SEG = 18;        // subdivisões da malha: mais = curva mais lisa
-const SUPER = 1.5;     // a foto é tirada maior que a tela e reduzida, para o texto ficar nítido
+const SUPER = 2;       // a foto é tirada maior que a tela e reduzida, para o texto ficar nítido
 const items = new Map(), urls = new Map();
 let renderer, scene, camera, cssText = null, cssReady = null;
 

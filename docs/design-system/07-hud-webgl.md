@@ -33,3 +33,43 @@ Dois números controlam a lente em `glass.js`: `K` (força; hoje −0,12) e `R0`
 2. Levar o HUD para dentro do pipeline de pós-processamento da cena (grão e linhas iguais aos do jogo).
 3. Medir desempenho em máquina real e em Safari.
 4. Decidir se as peças do centro (avisos, menu da carta, relatório) também entram na lente.
+
+---
+
+## Etapa 2 · HUD nativo (decisão do autor em 26/11/2026)
+
+O autor pediu o caminho completo, não o atalho. A etapa 1 (fotografar o HTML) fica como **ponte**: mantém o jogo funcionando enquanto cada peça é refeita de forma nativa. Ela não é o destino, porque a foto é reamostrada ao curvar e o texto pequeno amolece.
+
+### Arquitetura alvo
+
+| Parte | Como fica |
+|---|---|
+| Onde desenha | Num passe final do **mesmo renderizador do jogo** (`gfx.js`), depois das cartas, em coordenadas de tela. Sem segunda camada. |
+| Lente | Aplicada nos **vértices** (no fim do shader de vértice, em espaço de tela). Nada é reamostrado: a geometria já nasce curva. |
+| Texto | Por **campo de distância (MSDF)**, com atlas das fontes gerado no build. Fica nítido em qualquer tamanho, escala e curvatura. |
+| Painéis | Molduras e texturas do design system desenhadas por shader ou em texturas geradas uma vez (moldura em 9 fatias). |
+| Layout | Um módulo pequeno de caixas e linhas, que lê os mesmos tokens (`tokens.css`, `ds.css`). |
+| Cliques | Pelo inverso da lente: o ponto do cursor é "desentortado" e testado contra as caixas. |
+| Animação | Por quadro, no próprio passe (carimbo, pulsar, contagem), sem custo de foto. |
+| Filtros | Grão, linhas e franja de cor no mesmo shader do passe, iguais aos da cena. |
+| Acessibilidade | Camada HTML invisível com os mesmos botões, para teclado e leitor de tela. |
+
+### O que já foi verificado (26/11/2026)
+
+- **Passe final com lente nos vértices: funciona.** Um plano desenhado no renderizador do jogo, por cima da cena, saiu curvado e nítido.
+- **Texto por campo de distância com a biblioteca `troika-three-text`: travou o navegador** no ambiente de teste, que não tem placa de vídeo (renderização por software). Não sei se trava em máquina real. Por isso o plano é gerar o atlas MSDF no build, sem depender de geração em tempo de execução. A biblioteca foi removida do projeto.
+
+### Ordem de entrega (uma peça por vez, com a ponte como reserva)
+
+1. Infraestrutura: passe final, lente, atlas MSDF das duas fontes, desenho de texto, teste de clique.
+2. Pasta de CAIXA (a peça mais simples; inclui a contagem e o carimbo de dano animados).
+3. Painel de turno (botões, estados, tecla).
+4. Ficha da carta (texto longo com quebra de linha e negrito).
+5. Botões do topo.
+6. Avisos, tira da jogada, anúncio de turno, etiquetas da mesa.
+7. Menu da carta, prévia de ataque, relatório (rolagem), fim de partida.
+8. Remover a ponte e a camada extra.
+
+**Tamanho estimado:** continua sendo o de `FUTURO.md` (2.000 a 3.000 linhas, 4 a 6 sessões). É ordem de grandeza, não medida.
+
+**Risco principal:** o design system passa a ter duas implementações (CSS para o lobby, nativa para a partida). Para não divergirem, os valores vêm sempre dos mesmos tokens e cada peça nativa é comparada com a versão CSS no catálogo.
