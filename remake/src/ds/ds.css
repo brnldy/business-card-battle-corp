@@ -37,7 +37,7 @@
 }
 
 /* ── texto ── */
-.ds-title { font: 400 34px/1 var(--f-title); color: var(--ds-ink); margin: 0; letter-spacing: -0.005em; }
+.ds-title { font: 400 34px/1 var(--f-title); color: var(--ds-ink); margin: 0; text-transform: uppercase; word-spacing: -0.28em; }
 .ds-title--xl { font-size: 52px; } .ds-title--sm { font-size: 24px; }
 .ds-label { font: 700 var(--t-cap)/1.2 var(--f-ui); letter-spacing: 0.14em; text-transform: uppercase; color: var(--ds-ink-2); margin: 0; }
 .ds-text { font: 400 var(--t-md)/1.45 var(--f-ui); color: var(--ds-ink); margin: 0; }
@@ -59,22 +59,27 @@
 .ds-folder { position: relative; background: var(--ds-tex-kraft); color: var(--ds-ink); border: var(--ds-line) solid var(--ds-ink); border-radius: var(--ds-r); box-shadow: 0 5px 0 0 var(--ds-kraft-lo), 0 6px 0 1px var(--ds-ink), 8px 14px 0 0 rgba(0, 0, 0, 0.5); }
 .ds-folder__tab { position: absolute; left: 22px; bottom: 100%; margin-bottom: calc(-1 * var(--ds-line)); padding: 8px 16px 6px; background: var(--ds-tex-lines), #c2a26b; border: var(--ds-line) solid var(--ds-ink); border-bottom: none; border-radius: 6px 10px 0 0; font: 700 var(--t-cap)/1 var(--f-ui); letter-spacing: 0.14em; text-transform: uppercase; }
 
-/* ── botão ── */
-.ds-btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; height: 40px; padding: 0 16px; font: 700 var(--t-sm)/1 var(--f-ui); letter-spacing: 0.1em; text-transform: uppercase; white-space: nowrap; background: var(--ds-card); color: var(--ds-ink); border: var(--ds-line) solid var(--ds-ink); border-radius: var(--ds-r); box-shadow: var(--ds-shadow-in); cursor: pointer; pointer-events: auto; transition: transform 0.06s, box-shadow 0.06s, background 0.1s; }
-.ds-btn:hover:not(:disabled) { transform: translate(-1px, -1px); box-shadow: 4px 4px 0 var(--ds-ink); background: #fff; }
-.ds-btn:active:not(:disabled) { transform: translate(3px, 3px); box-shadow: 0 0 0 var(--ds-ink); }
-.ds-btn:focus-visible { outline: 3px solid var(--ds-amber); outline-offset: 3px; }
-.ds-btn--primary { background: var(--ds-ink); color: var(--ds-paper); box-shadow: 3px 3px 0 var(--ds-amber); }
-.ds-btn--primary:hover:not(:disabled) { background: var(--ds-ink); color: var(--ds-amber); box-shadow: 4px 4px 0 var(--ds-amber); }
-.ds-btn--primary:active:not(:disabled) { box-shadow: 0 0 0 var(--ds-amber); }
-.ds-btn--accent { background: var(--ds-amber); } .ds-btn--accent:hover:not(:disabled) { background: #ffd27a; }
-.ds-btn--danger { background: var(--ds-red); color: #fff; } .ds-btn--danger:hover:not(:disabled) { background: #d23324; }
-.ds-btn--link { height: auto; padding: 3px 0; background: none; border: none; border-bottom: var(--ds-line) solid currentColor; border-radius: 0; box-shadow: none; }
-.ds-btn--link:hover:not(:disabled) { transform: none; box-shadow: none; background: none; color: var(--ds-red); }
-.ds-btn--lg { height: 56px; padding: 0 24px; font-size: 16px; }
-.ds-btn--sq { width: 40px; padding: 0; }
-.ds-btn:disabled { cursor: default; background: none; color: var(--ds-ink-3); border-style: dashed; border-color: var(--ds-ink-3); box-shadow: none; }
-.ds-key { font: 700 11px/1 var(--f-ui); letter-spacing: 0.06em; padding: 5px 7px 4px; background: var(--ds-amber); color: var(--ds-ink); border-radius: 4px; box-shadow: 0 0 0 1.5px var(--ds-card), 0 0 0 3px var(--ds-ink); margin: 0 3px; text-transform: uppercase; }   /* tecla: cápsula âmbar, anel claro, contorno escuro */
+/* ── botão ──
+   Tira de cartão com contorno grosso: traço de 3 px, fio claro por dentro, espessura escura embaixo.
+   A tecla vai à ESQUERDA do texto, numa cápsula âmbar. Sem sombra solta: o botão "afunda" ao clicar. */
+.ds-btn { position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 12px; height: 44px; padding: 0 18px; margin-bottom: 5px; font: 700 var(--t-sm)/1 var(--f-ui); letter-spacing: 0.1em; text-transform: uppercase; white-space: nowrap; color: var(--ds-ink);
+  background: var(--ds-tex-card); border: 3px solid var(--ds-ink); border-radius: 0; box-shadow: inset 0 0 0 1.5px rgba(255, 252, 240, 0.9), 0 4px 0 0 var(--ds-band-lo), 0 4px 0 3px var(--ds-ink); cursor: pointer; pointer-events: auto; transition: transform 0.05s, box-shadow 0.05s; }
+.ds-btn:hover:not(:disabled) { background: var(--ds-tex-lines), linear-gradient(to bottom, #ffd98c, var(--ds-amber)); }
+.ds-btn:active:not(:disabled) { transform: translateY(4px); box-shadow: inset 0 0 0 1.5px rgba(255, 252, 240, 0.9), 0 0 0 0 var(--ds-band-lo), 0 0 0 3px var(--ds-ink); }
+.ds-btn:focus-visible { outline: 3px solid var(--ds-amber); outline-offset: 5px; }
+.ds-btn .ds-key { order: -1; margin: 0 2px 0 -6px; }
+.ds-btn--primary { background: var(--ds-tex-lines), linear-gradient(to bottom, #f9cf7c, var(--ds-amber) 60%, #dc9a2f); box-shadow: inset 0 0 0 1.5px rgba(255, 244, 214, 0.9), 0 4px 0 0 #a8701a, 0 4px 0 3px var(--ds-ink); }
+.ds-btn--primary:hover:not(:disabled) { background: var(--ds-tex-lines), linear-gradient(to bottom, #ffe2a3, #f7c466); }
+.ds-btn--primary .ds-key { background: var(--ds-ink); color: var(--ds-amber); box-shadow: 0 0 0 1.5px var(--ds-amber), 0 0 0 3px var(--ds-ink); }
+.ds-btn--accent { background: var(--ds-tex-lines), var(--ds-amber); }
+.ds-btn--danger { background: var(--ds-tex-lines), linear-gradient(to bottom, #d2412f, var(--ds-red)); color: #fff; box-shadow: inset 0 0 0 1.5px rgba(255, 220, 210, 0.6), 0 4px 0 0 #6f160e, 0 4px 0 3px var(--ds-ink); }
+.ds-btn--link { height: auto; padding: 3px 0; margin: 0; background: none; border: none; border-bottom: var(--ds-line) solid currentColor; box-shadow: none; }
+.ds-btn--link:hover:not(:disabled) { background: none; color: var(--ds-red); } .ds-btn--link:active:not(:disabled) { transform: none; box-shadow: none; }
+.ds-btn--lg { height: 58px; padding: 0 26px; font-size: 17px; }
+.ds-btn--sq { width: 44px; padding: 0; }
+.ds-btn:disabled { cursor: default; color: var(--ds-ink-3); background: var(--ds-tex-lines), #cdbb95; border-color: #8f7f62; box-shadow: inset 0 0 0 1.5px rgba(255, 252, 240, 0.35), 0 4px 0 0 #a8946c, 0 4px 0 3px #8f7f62; }
+.ds-btn:disabled .ds-key { filter: saturate(0.2); opacity: 0.6; }
+.ds-key { font: 700 12px/1 var(--f-ui); letter-spacing: 0.06em; padding: 6px 8px 5px; background: var(--ds-amber); color: var(--ds-ink); border-radius: 5px; box-shadow: 0 0 0 1.5px var(--ds-card), 0 0 0 3.5px var(--ds-ink); text-transform: uppercase; }   /* tecla: cápsula âmbar, anel claro, contorno escuro */
 
 /* ── etiqueta de valor, carimbo, estado ── */
 .ds-tag { display: inline-flex; align-items: baseline; gap: 8px; padding: 7px 12px 6px 24px; background: var(--ds-card); color: var(--ds-ink-2); font: 700 var(--t-cap)/1 var(--f-ui); letter-spacing: 0.12em; text-transform: uppercase; clip-path: polygon(13px 0, 100% 0, 100% 100%, 13px 100%, 0 50%); filter: drop-shadow(3px 3px 0 rgba(0, 0, 0, 0.4)); position: relative; white-space: nowrap; }

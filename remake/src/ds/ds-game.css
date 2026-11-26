@@ -25,7 +25,7 @@
 .h-hud .h-slot--opp { top: 34px; } .h-hud .h-slot--me { bottom: 44px; }
 .h-hud .h-slot--turn { top: 104px; } .h-hud .h-slot--bar { top: 34px; }
 /* vidro: franja de cor e halo quente em volta da peça (não muda a área clicável) */
-.ds-glass { will-change: transform; filter: drop-shadow(1px 0 0 rgba(255, 70, 45, 0.3)) drop-shadow(-1px 0 0 rgba(60, 215, 255, 0.26)) drop-shadow(0 0 16px rgba(255, 214, 150, 0.16)); }
+.ds-glass { will-change: transform; filter: var(--ds-glass, none) drop-shadow(1px 0 0 rgba(255, 70, 45, 0.3)) drop-shadow(-1px 0 0 rgba(60, 215, 255, 0.26)) drop-shadow(0 0 16px rgba(255, 214, 150, 0.16)); }
 
 /* pasta de CAIXA = ds-folder */
 .h-folder { width: 270px; }
@@ -54,16 +54,23 @@ body.theme-buckshot .h-folder__name { text-transform: uppercase; }
 .h-res { gap: 0; padding: 4px 12px; border: none; background: rgba(150, 118, 78, 0.18); }
 .h-res__row { padding: 7px 0; border-bottom: 1.5px dotted rgba(27, 20, 13, 0.45); } .h-res__row:last-child { border-bottom: none; } .h-res__row dt { font-weight: 700; }
 .h-res__row dd { font: 700 var(--t-cap)/1 var(--f-ui); letter-spacing: 0.1em; text-transform: uppercase; padding: 5px 8px 4px; border: var(--ds-line) solid currentColor; background: var(--ds-card); }
-.h-turn .h-btn--primary { height: 56px; font: 700 16px/1 var(--f-ui); letter-spacing: 0.1em; background: var(--ds-tex-ink); color: var(--ds-paper); border: var(--ds-line) solid var(--ds-ink); border-radius: 0; box-shadow: 0 0 0 2px var(--ds-card), 0 0 0 3px var(--ds-ink), 0 4px 0 3px var(--ds-amber), 0 5px 0 3px var(--ds-ink); margin: 3px 3px 8px; }
-.h-turn .h-btn--primary:hover:not(:disabled) { color: var(--ds-amber); }
-.h-turn .h-btn--primary:disabled { opacity: 1; background: none; color: var(--ds-ink-3); border: var(--ds-line) dashed var(--ds-ink-3); box-shadow: none; }
-.h-turn .h-btn--secondary { color: var(--ds-ink); background: var(--ds-tex-card); border: var(--ds-line) solid var(--ds-ink); border-radius: 0; font-weight: 700; height: 36px; }
-.h-turn .h-btn.is-ready { animation: ds-ready 1.2s steps(2) infinite; } @keyframes ds-ready { 50% { box-shadow: 0 0 0 2px var(--ds-card), 0 0 0 3px var(--ds-ink), 0 4px 0 3px var(--ds-amber), 0 5px 0 3px var(--ds-ink), 0 0 0 6px var(--ds-amber); } }
-.h-turn .h-key { background: var(--ds-amber); color: var(--ds-ink); border: none; opacity: 1; border-radius: 4px; box-shadow: 0 0 0 1.5px var(--ds-card), 0 0 0 3px var(--ds-ink); font-weight: 700; }
+.h-turn .h-btn { position: relative; gap: 12px; margin-bottom: 5px; font: 700 15px/1 var(--f-ui); letter-spacing: 0.1em; color: var(--ds-ink); background: var(--ds-tex-card); border: 3px solid var(--ds-ink); border-radius: 0; box-shadow: inset 0 0 0 1.5px rgba(255, 252, 240, 0.9), 0 4px 0 0 var(--ds-band-lo), 0 4px 0 3px var(--ds-ink); transition: transform 0.05s, box-shadow 0.05s; }
+.h-turn .h-btn--primary { height: 54px; background: var(--ds-tex-lines), linear-gradient(to bottom, #f9cf7c, var(--ds-amber) 60%, #dc9a2f); box-shadow: inset 0 0 0 1.5px rgba(255, 244, 214, 0.9), 0 4px 0 0 #a8701a, 0 4px 0 3px var(--ds-ink); }
+.h-turn .h-btn--secondary { height: 40px; font-size: var(--t-sm); }
+.h-turn .h-btn:hover:not(:disabled) { background: var(--ds-tex-lines), linear-gradient(to bottom, #ffe2a3, #f7c466); }
+.h-turn .h-btn:active:not(:disabled) { transform: translateY(4px); box-shadow: inset 0 0 0 1.5px rgba(255, 252, 240, 0.9), 0 0 0 3px var(--ds-ink); }
+.h-turn .h-btn:disabled { opacity: 1; color: var(--ds-ink-3); background: var(--ds-tex-lines), #cdbb95; border-color: #8f7f62; box-shadow: inset 0 0 0 1.5px rgba(255, 252, 240, 0.35), 0 4px 0 0 #a8946c, 0 4px 0 3px #8f7f62; }
+.h-turn .h-btn.is-ready { animation: ds-ready 1.1s steps(2) infinite; } @keyframes ds-ready { 50% { outline: 3px solid var(--ds-amber); outline-offset: 6px; } }
+.h-turn .h-key { order: -1; margin: 0 2px 0 -4px; font: 700 12px/1 var(--f-ui); padding: 6px 8px 5px; background: var(--ds-ink); color: var(--ds-amber); border: none; opacity: 1; border-radius: 5px; box-shadow: 0 0 0 1.5px var(--ds-amber), 0 0 0 3.5px var(--ds-ink); }
+.h-turn .h-btn--secondary .h-key { background: var(--ds-amber); color: var(--ds-ink); box-shadow: 0 0 0 1.5px var(--ds-card), 0 0 0 3.5px var(--ds-ink); }
+.h-turn .h-btn:disabled .h-key { filter: saturate(0.2); opacity: 0.6; }
+.h-turn__actions { gap: 10px; }
 
 /* barra de cima = ds-btn */
-.h-topbar .h-ibtn { height: 36px; min-width: 36px; background: var(--ds-tex-card); color: var(--ds-ink); border: var(--ds-line) solid var(--ds-ink); border-radius: 0; font-weight: 700; letter-spacing: 0.08em; box-shadow: 0 3px 0 0 var(--ds-band-lo), 0 4px 0 1px var(--ds-ink), 4px 8px 0 0 rgba(0, 0, 0, 0.5); }
-.h-topbar .h-ibtn:hover, .h-topbar .h-ibtn.is-on { background: var(--ds-tex-ink); color: var(--ds-paper); border-color: var(--ds-ink); }
+.h-topbar { gap: 10px; }
+.h-topbar .h-ibtn { height: 38px; min-width: 38px; margin-bottom: 5px; background: var(--ds-tex-card); color: var(--ds-ink); border: 3px solid var(--ds-ink); border-radius: 0; font-weight: 700; letter-spacing: 0.08em; box-shadow: inset 0 0 0 1.5px rgba(255, 252, 240, 0.9), 0 4px 0 0 var(--ds-band-lo), 0 4px 0 3px var(--ds-ink); }
+.h-topbar .h-ibtn:active { transform: translateY(4px); box-shadow: inset 0 0 0 1.5px rgba(255, 252, 240, 0.9), 0 0 0 3px var(--ds-ink); }
+.h-topbar .h-ibtn:hover, .h-topbar .h-ibtn.is-on { background: var(--ds-tex-lines), linear-gradient(to bottom, #ffe2a3, #f7c466); color: var(--ds-ink); border-color: var(--ds-ink); }
 
 
 /* ficha da carta = ds-sheet--card + ds-stat */
@@ -76,3 +83,10 @@ body.theme-buckshot .h-folder__name { text-transform: uppercase; }
 .h-sheet .h-gloss { background: rgba(150, 118, 78, 0.18); border: none; border-radius: 0; } .h-sheet .h-gloss dt { color: var(--ds-ink); font-weight: 700; } .h-sheet .h-gloss dd { color: var(--ds-ink-2); }
 .h-sheet__status { border-top: var(--ds-line) solid var(--ds-ink); font-weight: 700; }
 .h-hud .h-slot--sheet { transform: none; translate: 0 -50%; }   /* centraliza com 'translate' para o vidro poder usar 'transform' */
+
+/* títulos sempre em caixa alta (VT323 é monoespaçada: aperta o espaço entre palavras) */
+.h-turn__who, .h-sheet__name, .h-banner__title, .lb-box h2, .modal-box h2, .over-box h2 { text-transform: uppercase; word-spacing: -0.28em; }
+/* escala geral: as peças do HUD e a janela ficam 12% menores */
+.h-hud :is(.h-slot--opp, .h-slot--me, .h-slot--turn, .h-slot--bar, .h-slot--sheet) { zoom: 0.88; }
+.lb-box--duel { zoom: 0.92; }
+#lobby .lb-box--duel .lb-x { border-width: 3px; }
