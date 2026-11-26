@@ -153,6 +153,7 @@ export class LobbyUI {
       case 'exit': sfx('cancel'); return this.actions.exit();
       case 'tab': this.tab[this.panel] = id; sfx('select'); return this.render();
       case 'filter': this.filter = id; sfx('select'); return this.render();
+      case 'vm-pick': this.vmSel[this.tab.shop] = id; sfx('select'); return this.render();
       // decks
       case 'deck-pick': if (this.ed?.dirty) { this.toast('Salve ou descarte antes de trocar.', 'bad'); return sfx('deny'); } this.loadDeck(Number(id)); sfx('select'); return this.render();
       case 'deck-new': if (this.ed?.dirty) { this.toast('Salve ou descarte antes de criar outro.', 'bad'); return sfx('deny'); } this.ed = { index: -1, name: `Deck ${this.s.decks.length + 1}`, cards: [], dirty: true }; sfx('select'); return this.render();
@@ -165,10 +166,10 @@ export class LobbyUI {
       // reciclar
       case 'recycle': { const r = Meta.recycle(this.s, id || null, Date.now()); if (this.commit(r)) { sfx('sacrifice'); this.toast(`<b>${r.count} carta${r.count > 1 ? 's' : ''} triturada${r.count > 1 ? 's' : ''}</b><span>+ ${money(r.gained)} de PATRIMÔNIO</span>`, 'good'); } return undefined; }
       // loja
-      case 'buy-card': if (this.commit(Meta.buySingle(this.s, id, Date.now()), `<b>${esc(byId.get(id).name)}</b><span>foi para o seu arquivo</span>`)) sfx('draw'); return undefined;
+      case 'buy-card': this.vmLast = asset(byId.get(id).art); if (this.commit(Meta.buySingle(this.s, id, Date.now()), `<b>${esc(byId.get(id).name)}</b><span>foi para o seu arquivo</span>`)) sfx('draw'); return undefined;
       case 'buy-pack': { const r = Meta.buyBooster(this.s, Date.now()); if (this.commit(r)) this.openPack(r.cards); return undefined; }
       case 'buy-deck': { const d = META.readyDecks.find((x) => x.id === id), r = Meta.buyReadyDeck(this.s, id, Date.now()); if (this.commit(r, `<b>${esc(d.name)}</b><span>já está no arquivo e escolhido para o duelo</span>`)) { sfx('summon'); this.ed = null; } return undefined; }
-      case 'buy-cos': if (this.commit(Meta.buyCosmetic(this.s, id, Date.now()), 'Comprado. Use na recepção, aba Visual.')) sfx('draw'); return undefined;
+      case 'buy-cos': this.vmLast = id.startsWith('logo') ? logoUrl(id) : backUrl(id, this.s.cosmetics.logo, asset('cards/back.png')); if (this.commit(Meta.buyCosmetic(this.s, id, Date.now()), 'Comprado. Use na recepção, aba Visual.')) sfx('draw'); return undefined;
       case 'equip': if (this.commit(Meta.equipCosmetic(this.s, id, Date.now()))) sfx('select'); return undefined;
       case 'pack-next': return this.packNext();
       // metas
@@ -334,25 +335,46 @@ export class LobbyUI {
   }
 
   // ───────── máquina de benefícios: loja ─────────
+  /** produtos da prateleira aberta na máquina (cada um com o código do nicho, como numa máquina de salgadinho) */
+  vmItems(s, t) {
+    const can = (p) => s.patrimonio >= p, back = (id) => backUrl(id, s.cosmetics.logo, asset('cards/back.png')), n2 = (i) => String(i + 1).padStart(2, '0');
+    if (t === 'packs') return [{ code: 'A01', id: 'pack', act: 'buy-pack', kind: 'pack', name: 'Envelope pardo', price: META.booster.price, img: back(s.cosmetics.back), state: can(META.booster.price) ? 'ok' : 'poor' }];
+    if (t === 'cards') return CARDS.map((c, i) => { const own = Meta.owned(s, c.id), p = Meta.priceOf(c.id); return { code: 'B' + n2(i), id: c.id, act: 'buy-card', kind: 'card', name: c.name, price: p, img: asset(c.art), own, state: own >= DECK_RULES.maxCopies ? 'full' : can(p) ? 'ok' : 'poor' }; });
+    if (t === 'decks') return META.readyDecks.map((d, i) => ({ code: 'C' + n2(i), id: d.id, act: 'buy-deck', kind: 'deck', name: d.name, price: d.price, deck: d, faces: Object.keys(d.cards).filter((id) => Meta.rarityOf(id) !== 'common').slice(0, 3), state: can(d.price) ? 'ok' : 'poor' }));
+    return META.cosmetics.map((c, i) => { const own = s.cosmetics.owned.includes(c.id), on = s.cosmetics[c.kind] === c.id; return { code: 'D' + n2(i), id: c.id, act: own ? 'equip' : 'buy-cos', kind: c.kind, name: c.name, price: c.price, img: c.kind === 'logo' ? logoUrl(c.id) : back(c.id), state: on ? 'on' : own ? 'own' : can(c.price) ? 'ok' : 'poor' }; });
+  }
   vShop(s) {
-    const tabs = this.tabs('shop', [['packs', 'Pacotes'], ['cards', 'Cartas avulsas'], ['decks', 'Decks prontos'], ['look', 'Visual']]), t = this.tab.shop, can = (p) => s.patrimonio >= p;
-    let body = '';
-    if (t === 'packs') {
-      const b = META.booster, o = b.odds, tot = o.common + o.rare + o.legendary, miss = CARDS.reduce((n, c) => n + Math.max(0, DECK_RULES.maxCopies - Meta.owned(s, c.id)), 0);
-      body = `<div class="lb-packshop"><div class="lb-packart"><img src="${backUrl(s.cosmetics.back, s.cosmetics.logo, asset('cards/back.png'))}" alt=""><img src="${backUrl(s.cosmetics.back, s.cosmetics.logo, asset('cards/back.png'))}" alt=""><img src="${backUrl(s.cosmetics.back, s.cosmetics.logo, asset('cards/back.png'))}" alt=""></div>
-        <div><h3>Envelope pardo lacrado</h3><p class="lb-lead">${b.size} cartas. Enquanto faltar carta no arquivo, <b>não vem sobra</b>.</p>
-        <ul class="lb-odds"><li>${rarityTag('BCB-001')} Comum <b>${Math.round((o.common / tot) * 100)}%</b></li><li><i class="lb-rar lb-rar--rare"></i> Rara <b>${Math.round((o.rare / tot) * 100)}%</b></li><li><i class="lb-rar lb-rar--legendary"></i> Lendária <b>${Math.round((o.legendary / tot) * 100)}%</b></li></ul>
-        <div class="lb-actions"><button data-a="buy-pack" class="primary big" ${can(b.price) ? '' : 'disabled'}>Comprar e abrir · ${money(b.price)}</button></div>
-        <p class="fine">${miss ? `Faltam ${miss} cópias para completar.` : 'Arquivo completo: agora só vem sobra.'}</p></div></div>`;
-    } else if (t === 'cards') {
-      body = `<div class="lb-scroll lb-grid lb-grid--shop">${CARDS.map((c) => { const own = Meta.owned(s, c.id), full = own >= DECK_RULES.maxCopies, p = Meta.priceOf(c.id); return `<figure class="lb-card ${full ? 'is-used' : ''}" data-card="${c.id}"><img loading="lazy" src="${asset(c.art)}" alt="${esc(c.name)}"><figcaption>${rarityTag(c.id)}<span>${RARITY_PT[Meta.rarityOf(c.id)]}</span><b>${own}/${DECK_RULES.maxCopies}</b></figcaption><button data-a="buy-card" data-id="${c.id}" ${full || !can(p) ? 'disabled' : ''}>${full ? 'Completa' : money(p)}</button></figure>`; }).join('')}</div>`;
-    } else if (t === 'decks') {
-      body = `<div class="lb-scroll lb-rows">${META.readyDecks.map((d) => { const miss = Meta.readyDeckMissing(s, d.id), n = Object.values(miss).reduce((a, b) => a + b, 0), faces = Object.keys(d.cards).filter((id) => Meta.rarityOf(id) !== 'common').slice(0, 5); return `<div class="lb-row lb-row--deck"><div class="lb-fan">${faces.map((id) => `<img src="${asset(byId.get(id).art)}" alt="" data-card="${id}">`).join('')}</div><div><b>${esc(d.name)}</b><span>${esc(d.text)}</span><span class="fine">${n ? `Entrega as ${n} cartas que faltam.` : 'Você já tem todas: só guarda a lista.'}</span></div><button data-a="buy-deck" data-id="${d.id}" class="primary" ${can(d.price) ? '' : 'disabled'}>${money(d.price)}</button></div>`; }).join('')}</div>`;
-    } else {
-      const item = (c) => { const own = s.cosmetics.owned.includes(c.id), on = s.cosmetics[c.kind] === c.id, img = c.kind === 'logo' ? logoUrl(c.id) : backUrl(c.id, s.cosmetics.logo, asset('cards/back.png')); return `<figure class="lb-cos lb-cos--${c.kind} ${on ? 'on' : ''}"><img src="${img}" alt=""><figcaption>${esc(c.name)}</figcaption>${own ? `<button data-a="equip" data-id="${c.id}" ${on ? 'disabled' : ''}>${on ? 'Em uso' : 'Usar'}</button>` : `<button data-a="buy-cos" data-id="${c.id}" class="primary" ${can(c.price) ? '' : 'disabled'}>${money(c.price)}</button>`}</figure>`; };
-      body = `<div class="lb-scroll"><p class="memo">Logo da empresa</p><div class="lb-cosgrid">${META.cosmetics.filter((c) => c.kind === 'logo').map(item).join('')}</div><p class="memo">Verso das cartas</p><div class="lb-cosgrid">${META.cosmetics.filter((c) => c.kind === 'back').map(item).join('')}</div></div>`;
-    }
-    return `${tabs}<div class="lb-pad lb-fill">${body}</div>`;
+    const SHELVES = [['packs', 'A', 'Pacotes'], ['cards', 'B', 'Cartas'], ['decks', 'C', 'Decks'], ['look', 'D', 'Visual']];
+    const t = (this.tab.shop ??= 'packs'), items = this.vmItems(s, t); this.vmSel ??= {};
+    const sel = items.find((x) => x.code === this.vmSel[t]) ?? items.find((x) => x.state === 'ok') ?? items[0]; this.vmSel[t] = sel.code;
+    const TAG = { full: 'esgotada', own: 'seu', on: 'em uso' };
+    const prod = (x) => x.kind === 'pack' ? `<span class="vm-prod vm-prod--pack"><i></i><i></i><i></i></span>`
+      : x.kind === 'deck' ? `<span class="vm-prod vm-prod--deck">${x.faces.map((id) => `<img src="${asset(byId.get(id).art)}" alt="">`).join('')}<b></b></span>`
+      : `<span class="vm-prod vm-prod--${x.kind}"><img loading="lazy" src="${x.img}" alt=""></span>`;
+    const slot = (x, i) => `<button class="vm-slot ${x.code === sel.code ? 'is-sel' : ''} is-${x.state} ${i && items[i - 1].kind !== x.kind ? 'vm-slot--brk' : ''}" data-a="vm-pick" data-id="${x.code}" ${x.kind === 'card' ? `data-card="${x.id}"` : ''} title="${esc(x.name)}">
+        ${prod(x)}<i class="vm-coil"></i>
+        <span class="vm-rail"><b>${x.code}</b><em>${TAG[x.state] ?? (x.price ? money(x.price) : 'grátis')}</em></span></button>`;
+    // ficha do produto escolhido: um papel colado na máquina com fita
+    let info = '';
+    if (sel.kind === 'pack') { const b = META.booster, o = b.odds, tot = o.common + o.rare + o.legendary, miss = CARDS.reduce((n, c) => n + Math.max(0, DECK_RULES.maxCopies - Meta.owned(s, c.id)), 0), bar = (k, n, v) => `<li><span>${n}</span><i class="vm-bar vm-bar--${k}"><b style="width:${Math.round((v / tot) * 100)}%"></b></i><em>${Math.round((v / tot) * 100)}%</em></li>`;
+      info = `<p><b>${b.size} cartas</b> sorteadas.</p><ul class="vm-odds">${bar('common', 'Comum', o.common)}${bar('rare', 'Rara', o.rare)}${bar('legendary', 'Lendária', o.legendary)}</ul><p class="vm-fine">${miss ? `Enquanto faltar carta, <span class="ds-hl">não vem sobra</span>. Faltam ${miss}.` : 'Arquivo completo: agora só vem sobra.'}</p>`; }
+    else if (sel.kind === 'card') { const c = byId.get(sel.id); info = `<div class="vm-card"><img src="${sel.img}" alt=""><div><p>${rarityTag(c.id)} <b>${RARITY_PT[Meta.rarityOf(c.id)]}</b></p><p>${isFx(c) ? KIND[c.kind] : `Criatura · ${c.atk} / ${c.def}`}</p><p class="vm-fine">No arquivo</p><p class="vm-pips">${Array.from({ length: DECK_RULES.maxCopies }, (_, k) => `<i class="${k < sel.own ? 'on' : ''}"></i>`).join('')}<b>${sel.own}/${DECK_RULES.maxCopies}</b></p></div></div>`; }
+    else if (sel.kind === 'deck') { const miss = Meta.readyDeckMissing(s, sel.id), n = Object.values(miss).reduce((a, b) => a + b, 0); info = `<div class="vm-faces">${sel.faces.map((id) => `<img src="${asset(byId.get(id).art)}" alt="">`).join('')}</div><p>${esc(sel.deck.text)}</p><p class="vm-fine">${n ? `Entrega as <span class="ds-hl">${n} cartas</span> que faltam.` : 'Você já tem todas: só guarda a lista.'}</p>`; }
+    else info = `<p>${sel.kind === 'logo' ? 'Logo da empresa' : 'Verso das cartas'}</p><div class="vm-big vm-big--${sel.kind}"><img src="${sel.img}" alt=""></div>`;
+    const BUY = { ok: sel.kind === 'pack' ? 'Comprar e abrir' : 'Comprar', poor: 'Sem saldo', full: 'Esgotada', own: 'Usar', on: 'Em uso' }, dis = ['poor', 'full', 'on'].includes(sel.state);
+    const lcd = sel.state === 'poor' ? `<p class="bad">SALDO INSUFICIENTE</p>` : sel.state === 'full' ? `<p class="bad">NICHO ESGOTADO</p>` : sel.state === 'on' ? `<p>EM USO</p>` : sel.state === 'own' ? `<p>JA E SEU</p>` : `<p>PRECO <b>${sel.price ? money(sel.price) : 'GRATIS'}</b></p>`;
+    const last = this.vmLast ? `<img src="${this.vmLast}" alt="">` : '';
+    return `<div class="vm">
+      <div class="vm-glass vm-glass--${t}"><div class="lb-scroll vm-shelf">${items.map(slot).join('')}</div></div>
+      <aside class="vm-panel">
+        <div class="vm-lcd"><p class="cred"><span>CREDITO</span><b>${money(s.patrimonio)}</b></p><p class="pick ${sel.name.length > 23 ? 'xlong' : sel.name.length > 17 ? 'long' : ''}"><b>${sel.code}</b> ${esc(sel.name)}</p>${lcd}</div>
+        <div class="vm-keys">${SHELVES.map(([k, l, n]) => `<button data-a="tab" data-id="${k}" class="${k === t ? 'on' : ''}"><b>${l}</b><span>${n}</span></button>`).join('')}</div>
+        <div class="vm-info"><i class="ds-tape ds-tape--top"></i><h3 class="ds-title ds-title--sm">${esc(sel.name)}</h3>${info}</div>
+        <button data-a="${sel.act}" data-id="${sel.kind === 'pack' ? '' : sel.id}" class="ds-btn ${sel.state === 'own' ? '' : 'ds-btn--primary'} vm-buy" ${dis ? 'disabled' : ''}>${BUY[sel.state]}${sel.state === 'ok' && sel.price ? ` · ${money(sel.price)}` : ''}</button>
+        <div class="vm-coin"><i></i><span class="vm-warn">Não devolve troco</span></div>
+      </aside>
+      <div class="vm-tray ${last ? 'has' : ''}"><span>Retire aqui</span>${last}</div>
+    </div>`;
   }
   openPack(cards) {
     this.pack = { cards, i: -1 };
