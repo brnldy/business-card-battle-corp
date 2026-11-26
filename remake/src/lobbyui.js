@@ -41,7 +41,7 @@ export class LobbyUI {
       <div class="lb-top"><button class="lb-exit" data-a="exit">← Sair para a rua</button></div>
       <div class="lb-labels"></div>
       <nav class="lb-nav"></nav>
-      <div class="lb-hint">Clique num objeto ou tecle 1–9</div>
+      <div class="lb-hint">Clique num objeto da sala</div>
       <div class="lb-win hidden"></div>
       <div class="lb-pack hidden"></div>
       <div class="lb-toasts"></div>`;
@@ -279,10 +279,28 @@ export class LobbyUI {
       </section></div>`;
   }
   vTraining(s) {
-    return `<div class="lb-pad">
-      <p class="lb-lead">O estagiário <b>erra de propósito</b>. Não paga, não conta para metas, conquistas nem histórico.</p>
-      ${this.deckLine(s)}
-      <div class="lb-actions"><button data-a="train" class="primary big" ${Meta.activeDeckValid(s) ? '' : 'disabled'}>Treinar com o estagiário</button><button data-a="open" data-id="duel">Ir para o duelo valendo</button></div></div>`;
+    const d = Meta.activeDeck(s), ok = Meta.activeDeckValid(s), back = backUrl(s.cosmetics.back, s.cosmetics.logo, asset('cards/back.png'));
+    const no = (t) => `<li><i class="tr-box"></i><span>${t}</span></li>`;
+    return `<div class="tr">
+      <section class="ds-sheet tr-term">
+        <i class="ds-staple"></i>
+        <div class="ds-bar"><span>Termo de estágio</span><b>não remunerado</b></div>
+        <div class="ds-body">
+          <div class="tr-id">
+            <div class="tr-photo"><i></i><i></i><b></b></div>
+            <div><span class="ds-label">Funcionário</span><h3 class="ds-title">Estagiário</h3><p class="ds-text">Ele <span class="ds-hl">erra de propósito</span>. Bom para testar um deck.</p></div>
+          </div>
+          <div><span class="ds-label">Esta partida não vale</span><ul class="tr-no">${no('Patrimônio')}${no('Metas')}${no('Conquistas')}${no('Histórico')}</ul></div>
+          <div class="ds-deckcard ${ok ? '' : 'is-bad'}">
+            <div class="ds-deckcard__fan"><img src="${back}" alt=""><img src="${back}" alt=""><img src="${back}" alt=""></div>
+            <div class="ds-deckcard__txt"><span class="ds-label">Deck</span><b>${esc(d.name)}</b><span class="ds-text">${ok ? `${d.cards.length} cartas` : esc(Meta.deckErrors(s, d.cards)[0] ?? 'Deck inválido')}</span></div>
+            <div class="ds-deckcard__side"><span class="ds-chip ${ok ? 'ds-chip--ok' : 'ds-chip--no'}">${ok ? 'Pronto' : 'Inválido'}</span><button data-a="open" data-id="deck" class="ds-btn ds-btn--link">Trocar</button></div>
+          </div>
+          <div class="ds-actions"><button data-a="train" class="ds-btn ds-btn--primary ds-btn--lg" ${ok ? '' : 'disabled'}>Treinar</button><button data-a="open" data-id="duel" class="ds-btn ds-btn--link">Duelo valendo</button></div>
+        </div>
+      </section>
+      <div class="ds-postit tr-note"><i class="ds-tape ds-tape--top"></i><b>Chefe,</b>posso jogar com vc? prometo perder.<em>— o estagiário</em></div>
+    </div>`;
   }
 
   // ───────── mural: metas do dia ─────────

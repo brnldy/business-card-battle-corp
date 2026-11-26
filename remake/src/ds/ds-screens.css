@@ -27,37 +27,54 @@
 /* aviso de som: post-it pequeno */
 #unlock { bottom: 30px; padding: 10px 14px 8px; background: var(--ds-tex-lines), linear-gradient(160deg, #ffe680, #f4cf4a); color: var(--ds-ink); border: var(--ds-line) solid var(--ds-ink); box-shadow: 4px 5px 0 rgba(0, 0, 0, 0.45); font: 700 var(--t-sm)/1 var(--f-ui); letter-spacing: 0.06em; text-transform: uppercase; transform: translateX(-50%) rotate(-2deg); animation: none; }
 
-/* ───────── lobby ───────── */
-/* crachá da empresa */
-.lb-badge { left: 34px; top: 30px; gap: 14px; padding: 22px 18px 12px 12px; background: var(--ds-tex-card); border: var(--ds-line) solid var(--ds-ink); box-shadow: var(--ds-frame); margin: 5px; transform: rotate(-1.2deg); }
-.lb-badge::before { content: ""; position: absolute; left: 50%; top: 7px; width: 42px; height: 8px; margin-left: -21px; background: #141a16; border: 1.5px solid var(--ds-ink); border-radius: 4px; }   /* furo do cordão */
-.lb-badge:hover { border-color: var(--ds-ink); background: var(--ds-tex-lines), #fff6dc; }
-.lb-badge img { width: 54px; height: 54px; background: var(--ds-ink); border: var(--ds-line) solid var(--ds-ink); padding: 4px; }
-.lb-badge b { font: 400 28px/1 var(--f-title); color: var(--ds-ink); text-shadow: none; text-transform: uppercase; word-spacing: -0.28em; }
-.lb-badge span { color: var(--ds-ink-2); font-weight: 700; display: block; margin-top: 5px; }
-.lb-badge em { font: 400 24px/1 var(--f-title); color: var(--ds-ink); background: var(--ds-amber); padding: 1px 7px 0; margin-left: 6px; border: 1.5px solid var(--ds-ink); }
+/* ───────── lobby ─────────
+   Discreto: a sala é a interface. Só um crachá pequeno, etiquetas finas nos objetos e o botão de sair.
+   A régua de atalhos saiu da tela (os números 1 a 9 continuam funcionando no teclado). */
+.lb-nav { display: none; }
+.lb-hint { bottom: 26px; font: 500 var(--t-cap)/1 var(--f-ui); letter-spacing: 0.14em; color: var(--ds-paper); opacity: 0.55; }
+/* crachá */
+.lb-badge { left: 30px; top: 26px; gap: 10px; padding: 8px 12px 8px 8px; background: var(--ds-tex-card); border: 1.5px solid var(--ds-ink); box-shadow: 3px 4px 0 rgba(0, 0, 0, 0.45); }
+.lb-badge:hover { border-color: var(--ds-ink); background: #fff6dc; }
+.lb-badge img { width: 34px; height: 34px; background: var(--ds-ink); border: none; padding: 3px; }
+.lb-badge b { font: 400 20px/1 var(--f-title); color: var(--ds-ink); text-shadow: none; text-transform: uppercase; word-spacing: -0.28em; }
+.lb-badge span { color: var(--ds-ink-2); font: 500 11px/1 var(--f-ui); letter-spacing: 0.1em; display: block; margin-top: 4px; }
+.lb-badge em { font: 400 18px/1 var(--f-title); color: var(--ds-ink); margin-left: 4px; }
 /* sair */
-.lb-top { right: 34px; top: 34px; }
-#lobby .lb-exit { height: 44px; padding: 0 18px; background: var(--ds-tex-card) !important; color: var(--ds-ink) !important; border: 3px solid var(--ds-ink) !important; border-radius: 0; box-shadow: inset 0 0 0 1.5px rgba(255, 252, 240, 0.9), 0 4px 0 0 var(--ds-band-lo), 0 4px 0 3px var(--ds-ink); font: 700 var(--t-sm)/1 var(--f-ui); letter-spacing: 0.1em; }
-#lobby .lb-exit:hover { background: var(--ds-tex-lines), linear-gradient(to bottom, #ffe2a3, #f7c466) !important; color: var(--ds-ink); }
-/* etiquetas dos objetos: fita de rotuladora (nome) + tira de papel (o que faz) */
-#lobby .lb-label { gap: 0; padding: 0; background: none !important; border: none !important; justify-items: center; }
-#lobby .lb-label b { padding: 6px 12px 3px; background: linear-gradient(to bottom, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0) 30%, rgba(0, 0, 0, 0.2)), #23201c; color: #f4efe2; font: 400 22px/1 var(--f-title); letter-spacing: 0.14em; text-shadow: 0 1px 0 rgba(0, 0, 0, 0.6); border-radius: 2px; box-shadow: 3px 4px 0 rgba(0, 0, 0, 0.5); transform: rotate(-1.5deg); }
-#lobby .lb-label:nth-child(even) b { transform: rotate(1.2deg); }
-#lobby .lb-label span { margin-top: -1px; padding: 4px 9px 3px; background: var(--ds-card); color: var(--ds-ink); border: 1.5px solid var(--ds-ink); font: 700 var(--t-cap)/1 var(--f-ui); letter-spacing: 0.08em; text-transform: uppercase; box-shadow: 3px 4px 0 rgba(0, 0, 0, 0.45); }
-#lobby .lb-label::after { bottom: -12px; height: 12px; width: 2px; background: var(--ds-card); }
-#lobby .lb-label.is-hot, #lobby .lb-label:hover { background: none; }
-#lobby .lb-label.is-hot b, #lobby .lb-label:hover b { background: var(--ds-amber); color: var(--ds-ink); text-shadow: none; }
-#lobby .lb-label.is-hot span, #lobby .lb-label:hover span { background: var(--ds-ink); color: var(--ds-paper); }
-#lobby .lb-label .lb-dot, #lobby .lb-nav .lb-dot { right: -8px; top: -8px; width: 16px; height: 16px; background: var(--ds-red); border: 2px solid var(--ds-ink); box-shadow: 2px 3px 0 rgba(0, 0, 0, 0.4); }
-/* régua de atalhos: uma tira de papelão com teclas */
-.lb-nav { bottom: 30px; gap: 8px; padding: 10px 12px 14px; background: var(--ds-tex-kraft); border: var(--ds-line) solid var(--ds-ink); box-shadow: 0 5px 0 0 var(--ds-kraft-lo), 0 6px 0 1px var(--ds-ink), 6px 13px 0 0 rgba(0, 0, 0, 0.5); }
-#lobby .lb-nav button { gap: 9px; height: 40px; padding: 0 12px 0 8px; margin-bottom: 4px; background: var(--ds-tex-card); color: var(--ds-ink); border: var(--ds-line) solid var(--ds-ink); border-radius: 0; box-shadow: 0 4px 0 0 var(--ds-band-lo), 0 4px 0 2px var(--ds-ink); font: 700 var(--t-cap)/1 var(--f-ui); letter-spacing: 0.08em; }
-#lobby .lb-nav button:hover { background: var(--ds-tex-lines), linear-gradient(to bottom, #ffe2a3, #f7c466); color: var(--ds-ink); }
-#lobby .lb-nav button:active { transform: translateY(4px); box-shadow: 0 0 0 2px var(--ds-ink); }
-#lobby .lb-nav kbd { min-width: 22px; text-align: center; font: 400 20px/1 var(--f-title); padding: 3px 5px 1px; background: linear-gradient(to bottom, #4a443d, #26221e); color: #f4efe2; border: none; border-radius: 4px; opacity: 1; box-shadow: 0 2px 0 #0f0d0b; }
-.lb-hint { bottom: 104px; padding: 7px 12px 6px; background: var(--ds-tex-lines), linear-gradient(160deg, #ffe680, #f4cf4a); color: var(--ds-ink); border: var(--ds-line) solid var(--ds-ink); opacity: 1; box-shadow: 3px 4px 0 rgba(0, 0, 0, 0.45); transform: translateX(-50%) rotate(-1deg); }
-/* avisos do lobby: tira de papel com tarja */
-.lb-toast { background: var(--ds-tex-card); color: var(--ds-ink); border: var(--ds-line) solid var(--ds-ink); border-left: 12px solid var(--ds-ink-3); border-radius: 0; box-shadow: 5px 6px 0 rgba(0, 0, 0, 0.45); font-weight: 700; }
-.lb-toast b { font: 400 26px/1 var(--f-title); text-transform: uppercase; word-spacing: -0.28em; } .lb-toast span { color: var(--ds-ink-2); }
+.lb-top { right: 30px; top: 26px; }
+#lobby .lb-exit { padding: 9px 12px 8px; background: var(--ds-tex-card) !important; color: var(--ds-ink) !important; border: 1.5px solid var(--ds-ink) !important; border-radius: 0; box-shadow: 3px 4px 0 rgba(0, 0, 0, 0.45); font: 700 11px/1 var(--f-ui); letter-spacing: 0.1em; }
+#lobby .lb-exit:hover { background: var(--ds-amber) !important; }
+/* etiquetas dos objetos: uma tirinha de rotuladora; o que o objeto faz só aparece ao apontar */
+#lobby .lb-label { gap: 3px; padding: 0; background: none !important; border: none !important; justify-items: center; }
+#lobby .lb-label b { padding: 4px 8px 2px; background: #23201c; color: #efe8d6; font: 400 16px/1 var(--f-title); letter-spacing: 0.12em; border-radius: 1px; box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.45); opacity: 0.88; }
+#lobby .lb-label span { display: none; padding: 3px 7px 2px; background: var(--ds-card); color: var(--ds-ink); border: 1px solid var(--ds-ink); font: 700 10px/1 var(--f-ui); letter-spacing: 0.08em; text-transform: uppercase; }
+#lobby .lb-label::after { display: none; }
+#lobby .lb-label.is-hot b, #lobby .lb-label:hover b { background: var(--ds-amber); color: var(--ds-ink); opacity: 1; }
+#lobby .lb-label.is-hot span, #lobby .lb-label:hover span { display: block; }
+#lobby .lb-label .lb-dot { right: -6px; top: -6px; width: 10px; height: 10px; background: var(--ds-red); border: 1.5px solid var(--ds-ink); box-shadow: none; }
+/* avisos */
+.lb-toasts { bottom: 30px; right: 30px; }
+.lb-toast { padding: 9px 13px 8px; background: var(--ds-tex-card); color: var(--ds-ink); border: 1.5px solid var(--ds-ink); border-left: 8px solid var(--ds-ink-3); border-radius: 0; box-shadow: 3px 4px 0 rgba(0, 0, 0, 0.45); font-weight: 700; }
+.lb-toast b { font: 400 22px/1 var(--f-title); text-transform: uppercase; word-spacing: -0.28em; } .lb-toast span { color: var(--ds-ink-2); }
 .lb-toast.good { border-left-color: var(--ds-green); } .lb-toast.bad { border-left-color: var(--ds-red); } .lb-toast.gold { border-left-color: var(--ds-amber); background: var(--ds-tex-card); } .lb-toast.gold b { color: var(--ds-ink); }
+
+/* ───────── janela do estagiário: termo de estágio grampeado + bilhete dele ───────── */
+.lb-box--training { width: min(820px, 95%); }
+.tr { position: relative; display: grid; grid-template-columns: 1fr 200px; gap: var(--ds-4); align-items: start; }
+.tr-term { box-shadow: var(--ds-frame-in), 6px 11px 0 3px rgba(40, 24, 6, 0.3); transform: rotate(-0.4deg); }
+.tr-term .ds-staple { left: auto; right: 16px; top: 44px; transform: rotate(32deg); }
+.tr-id { display: grid; grid-template-columns: 92px 1fr; gap: var(--ds-4); align-items: center; }
+.tr-id > div:last-child { display: grid; gap: 5px; }
+/* foto 3×4 do estagiário: a caixa de papelão na cabeça */
+.tr-photo { position: relative; width: 92px; height: 112px; background: #cfd6cc; border: var(--ds-line) solid var(--ds-ink); box-shadow: 0 0 0 3px var(--ds-card), 0 0 0 4px var(--ds-ink-3); margin: 4px; transform: rotate(-2deg); overflow: hidden; }
+.tr-photo::before { content: ""; position: absolute; left: 18px; top: 22px; width: 54px; height: 50px; background: var(--ds-kraft); border: var(--ds-line) solid var(--ds-ink); }
+.tr-photo::after { content: ""; position: absolute; left: 6px; right: 6px; top: 76px; bottom: -4px; background: #3a3f3c; border: var(--ds-line) solid var(--ds-ink); border-radius: 14px 14px 0 0; }
+.tr-photo i { position: absolute; top: 40px; width: 7px; height: 9px; background: var(--ds-ink); z-index: 1; } .tr-photo i:nth-child(1) { left: 33px; } .tr-photo i:nth-child(2) { left: 51px; }
+.tr-photo b { position: absolute; left: 35px; top: 58px; width: 20px; height: 3px; background: var(--ds-ink); z-index: 1; }
+/* o que não vale: caixinhas riscadas a caneta vermelha */
+.tr-no { list-style: none; margin: 8px 0 0; padding: 0; display: grid; grid-template-columns: repeat(4, auto); justify-content: start; gap: 8px 22px; }
+.tr-no li { display: flex; align-items: center; gap: 8px; font: 700 var(--t-md)/1 var(--f-ui); color: var(--ds-ink-2); }
+.tr-no span { position: relative; } .tr-no span::after { content: ""; position: absolute; left: -3px; right: -3px; top: 48%; height: 2px; background: var(--ds-red); transform: rotate(-3deg); }
+.tr-box { width: 18px; height: 18px; flex: none; background: linear-gradient(45deg, transparent 43%, var(--ds-red) 43% 57%, transparent 57%), linear-gradient(-45deg, transparent 43%, var(--ds-red) 43% 57%, transparent 57%), var(--ds-card); border: var(--ds-line) solid var(--ds-ink); }
+.tr-note { width: 200px; min-height: 170px; margin-top: 46px; transform: rotate(3deg); font: 700 var(--t-md)/1.35 var(--f-ui); }
+.tr-note em { font: 500 var(--t-cap)/1 var(--f-ui); font-style: normal; color: var(--ds-ink-2); margin-top: 8px; }
+.tr-note .ds-tape--top { top: -13px; }
