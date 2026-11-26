@@ -146,7 +146,7 @@
   clip-path: polygon(0 0, 4% 12%, 0 25%, 4% 38%, 0 50%, 4% 62%, 0 75%, 4% 88%, 0 100%, 100% 100%, 96% 88%, 100% 75%, 96% 62%, 100% 50%, 96% 38%, 100% 25%, 96% 12%, 100% 0); }
 .ds-tape--top { left: 50%; top: -13px; margin-left: -46px; } .ds-tape--tl { left: -24px; top: 6px; transform: rotate(-38deg); } .ds-tape--tr { right: -24px; top: 6px; transform: rotate(38deg); }
 /* clipe: junta folhas. Sempre na borda de cima, meio para fora. */
-.ds-clip { position: absolute; top: -24px; right: 30px; width: 17px; height: 44px; z-index: 3; pointer-events: none; transform: rotate(4deg);
+.ds-clip { position: absolute; top: -30px; right: 30px; width: 24px; height: 62px; z-index: 3; pointer-events: none; transform: rotate(4deg);
   background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 22 58'%3E%3Cpath d='M6 18v26a5 5 0 0 0 10 0V10a8 8 0 0 0-14 0v36' fill='none' stroke='%231b140d' stroke-width='5' stroke-linecap='round'/%3E%3Cpath d='M6 18v26a5 5 0 0 0 10 0V10a8 8 0 0 0-14 0v36' fill='none' stroke='%23b9bcc0' stroke-width='2.4' stroke-linecap='round'/%3E%3C/svg%3E") center / contain no-repeat; }
 .ds-clip--l { right: auto; left: 30px; transform: rotate(-5deg); }
 /* grampo: duas folhas presas de vez. Canto de cima, inclinado. */
