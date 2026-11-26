@@ -135,7 +135,7 @@ export class LobbyUI {
     const body = { deck: () => this.vDeck(s), recycle: () => this.vRecycle(s), duel: () => this.vDuel(s), training: () => this.vTraining(s), missions: () => this.vMissions(s), shop: () => this.vShop(s), achievements: () => this.vAchievements(s), profile: () => this.vProfile(s) }[id]();
     const scroll = $('.lb-scroll', this.win)?.scrollTop ?? 0, scroll2 = $('.lb-decklist', this.win)?.scrollTop ?? 0, focus = document.activeElement?.id;
     this.win.innerHTML = `<section class="lb-box lb-box--${id}">
-      <header><div><p class="memo">${esc(memo)}</p><h2>${esc(title)}</h2></div><div class="lb-pat">Patrimônio <b>${money(s.patrimonio)}</b></div><button class="lb-x" data-a="close" title="Fechar (Esc)">✕</button></header>
+      <header><div><p class="memo"><span>${esc(memo.split(' · ')[0])}</span></p><h2>${esc(title)}</h2></div><div class="lb-pat"><span>Patrimônio</span><b>${money(s.patrimonio)}</b></div><button class="lb-x" data-a="close" title="Fechar (Esc)">✕</button></header>
       ${body}</section>`;
     const sc = $('.lb-scroll', this.win); if (sc) sc.scrollTop = scroll; const dl = $('.lb-decklist', this.win); if (dl) dl.scrollTop = scroll2;
     if (focus === 'lb-deck-name') { const i = $('#lb-deck-name', this.win); i?.focus(); i?.setSelectionRange(i.value.length, i.value.length); }

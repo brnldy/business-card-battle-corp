@@ -172,3 +172,12 @@ body.theme-buckshot .h-folder__name { text-transform: uppercase; }
 @keyframes h-stamp { 0% { opacity: 0; transform: translateY(8px) rotate(6deg) scale(1.25); } 10%, 84% { opacity: 1; transform: translateY(-46px) rotate(6deg) scale(1); } 100% { opacity: 0; transform: translateY(-46px) rotate(6deg) scale(1); } }
 
 .ds-glass { filter: opacity(0) !important; }   /* interface curva ligada: o HTML fica invisível e clicável; quem desenha é src/ds/glass.js */
+
+/* ── cabeçalho das janelas em pasta (revisão de 27/11) ──
+   Aba: fica só a forma da pasta, com o nome do lugar numa fita de rotuladora colada nela (sem subtítulo).
+   Patrimônio: número de livro-caixa, sem caixa nem etiqueta; rótulo pequeno em cima e sublinhado duplo de total. */
+:is(.lb-box--duel, .lb-box--training, .lb-box--missions) > header .memo { padding: 7px 14px 6px 12px; letter-spacing: 0; }
+:is(.lb-box--duel, .lb-box--training, .lb-box--missions) > header .memo span { display: block; padding: 4px 9px 2px; background: #23201c; color: #efe8d6; font: 400 17px/1 var(--f-title); letter-spacing: 0.14em; border-radius: 1px; transform: rotate(-1deg); }
+:is(.lb-box--duel, .lb-box--training, .lb-box--missions) .lb-pat { display: grid; justify-items: end; gap: 3px; padding: 0 2px 5px; background: none; clip-path: none; filter: none; border: none; border-bottom: 5px double var(--ds-ink); color: var(--ds-ink-2); font: 700 11px/1 var(--f-ui); letter-spacing: 0.16em; }
+:is(.lb-box--duel, .lb-box--training, .lb-box--missions) .lb-pat b { margin: 0; font: 400 34px/0.9 var(--f-title); color: var(--ds-ink); letter-spacing: 0; vertical-align: 0; }
+:is(.lb-box--duel, .lb-box--training, .lb-box--missions) > header { align-items: center; }
