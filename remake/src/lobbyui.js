@@ -265,8 +265,7 @@ export class LobbyUI {
         <b>${esc(d.name)}</b>
         ${ok ? `<div class="dk-split"><i style="width:${pct}%"></i></div><p><span><b>${cr}</b> criaturas</span><span><b>${fx}</b> efeitos</span></p>` : `<p class="dk-err">${esc(Meta.deckErrors(s, d.cards)[0] ?? 'Deck inválido')}</p>`}
       </div>
-      <i class="ds-stamp ${ok ? 'ds-stamp--ok' : 'ds-stamp--no'}">${ok ? 'Pronto' : 'Inválido'}</i>
-      <button data-a="open" data-id="deck" class="ds-btn dk-swap">Trocar</button>
+      <div class="dk-side"><i class="ds-stamp ${ok ? 'ds-stamp--ok' : 'ds-stamp--no'}">${ok ? 'Pronto' : 'Inválido'}</i><button data-a="open" data-id="deck" class="ds-btn dk-swap">Trocar</button></div>
     </div>`;
   }
   vDuel(s) {
@@ -282,7 +281,7 @@ export class LobbyUI {
             <div><dt>Derrota</dt><dd style="color:var(--ds-red)">${money(0)}</dd></div>
           </dl>
           ${this.deckCard(s)}
-          <footer class="dk-foot"><button data-a="duel" class="ds-btn ds-btn--primary ds-btn--lg" ${ok ? '' : 'disabled'}>Entrar na reunião <span class="ds-key">Enter</span></button><button data-a="open" data-id="training" class="ds-btn">Treinar antes</button></footer>
+          <footer class="dk-foot"><button data-a="duel" class="ds-btn ds-btn--primary" ${ok ? '' : 'disabled'}>Entrar na reunião <span class="ds-key">Enter</span></button><button data-a="open" data-id="training" class="ds-btn">Treinar antes</button></footer>
         </div>
       </section>
       <section class="ds-sheet">
@@ -304,7 +303,7 @@ export class LobbyUI {
           </div>
           <div><span class="ds-label">Esta partida não vale</span><ul class="tr-no">${no('Patrimônio')}${no('Metas')}${no('Conquistas')}${no('Histórico')}</ul></div>
           ${this.deckCard(s)}
-          <footer class="dk-foot"><button data-a="train" class="ds-btn ds-btn--primary ds-btn--lg" ${ok ? '' : 'disabled'}>Treinar com ele</button><button data-a="open" data-id="duel" class="ds-btn">Duelo valendo</button></footer>
+          <footer class="dk-foot"><button data-a="train" class="ds-btn ds-btn--primary" ${ok ? '' : 'disabled'}>Treinar com ele</button><button data-a="open" data-id="duel" class="ds-btn">Duelo valendo</button></footer>
         </div>
       </section>
       <div class="ds-postit tr-note"><i class="ds-tape ds-tape--top"></i><b>Chefe,</b>posso jogar com vc? prometo perder.<em>— o estagiário</em></div>

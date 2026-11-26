@@ -352,7 +352,7 @@ export function buildLobby() {
     const lampM = fit(model('hanging_industrial_lamp'), { h: 1.1 }); lampM.children[0].position.y -= 1.1; lampHolder.add(lampM);
     const l = new THREE.SpotLight(WARM, 60, 7, 0.66, 0.8, 1.5); at(l, 0, -1.05, 0); l.target.position.set(0, -4, 0.1); l.castShadow = true; l.shadow.mapSize.set(1024, 1024); l.shadow.bias = -0.002; lampHolder.add(l, l.target); spots.push(l);
     pulses.push({ o: lampHolder, base: 0, sp: 0.9, amp: 0.05 });
-    intern = { mixer, headBox, headBone, g };
+    intern = { mixer, headBox, headBone, g, spot: l };
     hotspot('training', 'Estagiário', 'Treino sem valer', g, { hit: [1.6, 1.95, 1.3, 0, 0.98, -0.25], anchor: [0, 2.06, -0.4], light: l, lit: 1.9 });
   }
   // 8) RECEPÇÃO — perfil da empresa (lateral direita)
@@ -410,17 +410,23 @@ export function buildLobby() {
       const rt = new THREE.WebGLRenderTarget(w, h), cam = new THREE.PerspectiveCamera(15, w / h, 0.1, 50), c = new THREE.Vector3();
       intern.headBox.getWorldPosition(c);
       cam.position.set(c.x + 0.55, c.y + 0.1, c.z + 3.2); cam.lookAt(c.x, c.y - 0.16, c.z);
-      const key = new THREE.PointLight(0xfff4e4, 7, 9); key.position.set(c.x + 1.4, c.y + 0.9, c.z + 2.2);
-      const fill = new THREE.PointLight(0xbfe0d6, 2.5, 9); fill.position.set(c.x - 1.6, c.y, c.z + 1.6); scene.add(key, fill);
-      const fog = scene.fog, bg = scene.background, target = renderer.getRenderTarget(); scene.fog = null; scene.background = new THREE.Color(0x8d9a90);
+      // luz de estúdio neutra: a luminária quente da sala (e o reforço de quando o mouse está em cima) saturava o papelão
+      const spotI = intern.spot.intensity, tilt = intern.headBox.rotation.z; intern.spot.intensity = 0; intern.headBox.rotation.z = 0;
+      const key = new THREE.DirectionalLight(0xffffff, 1.5); key.position.set(c.x + 2, c.y + 2, c.z + 4); key.target.position.copy(c);
+      const fill = new THREE.AmbientLight(0xffffff, 0.55); scene.add(key, key.target, fill);
+      const fog = scene.fog, bg = scene.background, target = renderer.getRenderTarget(); scene.fog = null; scene.background = new THREE.Color(0x6f7a72);
       const vis = hits.map((o) => o.visible); hits.forEach((o) => { o.visible = false; });
       renderer.setRenderTarget(rt); renderer.clear(); renderer.render(scene, cam);
       const px = new Uint8Array(w * h * 4); renderer.readRenderTargetPixels(rt, 0, 0, w, h, px);
-      renderer.setRenderTarget(target); scene.fog = fog; scene.background = bg; scene.remove(key, fill); hits.forEach((o, i) => { o.visible = vis[i]; }); rt.dispose();
+      renderer.setRenderTarget(target); scene.fog = fog; scene.background = bg; scene.remove(key, key.target, fill); hits.forEach((o, i) => { o.visible = vis[i]; }); rt.dispose();
+      intern.spot.intensity = spotI; intern.headBox.rotation.z = tilt;
+      // o alvo guarda luz linear: converte para sRGB (sem isso a foto sai escura e com a cor estourada)
+      const enc = (v) => { v = Math.min(1, Math.max(0, v)); return 255 * (v <= 0.0031308 ? v * 12.92 : 1.055 * Math.pow(v, 1 / 2.4) - 0.055); };
       const cv = document.createElement('canvas'); cv.width = w; cv.height = h; const g = cv.getContext('2d'), im = g.createImageData(w, h);
-      for (let y = 0; y < h; y++) im.data.set(px.subarray((h - 1 - y) * w * 4, (h - y) * w * 4), y * w * 4);
-      g.putImageData(im, 0, 0); return (this._portrait = cv.toDataURL('image/jpeg', 0.9));
+      for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const i = ((h - 1 - y) * w + x) * 4, o = (y * w + x) * 4; im.data[o] = enc(px[i] / 255); im.data[o + 1] = enc(px[i + 1] / 255); im.data[o + 2] = enc(px[i + 2] / 255); im.data[o + 3] = 255; }
+      g.putImageData(im, 0, 0); return (this._portrait = cv.toDataURL('image/jpeg', 0.92));
     },
+
     get hover() { return hoverId; },
     /** posição na tela (0..1) da etiqueta de cada área */
     anchors() {
