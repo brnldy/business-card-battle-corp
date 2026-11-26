@@ -3,8 +3,11 @@
 // volta ao contrário até sumir. Fica dentro do filtro de imagem do jogo (gfx.js), então ganha o mesmo pixelado,
 // pontilhado e cores reduzidas do resto: as trincas são desenhadas num canvas pequeno (vermelho = brilho do vidro,
 // verde = sombra da rachadura) que o filtro lê.
+// Se existirem as imagens do autor (assets/img/FROZEN_1.jpg … FROZEN_4.jpg, gelo branco sobre fundo preto, da menos
+// para a mais congelada), elas substituem o gelo e as trincas feitas por código, aplicadas em modo "screen".
 import * as THREE from 'three';
 import { tween, ease } from './gfx.js';
+import { asset } from './assets.js';
 import { sfx } from './audio.js';
 import { settings } from './settings.js';
 
@@ -39,6 +42,9 @@ export class FrostScreen {
     this.tex = new THREE.CanvasTexture(this.c); this.tex.magFilter = this.tex.minFilter = THREE.NearestFilter; this.tex.generateMipmaps = false;
     this.u.tCrack.value = this.tex;
     this.level = 0; this.shown = 0; this.cracks = []; this.anim = null;
+    this.black = this.u.tIceA.value; this.imgs = [];
+    const loader = new THREE.TextureLoader();
+    [1, 2, 3, 4].forEach((n) => loader.load(asset(`img/FROZEN_${n}.jpg`), (t) => { t.colorSpace = THREE.SRGBColorSpace; t.generateMipmaps = false; t.minFilter = THREE.LinearFilter; this.imgs[n] = t; if (this.imgs.filter(Boolean).length === 4) this.u.uIceImg.value = 1; }, undefined, () => {}));
   }
   /** trincas novas (uma por nível), no tamanho certo para a tela atual */
   reroll() {
@@ -49,6 +55,12 @@ export class FrostScreen {
   }
   /** desenha o nível v (0 = limpo … 4 = muito trincado); aceita frações para animar */
   draw(v) {
+    if (this.u.uIceImg.value > 0.5) { // imagens do autor: troca suave entre o nível de baixo e o de cima
+      const a = Math.floor(v), b = Math.min(4, a + 1);
+      this.u.tIceA.value = a > 0 ? this.imgs[a] : this.black; this.u.tIceB.value = b > 0 ? this.imgs[b] : this.black; this.u.uIceMix.value = v - a;
+      this.u.uIce.value = v > 0 ? Math.min(1, v / 4) : 0; this.u.uIceTint.value = v > 0 ? 0.06 + 0.1 * Math.min(1, v / 4) : 0; this.u.uCrack.value = 0;
+      return;
+    }
     const g = this.c.getContext('2d'), W = this.c.width, H = this.c.height, f = Math.min(1, v / 4);
     g.clearRect(0, 0, W, H); g.fillStyle = '#000'; g.fillRect(0, 0, W, H);
     g.lineCap = 'square'; g.lineJoin = 'miter';

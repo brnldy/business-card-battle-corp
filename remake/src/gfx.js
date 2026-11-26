@@ -149,6 +149,7 @@ export class Gfx {
       uGrain: { value: 0.03 }, uLevels: { value: 32 }, uVig: { value: P.vig }, uSat: { value: P.sat }, uBloom: { value: P.bloom },
       uFrost: { value: 0 }, uGlitch: { value: 0 }, uFade: { value: 0 }, uBarrel: { value: 0 }, uTintWarm: { value: 0 }, uScan: { value: P.scan },
       uIce: { value: 0 }, uIceTint: { value: 0 }, uCrack: { value: 0 }, tCrack: { value: new THREE.DataTexture(new Uint8Array(4), 1, 1) },
+      uIceImg: { value: 0 }, uIceMix: { value: 0 }, tIceA: { value: new THREE.DataTexture(new Uint8Array(4), 1, 1) }, tIceB: { value: new THREE.DataTexture(new Uint8Array(4), 1, 1) },
       uWobble: { value: P.wobble ?? 0 }, uShadow: { value: new THREE.Vector3(...P.shadow) }, uHigh: { value: new THREE.Vector3(...P.high) },
     };
     this.base = { aberr: P.aberr };
@@ -165,7 +166,7 @@ export class Gfx {
         gl_FragColor = vec4(c, 1.0); }`);
     this.postMat = quadMat(this.u, `
       precision highp float;
-      varying vec2 vUv; uniform sampler2D tScene, tBloom, tCrack; uniform vec2 uRes; uniform float uIce, uIceTint, uCrack; uniform vec3 uFlashCol, uShadow, uHigh;
+      varying vec2 vUv; uniform sampler2D tScene, tBloom, tCrack, tIceA, tIceB; uniform float uIceImg, uIceMix; uniform vec2 uRes; uniform float uIce, uIceTint, uCrack; uniform vec3 uFlashCol, uShadow, uHigh;
       uniform float uTime, uAberr, uFlash, uGrain, uLevels, uVig, uSat, uFrost, uGlitch, uFade, uTintWarm, uBloom, uScan, uWobble;
       float hash(vec2 p){ p = fract(p * vec2(123.34, 456.21)); p += dot(p, p + 45.32); return fract(p.x * p.y); }
       float bayer2(vec2 a){ a = floor(a); return fract(a.x / 2.0 + a.y * a.y * 0.75); }
@@ -196,7 +197,13 @@ export class Gfx {
         col = mix(col, col * vec3(1.25, 0.8, 0.7), uTintWarm);
         col = mix(col, vec3(l) * vec3(0.72, 0.95, 1.25) + 0.05, max(uFrost, uIceTint));
         // Ar Condicionado no Talo: gelo em blocos de cristal crescendo das bordas e trincas de vidro (frost.js)
-        if (uIce > 0.0) {
+        if (uIce > 0.0 && uIceImg > 0.5) {
+          // imagens de gelo do autor (fundo preto) em modo "screen", cobrindo a tela sem distorcer (16:9)
+          vec2 iu = uv; float sa = uRes.x / uRes.y, ia = 16.0 / 9.0;
+          if (sa > ia) iu.y = (uv.y - 0.5) * ia / sa + 0.5; else iu.x = (uv.x - 0.5) * sa / ia + 0.5;
+          vec3 fr = mix(texture2D(tIceA, iu).rgb, texture2D(tIceB, iu).rgb, uIceMix);
+          col = 1.0 - (1.0 - col) * (1.0 - fr);
+        } else if (uIce > 0.0) {
           float ed = min(min(vUv.x, 1.0 - vUv.x) * uRes.x / uRes.y, min(vUv.y, 1.0 - vUv.y));
           vec2 cell = floor(px / 3.0);
           float jag = (hash(cell) - 0.5) * 0.05 + (hash(floor(px / 9.0)) - 0.5) * 0.06;
