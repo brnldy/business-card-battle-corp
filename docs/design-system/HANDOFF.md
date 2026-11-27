@@ -77,6 +77,7 @@ Armadilhas desta rodada (não repetir):
 
 Ficou por fazer ou em aberto:
 
+- **Cabeçalho das janelas em escolha.** Duas propostas no código, alternadas pelo endereço: `?lobby&head=a` (topo de formulário: `.ds-formhead` + `.ds-balance`) e `?lobby&head=b` (aba ativa como título + visor `.ds-register` na borda). Sem parâmetro vale a A. Quando o autor escolher, apagar a outra (`HEAD` e `head()` no `lobbyui.js`, regras `.lb-head--a/--b`) e levar a escolhida para as telas antigas.
 - **Metas, Campanha e Treino não têm o zoom das telas novas.** Em 1280×720 e 1440×900, trocar de Metas para Troféus muda o tamanho da janela. É o passo 6 do plano.
 - Em 1280×720 as grades rolam (uma fileira e meia de cartas visível).
 - A confirmação de compra do deck ainda usa o diálogo antigo (`ui.confirm`).

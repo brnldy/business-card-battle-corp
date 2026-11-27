@@ -298,3 +298,20 @@ button.ds-boxfile.is-on { transform: translateY(-5px); box-shadow: 0 4px 0 var(-
 .ds-plaque:not(.is-on) > span { background: none; border: none; color: var(--ds-ink-2); text-shadow: none; }
 button.ds-plaque { transition: transform 0.1s; } button.ds-plaque:hover, button.ds-plaque:focus-visible { transform: translateY(-3px); }
 .ds-plaque--lg { width: 240px; min-height: 120px; cursor: default; } .ds-plaque--lg > span { min-height: 86px; font-size: 24px; }
+
+/* ── cabeçalho das janelas (27/11, duas propostas) ── */
+.ds-sr { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+/* rótulo de formulário: o mesmo do Formulário 01-A */
+.ds-formlabel { font: 700 11px/1 var(--f-ui); letter-spacing: 0.16em; text-transform: uppercase; color: var(--ds-ink-2); }
+/* A · topo de formulário: uma faixa de papel com casas separadas por fio */
+.ds-formhead { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; background: var(--ds-tex-lines), var(--ds-card); border: var(--ds-line) solid var(--ds-ink); box-shadow: 3px 4px 0 rgba(27, 20, 13, 0.3); }
+.ds-formhead__cell { display: grid; align-content: center; gap: 9px; padding: 12px 20px 10px; min-width: 0; } .ds-formhead__cell + .ds-formhead__cell { border-left: var(--ds-line) solid var(--ds-ink); }
+.ds-formhead h2 { margin: 0; font: 400 38px/1 var(--f-title); letter-spacing: 0.02em; text-transform: uppercase; color: var(--ds-ink); text-shadow: none; }
+.ds-formhead__x { padding: 0 16px; place-items: center; background: rgba(27, 20, 13, 0.06); }
+/* patrimônio como campo preenchido à máquina, em tinta azul, sobre a linha de assinatura */
+.ds-balance { min-width: 200px; } .ds-balance b { font: 400 34px/0.9 var(--f-title); letter-spacing: 0.02em; color: #1f3fa8; padding-bottom: 4px; border-bottom: 1.5px dotted var(--ds-ink-3); white-space: nowrap; }
+/* B · visor de máquina de somar: carcaça de plástico creme, janela escura com dígitos âmbar e a tecla Esc */
+.ds-register { display: flex; align-items: center; gap: 12px; padding: 8px 10px 8px 14px; background: linear-gradient(to bottom, #f1e9d6, #d6cbb0); border: var(--ds-line) solid var(--ds-ink); border-bottom: none; border-radius: 10px 10px 0 0; box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.7), inset 0 -3px 0 rgba(27, 20, 13, 0.12); }
+.ds-register__label { font: 700 11px/1 var(--f-ui); letter-spacing: 0.14em; text-transform: uppercase; color: var(--ds-ink-2); white-space: nowrap; }
+.ds-register__win { min-width: 150px; padding: 6px 12px 3px; background: linear-gradient(to bottom, #12140f, #22251b); border: var(--ds-line) solid var(--ds-ink); border-radius: 4px; box-shadow: inset 0 3px 6px rgba(0, 0, 0, 0.8), 0 1px 0 rgba(255, 255, 255, 0.6); font: 400 32px/1 var(--f-title); letter-spacing: 0.04em; color: var(--ds-amber); text-align: right; text-shadow: 0 0 8px rgba(242, 185, 76, 0.55); white-space: nowrap; }
+.ds-register .ds-btn--key { height: 40px; min-width: 52px; font-size: 15px; }

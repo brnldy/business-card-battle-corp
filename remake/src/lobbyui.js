@@ -58,6 +58,9 @@ const TITLES = {
   missions: ['Mural de avisos · leitura obrigatória', 'Metas do dia'], shop: ['Máquina de benefícios · não devolve troco', 'Loja'],
   achievements: ['Prateleira de troféus · empoeirada', 'Troféus'], profile: ['Recepção · ficha cadastral', 'Perfil da empresa'],
 };
+// cabeçalho das janelas novas: duas propostas em teste (?lobby&head=a ou &head=b); a escolhida fica e a outra sai
+const HEAD = new URLSearchParams(location.search).get('head') === 'b' ? 'b' : 'a';
+const NEW_HEAD = new Set(['duel', 'training', 'missions', 'achievements', 'shop']);
 const sortCards = (ids) => [...ids].sort((a, b) => a.localeCompare(b));
 const group = (ids) => { const m = new Map(); for (const id of ids) m.set(id, (m.get(id) ?? 0) + 1); return [...m.entries()].sort((a, b) => a[0].localeCompare(b[0])); };
 const dateStr = (ms) => { const d = new Date(ms), p = (n) => String(n).padStart(2, '0'); return `${p(d.getDate())}/${p(d.getMonth() + 1)} ${p(d.getHours())}:${p(d.getMinutes())}`; };
@@ -206,7 +209,7 @@ export class LobbyUI {
     const ht = HTABS[id], here = id === 'shop' ? this.tab.shop : id;
     const htabs = ht ? `<nav class="ds-tabs lb-htabs" role="tablist" aria-label="${esc(memo.split(' · ')[0])}">${ht[1].map(([k, n]) => `<button class="ds-tab ${k === here ? 'is-on' : ''}" role="tab" aria-selected="${k === here}" data-a="${ht[0]}" data-id="${k}">${n}</button>`).join('')}</nav>` : '';
     this.win.innerHTML = `<section class="lb-box lb-box--${id} ${id === 'shop' ? `lb-box--shop-${this.tab.shop}` : ''}">
-      <header><div>${htabs || `<p class="memo"><span>${esc(memo.split(' · ')[0])}</span></p>`}<h2>${esc(title)}</h2></div><div class="lb-pat"><span>Patrimônio</span><b>${money(s.patrimonio)}</b></div><button class="lb-x" data-a="close" title="Fechar (Esc)">✕</button></header>
+      ${NEW_HEAD.has(id) ? this.head(title, memo, htabs, s) : `<header><div>${htabs || `<p class="memo"><span>${esc(memo.split(' · ')[0])}</span></p>`}<h2>${esc(title)}</h2></div><div class="lb-pat"><span>Patrimônio</span><b>${money(s.patrimonio)}</b></div><button class="lb-x" data-a="close" title="Fechar (Esc)">✕</button></header>`}
       ${body}</section>`;
     const sc = $('.lb-scroll', this.win); if (sc) sc.scrollTop = scroll; const dl = $('.lb-decklist', this.win); if (dl) dl.scrollTop = scroll2;
     if (focus && ['lb-deck-name', 'lb-q', 'lb-sort'].includes(focus)) { const i = $(`#${focus}`, this.win); i?.focus(); if (sel) i?.setSelectionRange?.(...sel); }
@@ -214,11 +217,20 @@ export class LobbyUI {
       const q = `[data-a="${sig.a}"]${sig.card ? `[data-card="${sig.card}"]` : ''}${sig.id != null ? `[data-id="${sig.id}"]` : ''}`;
       const el = (sig.list ? $(`.lb-decklist ${q}`, this.win) : null) ?? $(`.lb-grid ${q}`, this.win) ?? $(q, this.win);
       // o botão sumiu ou ficou desligado (virou "Completa", "Em uso"...): foco na aba ativa, para o Tab não recomeçar do zero
-      (el && !el.disabled ? el : $('.lb-tabs .on', this.win) ?? $('.lb-htabs .is-on', this.win) ?? $('.lb-x', this.win))?.focus({ preventScroll: true });
+      (el && !el.disabled ? el : $('.lb-tabs .on', this.win) ?? $('.lb-htabs .is-on', this.win) ?? $('.lb-x, .lb-close', this.win))?.focus({ preventScroll: true });
     }
     if (this._scrollTo != null) { $(`[data-deck="${this._scrollTo}"]`, this.win)?.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); this._scrollTo = null; }
   }
   /** sai do editor de volta para as pastas */
+  /** cabeçalho das janelas novas. A: topo de formulário (lugar e título | patrimônio | Esc). B: a aba ativa é o título e o patrimônio é um visor preso na borda */
+  head(title, memo, htabs, s) {
+    const place = esc(memo.split(' · ')[0]), pat = money(s.patrimonio);
+    const key = '<button class="ds-btn ds-btn--key lb-close" data-a="close" title="Fechar (Esc)" aria-label="Fechar">Esc</button>';
+    if (HEAD === 'b') return `<header class="lb-head lb-head--b">${htabs}<h2 class="ds-sr">${esc(title)}</h2>
+      <div class="ds-register"><span class="ds-register__label">Patrimônio</span><b class="ds-register__win" aria-label="Patrimônio ${pat}">${pat}</b>${key}</div></header>`;
+    return `<header class="lb-head lb-head--a">${htabs}<div class="ds-formhead"><div class="ds-formhead__cell"><span class="ds-formlabel">${place}</span><h2>${esc(title)}</h2></div>
+      <div class="ds-formhead__cell ds-balance"><span class="ds-formlabel">Patrimônio</span><b>${pat}</b></div><div class="ds-formhead__cell ds-formhead__x">${key}</div></div></header>`;
+  }
   leaveEditor() { this.ed = null; this.resetFilters(); this.peek(null); sfx('navBack'); this.render(); }
   tabs(id, list) { const cur = this.tab[id] ?? list[0][0]; this.tab[id] = cur; return `<div class="lb-tabs" role="tablist">${list.map(([k, n]) => `<button data-a="tab" data-id="${k}" role="tab" aria-selected="${k === cur}" class="${k === cur ? 'on' : ''}">${n}</button>`).join('')}</div>`; }
 
