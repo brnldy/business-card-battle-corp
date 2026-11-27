@@ -396,3 +396,8 @@ body.rc-dragging, body.rc-dragging * { cursor: grabbing !important; }
 .rc-aim.is-hot { transform: scale(1.1); } .rc-aim.is-hot i { border-style: solid; background: rgba(242, 185, 76, 0.18); } .rc-aim.is-hot span { background: var(--ds-amber); color: #1b140d; opacity: 1; }
 @keyframes rc-aim-spin { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .rc-aim i { animation: none; } }
+/* painel estreito da sala: o título e o recibo dividem a largura sem se sobrepor */
+#lobby .lb-box.is-room .lb-head .ds-letterhead { gap: 16px; }
+#lobby .lb-box.is-room .lb-head .ds-letterhead h2 { font-size: 34px; }
+#lobby .lb-box.is-room .ds-till__paper { min-width: 0; column-gap: 14px; padding: 12px 14px 16px; }
+#lobby .lb-box.is-room .ds-till__total { font-size: 28px; }
