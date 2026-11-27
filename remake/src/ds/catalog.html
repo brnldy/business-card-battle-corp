@@ -118,11 +118,11 @@
           <div class="ds-sign is-signed"><div class="ds-sign__top"><span class="ds-formlabel">Assinatura</span><button class="ds-sign__clear">Limpar</button></div><div class="ds-sign__pad"><canvas></canvas><span class="ds-sign__x">✕</span></div></div></div>
         <footer class="ds-confirm__foot"><button class="ds-btn">Voltar</button><button class="ds-btn ds-btn--primary">Comprar · $ 9.000</button></footer></div>
     </div></section>
-  <section><h2>Aviso impresso</h2><p class="cat-note">Os avisos (toasts) saem da impressora matricial: confirmado, recusado (fita vermelha), crédito/débito (linha de conta grifada) e nota.</p>
-    <div class="cat-row" style="align-items:flex-start;gap:26px;flex-wrap:wrap">
-      <div class="ds-feed is-good" style="zoom:1"><div class="ds-feed__paper"><p class="ds-feed__head"><span>BCBC · Confirmado</span><span>14:32 · Nº 0042</span></p><div class="ds-feed__msg"><i class="ds-feed__ok">OK</i><div><b>Cópia criada</b><span>Kit do novato (cópia)</span></div></div></div></div>
-      <div class="ds-feed is-bad" style="zoom:1"><div class="ds-feed__paper"><p class="ds-feed__head"><span>BCBC · Recusado</span><span>14:32 · Nº 0043</span></p><div class="ds-feed__msg"><div>Você ainda não tem esta carta. Faltam $ 3.000.</div></div></div></div>
-      <div class="ds-feed is-gold" style="zoom:1"><div class="ds-feed__paper"><p class="ds-feed__head"><span>BCBC · Crédito</span><span>14:32 · Nº 0044</span></p><div class="ds-feed__msg"><div><b>Troféu: Primeiro contrato</b><span>Vença 1 partida</span></div></div><p class="ds-feed__amount"><span>Entrou</span><b>+ $ 1.000</b></p></div></div>
-      <div class="ds-feed is-note" style="zoom:1"><div class="ds-feed__paper"><p class="ds-feed__head"><span>BCBC · Nota</span><span>14:32 · Nº 0045</span></p><div class="ds-feed__msg"><div>O deck voltou a ser como estava quando você abriu.</div></div></div></div>
+  <section><h2>Aviso impresso</h2><p class="cat-note">Os avisos (toasts) saem da impressora matricial, como a tira do topo do duelo: confirmado, recusado (fita vermelha), crédito/débito (valor na ponta da linha) e nota.</p>
+    <div style="display:grid;gap:14px;justify-items:start">
+      <div class="ds-feed is-good" style="zoom:1;animation:none"><p class="ds-feed__row ds-feed__head"><span>BCBC · Confirmado</span><span>14:32 · Nº 0042</span></p><p class="ds-feed__row"><span class="ds-feed__txt"><i class="ds-feed__ok">OK</i><b>Cópia criada</b><span>Kit do novato (cópia)</span></span></p></div>
+      <div class="ds-feed is-bad" style="zoom:1;animation:none"><p class="ds-feed__row ds-feed__head"><span>BCBC · Recusado</span><span>14:32 · Nº 0043</span></p><p class="ds-feed__row"><span class="ds-feed__txt">Você ainda não tem esta carta. Faltam $ 3.000.</span></p></div>
+      <div class="ds-feed is-gold" style="zoom:1;animation:none"><p class="ds-feed__row ds-feed__head"><span>BCBC · Crédito</span><span>14:32 · Nº 0044</span></p><p class="ds-feed__row"><span class="ds-feed__txt"><b>Troféu: Primeiro contrato</b><span>Vença 1 partida</span></span><b class="ds-feed__amt pos">+ $ 1.000</b></p></div>
+      <div class="ds-feed is-note" style="zoom:1;animation:none"><p class="ds-feed__row ds-feed__head"><span>BCBC · Nota</span><span>14:32 · Nº 0045</span></p><p class="ds-feed__row"><span class="ds-feed__txt">O deck voltou a ser como estava quando você abriu.</span></p></div>
     </div></section>
 </main>

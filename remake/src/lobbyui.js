@@ -167,14 +167,13 @@ export class LobbyUI {
   }
   /** aviso impresso (peça .ds-feed): tira de formulário contínuo que sai da impressora matricial.
    *  tone: 'good' (confirmado), 'bad' (recusado, fita vermelha), 'gold' (crédito) ou nada (nota).
-   *  amount: valor que entrou (+) ou saiu (−) do PATRIMÔNIO, impresso numa linha de conta grifada a marca-texto. */
+   *  amount: valor que entrou (+) ou saiu (−) do PATRIMÔNIO, impresso na ponta direita da linha, como no relatório. */
   toast(text, tone = '', { amount = null } = {}) {
     const n = (this._feedNo = (this._feedNo ?? 41) + 1), d = new Date(), hh = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
     const label = tone === 'bad' ? 'Recusado' : amount != null ? (amount >= 0 ? 'Crédito' : 'Débito') : tone === 'good' ? 'Confirmado' : tone === 'gold' ? 'Crédito' : 'Nota';
     const el = document.createElement('div'); el.className = `ds-feed is-${tone || 'note'}`;
-    el.innerHTML = `<div class="ds-feed__paper"><p class="ds-feed__head"><span>BCBC · ${label}</span><span>${hh} · Nº ${String(n).padStart(4, '0')}</span></p>
-      <div class="ds-feed__msg">${tone === 'good' ? '<i class="ds-feed__ok" aria-hidden="true">OK</i>' : ''}<div>${text}</div></div>
-      ${amount != null ? `<p class="ds-feed__amount"><span>${amount >= 0 ? 'Entrou' : 'Saiu'}</span><b>${amount >= 0 ? '+' : '−'} ${money(Math.abs(amount))}</b></p>` : ''}</div>`;
+    el.innerHTML = `<p class="ds-feed__row ds-feed__head"><span>BCBC · ${label}</span><span>${hh} · Nº ${String(n).padStart(4, '0')}</span></p>
+      <p class="ds-feed__row"><span class="ds-feed__txt">${tone === 'good' ? '<i class="ds-feed__ok" aria-hidden="true">OK</i>' : ''}${text}</span>${amount != null ? `<b class="ds-feed__amt ${amount >= 0 ? 'pos' : 'neg'}">${amount >= 0 ? '+' : '−'} ${money(Math.abs(amount))}</b>` : ''}</p>`;
     // aviso com botão fica mais tempo (dá para alcançar o botão)
     const t = text.includes('<button') ? 7000 : 4200;
     $('.lb-toasts', this.root).appendChild(el); setTimeout(() => el.classList.add('out'), t); setTimeout(() => el.remove(), t + 600);
