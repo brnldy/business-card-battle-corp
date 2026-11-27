@@ -444,15 +444,22 @@ export class LobbyUI {
     const was = !el.classList.contains('hidden'); el.classList.remove('hidden'); if (!was) sfx('nav'); ($('[data-a="buy-card"]', el) ?? $('[data-a="detail-close"]', el)).focus({ preventScroll: true });
   }
   closeDetail() { if (!this.detailId) return; this.detailId = null; this.detailBuy = false; const el = $('.lb-detail', this.root); el.classList.add('hidden'); el.innerHTML = ''; sfx('navBack'); }
-  /** destaque da carta no editor (R6): a ficha completa aparece dentro da prateleira, do lado oposto ao do mouse */
+  /** destaque da carta no editor (R6): ficha compacta colada na carta apontada (ou na linha da lista), sem tapar a grade */
   peek(el) {
     this.peekEl.classList.add('hidden');
     const box = $('.ed-peek', this.win), id = el?.dataset?.card; if (!box) return;
-    if (!id || !byId.has(id) || !el.closest('.ed-grid, .ed-list')) { box.classList.remove('is-on'); return; }
-    if (box.dataset.for !== id) { box.innerHTML = this.scFile(id, false); box.dataset.for = id; }
-    const sh = box.parentElement.getBoundingClientRect(), r = el.getBoundingClientRect();
-    box.classList.toggle('is-left', !el.closest('.ed-list') && r.left + r.width / 2 > sh.left + sh.width / 2);
+    if (!id || !byId.has(id) || !el.closest('.ed-grid, .ed-list')) { box.classList.remove('is-on'); box.dataset.for = ''; return; }
+    const inDeck = this.edDeck ? this.edDeck.cards.filter((x) => x === id).length : 0;
+    const key = `${id}:${inDeck}:${Meta.owned(this.s, id)}`;
+    if (box.dataset.for !== key) { box.innerHTML = this.scFile(id, false, { compact: true, inDeck }); box.dataset.for = key; }
     box.classList.add('is-on');
+    const shelf = box.parentElement, z = shelf.currentCSSZoom || 1, sh = shelf.getBoundingClientRect(), r = el.getBoundingClientRect();
+    const W = shelf.clientWidth, H = shelf.clientHeight, w = box.offsetWidth, h = box.offsetHeight, gap = 10;
+    const top = (r.top - sh.top) / z, inList = !!el.closest('.ed-list');
+    let x = inList ? W - w - 12 : (r.right - sh.left) / z + gap;
+    if (!inList && (r.left + r.width / 2 - sh.left) / z > W / 2) x = (r.left - sh.left) / z - w - gap;
+    box.style.left = `${Math.max(10, Math.min(W - w - 10, x))}px`;
+    box.style.top = `${Math.max(10, Math.min(H - h - 10, top))}px`;
   }
   /** cartas da coleção depois de busca, filtro de tipo, "só as que tenho" e ordenação */
   cardList(s) {
@@ -475,12 +482,26 @@ export class LobbyUI {
       <hr><button class="ds-menu__item ds-menu__check ${f.mine ? 'is-on' : ''}" role="menuitemcheckbox" aria-checked="${f.mine}" data-a="cf-mine">Só as que tenho</button>
       ${this.filtered() ? `<hr><button class="ds-menu__item" data-a="cf-clear">Limpar filtros · ${shown} de ${CARDS.length}</button>` : ''}</div>` : '';
     return `<div class="ed-tools">
-      ${back ? '<button class="ds-btn ed-back" data-a="deck-back" title="Voltar para as pastas (Esc)">‹ Pastas</button>' : ''}
-      <input id="lb-q" class="ds-search" type="search" value="${esc(f.q)}" placeholder="Buscar carta" spellcheck="false" autocomplete="off" aria-label="Buscar carta por nome, elemento ou departamento">
+      ${back ? '<button class="ed-back" data-a="deck-back" title="Voltar para as pastas (Esc)">‹ Pastas</button><i class="ed-sep" aria-hidden="true"></i>' : ''}
+      <input id="lb-q" class="ds-search" type="search" value="${esc(f.q)}" placeholder="Buscar" spellcheck="false" autocomplete="off" aria-label="Buscar carta por nome, elemento ou departamento">
       <span class="ds-seg ed-seg" role="group" aria-label="Tipo de carta">${T.map(([k, n]) => `<button class="ds-seg__btn ${f.type === k ? 'is-on' : ''}" data-a="cf-type" data-id="${k}" aria-pressed="${f.type === k}">${n}</button>`).join('')}</span>
       <span class="ds-more"><button class="ds-btn ds-btn--sq ds-more__btn ${extra ? 'has-dot' : ''} ${this.cfMenu ? 'is-on' : ''}" data-a="cf-menu" aria-expanded="${!!this.cfMenu}" aria-label="Ordem e filtros" title="Ordem e filtros">⋯</button>${menu}</span>
       ${count}
     </div>`;
+  }
+  /** − e + de uma carta no deck. O + vira compra (com o preço) quando a próxima cópia ainda não é sua; slim = sem preço (lista) */
+  stepper(s, cards, id, inDeck, slim = false) {
+    const max = DECK_RULES.maxCopies, own = Meta.owned(s, id), p = Meta.priceOf(id), nm = esc(byId.get(id).name);
+    const full = cards.length >= DECK_RULES.size, buy = inDeck >= Math.min(own, max) && own < max && inDeck < max;
+    const why = inDeck >= max ? `Máximo de ${max} cópias por carta` : full ? `O deck já tem ${DECK_RULES.size} cartas` : null;
+    const minus = `<button class="ds-stepper__btn" data-a="deck-rem" data-card="${id}" ${inDeck ? '' : 'disabled'} aria-label="Tirar uma ${nm}" title="Tirar uma">−</button>`;
+    let plus;
+    if (why) plus = `<button class="ds-stepper__btn" disabled aria-label="Pôr mais uma ${nm}" title="${why}">+</button>`;
+    else if (buy && slim) plus = `<button class="ds-stepper__btn" disabled aria-label="Pôr mais uma ${nm}" title="Você só tem ${own}. Compre mais na grade.">+</button>`;
+    else if (buy) plus = p > s.patrimonio ? `<button class="ds-stepper__btn is-buy" disabled title="Faltam ${money(p - s.patrimonio)}">+${money(p).replace(/\s/g, '')}</button>`
+      : `<button class="ds-stepper__btn is-buy" data-a="buy-card" data-id="${id}" aria-label="Comprar uma ${nm} por ${money(p)} e pôr no deck" title="Comprar por ${money(p)} e pôr no deck">+${money(p).replace(/\s/g, '')}</button>`;
+    else plus = `<button class="ds-stepper__btn" data-a="deck-add" data-card="${id}" aria-label="Pôr uma ${nm}" title="Pôr uma">+</button>`;
+    return `<span class="ds-stepper">${minus}${plus}</span>`;
   }
   /** três casas por carta: cheia = no deck; contorno = você tem e está livre; tracejada = não tem; vermelha = o deck usa uma que você não tem */
   copiesIn(s, id, inDeck) {
@@ -581,10 +602,9 @@ export class LobbyUI {
     const changed = d.name !== snap.name || sortCards(d.cards).join() !== snap.cards.join();
     const item = (c) => {
       const own = Meta.owned(s, c.id), inDeck = counts.get(c.id) ?? 0, nm = esc(c.name), p = Meta.priceOf(c.id), poor = p > s.patrimonio;
-      const needBuy = own < max && (own === 0 || inDeck >= own);
       return `<article class="ed-item sc-item--${Meta.rarityOf(c.id)} ${inDeck ? 'is-in' : ''} ${own ? '' : 'is-missing'}" data-card="${c.id}">
         <button class="ed-card" data-a="deck-add" data-card="${c.id}" aria-label="${nm}: pôr uma no deck (${inDeck} no deck, você tem ${own})">${mini(c.id)}</button>
-        <div class="sc-meta">${this.copiesIn(s, c.id, inDeck)}${needBuy ? `<button class="ds-price" data-a="buy-card" data-id="${c.id}" ${poor ? `disabled title="Faltam ${money(p - s.patrimonio)}"` : `title="Comprar e pôr no deck"`}>${money(p)}</button>` : ''}</div></article>`;
+        <div class="sc-meta">${this.copiesIn(s, c.id, inDeck)}${this.stepper(s, d.cards, c.id, inDeck)}</div></article>`;
     };
     const list = this.cardList(s);
     const GROUPS = [['Criaturas', (c) => !isFx(c)], ['Efeitos', (c) => c.kind === 'effect_instant'], ['Armadilhas', (c) => c.kind === 'effect_trap']];
@@ -592,7 +612,7 @@ export class LobbyUI {
       const g = [...counts.entries()].filter(([id]) => test(byId.get(id))); if (!g.length) return '';
       return `<li class="ed-group"><span>${title}</span><em>${g.reduce((a, [, k]) => a + k, 0)}</em></li>${g.map(([id, k]) => {
         const has = Meta.owned(s, id), short = k > Math.min(has, max), nm = esc(byId.get(id).name), isNew = fresh?.has(id);
-        return `<li class="ed-row ${short ? 'is-short' : ''}"><button data-a="deck-rem" data-card="${id}" title="Tirar uma"><b>${k}×</b><span>${nm}</span>${isNew ? '<i class="ed-new">nova</i>' : ''}${short ? `<i class="ed-warn">tem ${has}</i>` : ''}<em aria-hidden="true">−</em></button></li>`;
+        return `<li class="ed-row ${short ? 'is-short' : ''}" data-card="${id}"><b>${k}×</b><span class="ed-row__name" title="${nm}">${nm}</span>${isNew ? '<i class="ed-new">nova</i>' : ''}${short ? `<i class="ed-warn">tem ${has}</i>` : ''}${this.stepper(s, d.cards, id, k, true)}</li>`;
       }).join('')}`;
     }).join('');
     const state = ok ? 'pronto' : hard.length ? 'com erro' : `faltam ${DECK_RULES.size - n}`;
@@ -601,7 +621,7 @@ export class LobbyUI {
     return `<div class="sc ed">
       <section class="sc-shelf ed-shelf">${this.vTools(s, list.length, { back: true })}
         <div class="lb-scroll ed-grid">${list.map(item).join('') || '<p class="sc-none">Nenhuma carta com esse filtro.</p>'}</div>
-        <p class="ed-hint">Clique para pôr · botão direito para tirar</p>
+        <p class="ed-hint">+ põe no deck · − tira · passe o mouse para ler a carta</p>
         <div class="ed-peek" aria-hidden="true"></div>
       </section>
       <section class="ds-sheet ds-file ed-side">
@@ -744,20 +764,23 @@ export class LobbyUI {
     </div>`;
   }
   /** ficha da carta (peça .ds-file): foto presa por clipe, título, categorias, atributos, texto completo, cópias e a compra */
-  scFile(id, mode = true) {
+  /** ficha da carta (peça .ds-cardfile): o único lugar com o texto completo (R6). Topo calmo (foto pequena, nome e uma
+   *  linha de categorias), atributos numa faixa, regras e, no pé, as cópias junto da ação. compact = destaque do editor */
+  scFile(id, mode = true, { compact = false, inDeck = null } = {}) {
     const c = byId.get(id), s = this.s, fx = isFx(c), max = DECK_RULES.maxCopies, own = Math.min(Meta.owned(s, id), max), price = Meta.priceOf(id), lack = price - s.patrimonio;
-    const kind = [KIND[c.kind], c.element, c.department ? `depto. ${DEPT[c.department] ?? c.department}` : ''].filter(Boolean);
-    const stats = fx ? `<p class="ds-file__fx">${c.kind === 'effect_trap' ? 'Fica virada na mesa até disparar.' : c.durationTurns ? `Fica na mesa por ${c.durationTurns} turnos seus.` : 'Vale na hora e vai para o Morto.'}</p>`
-      : `<dl class="ds-file__stats"><div><dt>Ataque</dt><dd>${money(c.atk)}</dd></div><div><dt>Defesa</dt><dd>${money(c.def)}</dd></div><div><dt>Custo</dt><dd>${c.cost ? `${c.cost} <small>sacrif.</small>` : '<small>grátis</small>'}</dd></div></dl>`;
-    const action = mode === 'shop' ? (own >= max ? '<i class="ds-stamp ds-stamp--ok">Completa</i>' : `<button class="ds-btn ds-btn--primary" data-a="to-shop" data-id="${id}">${own ? 'Comprar mais na Loja' : 'Comprar na Loja'}</button>`) : own >= max ? '<i class="ds-stamp ds-stamp--ok">Completa</i>' : lack > 0 ? `<button class="ds-btn ds-btn--primary" disabled>Faltam ${money(lack)}</button>` : `<button class="ds-btn ds-btn--primary" data-a="buy-card" data-id="${id}">Comprar · ${money(price)}</button>`;
-    return `<section class="ds-sheet ds-file ds-file--${Meta.rarityOf(id)}">
-      <div class="ds-bar"><span>Ficha da carta</span><b>${RARITY_PT[Meta.rarityOf(id)]}</b></div>
+    const kind = [KIND[c.kind], c.element, c.department ? `Depto. ${DEPT[c.department] ?? c.department}` : ''].filter(Boolean).join(' · ');
+    const stats = fx ? `<p class="ds-cardfile__fx">${c.kind === 'effect_trap' ? 'Fica virada na mesa até disparar.' : c.durationTurns ? `Fica na mesa por ${c.durationTurns} turnos seus.` : 'Vale na hora e vai para o Morto.'}</p>`
+      : `<dl class="ds-cardfile__stats"><div><dt>Ataque</dt><dd>${money(c.atk)}</dd></div><div><dt>Defesa</dt><dd>${money(c.def)}</dd></div><div><dt>Custo</dt><dd>${c.cost ? `${c.cost} <small>sacrif.</small>` : '<small>grátis</small>'}</dd></div></dl>`;
+    const action = mode === 'shop' ? (own >= max ? '<i class="ds-stamp ds-stamp--ok">Completa</i>' : `<button class="ds-btn ds-btn--primary" data-a="to-shop" data-id="${id}">${own ? 'Comprar mais' : 'Comprar na Loja'}</button>`)
+      : own >= max ? '<i class="ds-stamp ds-stamp--ok">Completa</i>' : lack > 0 ? `<button class="ds-btn ds-btn--primary" disabled>Faltam ${money(lack)}</button>` : `<button class="ds-btn ds-btn--primary" data-a="buy-card" data-id="${id}">Comprar · ${money(price)}</button>`;
+    const own$ = inDeck != null ? `<b>${inDeck}</b> no deck · tem <b>${own}</b>` : `Você tem <b>${own} de ${max}</b>`;
+    return `<section class="ds-sheet ds-file ds-cardfile ${compact ? 'is-compact' : ''}">
+      <div class="ds-bar"><span>${compact ? esc(RARITY_PT[Meta.rarityOf(id)]) : 'Ficha da carta'}</span><b>${compact ? '' : RARITY_PT[Meta.rarityOf(id)]}</b></div>
       <div class="ds-body">
-        <div class="ds-file__top"><figure class="ds-photo"><i class="ds-clip"></i><img src="${photoUrl(id)}" alt=""></figure>
-          <div><h3 class="ds-title">${esc(c.name)}</h3><p class="ds-file__kind">${kind.map((k) => `<span>${esc(k)}</span>`).join('')}</p></div></div>
+        <header class="ds-cardfile__head">${compact ? '' : `<img class="ds-cardfile__pic" src="${photoUrl(id)}" alt="">`}<div><h3 class="ds-title">${esc(c.name)}</h3><p class="ds-cardfile__kind">${esc(kind)}</p></div></header>
         ${stats}
         <ul class="ds-file__rules">${(RULES_TEXT[id] ?? []).map(([n, t]) => `<li><b>${esc(n)}</b>${esc(t)}</li>`).join('') || '<li>Sem habilidade.</li>'}</ul>
-        <footer class="ds-file__foot"><p>${copies(own)}<span>Você tem <b>${own} de ${max}</b></span></p>${mode ? action : ''}</footer>
+        <footer class="ds-cardfile__foot"><span class="ds-cardfile__own">${copies(own)}<span>${own$}</span></span>${mode ? action : ''}</footer>
       </div></section>`;
   }
   /** vitrine com ficha ao lado (Cartas, Decks, Visual, Troféus): o que fica na ficha sem nada apontado e como desenhar cada item */

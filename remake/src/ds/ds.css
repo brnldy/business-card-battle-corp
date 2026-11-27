@@ -420,3 +420,30 @@ button.ds-slot.is-filled:hover, button.ds-slot.is-filled:focus-visible { transfo
 .ds-slot__no { font: 400 30px/1 var(--f-title); color: var(--ds-ink-3); } .ds-slot__name { padding: 0 10px; font: 700 12px/1.25 var(--f-ui); letter-spacing: 0.06em; text-align: center; text-transform: uppercase; color: var(--ds-ink-2); }
 /* o corpo da ficha nunca fica mais largo que a ficha (nomes longos cortam com reticências em vez de empurrar a borda) */
 .ds-file > .ds-body { grid-template-columns: minmax(0, 1fr); }
+
+/* ── peças de 27/11, 2ª rodada (Decks) ── */
+/* − e +: dois botões colados. O + vira compra (fundo âmbar, com o preço) quando a próxima cópia ainda não é sua */
+.ds-stepper { display: inline-flex; flex: none; background: var(--ds-card); border: var(--ds-line) solid var(--ds-ink); border-radius: var(--ds-r); box-shadow: 2px 2px 0 rgba(27, 20, 13, 0.3); }
+.ds-stepper__btn { box-sizing: border-box; display: grid; place-items: center; min-width: 32px; height: 32px; padding: 0 6px; margin: 0; background: none; border: none; border-radius: 0; color: var(--ds-ink); font: 400 24px/1 var(--f-title); cursor: pointer; pointer-events: auto; }
+.ds-stepper__btn + .ds-stepper__btn { border-left: var(--ds-line) solid var(--ds-ink); }
+.ds-stepper__btn:hover:not(:disabled), .ds-stepper__btn:focus-visible { background: var(--ds-amber); }
+.ds-stepper__btn:disabled { color: var(--ds-ink-3); cursor: not-allowed; opacity: 0.55; }
+.ds-stepper__btn.is-buy { padding: 1px 7px 0; background: var(--ds-tex-lines), var(--ds-amber); font-size: 17px; letter-spacing: 0; white-space: nowrap; }
+.ds-stepper__btn.is-buy:hover:not(:disabled) { background: var(--ds-tex-lines), #ffd98c; } .ds-stepper__btn.is-buy:disabled { background: none; color: var(--ds-red); opacity: 1; }
+/* ficha da carta: topo calmo (foto pequena e reta, nome, uma linha de categorias), atributos numa faixa, regras, cópias e ação no pé */
+.ds-cardfile > .ds-body { grid-template-rows: auto auto minmax(0, 1fr) auto; gap: 12px; padding: 14px 16px 14px; }
+.ds-cardfile__head { display: grid; grid-template-columns: 78px minmax(0, 1fr); gap: 14px; align-items: center; }
+.ds-cardfile.is-compact .ds-cardfile__head { grid-template-columns: minmax(0, 1fr); }
+.ds-cardfile__pic { display: block; width: 78px; aspect-ratio: 1006 / 794; object-fit: cover; border: var(--ds-line) solid var(--ds-ink); box-shadow: 0 0 0 3px #fffdf5, 0 0 0 4.5px var(--ds-ink-3); }
+.ds-cardfile .ds-title { margin: 0; font-size: 24px; line-height: 1; }
+.ds-cardfile__kind { margin: 6px 0 0; font: 600 13px/1.3 var(--f-ui); color: var(--ds-ink-2); }
+.ds-cardfile__stats { margin: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-top: var(--ds-line) solid var(--ds-ink); border-bottom: var(--ds-line) solid var(--ds-ink); }
+.ds-cardfile__stats div { padding: 6px 8px 5px 0; min-width: 0; } .ds-cardfile__stats div + div { padding-left: 10px; border-left: 1.5px dashed var(--ds-ink-3); }
+.ds-cardfile__stats dt { font: 700 12px/1 var(--f-ui); letter-spacing: 0.1em; text-transform: uppercase; color: var(--ds-ink-2); }
+.ds-cardfile__stats dd { margin: 4px 0 0; font: 400 22px/1 var(--f-title); white-space: nowrap; } .ds-cardfile__stats dd small { font: 700 12px/1 var(--f-ui); }
+.ds-cardfile__fx { margin: 0; padding: 8px 0; border-top: var(--ds-line) solid var(--ds-ink); border-bottom: var(--ds-line) solid var(--ds-ink); font: 700 14px/1.35 var(--f-ui); }
+.ds-cardfile .ds-file__rules { gap: 10px; } .ds-cardfile .ds-file__rules li { font: 500 14px/1.4 var(--f-ui); } .ds-cardfile .ds-file__rules b { font-size: 18px; }
+.ds-cardfile__foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; padding-top: 10px; border-top: 1.5px dashed var(--ds-ink-3); }
+.ds-cardfile__own { display: flex; align-items: center; gap: 8px; font: 500 14px/1.2 var(--f-ui); } .ds-cardfile__own b { font-weight: 700; }
+.ds-cardfile__foot .ds-btn { height: 40px; padding: 0 14px; margin-bottom: 4px; font-size: 13px; } .ds-cardfile__foot .ds-stamp { margin: 0 4px 0 0; font-size: 13px; }
+.ds-cardfile.is-compact > .ds-body { gap: 10px; padding: 12px 14px; } .ds-cardfile.is-compact .ds-file__rules { -webkit-mask-image: none; mask-image: none; padding-bottom: 0; }
