@@ -54,7 +54,8 @@ O autor achou o resultado das regras antigas grande demais e sem respiro. Acessi
 | Troféus (era Conquistas), em aba com Metas | Feito em 27/11; o autor ainda não viu. |
 | Decks (gaveta, editor, álbum) | Refeitos do zero em 27/11; o autor ainda não viu. |
 | Perfil (contrato social + extrato) | Refeito em 27/11; o autor ainda não viu. |
-| Reciclar, Salvar/Carregar | Não feitos (desenho escuro antigo). |
+| Reciclar (trituradora com arrastar) | Refeito em 27/11; o autor ainda não viu. |
+| Salvar/Carregar | Não feito (desenho escuro antigo). |
 
 Recusados, para não repetir: a Loja como máquina de vendas (duas tentativas; o autor não entendeu o fluxo e mandou apagar) e um guia de estilo que copiava o Dispatch.
 
@@ -64,6 +65,7 @@ Decisões do autor nesta rodada: o custo de sacrifício **fica** na carta reduzi
 
 Feito e conferido em captura (1280×720, 1440×900, 1920×1080):
 
+000000000000. **Reciclar refeito, com a trituradora** (pedido do autor: animação caprichada e poder arrastar a carta até a máquina). À esquerda, as cartas com cópia sobrando (fita "+2" e quanto valem). À direita, a trituradora (`.ds-shredder`: boca, corpo de metal com fenda, ventilação e luz, cesto de arame) e a ordem como recibo, com o total e a ação. **Arrastar** uma carta (`rcDragMove`/`rcDragEnd`; a carta-fantasma vai no `body`, fora do zoom) acende a máquina e mostra "Solte para triturar"; soltar fora devolve a carta. **Animação** (`shred()`): a carta desce pela fenda, a máquina treme e a luz pisca vermelha, e a carta sai em 9 tiras com o desenho dela fatiado, que caem no cesto; só depois grava e imprime o aviso. Sem arrastar: clicar na carta seleciona e o botão vira "Triturar <carta> (+ $)"; "Triturar tudo" pede assinatura e passa as cartas uma a uma. Com "reduzir movimento" ligado, grava direto sem animação.
 00000000000. **Perfil refeito** (abas "Ficha" e "Extrato" no topo da pasta; saiu a aba "Visual", que repetia a Loja). Ficha: contrato social (`.ds-charter`, com o selo `.ds-seal` do logo), razão social com um lápis ao lado (`.ds-pencil`, colado na última palavra) que muda o nome, outro lápis no canto do selo que leva à Loja › Visual para trocar o logo (pedido do autor: ícone em vez de texto), data de fundação (`save.founded()`), reunião atual da campanha e três números (vitórias, aproveitamento, coleção); ao lado, os indicadores e a carta mais usada, com "Recomeçar do zero" (autorização assinada). Extrato: o histórico impresso no formulário contínuo (`.ds-printout`), com data, empresa, resultado, turnos, caixa final e recebido, e o total; ao lado, o placar por empresa. O formulário de "Mudar o nome" ainda é o antigo (entra no onboarding).
 0000000000. **Ponto do meio banido** (regra 10 do README): trocados todos os "·" de texto visível em `lobbyui.js`, `ui.js`, `duel.js`, `log.js`, `hud/components.js`, `textures.js` (a carta reduzida agora diz "EFEITO DE 4 TURNOS"), `grime.js`, `lab.js` e no catálogo. Os subtítulos que vinham depois do ponto nos títulos das janelas (`TITLES`) nunca apareciam e saíram. No fim de partida, as linhas da recompensa vêm separadas por quebra de linha. **Aviso impresso refeito outra vez:** três faixas de 18 px no mínimo (cabeçalho em letra miúda, título, detalhe; o valor em dinheiro na ponta da última). O som de impressora que tocava a cada aviso foi testado e retirado a pedido do autor.
 000000000. **Avisos impressos** (pedido do autor: todos os avisos no papel de impressora matricial). `toast(texto, tom, { amount })` em `lobbyui.js` imprime uma tira de formulário contínuo (`.ds-feed`) no formato da tira do topo do duelo: duas faixas de 22 px (cabeçalho com tipo, hora e número de série; a mensagem numa linha), furos iguais aos da `.ds-printout`, topo e fim retos (o autor recusou o papel rasgado e a tira alta). Cresce para os lados até 920 px antes de quebrar linha. Quatro variações: confirmado (marca "OK"), recusado (fita vermelha), crédito/débito (valor na ponta direita da linha, verde ou vermelho, como no relatório; `amount` positivo ou negativo) e nota. Os avisos do duelo (HUD) não mudaram.
@@ -96,7 +98,7 @@ Armadilhas desta rodada (não repetir):
 
 Ficou por fazer ou em aberto:
 
-- **Assinatura, onde mais entra (decisão do autor):** no Formulário 01-A de registro da empresa, quando fizermos o onboarding; no "Triturar tudo" do Reciclar, quando chegarmos nessa tela. Recusados: mudar a razão social e enfrentar o Conselho.
+- **Assinatura, onde mais entra (decisão do autor):** no Formulário 01-A de registro da empresa, quando fizermos o onboarding; no "Triturar tudo" do Reciclar (feito em 27/11). Recusados: mudar a razão social e enfrentar o Conselho.
 - **CSS antigo sem uso** em `lobby.css` (regras `.lb-folder`, `.lb-card`, `.lb-drow`, `.lb-side`, `.lb-edbar`, `.lb-tools`, `.lb-pips`, `.lb-count` e afins, do Arquivo antigo). Não apaguei nesta rodada: Perfil e Reciclar ainda usam parte das classes `lb-*`. Conferir uma a uma no passo 8 (limpeza).
 - **Fora das janelas, ainda abaixo de 12 px:** crachá do perfil (`.lb-badge span`, 11 px), "Sair" (`.lb-exit`, 11 px) e etiquetas da sala 3D (`.lb-label span`, 10 px), sem contar o zoom.
 - Em 1280×720 as grades rolam (uma fileira e meia de cartas visível).
