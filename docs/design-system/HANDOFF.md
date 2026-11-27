@@ -52,7 +52,8 @@ O autor achou o resultado das regras antigas grande demais e sem respiro. Acessi
 | Loja → Cartas avulsas (grade + ficha sempre à direita) | Refeita em 27/11 a pedido do autor; ele ainda não viu. |
 | Loja → Decks prontos e Visual | Feitos em 27/11; o autor ainda não viu. |
 | Troféus (era Conquistas), em aba com Metas | Feito em 27/11; o autor ainda não viu. |
-| Arquivo, Perfil, Reciclar, Salvar/Carregar | Não feitos (desenho escuro antigo). |
+| Decks (gaveta, editor, álbum) | Refeitos do zero em 27/11; o autor ainda não viu. |
+| Perfil, Reciclar, Salvar/Carregar | Não feitos (desenho escuro antigo). |
 
 Recusados, para não repetir: a Loja como máquina de vendas (duas tentativas; o autor não entendeu o fluxo e mandou apagar) e um guia de estilo que copiava o Dispatch.
 
@@ -62,6 +63,11 @@ Decisões do autor nesta rodada: o custo de sacrifício **fica** na carta reduzi
 
 Feito e conferido em captura (1280×720, 1440×900, 1920×1080):
 
+00000. **Decks refeitos do zero** (liberdade criativa dada pelo autor; pedido: hierarquia clara, bater o olho e saber o que faz o quê). Três vistas, todas no padrão objeto à esquerda + ficha à direita, abas "Meus decks" e "Coleção" no topo da pasta:
+   - **Gaveta**: pastas suspensas (`.ds-hangfile`), uma por deck, com as 3 cartas-chave saindo pela boca, a etiqueta com o nome e "40/40 · pronto". A do duelo tem a aba âmbar "★ No duelo". Um clique escolhe; clicar de novo (ou Enter) abre o editor. Ficha da pasta: estado, composição, cartas-chave, "Duplicar"/"Apagar" como links e uma ação principal que muda com o caso (Usar no duelo / Editar / Abrir e completar; pasta vazia: Montar automático / Em branco).
+   - **Editor**: grade de cartas reduzidas com as casas de cópia (cheia = no deck, contorno = tem e está livre, tracejada = não tem, vermelha = o deck usa uma que você não tem) e a etiqueta de preço quando precisa comprar. Busca, tipo e um "⋯" (`.ds-menu`) com ordem e "só as que tenho". O destaque da carta (R6) abre dentro da prateleira, do lado oposto ao mouse (`.ed-peek`; a ficha flutuante antiga `.lb-peek` não é mais usada). À direita, o "Deck em montagem": nome editável, contador grande, estado, a lista por tipo (clique ou botão direito tira) e uma ação principal (Completar automático enquanto não está pronto; Usar no duelo quando está).
+   - **Álbum (Coleção)**: espaço de álbum (`.ds-slot`) com cantoneiras; o que falta é um espaço tracejado com o número e o nome. Ficha da carta com "Comprar na Loja", que abre a Loja já na ficha daquela carta.
+   Saíram: o painel escuro antigo, a barra de composição e o ATQ médio, a frase de rodapé, "Salvo sozinho" e a ficha flutuante. Defeito antigo corrigido: depois do "Completar automático" a marcação "nova" e o "Desfazer o automático" não apareciam (a gravação redesenhava antes de guardar a marcação). Avisos (toasts) com janela aberta passaram para o centro do topo, acima da pasta, para não cobrir o botão principal.
 0000. **Campanha e Treino refeitas do zero** (liberdade criativa dada pelo autor). As duas seguem o padrão da Loja: objeto à esquerda, ficha de ação à direita na mesma coluna de 388 px, com o botão principal sempre no mesmo lugar. Campanha: agenda de reuniões presa por espiral (`.ds-agenda`), com duas linhas por faixa e a faixa e o pagamento na margem; fechada = nome a caneta azul riscado com X, próxima = circulada a caneta vermelha, Conselho em vermelho no dia 30; nomes futuros ficam em branco. Ficha: convocação (`.ds-invite`) com faixa, empresa, quanto paga, derrotas contra ela, o deck (`.ds-deckline`, com cartas reduzidas) e o botão. Treino: mata-borrão (`.ds-deskpad`) com o crachá do estagiário (`.ds-badge`) e o bilhete; ficha = ordem de treino com o que não vale. Saíram "Treinar antes" e "Duelo valendo" (repetiam as abas), o resumo de deck antigo (`deckCard`, com arte cheia, contra a R4) e o CSS antigo das duas telas. Enter também inicia o treino (não dispara com foco num botão). Conferido: os estados meio da campanha, chefe e campanha concluída (simulados com `window.__SAVE__`), Enter nas duas telas e Trocar.
 000. **Tamanho único das janelas** (pedido do autor: as abas não podem pular ao trocar). As oito janelas novas usam a mesma pasta, até 1180×770 (no máximo 96% × 90% da tela), definida no fim de `ds-screens.css`. Conferido: mesma posição e tamanho da pasta em todas, em 1280×720 e 1920×1080. Campanha e Treino centram as folhas na pasta; o Treino passou a ter a mesma estrutura da Campanha (folha de ação à esquerda na proporção 1,3 : 1, bilhete à direita); Metas estica a cortiça; Pacotes estica palco e prateleiras. **Tela nova com abas tem de usar essa mesma pasta.**
 00. **Zoom das janelas** (passo 6 do plano): Campanha, Treino e Metas passaram a usar `--lb-fix` como as outras. Medido nas oito janelas novas em 1280×720, 1440×900 e 1920×1080: menor texto 12 px (13,5 em 1920), menor alvo 34 px (as abas), nada rola nem é cortado. Para caber o Treino em 1280×720: a lista "Esta partida não vale" foi para o lado da foto, e os botões do rodapé (Treino e Campanha) foram de 52 para 44 px.
@@ -82,6 +88,7 @@ Armadilhas desta rodada (não repetir):
 
 Ficou por fazer ou em aberto:
 
+- **CSS antigo sem uso** em `lobby.css` (regras `.lb-folder`, `.lb-card`, `.lb-drow`, `.lb-side`, `.lb-edbar`, `.lb-tools`, `.lb-pips`, `.lb-count` e afins, do Arquivo antigo). Não apaguei nesta rodada: Perfil e Reciclar ainda usam parte das classes `lb-*`. Conferir uma a uma no passo 8 (limpeza).
 - **Fora das janelas, ainda abaixo de 12 px:** crachá do perfil (`.lb-badge span`, 11 px), "Sair" (`.lb-exit`, 11 px) e etiquetas da sala 3D (`.lb-label span`, 10 px), sem contar o zoom.
 - Em 1280×720 as grades rolam (uma fileira e meia de cartas visível).
 - A confirmação de compra do deck ainda usa o diálogo antigo (`ui.confirm`).

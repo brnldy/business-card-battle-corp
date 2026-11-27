@@ -237,7 +237,7 @@
 
 /* ── peças de 27/11: cópias, etiqueta de preço, foto presa e ficha da carta ── */
 /* cópias: uma casa por cópia que cabe num deck; cheia = o jogador tem */
-.ds-copies { display: inline-flex; gap: 3px; vertical-align: middle; } .ds-copies i { width: 9px; height: 13px; border: 1.5px dashed var(--ds-ink-3); border-radius: 1.5px; } .ds-copies i.is-on { background: var(--ds-ink); border-style: solid; border-color: var(--ds-ink); }
+.ds-copies { display: inline-flex; gap: 3px; vertical-align: middle; } .ds-copies i { width: 9px; height: 13px; border: 1.5px dashed var(--ds-ink-3); border-radius: 1.5px; } .ds-copies i.is-on { background: var(--ds-ink); border-style: solid; border-color: var(--ds-ink); } .ds-copies i.is-own { border-style: solid; border-color: var(--ds-ink); } .ds-copies i.is-lack { background: var(--ds-red); border-style: solid; border-color: var(--ds-red); }
 /* foto presa por clipe (ilustração da carta, retrato de ficha) */
 .ds-photo { position: relative; margin: 0; padding: 5px; background: #fffdf5; border: var(--ds-line) solid var(--ds-ink); box-shadow: 3px 4px 0 rgba(27, 20, 13, 0.3); transform: rotate(-2deg); } .ds-photo img { display: block; width: 100%; }
 .ds-photo .ds-clip { top: -16px; right: auto; left: 12px; width: 14px; height: 38px; }
@@ -302,7 +302,7 @@ button.ds-plaque { transition: transform 0.1s; } button.ds-plaque:hover, button.
 /* ── cabeçalho das janelas (27/11): topo de formulário ── */
 /* rótulo de formulário: o mesmo do Formulário 01-A */
 .ds-formlabel { font: 700 12px/1 var(--f-ui); letter-spacing: 0.14em; text-transform: uppercase; color: var(--ds-ink-2); }
-/* A · papel timbrado: título direto no papel, sobre linha dupla de tinta; o recibo e o ✕ à direita */
+/* papel timbrado (cabeçalho das janelas): título direto no papel, sobre linha dupla de tinta; o recibo e o ✕ à direita */
 .ds-letterhead { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: 28px; padding: 0 0 12px; border-bottom: 5px double var(--ds-ink); }
 .ds-letterhead__title { display: grid; gap: 8px; min-width: 0; } .ds-letterhead__title .ds-formlabel { color: var(--ds-ink); }
 #lobby .lb-head .ds-letterhead h2 { margin: 0; font: 400 46px/1 var(--f-title); letter-spacing: 0.02em; text-transform: uppercase; color: var(--ds-ink); text-shadow: none; }
@@ -316,19 +316,6 @@ button.ds-plaque { transition: transform 0.1s; } button.ds-plaque:hover, button.
 .ds-till__label { font: 700 12px/1 var(--f-ui); letter-spacing: 0.14em; text-transform: uppercase; color: var(--ds-ink); }
 .ds-till__total { justify-self: end; font: 400 36px/1 var(--f-title); letter-spacing: 0.02em; white-space: nowrap; }
 .ds-till__total span { padding: 0 4px; margin-left: -4px; background: linear-gradient(to bottom, transparent 22%, var(--ds-amber) 22% 86%, transparent 86%); }
-/* B · placa da sala: placa escura de porta, filete âmbar por dentro e quatro parafusos de latão */
-.ds-nameplate { --screw: radial-gradient(circle, #e8c46a 0 2.4px, #6b4a14 2.6px 3.4px, transparent 3.6px); position: relative; display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: 26px; padding: 14px 18px 14px 28px;
-  background: var(--screw) 9px 9px / 8px 8px no-repeat, var(--screw) calc(100% - 9px) 9px / 8px 8px no-repeat, var(--screw) 9px calc(100% - 9px) / 8px 8px no-repeat, var(--screw) calc(100% - 9px) calc(100% - 9px) / 8px 8px no-repeat, linear-gradient(to bottom, #302b25, #1f1b17);
-  border: var(--ds-line) solid var(--ds-ink); border-radius: 4px; box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.1), inset 0 0 0 5px #2c2722, inset 0 0 0 6.5px rgba(242, 185, 76, 0.55), 4px 6px 0 rgba(27, 20, 13, 0.35); }
-.ds-nameplate__title { display: grid; gap: 8px; min-width: 0; }
-.ds-nameplate__title span { font: 700 12px/1 var(--f-ui); letter-spacing: 0.16em; text-transform: uppercase; color: var(--ds-amber); }
-#lobby .lb-head .ds-nameplate h2, .ds-nameplate h2 { margin: 0; font: 400 44px/1 var(--f-title); letter-spacing: 0.04em; text-transform: uppercase; color: #f4efe2; text-shadow: 0 2px 0 rgba(0, 0, 0, 0.5); }
-/* pilha de moedas: o dinheiro do jogador, em âmbar (a cor do dinheiro no sistema) */
-.ds-coinstack { display: flex; align-items: center; gap: 12px; padding-left: 24px; border-left: 1.5px solid rgba(242, 185, 76, 0.35); }
-.ds-coinstack__art { width: 60px; height: 50px; flex: none; } .ds-coinstack__s { font: 400 17px/1 var(--f-title); fill: #1b140d; }
-.ds-coinstack > span { display: grid; gap: 6px; }
-.ds-coinstack small { font: 700 12px/1 var(--f-ui); letter-spacing: 0.16em; text-transform: uppercase; color: #cfc4ab; }
-.ds-coinstack b { font: 400 38px/0.9 var(--f-title); letter-spacing: 0.02em; color: var(--ds-amber); white-space: nowrap; text-shadow: 0 2px 0 rgba(0, 0, 0, 0.5); }
 
 /* ── peças de 27/11 (Campanha e Treino) ── */
 /* agenda de reuniões: folha de planejamento presa por espiral. Na margem, cada faixa (nome e quanto paga); um dia por
@@ -392,3 +379,44 @@ button.ds-plaque { transition: transform 0.1s; } button.ds-plaque:hover, button.
 .ds-badge__card b { margin-top: 2px; font: 400 30px/1 var(--f-title); letter-spacing: 0.04em; text-transform: uppercase; }
 .ds-badge__card small { font: 700 12px/1 var(--f-ui); letter-spacing: 0.14em; text-transform: uppercase; color: var(--ds-ink-2); }
 .ds-badge__code { width: 150px; height: 24px; margin-top: 4px; background: repeating-linear-gradient(to right, var(--ds-ink) 0 2px, transparent 2px 4px, var(--ds-ink) 4px 5px, transparent 5px 8px, var(--ds-ink) 8px 11px, transparent 11px 12px, var(--ds-ink) 12px 13px, transparent 13px 16px); }
+
+/* ── peças de 27/11 (Decks) ── */
+/* campo de busca: tira de papel com lupa desenhada */
+.ds-search { height: 36px; box-sizing: border-box; padding: 0 12px 0 34px; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%231b140d' stroke-width='2'%3E%3Ccircle cx='6.5' cy='6.5' r='5'/%3E%3Cpath d='M10.5 10.5l4 4'/%3E%3C/svg%3E") 11px 50% no-repeat, var(--ds-card); color: var(--ds-ink); border: var(--ds-line) solid var(--ds-ink); border-radius: var(--ds-r); font: 500 14px/1 var(--f-ui); outline: none; pointer-events: auto; }
+.ds-search::placeholder { color: var(--ds-ink-3); } .ds-search:focus { box-shadow: 0 0 0 3px var(--ds-amber); }
+/* botões do seletor: com classe própria, para a regra genérica de botão do lobby não pegar */
+.ds-seg .ds-seg__btn { height: 32px; padding: 2px 11px 0; font-size: 12px; letter-spacing: 0.08em; } .ds-seg .ds-seg__btn:hover:not(.is-on) { background: var(--ds-amber); color: var(--ds-ink); }
+/* "⋯": botão que abre um menu curto de papel (ordem, filtros) */
+.ds-more { position: relative; }
+#lobby .ds-more__btn { height: 36px; width: 40px; margin-bottom: 4px; font: 700 20px/1 var(--f-ui); }
+#lobby .ds-more__btn.has-dot::after { content: ""; position: absolute; right: -4px; top: -4px; width: 10px; height: 10px; border-radius: 50%; background: var(--ds-amber); box-shadow: 0 0 0 1.5px var(--ds-ink); }
+.ds-menu { position: absolute; right: 0; top: calc(100% + 4px); z-index: 20; display: grid; gap: 2px; min-width: 200px; padding: 12px 8px 8px; background: var(--ds-tex-lines), var(--ds-card); border: var(--ds-line) solid var(--ds-ink); box-shadow: 5px 7px 0 rgba(27, 20, 13, 0.35); }
+.ds-menu .ds-formlabel { padding: 0 8px 4px; } .ds-menu hr { width: 100%; margin: 6px 0; border: none; border-top: 1.5px dashed var(--ds-ink-3); }
+#lobby .ds-menu__item { all: unset; box-sizing: border-box; pointer-events: auto; cursor: pointer; display: flex; align-items: center; gap: 10px; min-height: 32px; padding: 0 8px; font: 600 14px/1 var(--f-ui); color: var(--ds-ink); border-radius: 2px; }
+#lobby .ds-menu__item::before { content: ""; width: 14px; flex: none; text-align: center; font: 700 14px/1 var(--f-ui); }
+#lobby .ds-menu__item.is-on::before { content: "✓"; } #lobby .ds-menu__check::before { content: ""; width: 14px; height: 14px; box-sizing: border-box; border: var(--ds-line) solid var(--ds-ink); background: var(--ds-card); }
+#lobby .ds-menu__check.is-on::before { content: "✓"; display: grid; place-items: center; font-size: 11px; } #lobby .ds-menu__item:hover, #lobby .ds-menu__item:focus-visible { background: var(--ds-amber); }
+/* pasta suspensa: um deck. Fundo de papelão com aba (nome curto), cartas-chave saindo pela boca e a frente com a etiqueta */
+button.ds-hangfile { position: relative; display: block; width: 100%; height: 182px; padding: 0; background: none; border: none; color: var(--ds-ink); text-align: left; cursor: pointer; pointer-events: auto; }
+button.ds-hangfile::before { content: ""; position: absolute; left: 0; right: 0; top: 24px; bottom: 0; background: linear-gradient(to bottom, #a98650, #8f6e3c); border: var(--ds-line) solid var(--ds-ink); border-radius: 2px 3px 4px 4px; }
+.ds-hangfile__tab { position: absolute; z-index: 1; left: 12px; top: 0; height: 26px; padding: 6px 12px 0; box-sizing: border-box; background: #a98650; border: var(--ds-line) solid var(--ds-ink); border-bottom: none; border-radius: 6px 9px 0 0; font: 700 12px/1 var(--f-ui); letter-spacing: 0.1em; text-transform: uppercase; white-space: nowrap; }
+.ds-hangfile__tab::after { content: ""; position: absolute; left: 0; right: 0; bottom: -3px; height: 4px; background: #a98650; }
+.ds-hangfile.is-on .ds-hangfile__tab, .ds-hangfile.is-on .ds-hangfile__tab::after { background: var(--ds-amber); }
+.ds-hangfile__cards { position: absolute; left: 0; right: 0; top: 36px; display: flex; justify-content: center; transition: transform 0.15s; }
+.ds-hangfile__cards .ds-mini { width: 66px; margin: 0 -8px; transform-origin: 50% 100%; } .ds-hangfile__cards .ds-mini:nth-child(1) { transform: rotate(-9deg); } .ds-hangfile__cards .ds-mini:nth-child(2) { z-index: 1; transform: translateY(-4px); } .ds-hangfile__cards .ds-mini:nth-child(3) { transform: rotate(9deg); }
+.ds-hangfile:hover .ds-hangfile__cards, .ds-hangfile:focus-visible .ds-hangfile__cards { transform: translateY(-10px); }
+.ds-hangfile__front { position: absolute; z-index: 2; left: -2px; right: -2px; bottom: 0; height: 92px; box-sizing: border-box; display: grid; align-content: center; gap: 5px; padding: 0 14px; background: var(--ds-tex-kraft); border: var(--ds-line) solid var(--ds-ink); border-radius: 2px 2px 4px 4px; box-shadow: 0 -3px 0 rgba(27, 20, 13, 0.25); }
+.ds-hangfile__front b { padding: 6px 9px 4px; background: #fbf8ee; border: 1.5px solid var(--ds-ink); font: 400 20px/1 var(--f-title); letter-spacing: 0.02em; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; box-shadow: 1px 2px 0 rgba(27, 20, 13, 0.25); }
+.ds-hangfile__front small { font: 700 12px/1 var(--f-ui); letter-spacing: 0.1em; text-transform: uppercase; color: var(--ds-ink); }
+.ds-hangfile.is-bad .ds-hangfile__front small { color: #7d1a10; }
+.ds-hangfile.is-empty::before, .ds-hangfile.is-empty .ds-hangfile__tab, .ds-hangfile.is-empty .ds-hangfile__front { background: rgba(27, 20, 13, 0.06); border-style: dashed; border-color: var(--ds-ink-2); box-shadow: none; } .ds-hangfile.is-empty .ds-hangfile__tab::after { background: none; }
+.ds-hangfile.is-empty .ds-hangfile__front b { background: none; border: none; box-shadow: none; padding: 0; font-size: 24px; }
+/* espaço de álbum: a carta presa por quatro cantoneiras; vazio = contorno tracejado com o número e o nome */
+button.ds-slot { position: relative; display: grid; place-items: center; align-content: center; gap: 8px; width: 100%; aspect-ratio: 1079 / 1257; padding: 0; background: none; border: none; color: var(--ds-ink); cursor: pointer; pointer-events: auto; transition: transform 0.1s; }
+button.ds-slot:not(.is-filled) { background: rgba(27, 20, 13, 0.05); border: var(--ds-line) dashed var(--ds-ink-3); border-radius: 4px; }
+button.ds-slot.is-filled:hover, button.ds-slot.is-filled:focus-visible { transform: translateY(-4px) rotate(-0.6deg); }
+.ds-slot__corners { position: absolute; inset: -5px; z-index: 1; pointer-events: none; --c: #23201c;
+  background: linear-gradient(135deg, var(--c) 0 13px, transparent 13.5px) top left / 24px 24px no-repeat, linear-gradient(225deg, var(--c) 0 13px, transparent 13.5px) top right / 24px 24px no-repeat, linear-gradient(45deg, var(--c) 0 13px, transparent 13.5px) bottom left / 24px 24px no-repeat, linear-gradient(315deg, var(--c) 0 13px, transparent 13.5px) bottom right / 24px 24px no-repeat; }
+.ds-slot__no { font: 400 30px/1 var(--f-title); color: var(--ds-ink-3); } .ds-slot__name { padding: 0 10px; font: 700 12px/1.25 var(--f-ui); letter-spacing: 0.06em; text-align: center; text-transform: uppercase; color: var(--ds-ink-2); }
+/* o corpo da ficha nunca fica mais largo que a ficha (nomes longos cortam com reticências em vez de empurrar a borda) */
+.ds-file > .ds-body { grid-template-columns: minmax(0, 1fr); }

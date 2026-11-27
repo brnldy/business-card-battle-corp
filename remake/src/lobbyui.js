@@ -40,6 +40,7 @@ const copies = (own, max = DECK_RULES.maxCopies) => `<span class="ds-copies" rol
 const HTABS = {
   shop: ['tab', [['packs', 'Pacotes'], ['cards', 'Cartas'], ['decks', 'Decks'], ['look', 'Visual']]],
   duel: ['open', [['duel', 'Campanha'], ['training', 'Treino']]], training: ['open', [['duel', 'Campanha'], ['training', 'Treino']]],
+  deck: ['tab', [['decks', 'Meus decks'], ['collection', 'Coleção']]],
   missions: ['open', [['missions', 'Metas do dia'], ['achievements', 'Troféus']]], achievements: ['open', [['missions', 'Metas do dia'], ['achievements', 'Troféus']]],
 };
 const inkLogo = (id) => logoUrl(id, { ink: '#1b140d', accent: '#c98a16', bg: '#f6efdc' });
@@ -53,16 +54,13 @@ const AREAS = [
   ['profile', 'Perfil'], ['training', 'Treino'], ['recycle', 'Reciclar'], ['settings', 'Config.'],
 ];
 const TITLES = {
-  deck: ['Arquivo morto · gaveta 3', 'Decks e coleção'], recycle: ['Trituradora · uso por conta e risco', 'Reciclar repetidas'],
+  deck: ['Arquivo morto · gaveta 3', 'Decks'], recycle: ['Trituradora · uso por conta e risco', 'Reciclar repetidas'],
   duel: ['Sala de reunião · porta entreaberta', 'Campanha'], training: ['Mesa do estagiário', 'Treino sem valer'],
   missions: ['Mural de avisos · leitura obrigatória', 'Metas do dia'], shop: ['Máquina de benefícios · não devolve troco', 'Loja'],
   achievements: ['Prateleira de troféus · empoeirada', 'Troféus'], profile: ['Recepção · ficha cadastral', 'Perfil da empresa'],
 };
-// cabeçalho das janelas novas: duas propostas em teste (?lobby&head=b); a escolhida fica e a outra sai
-const HEAD = new URLSearchParams(location.search).get('head') === 'b' ? 'b' : 'a';
-/** pilha de moedas (peça .ds-coinstack): quatro moedas empilhadas e uma de pé, com o "$" */
-const COINS = '<svg class="ds-coinstack__art" viewBox="0 0 60 50" aria-hidden="true"><path d="M5 38 v6 a17 5.5 0 0 0 34 0 v-6" fill="#c98a16" stroke="#1b140d" stroke-width="2"/><ellipse cx="22" cy="38" rx="17" ry="5.5" fill="#f2b94c" stroke="#1b140d" stroke-width="2"/><path d="M5 31 v6 a17 5.5 0 0 0 34 0 v-6" fill="#c98a16" stroke="#1b140d" stroke-width="2"/><ellipse cx="22" cy="31" rx="17" ry="5.5" fill="#f2b94c" stroke="#1b140d" stroke-width="2"/><path d="M5 24 v6 a17 5.5 0 0 0 34 0 v-6" fill="#c98a16" stroke="#1b140d" stroke-width="2"/><ellipse cx="22" cy="24" rx="17" ry="5.5" fill="#f2b94c" stroke="#1b140d" stroke-width="2"/><path d="M5 17 v6 a17 5.5 0 0 0 34 0 v-6" fill="#c98a16" stroke="#1b140d" stroke-width="2"/><ellipse cx="22" cy="17" rx="17" ry="5.5" fill="#f2b94c" stroke="#1b140d" stroke-width="2"/><circle cx="44" cy="31" r="13" fill="#c98a16" stroke="#1b140d" stroke-width="2"/><circle cx="42" cy="31" r="13" fill="#f2b94c" stroke="#1b140d" stroke-width="2"/><circle cx="42" cy="31" r="9.3" fill="none" stroke="#a8701a" stroke-width="1.5"/><text x="42" y="37.5" text-anchor="middle" class="ds-coinstack__s">$</text></svg>';
-const NEW_HEAD = new Set(['duel', 'training', 'missions', 'achievements', 'shop']);
+// janelas que já usam o cabeçalho novo (papel timbrado com o recibo do patrimônio)
+const NEW_HEAD = new Set(['duel', 'training', 'missions', 'achievements', 'shop', 'deck']);
 const sortCards = (ids) => [...ids].sort((a, b) => a.localeCompare(b));
 const group = (ids) => { const m = new Map(); for (const id of ids) m.set(id, (m.get(id) ?? 0) + 1); return [...m.entries()].sort((a, b) => a[0].localeCompare(b[0])); };
 const dateStr = (ms) => { const d = new Date(ms), p = (n) => String(n).padStart(2, '0'); return `${p(d.getDate())}/${p(d.getMonth() + 1)} ${p(d.getHours())}:${p(d.getMinutes())}`; };
@@ -204,39 +202,34 @@ export class LobbyUI {
     const body = { deck: () => this.vDeck(s), recycle: () => this.vRecycle(s), duel: () => this.vDuel(s), training: () => this.vTraining(s), missions: () => this.vMissions(s), shop: () => this.vShop(s), achievements: () => this.vAchievements(s), profile: () => this.vProfile(s) }[id]();
     // guarda rolagem e foco (com a posição do cursor) para a tela não "pular" a cada clique
     const view = this.ed ? 'ed' : this.tab[id], same = this._view === `${id}:${view}`; this._view = `${id}:${view}`;
-    const scroll = same ? $('.lb-scroll', this.win)?.scrollTop ?? 0 : 0, scroll2 = same ? $('.lb-decklist', this.win)?.scrollTop ?? 0 : 0;
+    const scroll = same ? $('.lb-scroll', this.win)?.scrollTop ?? 0 : 0, scroll2 = same ? $('.ed-list', this.win)?.scrollTop ?? 0 : 0;
     const act = document.activeElement, focus = act?.id, sel = focus && act.selectionStart != null ? [act.selectionStart, act.selectionEnd] : null;
     // botão focado (teclado): guarda a "assinatura" para devolver o foco ao botão equivalente depois de redesenhar
-    const sig = !focus && act && this.win.contains(act) && act.dataset?.a ? { a: act.dataset.a, card: act.dataset.card, id: act.dataset.id, list: !!act.closest('.lb-decklist') } : null;
-    const ht = HTABS[id], here = id === 'shop' ? this.tab.shop : id;
+    const sig = !focus && act && this.win.contains(act) && act.dataset?.a ? { a: act.dataset.a, card: act.dataset.card, id: act.dataset.id, list: !!act.closest('.ed-list') } : null;
+    const ht = HTABS[id], here = ht?.[0] === 'tab' ? this.tab[id] : id;
     const htabs = ht ? `<nav class="ds-tabs lb-htabs" role="tablist" aria-label="${esc(memo.split(' · ')[0])}">${ht[1].map(([k, n]) => `<button class="ds-tab ${k === here ? 'is-on' : ''}" role="tab" aria-selected="${k === here}" data-a="${ht[0]}" data-id="${k}">${n}</button>`).join('')}</nav>` : '';
     this.win.innerHTML = `<section class="lb-box lb-box--${id} ${id === 'shop' ? `lb-box--shop-${this.tab.shop}` : ''}">
       ${NEW_HEAD.has(id) ? this.head(title, memo, htabs, s) : `<header><div>${htabs || `<p class="memo"><span>${esc(memo.split(' · ')[0])}</span></p>`}<h2>${esc(title)}</h2></div><div class="lb-pat"><span>Patrimônio</span><b>${money(s.patrimonio)}</b></div><button class="lb-x" data-a="close" title="Fechar (Esc)">✕</button></header>`}
       ${body}</section>`;
-    const sc = $('.lb-scroll', this.win); if (sc) sc.scrollTop = scroll; const dl = $('.lb-decklist', this.win); if (dl) dl.scrollTop = scroll2;
+    const sc = $('.lb-scroll', this.win); if (sc) sc.scrollTop = scroll; const dl = $('.ed-list', this.win); if (dl) dl.scrollTop = scroll2;
     if (focus && ['lb-deck-name', 'lb-q', 'lb-sort'].includes(focus)) { const i = $(`#${focus}`, this.win); i?.focus(); if (sel) i?.setSelectionRange?.(...sel); }
     else if (sig) {
       const q = `[data-a="${sig.a}"]${sig.card ? `[data-card="${sig.card}"]` : ''}${sig.id != null ? `[data-id="${sig.id}"]` : ''}`;
-      const el = (sig.list ? $(`.lb-decklist ${q}`, this.win) : null) ?? $(`.lb-grid ${q}`, this.win) ?? $(q, this.win);
+      const el = (sig.list ? $(`.ed-list ${q}`, this.win) : null) ?? $(`.ed-grid ${q}`, this.win) ?? $(q, this.win);
       // o botão sumiu ou ficou desligado (virou "Completa", "Em uso"...): foco na aba ativa, para o Tab não recomeçar do zero
       (el && !el.disabled ? el : $('.lb-tabs .on', this.win) ?? $('.lb-htabs .is-on', this.win) ?? $('.lb-x', this.win))?.focus({ preventScroll: true });
     }
     if (this._scrollTo != null) { $(`[data-deck="${this._scrollTo}"]`, this.win)?.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); this._scrollTo = null; }
   }
   /** sai do editor de volta para as pastas */
-  /** cabeçalho das janelas novas, duas propostas em teste (?lobby&head=b mostra a B; sem nada, a A).
-   *  A · recibo: título direto na pasta sobre linha dupla de papel timbrado; patrimônio num recibo de caixa preso por clipe.
-   *  B · placa: placa de porta escura com parafusos; patrimônio numa pilha de moedas com o valor em âmbar. */
+  /** cabeçalho das janelas novas: título direto na pasta sobre linha dupla de papel timbrado; patrimônio no recibo de caixa */
   head(title, memo, htabs, s) {
     const place = esc(memo.split(' · ')[0]), pat = money(s.patrimonio), x = '<button class="lb-x" data-a="close" title="Fechar (Esc)" aria-label="Fechar">✕</button>';
-    if (HEAD === 'b') return `<header class="lb-head lb-head--plate">${htabs}<div class="ds-nameplate">
-      <div class="ds-nameplate__title"><span>${place}</span><h2>${esc(title)}</h2></div>
-      <div class="ds-coinstack" role="img" aria-label="Patrimônio: ${pat}">${COINS}<span><small>Patrimônio</small><b>${pat}</b></span></div>${x}</div></header>`;
     return `<header class="lb-head lb-head--slip">${htabs}<div class="ds-letterhead">
       <div class="ds-letterhead__title"><span class="ds-formlabel">${place}</span><h2>${esc(title)}</h2></div>
       <div class="ds-till" role="img" aria-label="Patrimônio: ${pat}"><i class="ds-clip"></i><div class="ds-till__paper"><span class="ds-till__head">Caixa · saldo</span><span class="ds-till__label">Patrimônio</span><b class="ds-till__total"><span>${pat}</span></b></div></div>${x}</div></header>`;
   }
-  leaveEditor() { this.ed = null; this.resetFilters(); this.peek(null); sfx('navBack'); this.render(); }
+  leaveEditor() { if (this.ed) this.fdSel = String(this.ed.index); this.ed = null; this.resetFilters(); this.peek(null); sfx('navBack'); this.render(); }
   tabs(id, list) { const cur = this.tab[id] ?? list[0][0]; this.tab[id] = cur; return `<div class="lb-tabs" role="tablist">${list.map(([k, n]) => `<button data-a="tab" data-id="${k}" role="tab" aria-selected="${k === cur}" class="${k === cur ? 'on' : ''}">${n}</button>`).join('')}</div>`; }
 
   onClick(e) {
@@ -247,6 +240,7 @@ export class LobbyUI {
     if (/^(buy-|equip|put-active)/.test(a)) { const now = performance.now(); if (e.detail > 1 || now - (this._buyAt ?? 0) < 400) return; this._buyAt = now; }
     if (a === 'buy-card' && b.closest('.sc-grid')) { this.scSel = id; this.scView = null; }
     if (a === 'buy-cos' && b.closest('.lk-grid')) { this.lkSel = id; this.lkView = null; }
+    if (this.cfMenu && a !== 'cf-menu' && !b.closest('.ds-menu')) this.cfMenu = false;
     switch (a) {
       case 'open': this.closeDetail(); return this.open(id, { tab: b.dataset.tab });
       case 'detail': return this.detail(b.dataset.card, b.dataset.buy === '1');
@@ -260,11 +254,19 @@ export class LobbyUI {
       case 'close': return this.close();
       case 'exit': sfx('navBack'); return this.actions.exit();
       case 'slots': return this.openSlots();
-      case 'tab': this.tab[this.panel] = id; if (this.panel === 'deck') this.resetFilters(); sfx('nav'); return this.render();
+      case 'tab': this.tab[this.panel] = id; if (this.panel === 'deck') { this.resetFilters(); if (this.ed) this.fdSel = String(this.ed.index); this.ed = null; } sfx('nav'); return this.render();
       // coleção: busca, filtro e ordem
       case 'cf-type': this.cf.type = id; sfx('nav'); return this.render();
       case 'cf-mine': this.cf.mine = !this.cf.mine; sfx('nav'); return this.render();
       case 'cf-clear': this.resetFilters(); sfx('nav'); return this.render();
+      case 'cf-menu': this.cfMenu = !this.cfMenu; sfx('nav'); return this.render();
+      case 'cf-sort': this.cf.sort = id; sfx('nav'); return this.render();
+      // gaveta: um clique escolhe a pasta; clicar de novo na pasta já escolhida (ou Enter nela) abre o editor
+      case 'fd-pick':
+        if (id === this.fdSel && id !== 'new') { this.editDeck(Number(id)); sfx('nav'); return this.render(); }
+        this.fdSel = id; this.fdView = null; sfx('nav'); return this.render();
+      case 'al-pick': this.alSel = id; this.alView = null; sfx('card'); return this.render();
+      case 'to-shop': this.scSel = id; this.scView = null; return this.open('shop', { tab: 'cards' });
       // decks
       case 'deck-edit': this.editDeck(Number(id)); sfx('nav'); return this.render();
       case 'deck-back': return this.leaveEditor();
@@ -291,6 +293,7 @@ export class LobbyUI {
         const nAdded = added.reduce((n, [id, k]) => n + k - (lose.get(id) ?? 0), 0);
         if (!this.deckWrite(cards)) return undefined;
         this.ed.prev = [...before]; this.ed.fresh = new Set(added.map(([id]) => id));
+        this.render(); // a gravação já redesenhou antes de existir a marcação das novas e o "Desfazer o automático"
         const errs = Meta.deckErrors(this.s, cards), left = DECK_RULES.size - cards.length;
         sfx('summon');
         this.toast(`<b>+ ${nAdded} carta${nAdded === 1 ? '' : 's'}${removed ? ` · − ${removed} que você não tem` : ''}</b><span>${errs.length ? (left > 0 ? `ainda faltam ${left}: as que faltam têm botão Comprar na grade` : esc(errs[0])) : 'deck completo · as novas estão marcadas na lista'}</span>`, errs.length ? 'bad' : 'good');
@@ -299,7 +302,7 @@ export class LobbyUI {
       case 'deck-unfill': { const prev = this.ed.prev; if (!prev) return undefined; this.touch(); if (this.deckWrite(prev)) { sfx('cancel'); this.toast('As cartas do automático saíram.'); } return undefined; }
       case 'deck-clear': return this.ui.confirm('Esvaziar o deck?', `Todas as cartas saem de "${this.edDeck.name}". Elas continuam na sua coleção, e "Desfazer alterações" traz de volta enquanto o arquivo estiver aberto.`, 'ESVAZIAR', () => { this.touch(); this.deckWrite([]); sfx('cancel'); });
       case 'deck-use': { const i = Number(id), name = this.s.decks[i]?.name ?? ''; if (this.commit(Meta.setActiveDeck(this.s, i), `<b>${esc(name)}</b><span>é o deck que vai para o duelo</span>`)) sfx('nav'); return undefined; }
-      case 'deck-dup': { const r = Meta.duplicateDeck(this.s, Number(id), Date.now()); if (r.ok) this._scrollTo = r.index; if (this.commit(r, `<b>Cópia criada</b><span>${esc(r.ok ? r.save.decks[r.index].name : '')}</span>`)) sfx('draw'); return undefined; }
+      case 'deck-dup': { const r = Meta.duplicateDeck(this.s, Number(id), Date.now()); if (r.ok) { this._scrollTo = r.index; this.fdSel = String(r.index); } if (this.commit(r, `<b>Cópia criada</b><span>${esc(r.ok ? r.save.decks[r.index].name : '')}</span>`)) sfx('draw'); return undefined; }
       case 'deck-del': { const i = Number(id), name = this.s.decks[i]?.name ?? ''; return this.ui.confirm('Apagar este deck?', `"${name}" sai do arquivo. As cartas continuam na sua coleção.`, 'APAGAR', () => { this.snaps.clear(); if (this.commit(Meta.deleteDeck(this.s, i))) sfx('sacrifice'); }); }
       // reciclar
       case 'recycle': { const r = Meta.recycle(this.s, id || null, Date.now()); if (this.commit(r)) { sfx('sacrifice'); this.toast(`<b>${r.count} carta${r.count > 1 ? 's' : ''} triturada${r.count > 1 ? 's' : ''}</b><span>+ ${money(r.gained)} de PATRIMÔNIO</span>`, 'good'); } return undefined; }
@@ -441,20 +444,15 @@ export class LobbyUI {
     const was = !el.classList.contains('hidden'); el.classList.remove('hidden'); if (!was) sfx('nav'); ($('[data-a="buy-card"]', el) ?? $('[data-a="detail-close"]', el)).focus({ preventScroll: true });
   }
   closeDetail() { if (!this.detailId) return; this.detailId = null; this.detailBuy = false; const el = $('.lb-detail', this.root); el.classList.add('hidden'); el.innerHTML = ''; sfx('navBack'); }
-  /** abre a ficha flutuante da carta ao lado do elemento (ou fecha, com null), sem tapar o painel do deck nem sair da janela */
+  /** destaque da carta no editor (R6): a ficha completa aparece dentro da prateleira, do lado oposto ao do mouse */
   peek(el) {
-    if (el?.closest?.('.lb-pack, .lb-detail, .sc')) el = null;   // no pacote e no detalhe, a ficha é a vista de detalhe (clique)
-    const p = this.peekEl, id = el?.dataset?.card;
-    if (!id || !byId.has(id)) { p.classList.add('hidden'); this.peekFor = null; return; }
-    if (this.peekFor !== id) { p.innerHTML = C.cardSheet({ cardId: id }); this.peekFor = id; }
-    p.classList.remove('hidden');
-    const z = this.ui.scale, r = el.getBoundingClientRect(), W = window.innerWidth / z, H = window.innerHeight / z;
-    const box = $('.lb-box', this.win)?.getBoundingClientRect(), side = $('.lb-side', this.win);
-    const right = side && !side.contains(el) ? side.getBoundingClientRect().left / z : W;
-    const top = box ? box.top / z + 10 : 10, bottom = box ? box.bottom / z - 10 : H - 10;
-    const pw = p.offsetWidth, ph = p.offsetHeight, clamp = (v, a, b) => Math.max(a, Math.min(b, v));
-    let x = r.right / z + 12; if (x + pw > right - 8) x = r.left / z - pw - 12;
-    p.style.transform = `translate(${clamp(x, 10, W - pw - 10)}px, ${clamp(r.top / z - 6, top, Math.max(top, bottom - ph))}px)`;
+    this.peekEl.classList.add('hidden');
+    const box = $('.ed-peek', this.win), id = el?.dataset?.card; if (!box) return;
+    if (!id || !byId.has(id) || !el.closest('.ed-grid, .ed-list')) { box.classList.remove('is-on'); return; }
+    if (box.dataset.for !== id) { box.innerHTML = this.scFile(id, false); box.dataset.for = id; }
+    const sh = box.parentElement.getBoundingClientRect(), r = el.getBoundingClientRect();
+    box.classList.toggle('is-left', !el.closest('.ed-list') && r.left + r.width / 2 > sh.left + sh.width / 2);
+    box.classList.add('is-on');
   }
   /** cartas da coleção depois de busca, filtro de tipo, "só as que tenho" e ordenação */
   cardList(s) {
@@ -467,41 +465,32 @@ export class LobbyUI {
     return list.sort((a, b) => by(a, b) || a.id.localeCompare(b.id));
   }
   filtered() { const f = this.cf; return !!(f.q || f.type !== 'all' || f.mine); }
-  vTools(s, shown) {
+  /** ferramentas da grade (editor e álbum): busca, tipo e um "⋯" com ordem e "só as que tenho" */
+  vTools(s, shown, { back = false, count = '' } = {}) {
     const f = this.cf, T = [['all', 'Todas'], ['creature', 'Criaturas'], ['effect', 'Efeitos'], ['trap', 'Armadilhas']];
     const S = [['num', 'Número'], ['name', 'Nome'], ['atk', 'Maior ATQ'], ['def', 'Maior DEF'], ['rarity', 'Raridade']];
-    return `<div class="lb-tools">
-      <input id="lb-q" class="lb-search" type="search" value="${esc(f.q)}" placeholder="Nome, elemento, depto." spellcheck="false" autocomplete="off" aria-label="Buscar carta por nome, elemento ou departamento">
-      <div class="lb-chips" role="group" aria-label="Tipo de carta">${T.map(([k, n]) => `<button data-a="cf-type" data-id="${k}" class="${f.type === k ? 'on' : ''}" aria-pressed="${f.type === k}">${n}</button>`).join('')}</div>
-      <button data-a="cf-mine" class="lb-toggle ${f.mine ? 'on' : ''}" aria-pressed="${f.mine}" title="Esconde as cartas que você ainda não tem">Só as que tenho</button>
-      <label class="lb-sort"><span>Ordem</span><select id="lb-sort">${S.map(([k, n]) => `<option value="${k}" ${f.sort === k ? 'selected' : ''}>${n}</option>`).join('')}</select></label>
-      ${this.filtered() ? `<span class="lb-shown">${shown} de ${CARDS.length} <button data-a="cf-clear" class="ghost">Limpar filtros</button></span>` : ''}
+    const extra = f.mine || f.sort !== 'num';
+    const menu = this.cfMenu ? `<div class="ds-menu" role="menu" aria-label="Ordem e filtros"><span class="ds-formlabel">Ordem</span>
+      ${S.map(([k, n]) => `<button class="ds-menu__item ${f.sort === k ? 'is-on' : ''}" role="menuitemradio" aria-checked="${f.sort === k}" data-a="cf-sort" data-id="${k}">${n}</button>`).join('')}
+      <hr><button class="ds-menu__item ds-menu__check ${f.mine ? 'is-on' : ''}" role="menuitemcheckbox" aria-checked="${f.mine}" data-a="cf-mine">Só as que tenho</button>
+      ${this.filtered() ? `<hr><button class="ds-menu__item" data-a="cf-clear">Limpar filtros · ${shown} de ${CARDS.length}</button>` : ''}</div>` : '';
+    return `<div class="ed-tools">
+      ${back ? '<button class="ds-btn ed-back" data-a="deck-back" title="Voltar para as pastas (Esc)">‹ Pastas</button>' : ''}
+      <input id="lb-q" class="ds-search" type="search" value="${esc(f.q)}" placeholder="Buscar carta" spellcheck="false" autocomplete="off" aria-label="Buscar carta por nome, elemento ou departamento">
+      <span class="ds-seg ed-seg" role="group" aria-label="Tipo de carta">${T.map(([k, n]) => `<button class="ds-seg__btn ${f.type === k ? 'is-on' : ''}" data-a="cf-type" data-id="${k}" aria-pressed="${f.type === k}">${n}</button>`).join('')}</span>
+      <span class="ds-more"><button class="ds-btn ds-btn--sq ds-more__btn ${extra ? 'has-dot' : ''} ${this.cfMenu ? 'is-on' : ''}" data-a="cf-menu" aria-expanded="${!!this.cfMenu}" aria-label="Ordem e filtros" title="Ordem e filtros">⋯</button>${menu}</span>
+      ${count}
     </div>`;
   }
-  /** botão de compra avulsa direto na carta, com o preço; sem PATRIMÔNIO, diz quanto falta */
-  buyBtn(s, id) {
-    const p = Meta.priceOf(id), short = p - s.patrimonio, nb = (t) => t.replace(' ', ' ');
-    return short > 0
-      ? `<button class="lb-card__buy is-short" data-a="buy-card" data-id="${id}" disabled title="Faltam ${money(short)} de PATRIMÔNIO">${nb(money(p))}<small>faltam ${nb(money(short))}</small></button>`
-      : `<button class="lb-card__buy" data-a="buy-card" data-id="${id}" title="Compra 1 cópia por ${money(p)}">Comprar ${nb(money(p))}</button>`;
-  }
-  /** as 3 bolinhas de cópia: no deck · tenho e está livre · não tenho; vermelha = o deck usa uma cópia que você não tem */
-  pips(s, id, inDeck) {
-    const has = Meta.owned(s, id), own = Math.min(has, DECK_RULES.maxCopies);
-    const cls = (k) => (k < inDeck ? (k < own ? 'on' : 'over') : k < own ? 'own' : '');
-    return `<span class="lb-pips" title="Você tem ${has} · ${inDeck} no deck">${Array.from({ length: DECK_RULES.maxCopies }, (_, k) => `<i class="${cls(k)}"></i>`).join('')}</span>`;
+  /** três casas por carta: cheia = no deck; contorno = você tem e está livre; tracejada = não tem; vermelha = o deck usa uma que você não tem */
+  copiesIn(s, id, inDeck) {
+    const max = DECK_RULES.maxCopies, has = Meta.owned(s, id), own = Math.min(has, max);
+    const cls = (k) => (k < inDeck ? (k < own ? 'is-on' : 'is-lack') : k < own ? 'is-own' : '');
+    return `<span class="ds-copies" role="img" aria-label="${inDeck} no deck · você tem ${has}" title="${inDeck} no deck · você tem ${has}">${Array.from({ length: max }, (_, k) => `<i class="${cls(k)}"></i>`).join('')}</span>`;
   }
   deckStats(cards) {
-    const cs = cards.map((id) => byId.get(id)), crit = cs.filter((c) => !isFx(c));
-    return {
-      creatures: crit.length, effects: cs.filter((c) => c.kind === 'effect_instant').length, traps: cs.filter((c) => c.kind === 'effect_trap').length,
-      sac: crit.filter((c) => c.cost > 0).length, atk: crit.length ? Math.round(crit.reduce((n, c) => n + c.atk, 0) / crit.length) : 0,
-    };
-  }
-  /** "33 criaturas · 4 efeitos · 3 armadilhas", com os quadradinhos de cor da barra do editor */
-  mix(st) {
-    const pl = (n, one, many) => `${n} ${n === 1 ? one : many}`;
-    return `<span><i class="c"></i>${pl(st.creatures, 'criatura', 'criaturas')}</span><span><i class="e"></i>${pl(st.effects, 'efeito', 'efeitos')}</span><span><i class="t"></i>${pl(st.traps, 'armadilha', 'armadilhas')}</span>`;
+    const cs = cards.map((id) => byId.get(id));
+    return { creatures: cs.filter((c) => !isFx(c)).length, effects: cs.filter((c) => c.kind === 'effect_instant').length, traps: cs.filter((c) => c.kind === 'effect_trap').length };
   }
   /** as cartas de capa de um deck: as mais raras, depois as com mais cópias */
   faces(cards) {
@@ -512,102 +501,119 @@ export class LobbyUI {
   hardErrors(errs) { return errs.filter((e) => !e.startsWith('Faltam ')); }
   vDeck(s) {
     if (this.ed && !s.decks[this.ed.index]) this.ed = null;
+    this.tab.deck ??= 'decks';
     if (this.ed) return this.vEditor(s);
-    const tabs = this.tabs('deck', [['decks', `Meus decks · ${s.decks.length}/${META.maxDecks}`], ['collection', `Coleção · ${Meta.distinctOwned(s)}/${CARDS.length}`]]);
-    return `${tabs}<div class="lb-pad lb-fill">${this.tab.deck === 'collection' ? this.vCollection(s) : this.vDecks(s)}</div>`;
+    return this.tab.deck === 'collection' ? this.vCollection(s) : this.vDecks(s);
   }
+
+  // ───────── gaveta: as pastas suspensas (um deck por pasta) e a ficha da pasta escolhida ─────────
   vDecks(s) {
+    const max = META.maxDecks, can = s.decks.length < max, k = this.fdSel;
+    if (k == null || (k === 'new' ? !can : !s.decks[Number(k)])) this.fdSel = String(s.activeDeck);
+    this.fdView = null;
     const back = backUrl(s.cosmetics.back, s.cosmetics.logo, asset('cards/back.png'));
-    const folders = s.decks.map((d, i) => {
-      const errs = Meta.deckErrors(s, d.cards), ok = !errs.length, on = i === s.activeDeck, st = this.deckStats(d.cards), faces = this.faces(d.cards);
-      const first = this.hardErrors(errs)[0] ?? errs[0];
-      return `<article class="lb-folder ${on ? 'is-active' : ''} ${ok ? '' : 'is-bad'}" data-deck="${i}">
-        <p class="lb-folder__tab">${on ? '★ No duelo' : `Pasta ${String(i + 1).padStart(2, '0')}`}</p>
-        <button class="lb-folder__open" data-a="deck-edit" data-id="${i}" title="Abrir para editar">
-          <div class="lb-fan">${faces.length ? faces.map((id) => `<img src="${asset(byId.get(id).art)}" alt="">`).join('') : `<img src="${back}" alt=""><img src="${back}" alt="">`}</div>
-          <h3 title="${esc(d.name)}">${esc(d.name)}</h3>
-          <p class="lb-folder__count"><b>${d.cards.length}</b>/${DECK_RULES.size}</p>
-          <p class="lb-mix">${this.mix(st)}</p>
-          <p class="lb-folder__st">${ok ? 'Pronto para duelar' : esc(first)}</p>
-        </button>
-        <footer>
-          ${on ? '<span class="lb-folder__on">★ No duelo</span>' : `<button data-a="deck-use" data-id="${i}" class="primary" ${ok ? '' : `disabled title="${esc(first)}"`}>Usar no duelo</button>`}
-          <button data-a="deck-edit" data-id="${i}">Editar</button>
-          <button data-a="deck-dup" data-id="${i}" class="ghost" title="Duplicar" ${s.decks.length >= META.maxDecks ? 'disabled' : ''}>Duplicar</button>
-          <button data-a="deck-del" data-id="${i}" class="ghost" title="Apagar" ${s.decks.length <= 1 ? 'disabled' : ''}>Apagar</button>
-        </footer></article>`;
-    }).join('');
-    const fresh = s.decks.length < META.maxDecks ? `<article class="lb-folder lb-folder--new">
-        <p class="lb-folder__tab">Pasta vazia</p>
-        <div><h3>Novo deck</h3><p>Comece do zero, ou deixe o arquivo montar ${DECK_RULES.size} cartas com o melhor da sua coleção e ajuste depois.</p></div>
-        <footer><button data-a="deck-new" data-id="auto" class="primary">Montar automático</button><button data-a="deck-new" data-id="blank">Em branco</button></footer></article>` : '';
-    return `<div class="lb-scroll lb-folders">${folders}${fresh}</div>
-      <p class="fine">O deck marcado com ★ é o que vai para a sala de reunião e para o treino. Cada deck tem ${DECK_RULES.size} cartas, até ${DECK_RULES.maxCopies} cópias de cada.</p>`;
+    const item = (d, i) => {
+      const errs = Meta.deckErrors(s, d.cards), ok = !errs.length, on = i === s.activeDeck, faces = this.faces(d.cards), sel = String(i) === this.fdSel;
+      return `<article class="fd-item ${sel ? 'is-sel' : ''}" data-show="${i}" data-deck="${i}">
+        <button class="ds-hangfile ${on ? 'is-on' : ''} ${ok ? '' : 'is-bad'}" data-a="fd-pick" data-id="${i}" aria-pressed="${sel}" aria-label="${esc(d.name)}, ${d.cards.length} de ${DECK_RULES.size} cartas${on ? ', no duelo' : ''}">
+          <span class="ds-hangfile__tab">${on ? '★ No duelo' : `Pasta ${String(i + 1).padStart(2, '0')}`}</span>
+          <span class="ds-hangfile__cards" aria-hidden="true">${faces.length ? faces.map((id) => mini(id)).join('') : `<img class="ds-mini" src="${back}" alt=""><img class="ds-mini" src="${back}" alt="">`}</span>
+          <span class="ds-hangfile__front"><b>${esc(d.name)}</b><small>${d.cards.length}/${DECK_RULES.size} · ${ok ? 'pronto' : this.hardErrors(errs).length ? 'com erro' : 'incompleto'}</small></span>
+        </button></article>`;
+    };
+    const fresh = can ? `<article class="fd-item ${this.fdSel === 'new' ? 'is-sel' : ''}" data-show="new">
+        <button class="ds-hangfile is-empty" data-a="fd-pick" data-id="new" aria-pressed="${this.fdSel === 'new'}"><span class="ds-hangfile__tab">Pasta vazia</span><span class="ds-hangfile__cards"></span><span class="ds-hangfile__front"><b>+ Novo deck</b><small>montar ou começar do zero</small></span></button></article>` : '';
+    return `<div class="sc fd">
+      <section class="sc-shelf"><div class="sc-tools"><b>${s.decks.length} de ${max} pastas</b><span class="fd-tip">Clique de novo para abrir a pasta</span></div>
+        <div class="lb-scroll fd-grid">${s.decks.map(item).join('')}${fresh}</div></section>
+      <aside class="sc-view" aria-live="polite">${this.fdFile(this.fdSel)}</aside>
+    </div>`;
   }
+  /** ficha da pasta: nome, estado, composição, cartas-chave e uma ação principal que muda com o caso */
+  fdFile(k) {
+    const s = this.s, max = META.maxDecks;
+    if (k === 'new') return `<section class="ds-sheet ds-file fd-file">
+      <div class="ds-bar"><span>Pasta vazia</span><b>${s.decks.length + 1} de ${max}</b></div>
+      <div class="ds-body"><div><span class="ds-formlabel">Novo deck</span><h3 class="ds-title">Pasta vazia</h3><p class="ds-manifest__line">O arquivo monta ${DECK_RULES.size} cartas com o melhor da sua coleção. Depois você ajusta.</p></div>
+        <span></span><span></span>
+        <footer class="ds-file__foot fd-foot"><div class="fd-main"><button class="ds-btn" data-a="deck-new" data-id="blank">Em branco</button><button class="ds-btn ds-btn--primary" data-a="deck-new" data-id="auto">Montar automático</button></div></footer></div></section>`;
+    const i = Number(k), d = s.decks[i]; if (!d) return '';
+    const errs = Meta.deckErrors(s, d.cards), ok = !errs.length, hard = this.hardErrors(errs), on = i === s.activeDeck, st = this.deckStats(d.cards), n = d.cards.length;
+    const tag = ok ? 'Pronto' : hard.length ? 'Com erro' : 'Incompleto';
+    const line = ok ? `${n} de ${DECK_RULES.size} cartas, pronto para a mesa.` : hard.length ? esc(hard[0]) : `Faltam ${DECK_RULES.size - n} cartas para fechar ${DECK_RULES.size}.`;
+    const edit = (primary) => `<button class="ds-btn ${primary ? 'ds-btn--primary' : ''}" data-a="deck-edit" data-id="${i}">${ok ? 'Editar' : 'Abrir e completar'}</button>`;
+    const main = on ? `<i class="ds-stamp ds-stamp--ok">No duelo</i>${edit(true)}` : ok ? `${edit(false)}<button class="ds-btn ds-btn--primary" data-a="deck-use" data-id="${i}">Usar no duelo</button>` : edit(true);
+    const faces = this.faces(d.cards);
+    return `<section class="ds-sheet ds-file fd-file ${ok ? '' : 'is-bad'}">
+      <div class="ds-bar"><span>Pasta ${String(i + 1).padStart(2, '0')}</span><b>${tag}</b></div>
+      <div class="ds-body">
+        <div><span class="ds-formlabel">Deck</span><h3 class="ds-title">${esc(d.name)}</h3><p class="ds-manifest__line ${ok ? '' : 'fd-warn'}">${line}</p></div>
+        <dl class="ds-file__stats"><div><dt>Criaturas</dt><dd>${st.creatures}</dd></div><div><dt>Efeitos</dt><dd>${st.effects}</dd></div><div><dt>Armadilhas</dt><dd>${st.traps}</dd></div></dl>
+        <div class="fd-faces" aria-hidden="true">${faces.map((id) => mini(id)).join('')}</div>
+        <footer class="ds-file__foot fd-foot">
+          <div class="fd-minor"><button class="ds-btn ds-btn--link" data-a="deck-dup" data-id="${i}" ${s.decks.length >= max ? 'disabled title="Gaveta cheia"' : ''}>Duplicar</button><button class="ds-btn ds-btn--link" data-a="deck-del" data-id="${i}" ${s.decks.length <= 1 ? 'disabled title="Precisa sobrar um deck"' : ''}>Apagar</button></div>
+          <div class="fd-main">${main}</div></footer>
+      </div></section>`;
+  }
+
+  // ───────── álbum: a coleção como álbum de figurinhas (falta = espaço vazio com o número) ─────────
   vCollection(s) {
-    const list = this.cardList(s), copies = CARDS.reduce((n, c) => n + Meta.owned(s, c.id), 0), miss = CARDS.reduce((n, c) => n + Math.max(0, DECK_RULES.maxCopies - Meta.owned(s, c.id)), 0);
-    const grid = list.map((c) => {
-      const own = Meta.owned(s, c.id);
-      return `<figure class="lb-card ${own ? '' : 'is-missing'}" data-card="${c.id}" tabindex="0" aria-label="${esc(c.name)}">
-        <img loading="lazy" src="${asset(c.art)}" alt="${esc(c.name)}">
-        <figcaption>${rarityTag(c.id)}${this.pips(s, c.id, 0)}<b class="${own ? '' : 'no'}">${own ? `×${own}` : 'falta'}</b></figcaption>
-        ${own < DECK_RULES.maxCopies ? this.buyBtn(s, c.id) : ''}</figure>`;
-    }).join('');
-    return `${this.vTools(s, list.length)}
-      <p class="fine">${Meta.distinctOwned(s)} de ${CARDS.length} cartas diferentes · ${copies} cópias no arquivo · ${miss ? `faltam ${miss} para ter ${DECK_RULES.maxCopies} de cada` : 'coleção completa'}</p>
-      <div class="lb-scroll lb-grid lb-grid--big">${grid || '<p class="lb-empty">Nenhuma carta com esse filtro. <button data-a="cf-clear">Limpar filtros</button></p>'}</div>`;
+    const list = this.cardList(s), max = DECK_RULES.maxCopies;
+    if (!list.some((c) => c.id === this.alSel)) this.alSel = list[0]?.id ?? null;
+    this.alView = null;
+    const item = (c) => {
+      const own = Math.min(Meta.owned(s, c.id), max), sel = c.id === this.alSel, nm = esc(c.name);
+      return `<article class="al-item sc-item--${Meta.rarityOf(c.id)} ${sel ? 'is-sel' : ''} ${own ? '' : 'is-missing'}" data-show="${c.id}">
+        <button class="ds-slot ${own ? 'is-filled' : ''}" data-a="al-pick" data-id="${c.id}" aria-pressed="${sel}" aria-label="${nm}: você tem ${own} de ${max}">${own ? `${mini(c.id)}<i class="ds-slot__corners" aria-hidden="true"></i>` : `<span class="ds-slot__no">Nº ${c.id.slice(4)}</span><span class="ds-slot__name">${nm}</span>`}</button>
+        <div class="sc-meta al-meta">${copies(own)}${own ? '' : '<em class="al-miss">Falta</em>'}</div></article>`;
+    };
+    return `<div class="sc al">
+      <section class="sc-shelf">${this.vTools(s, list.length, { count: `<b class="al-count">${Meta.distinctOwned(s)} de ${CARDS.length}</b>` })}
+        <div class="lb-scroll sc-grid al-grid">${list.map(item).join('') || '<p class="sc-none">Nenhuma carta com esse filtro.</p>'}</div></section>
+      <aside class="sc-view" aria-live="polite">${this.alSel ? this.scFile(this.alSel, 'shop') : ''}</aside>
+    </div>`;
   }
+
+  // ───────── editor: a grade de cartas à esquerda e o deck em montagem à direita ─────────
   vEditor(s) {
     const d = s.decks[this.ed.index], snap = this.ed.snap, counts = new Map(group(d.cards)), errs = Meta.deckErrors(s, d.cards), ok = !errs.length, hard = this.hardErrors(errs);
-    const on = this.ed.index === s.activeDeck, st = this.deckStats(d.cards), n = d.cards.length, fresh = this.ed.fresh;
+    const on = this.ed.index === s.activeDeck, n = d.cards.length, fresh = this.ed.fresh, max = DECK_RULES.maxCopies;
     const changed = d.name !== snap.name || sortCards(d.cards).join() !== snap.cards.join();
+    const item = (c) => {
+      const own = Meta.owned(s, c.id), inDeck = counts.get(c.id) ?? 0, nm = esc(c.name), p = Meta.priceOf(c.id), poor = p > s.patrimonio;
+      const needBuy = own < max && (own === 0 || inDeck >= own);
+      return `<article class="ed-item sc-item--${Meta.rarityOf(c.id)} ${inDeck ? 'is-in' : ''} ${own ? '' : 'is-missing'}" data-card="${c.id}">
+        <button class="ed-card" data-a="deck-add" data-card="${c.id}" aria-label="${nm}: pôr uma no deck (${inDeck} no deck, você tem ${own})">${mini(c.id)}</button>
+        <div class="sc-meta">${this.copiesIn(s, c.id, inDeck)}${needBuy ? `<button class="ds-price" data-a="buy-card" data-id="${c.id}" ${poor ? `disabled title="Faltam ${money(p - s.patrimonio)}"` : `title="Comprar e pôr no deck"`}>${money(p)}</button>` : ''}</div></article>`;
+    };
     const list = this.cardList(s);
-    const grid = list.map((c) => {
-      const own = Meta.owned(s, c.id), inDeck = counts.get(c.id) ?? 0, why = this.whyNot(s, d.cards, c.id), nm = esc(c.name);
-      const needBuy = own < DECK_RULES.maxCopies && (own === 0 || inDeck >= own);
-      return `<figure class="lb-card ${own ? '' : 'is-missing'} ${own && !inDeck && why ? 'is-used' : ''} ${inDeck ? 'is-in' : ''}" data-a="deck-add" data-card="${c.id}">
-        <img loading="lazy" src="${asset(c.art)}" alt="${nm}">
-        ${own ? `<div class="lb-card__ctl"><button data-a="deck-rem" data-card="${c.id}" class="${inDeck ? '' : 'is-off'}" aria-disabled="${!inDeck}" aria-label="Tirar uma ${nm}" title="Tirar uma (botão direito)">−</button><button data-a="deck-add" data-card="${c.id}" class="${why ? 'is-off' : ''}" aria-disabled="${!!why}" aria-label="Pôr uma ${nm}" title="${why ? esc(why) : 'Pôr uma (clique)'}">+</button></div>` : ''}
-        ${needBuy ? this.buyBtn(s, c.id) : ''}
-        <figcaption>${rarityTag(c.id)}${this.pips(s, c.id, inDeck)}<b class="${own ? '' : 'no'}">${own ? (inDeck ? `${inDeck} no deck` : '') : 'falta'}</b></figcaption></figure>`;
-    }).join('');
     const GROUPS = [['Criaturas', (c) => !isFx(c)], ['Efeitos', (c) => c.kind === 'effect_instant'], ['Armadilhas', (c) => c.kind === 'effect_trap']];
     const rows = GROUPS.map(([title, test]) => {
       const g = [...counts.entries()].filter(([id]) => test(byId.get(id))); if (!g.length) return '';
-      return `<li class="lb-group"><span>${title}</span><em>${g.reduce((a, [, k]) => a + k, 0)}</em></li>${g.map(([id, k]) => {
-        const c = byId.get(id), why = this.whyNot(s, d.cards, id), has = Meta.owned(s, id), short = k > Math.min(has, DECK_RULES.maxCopies), nm = esc(c.name);
-        return `<li class="lb-drow ${short ? 'is-short' : ''} ${fresh?.has(id) ? 'is-new' : ''}" data-card="${id}"><span class="lb-drow__art" style="background-image:url(${asset(c.art)})"></span><i>${k}×</i><span class="lb-drow__name" title="${nm}${short ? ` · você só tem ${has}` : ''}">${nm}</span>
-          <em>${isFx(c) ? '' : `${c.cost ? `<b class="lb-sac" title="Pede ${c.cost} sacrifício${c.cost > 1 ? 's' : ''}">${'<i>✕</i>'.repeat(c.cost)}</b>` : ''}${c.atk}/${c.def}`}</em>
-          <span class="lb-drow__ctl"><button data-a="deck-rem" data-card="${id}" aria-label="Tirar uma ${nm}" title="Tirar uma">−</button><button data-a="deck-add" data-card="${id}" class="${why ? 'is-off' : ''}" aria-disabled="${!!why}" aria-label="Pôr mais uma ${nm}" title="${why ? esc(why) : 'Pôr mais uma'}">+</button></span></li>`;
+      return `<li class="ed-group"><span>${title}</span><em>${g.reduce((a, [, k]) => a + k, 0)}</em></li>${g.map(([id, k]) => {
+        const has = Meta.owned(s, id), short = k > Math.min(has, max), nm = esc(byId.get(id).name), isNew = fresh?.has(id);
+        return `<li class="ed-row ${short ? 'is-short' : ''}"><button data-a="deck-rem" data-card="${id}" title="Tirar uma"><b>${k}×</b><span>${nm}</span>${isNew ? '<i class="ed-new">nova</i>' : ''}${short ? `<i class="ed-warn">tem ${has}</i>` : ''}<em aria-hidden="true">−</em></button></li>`;
       }).join('')}`;
     }).join('');
-    const seg = (k, cls) => (k ? `<i class="${cls}" style="flex:${k}"></i>` : '');
-    const fixable = n < DECK_RULES.size || hard.length > 0;
-    const state = ok ? 'ok' : hard.length ? 'is-bad' : 'is-short';
-    return `<div class="lb-edbar">
-        <button data-a="deck-back" class="ghost" title="Voltar para todos os decks (Esc)">← Todos os decks</button>
-        <input id="lb-deck-name" maxlength="24" value="${esc(d.name)}" spellcheck="false" autocomplete="off" aria-label="Nome do deck" title="Nome do deck">
-        <span class="lb-saved">Salvo sozinho</span>
-        <button data-a="deck-undo" title="Volta o deck como estava quando você abriu" ${changed ? '' : 'hidden'}>Desfazer alterações</button>
-        ${on ? '<span class="lb-folder__on">★ No duelo</span>' : `<button data-a="deck-use" data-id="${this.ed.index}" class="primary" ${ok ? '' : `disabled title="${esc(hard[0] ?? errs[0])}"`}>Usar no duelo</button>`}
-      </div>
-      <div class="lb-deck">
-        <div class="lb-col">${this.vTools(s, list.length)}
-          <div class="lb-scroll lb-grid">${grid || '<p class="lb-empty">Nenhuma carta com esse filtro. <button data-a="cf-clear">Limpar filtros</button></p>'}</div>
-          <p class="fine lb-hintline">Clique numa carta para pôr · botão direito para tirar · passe o mouse para ler a ficha</p>
-        </div>
-        <aside class="lb-side">
-          <div class="lb-count ${state}"><b>${n}</b>/${DECK_RULES.size}<span>${ok ? 'pronto para duelar' : hard.length ? 'arrume o aviso abaixo' : `faltam ${DECK_RULES.size - n}`}</span></div>
-          <div class="lb-meter">${seg(st.creatures, 'c')}${seg(st.effects, 'e')}${seg(st.traps, 't')}${seg(Math.max(0, DECK_RULES.size - n), 'gap')}</div>
-          <p class="lb-mix">${this.mix(st)}</p>
-          <p class="lb-mix lb-mix--sub">ATQ médio ${st.atk ? money(st.atk) : '—'} · ${st.sac} pede${st.sac === 1 ? '' : 'm'} sacrifício</p>
-          <ul class="lb-decklist">${rows || `<li class="lb-empty">Deck vazio.<br>Clique nas cartas ao lado ou use “Completar automático”.</li>`}</ul>
-          ${hard.length ? `<ul class="lb-errs">${hard.slice(0, 3).map((e) => `<li>${esc(e)}</li>`).join('')}${hard.length > 3 ? `<li>e mais ${hard.length - 3}…</li>` : ''}</ul>` : ''}
-          <div class="lb-actions">
-            ${this.ed.prev ? `<button data-a="deck-unfill" title="Tira as cartas que o automático acabou de pôr">Desfazer o automático</button>` : `<button data-a="deck-fill" class="${fixable ? 'primary' : ''}" ${fixable ? '' : 'disabled'} title="Tira as cópias que você não tem e completa até ${DECK_RULES.size} com as melhores cartas livres da sua coleção (cerca de 1 efeito a cada 5 cartas, no máximo 6 que pedem sacrifício)">Completar automático</button>`}
-            <button data-a="deck-clear" class="ghost" ${n ? '' : 'disabled'}>Esvaziar</button>
-          </div>
-        </aside></div>`;
+    const state = ok ? 'pronto' : hard.length ? 'com erro' : `faltam ${DECK_RULES.size - n}`;
+    const primary = !ok ? `<button class="ds-btn ds-btn--primary" data-a="deck-fill">Completar automático</button>` : on ? '<i class="ds-stamp ds-stamp--ok">No duelo</i>' : `<button class="ds-btn ds-btn--primary" data-a="deck-use" data-id="${this.ed.index}">Usar no duelo</button>`;
+    const minor = `${this.ed.prev ? '<button class="ds-btn ds-btn--link" data-a="deck-unfill">Desfazer o automático</button>' : `<button class="ds-btn ds-btn--link" data-a="deck-undo" ${changed ? '' : 'hidden'}>Desfazer alterações</button>`}<button class="ds-btn ds-btn--link" data-a="deck-clear" ${n ? '' : 'disabled'}>Esvaziar</button>`;
+    return `<div class="sc ed">
+      <section class="sc-shelf ed-shelf">${this.vTools(s, list.length, { back: true })}
+        <div class="lb-scroll ed-grid">${list.map(item).join('') || '<p class="sc-none">Nenhuma carta com esse filtro.</p>'}</div>
+        <p class="ed-hint">Clique para pôr · botão direito para tirar</p>
+        <div class="ed-peek" aria-hidden="true"></div>
+      </section>
+      <section class="ds-sheet ds-file ed-side">
+        <div class="ds-bar"><span>Deck em montagem</span><b>Pasta ${String(this.ed.index + 1).padStart(2, '0')}</b></div>
+        <div class="ds-body">
+          <div class="ed-top"><input id="lb-deck-name" class="ed-name" maxlength="24" value="${esc(d.name)}" spellcheck="false" autocomplete="off" aria-label="Nome do deck" title="Nome do deck (clique para mudar)">
+            <div class="ed-count is-${ok ? 'ok' : hard.length ? 'bad' : 'short'}"><b>${n}</b><span>/${DECK_RULES.size}</span><small>${state}</small></div>
+            ${hard.length ? `<p class="ed-err">${esc(hard[0])}${hard.length > 1 ? ` (e mais ${hard.length - 1})` : ''}</p>` : ''}</div>
+          <ul class="ed-list">${rows || '<li class="ed-empty">Deck vazio. Clique nas cartas ao lado ou use "Completar automático".</li>'}</ul>
+          <footer class="ds-file__foot ed-foot"><div class="fd-minor">${minor}</div>${primary}</footer>
+        </div></section>
+    </div>`;
   }
   vRecycle(s) {
     const list = CARDS.filter((c) => Meta.extrasOf(s, c.id) > 0), total = list.reduce((n, c) => n + Meta.extrasOf(s, c.id) * Meta.recycleValue(c.id), 0);
@@ -738,12 +744,12 @@ export class LobbyUI {
     </div>`;
   }
   /** ficha da carta (peça .ds-file): foto presa por clipe, título, categorias, atributos, texto completo, cópias e a compra */
-  scFile(id, buy = true) {
+  scFile(id, mode = true) {
     const c = byId.get(id), s = this.s, fx = isFx(c), max = DECK_RULES.maxCopies, own = Math.min(Meta.owned(s, id), max), price = Meta.priceOf(id), lack = price - s.patrimonio;
     const kind = [KIND[c.kind], c.element, c.department ? `depto. ${DEPT[c.department] ?? c.department}` : ''].filter(Boolean);
     const stats = fx ? `<p class="ds-file__fx">${c.kind === 'effect_trap' ? 'Fica virada na mesa até disparar.' : c.durationTurns ? `Fica na mesa por ${c.durationTurns} turnos seus.` : 'Vale na hora e vai para o Morto.'}</p>`
       : `<dl class="ds-file__stats"><div><dt>Ataque</dt><dd>${money(c.atk)}</dd></div><div><dt>Defesa</dt><dd>${money(c.def)}</dd></div><div><dt>Custo</dt><dd>${c.cost ? `${c.cost} <small>sacrif.</small>` : '<small>grátis</small>'}</dd></div></dl>`;
-    const action = own >= max ? '<i class="ds-stamp ds-stamp--ok">Completa</i>' : lack > 0 ? `<button class="ds-btn ds-btn--primary" disabled>Faltam ${money(lack)}</button>` : `<button class="ds-btn ds-btn--primary" data-a="buy-card" data-id="${id}">Comprar · ${money(price)}</button>`;
+    const action = mode === 'shop' ? (own >= max ? '<i class="ds-stamp ds-stamp--ok">Completa</i>' : `<button class="ds-btn ds-btn--primary" data-a="to-shop" data-id="${id}">${own ? 'Comprar mais na Loja' : 'Comprar na Loja'}</button>`) : own >= max ? '<i class="ds-stamp ds-stamp--ok">Completa</i>' : lack > 0 ? `<button class="ds-btn ds-btn--primary" disabled>Faltam ${money(lack)}</button>` : `<button class="ds-btn ds-btn--primary" data-a="buy-card" data-id="${id}">Comprar · ${money(price)}</button>`;
     return `<section class="ds-sheet ds-file ds-file--${Meta.rarityOf(id)}">
       <div class="ds-bar"><span>Ficha da carta</span><b>${RARITY_PT[Meta.rarityOf(id)]}</b></div>
       <div class="ds-body">
@@ -751,13 +757,15 @@ export class LobbyUI {
           <div><h3 class="ds-title">${esc(c.name)}</h3><p class="ds-file__kind">${kind.map((k) => `<span>${esc(k)}</span>`).join('')}</p></div></div>
         ${stats}
         <ul class="ds-file__rules">${(RULES_TEXT[id] ?? []).map(([n, t]) => `<li><b>${esc(n)}</b>${esc(t)}</li>`).join('') || '<li>Sem habilidade.</li>'}</ul>
-        <footer class="ds-file__foot"><p>${copies(own)}<span>Você tem <b>${own} de ${max}</b></span></p>${buy ? action : ''}</footer>
+        <footer class="ds-file__foot"><p>${copies(own)}<span>Você tem <b>${own} de ${max}</b></span></p>${mode ? action : ''}</footer>
       </div></section>`;
   }
   /** vitrine com ficha ao lado (Cartas, Decks, Visual, Troféus): o que fica na ficha sem nada apontado e como desenhar cada item */
   viewer() {
-    const t = this.panel === 'shop' ? this.tab.shop : this.panel;
+    const t = this.panel === 'shop' ? this.tab.shop : this.panel === 'deck' ? (this.ed ? null : this.tab.deck === 'collection' ? 'collection' : 'folders') : this.panel;
     return {
+      folders: { def: this.fdSel, key: 'fdView', file: (k) => this.fdFile(k) },
+      collection: { def: this.alSel, key: 'alView', file: (id) => this.scFile(id, 'shop') },
       cards: { def: this.scSel, key: 'scView', file: (id) => this.scFile(id) },
       decks: { def: null, key: 'dkView', file: (id) => (id ? this.scFile(id, false) : this.dkFile()) },
       look: { def: this.lkSel, key: 'lkView', file: (id) => this.lkFile(id) },
