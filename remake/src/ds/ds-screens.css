@@ -131,3 +131,59 @@
 .cp-ladder li { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; } .cp-ladder li span { display: flex; align-items: baseline; gap: 10px; font-weight: 700; } .cp-ladder li i { font: 400 20px/1 var(--f-title); font-style: normal; color: var(--ds-ink-2); min-width: 24px; }
 .cp-ladder li em { font-style: normal; font-size: var(--t-cap); text-transform: uppercase; letter-spacing: 0.08em; } .cp-ladder .is-on em { color: var(--ds-green); }
 .cp-ladder .is-cur { background: var(--ds-amber); margin: 0 calc(var(--ds-4) * -1); padding-left: var(--ds-4); padding-right: var(--ds-4); } .cp-ladder .is-gap { justify-content: center; color: var(--ds-ink-3); letter-spacing: 0.3em; border: none; padding: 2px 0; } .cp-ladder .is-boss span { color: var(--ds-red); }
+
+/* ══ lobby novo (docs/UI_LOBBY.md): piso de tamanho, carta reduzida, detalhe da carta, loja ══ */
+.lb-box--shop-packs, .lb-pack > .pk, .lb-detail > .cd { zoom: var(--lb-fix, 1); }
+#lobby .lb-box--shop-packs .lb-x { width: 46px; height: 46px; }
+/* carta reduzida (R4): a mesma face da mesa do duelo */
+.ds-mini { display: block; width: 100%; aspect-ratio: 1079 / 1257; border-radius: 4.1% / 3.5%; box-shadow: 0 0 0 1.5px var(--ds-ink), 3px 4px 0 rgba(0, 0, 0, 0.35); user-select: none; }
+/* detalhe da carta (R6) */
+.lb-detail { position: absolute; inset: 0; z-index: 30; display: grid; place-items: center; background: rgba(4, 7, 5, 0.95); backdrop-filter: blur(6px); pointer-events: auto; animation: fadein 0.15s; }
+.cd { display: grid; grid-template-columns: auto minmax(0, 470px); gap: 26px; align-items: center; max-width: 94vw; }
+.cd-art { height: min(600px, 80vh); border-radius: 12px; box-shadow: 0 0 0 2px var(--ds-ink), 10px 14px 0 rgba(0, 0, 0, 0.5); transform: rotate(-1.2deg); }
+.cd-sheet { max-height: min(600px, 80vh); display: flex; flex-direction: column; } .cd-sheet .ds-body { display: grid; gap: 14px; align-content: start; overflow-y: auto; min-height: 0; }
+.cd-sheet .ds-title { font-size: 40px; line-height: 0.95; margin: 0; } .cd-kind { margin: 6px 0 0; font: 500 16px/1.3 var(--f-ui); color: var(--ds-ink-2); }
+.cd-stats { margin: 0; display: grid; grid-template-columns: repeat(3, 1fr); border: var(--ds-line) solid var(--ds-ink); background: rgba(255, 252, 240, 0.6); } .cd-stats div { padding: 9px 12px 6px; } .cd-stats div + div { border-left: var(--ds-line) solid var(--ds-ink); }
+.cd-stats dt { font: 700 13px/1 var(--f-ui); letter-spacing: 0.1em; text-transform: uppercase; color: var(--ds-ink-2); } .cd-stats dd { margin: 6px 0 0; font: 400 34px/0.9 var(--f-title); white-space: nowrap; } .cd-stats dd small { font: 700 15px/1 var(--f-ui); }
+.cd-fx { margin: 0; padding: 10px 12px; border: var(--ds-line) solid var(--ds-ink); background: rgba(255, 252, 240, 0.6); font: 700 16px/1.35 var(--f-ui); }
+.cd-rules { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; } .cd-rules li { font: 500 16px/1.45 var(--f-ui); } .cd-rules b { display: block; margin-bottom: 3px; font: 400 23px/1 var(--f-title); text-transform: uppercase; letter-spacing: 0.03em; }
+.cd-foot { display: flex; align-items: center; gap: 12px; padding-top: 14px; border-top: var(--ds-line) dashed var(--ds-ink-3); } .cd-own { margin: 0 auto 0 0; display: flex; align-items: center; gap: 10px; font: 500 16px/1 var(--f-ui); } .cd-own b { font-weight: 700; }
+.cd-pips { display: inline-flex; gap: 4px; } .cd-pips i { width: 14px; height: 20px; border: 1.5px dashed var(--ds-ink-3); } .cd-pips i.on { background: var(--ds-ink); border: 1.5px solid var(--ds-ink); }
+.cd-foot .ds-btn { height: 48px; }
+/* loja: o envelope em palco e as três prateleiras */
+.lb-box--shop-packs { width: min(1080px, 95%); }
+.sh { display: grid; grid-template-columns: minmax(0, 1fr) 390px; gap: var(--ds-5); align-items: stretch; }
+.sh-stage { position: relative; display: grid; justify-items: center; align-content: center; gap: 30px; min-height: 430px; padding: 34px 20px 30px; background: var(--ds-tex-card); border: var(--ds-line) solid var(--ds-ink); box-shadow: var(--ds-frame-in), 6px 9px 0 rgba(40, 24, 6, 0.3); }
+.sh-env { position: relative; } .sh-env .ds-envelope { width: 340px; height: 230px; padding-bottom: 22px; font-size: 15px; box-shadow: 7px 9px 0 rgba(27, 20, 13, 0.3); }
+.sh-env .ds-envelope::before { height: 114px; } .sh-env .ds-envelope::after { top: 92px; width: 32px; height: 32px; margin-left: -16px; }
+.sh-env > i { position: absolute; left: -46px; top: 14px; bottom: 0; width: 340px; background: var(--ds-tex-kraft); border: var(--ds-line) solid var(--ds-ink); filter: brightness(0.74); transform: scale(0.88); transform-origin: left bottom; } .sh-env > i:nth-child(2) { left: -24px; filter: brightness(0.86); transform: scale(0.94); }
+.sh-buy { display: flex; gap: 12px; } .sh-buy .ds-btn { min-width: 220px; font-size: 18px; }
+#lobby .sh-q { position: absolute; right: 16px; top: 16px; height: 44px; border-radius: 50%; font: 400 26px/1 var(--f-title); } #lobby .sh-q.on { background: var(--ds-ink); color: var(--ds-paper); }
+.sh-odds { position: absolute; right: 16px; top: 72px; z-index: 2; width: 230px; display: grid; gap: 6px; padding: 16px 16px 14px; transform: rotate(1.5deg); }
+.sh-odds b { font: 400 22px/1 var(--f-title); text-transform: uppercase; } .sh-odds p { margin: 0; display: flex; justify-content: space-between; font: 500 16px/1.2 var(--f-ui); border-bottom: 1px dashed rgba(27, 20, 13, 0.4); padding-bottom: 4px; } .sh-odds em { font: 400 22px/0.9 var(--f-title); font-style: normal; } .sh-odds small { font: 500 14px/1.3 var(--f-ui); }
+.sh-shelves { display: grid; grid-auto-rows: 1fr; gap: var(--ds-3); }
+#lobby button.sh-shelf { all: unset; box-sizing: border-box; cursor: pointer; pointer-events: auto; position: relative; display: grid; grid-template-columns: 116px minmax(0, 1fr) auto; align-items: center; gap: 12px; padding: 10px 12px 10px 12px; min-height: 126px; background: var(--ds-tex-card); color: var(--ds-ink); border: var(--ds-line) solid var(--ds-ink); box-shadow: 4px 6px 0 rgba(40, 24, 6, 0.3); transition: transform 0.1s; }
+#lobby button.sh-shelf:hover, #lobby button.sh-shelf:focus-visible { transform: translate(-2px, -2px); box-shadow: 6px 8px 0 rgba(40, 24, 6, 0.4); background: var(--ds-tex-card), var(--ds-amber); background-blend-mode: multiply; }
+.sh-shelf .ds-dymo { justify-self: start; font-size: 20px; letter-spacing: 0.08em; padding: 6px 10px 3px; white-space: nowrap; } .sh-shelf > i { font: 400 34px/1 var(--f-title); font-style: normal; color: var(--ds-ink-2); }
+.sh-pic { display: grid; place-items: center; height: 104px; }
+.sh-fan { position: relative; width: 112px; height: 100px; } .sh-fan img { position: absolute; left: 22px; top: 6px; width: 68px; transform: rotate(-12deg) translateX(-22px); } .sh-fan img:nth-child(2) { transform: translateY(-4px); } .sh-fan img:nth-child(3) { transform: rotate(12deg) translateX(22px); }
+.sh-box { position: relative; width: 112px; height: 100px; } .sh-box img { position: absolute; left: 30px; top: 0; width: 52px; transform: rotate(-9deg) translateX(-18px); } .sh-box img:nth-child(2) { transform: none; } .sh-box img:nth-child(3) { transform: rotate(9deg) translateX(18px); }
+.sh-box u { position: absolute; left: 6px; right: 6px; bottom: 0; height: 56px; display: grid; place-items: center; background: var(--ds-tex-kraft); border: var(--ds-line) solid var(--ds-ink); text-decoration: none; font: 400 20px/1 var(--f-title); letter-spacing: 0.16em; text-transform: uppercase; }
+.sh-look { position: relative; width: 112px; height: 100px; } .sh-look img { position: absolute; border: var(--ds-line) solid var(--ds-ink); } .sh-look img:first-child { left: 0; top: 14px; width: 66px; height: 66px; background: var(--ds-card); padding: 6px; transform: rotate(-5deg); } .sh-look img:last-child { right: 0; top: 4px; width: 62px; height: 88px; object-fit: cover; transform: rotate(6deg); }
+/* voltar das prateleiras antigas */
+.lb-tabs__here { align-self: center; margin-left: 12px; font: 700 var(--t-sm) var(--f-ui); letter-spacing: 0.08em; text-transform: uppercase; color: var(--cream); }
+/* abertura do envelope */
+.pk { display: grid; justify-items: center; gap: 44px; }
+.pk-env { position: absolute; left: 50%; top: 50%; margin: -115px 0 0 -170px; pointer-events: none; animation: pk-rip 0.7s cubic-bezier(0.5, 0, 0.8, 0.3) both; } .pk-env .ds-envelope { width: 340px; height: 230px; } .pk-env .ds-envelope::before { height: 114px; } .pk-env .ds-envelope::after { top: 92px; }
+@keyframes pk-rip { 0% { transform: scale(0.9); opacity: 1; } 35% { transform: scale(1.04) rotate(-3deg); } 55% { transform: scale(1.04) rotate(3deg); opacity: 1; } 100% { transform: translateY(70vh) rotate(18deg); opacity: 0; } }
+.pk-row { display: flex; gap: 34px; padding-bottom: 64px; }
+#lobby button.pk-card { all: unset; box-sizing: border-box; pointer-events: auto; cursor: pointer; position: relative; width: clamp(200px, 17vw, 250px); aspect-ratio: 1079 / 1257; perspective: 900px; animation: pk-drop 0.45s 0.5s both; } #lobby button.pk-card:nth-child(2) { animation-delay: 0.6s; } #lobby button.pk-card:nth-child(3) { animation-delay: 0.7s; }
+@keyframes pk-drop { from { transform: translateY(-50px); opacity: 0; } }
+.pk-in { position: absolute; inset: 0; transform-style: preserve-3d; transition: transform 0.55s cubic-bezier(0.2, 0.8, 0.2, 1); } .pk-card.on .pk-in { transform: rotateY(180deg); } .pk-card:not(.on):hover .pk-in { transform: translateY(-8px); }
+.pk-back, .pk-front { position: absolute; inset: 0; width: 100%; height: 100%; backface-visibility: hidden; -webkit-backface-visibility: hidden; } .pk-back { object-fit: cover; border-radius: 4.1% / 3.5%; box-shadow: 0 0 0 2px var(--ds-ink), 8px 12px 0 rgba(0, 0, 0, 0.5); } .pk-front { transform: rotateY(180deg); }
+.pk-card.on.pk-card--rare .pk-front { filter: drop-shadow(0 0 22px rgba(111, 183, 255, 0.85)); } .pk-card.on.pk-card--legendary .pk-front { filter: drop-shadow(0 0 30px rgba(242, 185, 76, 1)); animation: pk-shine 1.4s infinite; }
+@keyframes pk-shine { 50% { filter: drop-shadow(0 0 46px rgba(255, 214, 120, 1)); } }
+.pk-tag { position: absolute; right: -18px; top: -20px; z-index: 2; } .pk-tag .ds-stamp { background: var(--ds-card); opacity: 1; font-size: 17px; animation: pk-stamp 0.25s 0.45s both; } @keyframes pk-stamp { from { transform: scale(2.2) rotate(-7deg); opacity: 0; } }
+.pk-name { position: absolute; left: -10px; right: -10px; top: calc(100% + 16px); text-align: center; font: 400 26px/1 var(--f-title); font-style: normal; text-transform: uppercase; letter-spacing: 0.03em; color: var(--ds-paper); }
+.pk .ds-btn--lg { min-width: 260px; font-size: 18px; }
+.lb-box--shop-packs .lb-pat { font-size: 13px; letter-spacing: 0.14em; }

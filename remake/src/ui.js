@@ -94,6 +94,8 @@ export class UI {
   setScale() {
     const base = Math.max(0.8, Math.min(1.25, Math.min(window.innerHeight / 960, window.innerWidth / 1600)));
     this.scale = base * (Number(settings.get().uiSize) || 1); this.root.style.zoom = this.scale;
+    // piso de tamanho do lobby (docs/UI_LOBBY.md, R3): as telas novas não encolhem abaixo de 100%; se não couber, rolam
+    document.documentElement.style.setProperty('--lb-fix', String(Math.max(1, 1 / this.scale)));
   }
   renderBar() { $('#slot-bar').innerHTML = C.topbar({ logOn: !$('#slot-log')?.classList.contains('hidden'), muted: settings.get().muted }); }
 

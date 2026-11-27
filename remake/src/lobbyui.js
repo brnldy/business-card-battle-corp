@@ -8,6 +8,8 @@ import { sfx } from './audio.js';
 import { save } from './save.js';
 import { logoUrl, backUrl } from './cosmetics.js';
 import * as C from './hud/components.js';
+import { cardFaceCanvas } from './textures.js';
+import { RULES_TEXT, DEPT } from './cardtext.js';
 import * as Meta from '../../src/meta/meta.ts';
 import { CAMPAIGN, tierOf } from '../../src/meta/campaign.ts';
 
@@ -15,6 +17,10 @@ const { META, DECK_RULES, RARITY_PT } = Meta;
 const $ = (sel, root = document) => root.querySelector(sel);
 const esc = C.esc, money = C.money;
 const byId = new Map(CARDS.map((c) => [c.id, c]));
+// carta reduzida (a mesma da mesa do duelo: nome, arte, ATQ/DEF e custo, sem o texto de regras), desenhada uma vez por carta
+const miniCache = new Map();
+const miniUrl = (id) => { if (!miniCache.has(id)) miniCache.set(id, cardFaceCanvas(id).toDataURL('image/webp', 0.92)); return miniCache.get(id); };
+const mini = (id, cls = '') => `<img class="ds-mini ${cls}" src="${miniUrl(id)}" alt="${esc(byId.get(id).name)}" draggable="false">`;
 const isFx = (c) => c.kind === 'effect_instant' || c.kind === 'effect_trap';
 const KIND = { creature: 'Criatura', entity: 'Entidade', effect_instant: 'Efeito', effect_trap: 'Armadilha' };
 const AREAS = [
@@ -47,6 +53,7 @@ export class LobbyUI {
       <div class="lb-win hidden"></div>
       <div class="lb-pack hidden"></div>
       <div class="lb-peek hidden"></div>
+      <div class="lb-detail hidden"></div>
       <div class="lb-toasts" role="status" aria-live="polite"></div>`;
     ui.root.appendChild(root);
     this.root = root; this.win = $('.lb-win', root); this.labels = $('.lb-labels', root); this.peekEl = $('.lb-peek', root);
@@ -85,7 +92,8 @@ export class LobbyUI {
     canvas.addEventListener('click', (e) => { if (!this.on || this.panel) return; const id = lobby.pick(e.clientX / window.innerWidth, e.clientY / window.innerHeight); if (id) this.open(id); });
     window.addEventListener('keydown', (e) => {
       if (!this.on || (e.target.tagName === 'INPUT' && e.key !== 'Escape') || !$('#modal').classList.contains('hidden')) return;
-      if (e.key === 'Escape') { if (this.pack) { this.packSkip(); e.stopPropagation(); return; } if (this.panel === 'deck' && this.ed) { this.leaveEditor(); e.stopPropagation(); return; } if (this.panel) { this.close(); e.stopPropagation(); } return; }
+      if (e.key === 'Escape') { if (this.detailId) { this.closeDetail(); e.stopPropagation(); return; } if (this.pack) { this.packSkip(); e.stopPropagation(); return; } if (this.panel === 'deck' && this.ed) { this.leaveEditor(); e.stopPropagation(); return; } if (this.panel) { this.close(); e.stopPropagation(); } return; }
+      if (this.detailId) return;
       if (this.pack) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (!e.repeat) this.packNext(); } return; }
       if (!this.panel && (e.key === 's' || e.key === 'S')) return this.openSlots();
       const n = Number(e.key); if (!this.panel && n >= 1 && n <= AREAS.length) this.open(AREAS[n - 1][0]);
@@ -169,7 +177,7 @@ export class LobbyUI {
     const act = document.activeElement, focus = act?.id, sel = focus && act.selectionStart != null ? [act.selectionStart, act.selectionEnd] : null;
     // botão focado (teclado): guarda a "assinatura" para devolver o foco ao botão equivalente depois de redesenhar
     const sig = !focus && act && this.win.contains(act) && act.dataset?.a ? { a: act.dataset.a, card: act.dataset.card, id: act.dataset.id, list: !!act.closest('.lb-decklist') } : null;
-    this.win.innerHTML = `<section class="lb-box lb-box--${id}">
+    this.win.innerHTML = `<section class="lb-box lb-box--${id} ${id === 'shop' ? `lb-box--shop-${this.tab.shop}` : ''}">
       <header><div><p class="memo"><span>${esc(memo.split(' · ')[0])}</span></p><h2>${esc(title)}</h2></div><div class="lb-pat"><span>Patrimônio</span><b>${money(s.patrimonio)}</b></div><button class="lb-x" data-a="close" title="Fechar (Esc)">✕</button></header>
       ${body}</section>`;
     const sc = $('.lb-scroll', this.win); if (sc) sc.scrollTop = scroll; const dl = $('.lb-decklist', this.win); if (dl) dl.scrollTop = scroll2;
@@ -193,7 +201,10 @@ export class LobbyUI {
     // compras e "usar": o 2º clique de um clique duplo (ou um clique logo em seguida) não compra de novo
     if (/^(buy-|equip|put-active)/.test(a)) { const now = performance.now(); if (e.detail > 1 || now - (this._buyAt ?? 0) < 400) return; this._buyAt = now; }
     switch (a) {
-      case 'open': return this.open(id, { tab: b.dataset.tab });
+      case 'open': this.closeDetail(); return this.open(id, { tab: b.dataset.tab });
+      case 'detail': return this.detail(b.dataset.card);
+      case 'detail-close': return this.closeDetail();
+      case 'sh-odds': this.shOdds = !this.shOdds; sfx('nav'); return this.render();
       case 'close': return this.close();
       case 'exit': sfx('navBack'); return this.actions.exit();
       case 'slots': return this.openSlots();
@@ -353,8 +364,31 @@ export class LobbyUI {
     const s = this.s, act = Meta.activeDeck(s), can = !this.whyNot(s, act.cards, id);
     this.toast(`<b>${nm}</b><span>agora ${Math.min(Meta.owned(s, id), DECK_RULES.maxCopies)}/${DECK_RULES.maxCopies} na coleção · fora do deck do duelo · ${left}</span>${can ? `<button data-a="put-active" data-id="${id}">Pôr em "${esc(act.name)}"</button>` : ''}`, 'good');
   }
+  /** vista de detalhe (uma só para Loja, Arquivo e pacote): a carta completa à esquerda e a ficha legível à direita */
+  detail(id, action = '') {
+    if (!byId.has(id)) return;
+    const c = byId.get(id), s = this.s, fx = isFx(c), own = Math.min(Meta.owned(s, id), DECK_RULES.maxCopies), el = $('.lb-detail', this.root);
+    const kind = [KIND[c.kind], c.element, c.department ? `depto. ${DEPT[c.department] ?? c.department}` : ''].filter(Boolean).join(' · ');
+    const stats = fx ? `<p class="cd-fx">${c.kind === 'effect_trap' ? 'Fica virada na mesa até disparar.' : c.durationTurns ? `Fica na mesa por ${c.durationTurns} turnos seus.` : 'Vale na hora e vai para o Morto.'}</p>`
+      : `<dl class="cd-stats"><div><dt>Ataque</dt><dd>${money(c.atk)}</dd></div><div><dt>Defesa</dt><dd>${money(c.def)}</dd></div><div><dt>Custo</dt><dd>${c.cost ? `${c.cost} <small>sacrifício${c.cost > 1 ? 's' : ''}</small>` : '<small>grátis</small>'}</dd></div></dl>`;
+    this.detailId = id; this.peek(null);
+    el.innerHTML = `<div class="cd" role="dialog" aria-label="${esc(c.name)}">
+      <img class="cd-art" src="${asset(c.art)}" alt="${esc(c.name)}">
+      <section class="ds-sheet cd-sheet">
+        <div class="ds-bar"><span>Ficha da carta</span><b>${RARITY_PT[Meta.rarityOf(id)]}</b></div>
+        <div class="ds-body">
+          <div><h3 class="ds-title">${esc(c.name)}</h3><p class="cd-kind">${esc(kind)}</p></div>
+          ${stats}
+          <ul class="cd-rules">${(RULES_TEXT[id] ?? []).map(([n, t]) => `<li><b>${esc(n)}</b>${esc(t)}</li>`).join('') || '<li>Sem habilidade.</li>'}</ul>
+          <footer class="cd-foot"><p class="cd-own"><span class="cd-pips">${Array.from({ length: DECK_RULES.maxCopies }, (_, k) => `<i class="${k < own ? 'on' : ''}"></i>`).join('')}</span>Você tem <b>${own} de ${DECK_RULES.maxCopies}</b></p>${action}<button data-a="detail-close" class="ds-btn">Fechar <span class="ds-key">Esc</span></button></footer>
+        </div>
+      </section></div>`;
+    el.classList.remove('hidden'); sfx('nav'); $('[data-a="detail-close"]', el).focus({ preventScroll: true });
+  }
+  closeDetail() { if (!this.detailId) return; this.detailId = null; const el = $('.lb-detail', this.root); el.classList.add('hidden'); el.innerHTML = ''; sfx('navBack'); }
   /** abre a ficha flutuante da carta ao lado do elemento (ou fecha, com null), sem tapar o painel do deck nem sair da janela */
   peek(el) {
+    if (el?.closest?.('.lb-pack, .lb-detail')) el = null;   // no pacote e no detalhe, a ficha é a vista de detalhe (clique)
     const p = this.peekEl, id = el?.dataset?.card;
     if (!id || !byId.has(id)) { p.classList.add('hidden'); this.peekFor = null; return; }
     if (this.peekFor !== id) { p.innerHTML = C.cardSheet({ cardId: id }); this.peekFor = id; }
@@ -622,27 +656,42 @@ export class LobbyUI {
   priceAttrs(s, p, what = '') { return s.patrimonio >= p ? `title="${what ? `${esc(what)} por ` : 'Compra por '}${money(p)}"` : `disabled title="Faltam ${money(p - s.patrimonio)} de PATRIMÔNIO"`; }
   /** linha visível de "faltam $X" embaixo das compras grandes */
   shortLine(s, p) { return s.patrimonio < p ? `<p class="lb-short">Faltam ${money(p - s.patrimonio)} de PATRIMÔNIO</p>` : ''; }
+  /** entrada da Loja: o envelope em palco (uma ação: abrir) e as três prateleiras ao lado */
+  vShopHome(s) {
+    const b = META.booster, o = b.odds, tot = o.common + o.rare + o.legendary, pct = (v) => Math.round((v / tot) * 100), short = b.price - s.patrimonio;
+    const RANK = { legendary: 0, rare: 1, common: 2 }, top = [...CARDS].sort((x, y) => RANK[Meta.rarityOf(x.id)] - RANK[Meta.rarityOf(y.id)]).slice(0, 3).map((c) => c.id);
+    const d0 = META.readyDecks[0], dk = d0 ? Object.keys(d0.cards).sort((x, y) => RANK[Meta.rarityOf(x)] - RANK[Meta.rarityOf(y)]).slice(0, 3) : top;
+    const lk = META.cosmetics.find((c) => c.kind === 'logo' && c.id !== s.cosmetics.logo) ?? META.cosmetics.find((c) => c.kind === 'logo');
+    const shelf = (id, name, pic) => `<button class="sh-shelf sh-shelf--${id}" data-a="tab" data-id="${id}"><span class="sh-pic">${pic}</span><b class="ds-dymo">${name}</b><i>›</i></button>`;
+    return `<div class="sh">
+      <section class="sh-stage">
+        <button class="ds-btn ds-btn--sq sh-q ${this.shOdds ? 'on' : ''}" data-a="sh-odds" aria-expanded="${!!this.shOdds}" title="Chances do envelope">?</button>
+        ${this.shOdds ? `<div class="ds-postit sh-odds"><b>Chances por carta</b><p><span>Comum</span><em>${pct(o.common)}%</em></p><p><span>Rara</span><em>${pct(o.rare)}%</em></p><p><span>Lendária</span><em>${pct(o.legendary)}%</em></p><small>Enquanto faltar carta, não vem repetida sobrando.</small></div>` : ''}
+        <div class="sh-env"><i></i><i></i><div class="ds-envelope"><span>${b.size} cartas sorteadas</span></div></div>
+        <div class="sh-buy">${short > 0
+          ? `<button class="ds-btn ds-btn--primary ds-btn--lg" disabled>Faltam ${money(short)}</button><button class="ds-btn ds-btn--lg" data-a="open" data-id="duel">Ganhar mais</button>`
+          : `<button class="ds-btn ds-btn--primary ds-btn--lg" data-a="buy-pack">Abrir · ${money(b.price)}</button>`}</div>
+      </section>
+      <nav class="sh-shelves">
+        ${shelf('cards', 'Cartas avulsas', `<span class="sh-fan">${top.map((id) => mini(id)).join('')}</span>`)}
+        ${shelf('decks', 'Decks prontos', `<span class="sh-box">${dk.map((id) => mini(id)).join('')}<u>Deck</u></span>`)}
+        ${shelf('look', 'Visual', `<span class="sh-look"><img src="${logoUrl(lk.id)}" alt=""><img src="${backUrl(s.cosmetics.back, s.cosmetics.logo, asset('cards/back.png'))}" alt=""></span>`)}
+      </nav>
+    </div>`;
+  }
   vShop(s) {
-    const tabs = this.tabs('shop', [['packs', 'Pacotes'], ['cards', 'Cartas avulsas'], ['decks', 'Decks prontos'], ['look', 'Visual']]), t = this.tab.shop;
+    const t = (this.tab.shop ??= 'packs');
+    if (t === 'packs') return this.vShopHome(s);
+    const tabs = `<div class="lb-tabs"><button data-a="tab" data-id="packs">← Loja</button><span class="lb-tabs__here">${{ cards: 'Cartas avulsas', decks: 'Decks prontos', look: 'Visual' }[t]}</span></div>`;
     const back = backUrl(s.cosmetics.back, s.cosmetics.logo, asset('cards/back.png')), max = DECK_RULES.maxCopies;
-    // o que ainda dá para comprar nesta aba, para avisar quando o dinheiro não alcança nada
     const cheapest = {
-      packs: META.booster.price,
       cards: Math.min(...CARDS.filter((c) => Meta.owned(s, c.id) < max).map((c) => Meta.priceOf(c.id))),
       decks: Math.min(...META.readyDecks.filter((d) => Meta.readyDeckOwnedIndex(s, d.id) < 0 || Object.keys(Meta.readyDeckMissing(s, d.id)).length).map((d) => Meta.readyDeckPrice(s, d.id))),
       look: Math.min(...META.cosmetics.filter((c) => !s.cosmetics.owned.includes(c.id)).map((c) => c.price)),
     }[t];
     const broke = Number.isFinite(cheapest) && s.patrimonio < cheapest ? `<div class="lb-broke"><span><b>Sem verba para esta prateleira.</b> Vença uma reunião (o CAIXA que sobra vira PATRIMÔNIO), resgate metas no mural ou triture cópias sobrando.</span><button data-a="open" data-id="duel">Sala de reunião</button><button data-a="open" data-id="missions">Mural</button></div>` : '';
     let body = '';
-    if (t === 'packs') {
-      const b = META.booster, o = b.odds, tot = o.common + o.rare + o.legendary, miss = CARDS.reduce((n, c) => n + Math.max(0, max - Meta.owned(s, c.id)), 0);
-      body = `<div class="lb-packshop"><div class="lb-packart"><img src="${back}" alt=""><img src="${back}" alt=""><img src="${back}" alt=""></div>
-        <div><h3>Envelope pardo lacrado</h3><p class="lb-lead">${b.size} cartas sorteadas. Enquanto faltar carta no seu arquivo, o envelope <b>nunca entrega cópia sobrando</b>.</p>
-        <ul class="lb-odds"><li>${rarityTag('BCB-001')} Comum <b>${Math.round((o.common / tot) * 100)}%</b></li><li><i class="lb-rar lb-rar--rare"></i> Rara <b>${Math.round((o.rare / tot) * 100)}%</b></li><li><i class="lb-rar lb-rar--legendary"></i> Lendária <b>${Math.round((o.legendary / tot) * 100)}%</b></li></ul>
-        <div class="lb-actions"><button data-a="buy-pack" class="primary big" ${this.priceAttrs(s, b.price, 'Compra e abre o envelope')}>Comprar e abrir · ${money(b.price)}</button></div>
-        ${this.shortLine(s, b.price)}
-        ${miss ? `<button data-a="tab" data-id="cards" class="lb-linkish">Faltam <b>${miss}</b> cópias para completar o arquivo · ver cartas avulsas →</button>` : '<p class="fine">Arquivo completo: daqui em diante os envelopes só trazem cópias para a trituradora (25% do preço de volta).</p>'}</div></div>`;
-    } else if (t === 'cards') {
+    if (t === 'cards') {
       // ordem fixa (a numeração), as 19 cabem em 2 fileiras; a que você não tem fica marcada como "nova", sem trocar de lugar
       body = `<div class="lb-scroll lb-grid lb-grid--shop">${CARDS.map((c) => {
         const own = Meta.owned(s, c.id), full = own >= max, extra = Meta.extrasOf(s, c.id), state = own ? (full ? 'full' : 'part') : 'new';
@@ -682,32 +731,29 @@ export class LobbyUI {
     this.pack = { cards, open: new Set(), t0: performance.now(), lock: 0 };
     const s = this.s, back = backUrl(s.cosmetics.back, s.cosmetics.logo, asset('cards/back.png'));
     const el = $('.lb-pack', this.root); el.classList.remove('hidden'); this.root.classList.add('is-pack');
-    el.innerHTML = `<p class="memo">Envelope pardo · conteúdo não conferido</p><div class="lb-packrow">${cards.map((c, i) => `<div class="lb-flip lb-flip--${c.rarity}" data-i="${i}" data-a="pack-flip" data-id="${i}"><div class="lb-flip__in"><img class="lb-flip__back" src="${back}" alt="Carta fechada"><div class="lb-flip__front"><img src="${asset(byId.get(c.cardId).art)}" alt=""><span aria-live="polite"></span></div></div></div>`).join('')}</div>
-      <p class="lb-packsum" aria-live="polite"></p>
-      <div class="lb-actions"><button data-a="pack-next" class="primary big" id="lb-pack-btn">Virar carta <kbd>Enter</kbd></button><span class="fine">Esc vira todas</span></div>`;
+    el.innerHTML = `<div class="pk">
+      <div class="pk-env"><div class="ds-envelope"></div></div>
+      <div class="pk-row">${cards.map((c, i) => `<button class="pk-card pk-card--${c.rarity}" data-i="${i}" data-a="pack-flip" data-id="${i}" aria-label="Carta fechada"><span class="pk-in"><img class="pk-back" src="${back}" alt=""><span class="pk-front">${mini(c.cardId)}</span></span><span class="pk-tag"></span><em class="pk-name" aria-live="polite"></em></button>`).join('')}</div>
+      <button data-a="pack-next" class="ds-btn ds-btn--primary ds-btn--lg" id="lb-pack-btn">Virar carta <span class="ds-key">Enter</span></button></div>`;
     $('#lb-pack-btn', el).focus({ preventScroll: true });
     sfx('start');
   }
-  /** vira a carta i (se ainda estiver fechada) */
+  /** vira a carta i (se ainda estiver fechada); virada, o clique nela abre a ficha */
   packFlip(i) {
     const p = this.pack; if (!p || p.open.has(i) || !p.cards[i]) return;
     p.open.add(i); p.lock = performance.now() + 300;
-    const c = p.cards[i], d = byId.get(c.cardId), el = $('.lb-pack', this.root), f = $(`.lb-flip[data-i="${i}"]`, el);
-    f.classList.add('on'); f.dataset.card = c.cardId; f.removeAttribute('data-a');
-    $('.lb-flip__front img', f).alt = d.name;
-    const tag = c.extra ? `<i>sobra · + ${money(Meta.recycleValue(c.cardId))} na trituradora</i>` : c.isNew ? '<b>NOVA</b>' : c.count >= DECK_RULES.maxCopies ? '<b class="done">3/3 completa</b>' : '';
-    $('.lb-flip__front span', f).innerHTML = `${tag}<em>${esc(d.name)}</em>${RARITY_PT[c.rarity]}${c.extra || c.isNew || c.count >= DECK_RULES.maxCopies ? '' : ` · ${c.count}/${DECK_RULES.maxCopies}`}`;
+    const c = p.cards[i], d = byId.get(c.cardId), el = $('.lb-pack', this.root), f = $(`.pk-card[data-i="${i}"]`, el);
+    f.classList.add('on'); f.dataset.card = c.cardId; f.dataset.a = 'detail'; f.setAttribute('aria-label', d.name);
+    $('.pk-tag', f).innerHTML = c.isNew ? '<i class="ds-stamp ds-stamp--ok">Nova</i>' : c.extra ? '<i class="ds-stamp ds-stamp--no">Sobra</i>' : '';
+    $('.pk-name', f).textContent = d.name;
     sfx(c.rarity === 'legendary' ? 'effect' : c.rarity === 'rare' ? 'summon' : 'draw');
     if (p.open.size === p.cards.length) this.packDone();
   }
-  /** todas viradas: resumo e o botão vira "Guardar no arquivo" */
+  /** todas viradas: o botão vira "Guardar" */
   packDone() {
-    const p = this.pack, el = $('.lb-pack', this.root), n = p.cards.filter((c) => c.isNew).length, done = p.cards.filter((c) => !c.extra && c.count >= DECK_RULES.maxCopies).length, extra = p.cards.filter((c) => c.extra).length;
-    const parts = [n && `${n} nova${n > 1 ? 's' : ''}`, done && `${done} ${done > 1 ? 'completaram' : 'completou'} 3/3`, extra && `${extra} sobra${extra > 1 ? 's' : ''} para a trituradora`].filter(Boolean);
-    p.summary = parts.join(' · ') || 'cópias para os seus decks';
-    $('.lb-packsum', el).textContent = p.summary;
-    $('#lb-pack-btn', el).innerHTML = 'Guardar no arquivo <kbd>Enter</kbd>';
-    $('.lb-pack .fine', this.root).textContent = 'Passe o mouse numa carta para ler a ficha';
+    const p = this.pack, el = $('.lb-pack', this.root), n = p.cards.filter((c) => c.isNew).length;
+    p.summary = n ? `${n} nova${n > 1 ? 's' : ''}` : '';
+    $('#lb-pack-btn', el).innerHTML = 'Guardar <span class="ds-key">Enter</span>';
   }
   /** botão/Enter: vira a próxima fechada; com todas viradas, guarda e fecha */
   packNext() {
@@ -718,9 +764,9 @@ export class LobbyUI {
   }
   packClose() {
     const p = this.pack; if (!p) return;
-    const el = $('.lb-pack', this.root); this.pack = null; this.peek(null);
+    const el = $('.lb-pack', this.root); this.pack = null; this.peek(null); this.closeDetail();
     el.classList.add('hidden'); el.innerHTML = ''; this.root.classList.remove('is-pack'); sfx('navBack');
-    this.toast(`<b>${p.cards.length} cartas no arquivo</b><span>${esc(p.summary ?? '')}</span><button data-a="open" data-id="deck" data-tab="collection">Ver na coleção</button>`, 'gold');
+    this.toast(`<b>${p.cards.length} cartas no arquivo</b>${p.summary ? `<span>${esc(p.summary)}</span>` : ''}`, 'gold');
     $('[data-a="buy-pack"]', this.win)?.focus({ preventScroll: true });
   }
   /** Esc: vira todas; se já estão viradas, guarda */
