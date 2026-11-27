@@ -84,46 +84,68 @@
 .lb-card img { width: 100%; display: block; box-shadow: 0 5px 14px rgba(0, 0, 0, 0.5); }
 .lb-card figcaption { display: flex; align-items: center; gap: 2px; font: 700 10px var(--sans); letter-spacing: 0.06em; text-transform: uppercase; color: var(--mute); margin-top: 6px; }
 .lb-card figcaption b { margin-left: auto; color: var(--green); } .lb-card figcaption b.no { color: var(--mute); }
-.lb-card.is-missing img { filter: grayscale(1) brightness(0.32) contrast(1.2); } .lb-card.is-missing { cursor: help; }
-.lb-card.is-used img { opacity: 0.45; }
+.lb-card.is-missing img { filter: grayscale(1) brightness(0.32) contrast(1.2); }
+/* fora do deck e sem como entrar (deck cheio): só um pouco mais apagada, para não parecer carta que falta */
+.lb-card.is-used img { opacity: 0.62; filter: grayscale(0.35); }
 .lb-card.is-in img { outline: 2px solid var(--green); outline-offset: 2px; }
 .lb-grid--shop .lb-card, .lb-grid--big .lb-card { cursor: default; } .lb-grid--shop .lb-card:hover, .lb-grid--big .lb-card:hover { transform: none; }
-#lobby .lb-grid--shop .lb-card button, #lobby .lb-card__buy { width: 100%; margin-top: 6px; padding: 7px 4px; font-size: 11px; }
-#lobby .lb-card__buy:not(:disabled) { border-color: var(--cream); color: var(--cream); }
+.lb-grid--big .lb-card:focus-visible { outline: 2px solid var(--cream); outline-offset: 3px; }
+#lobby .lb-grid--shop .lb-card button, #lobby .lb-card__buy { width: 100%; margin-top: 6px; padding: 7px 2px; font-size: 11px; letter-spacing: 0.03em; white-space: nowrap; }
+#lobby .lb-card__buy:not(:disabled) { border-color: var(--cream); color: var(--cream); background: rgba(7, 11, 9, 0.85); }
 #lobby .lb-card__buy:hover:not(:disabled) { background: var(--cream); color: var(--ink); }
+/* sem PATRIMÔNIO: preço em cima, quanto falta embaixo (o motivo fica escrito, não só no title) */
+#lobby .lb-card__buy.is-short { line-height: 1.25; padding: 5px 2px; }
+.lb-card__buy small { display: block; font-size: 9.5px; letter-spacing: 0.03em; color: #ffb0a8; text-transform: none; }
+/* no editor, o botão de compra fica por cima da arte (a linha da grade não muda de altura) */
+#lobby .lb-deck .lb-card__buy { position: absolute; left: 6px; right: 6px; bottom: 64px; width: auto; margin: 0; z-index: 2; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6); }
+#lobby .lb-deck .lb-card__buy.is-short { background: rgba(7, 11, 9, 0.9); opacity: 1; color: var(--paper); }
 /* bolinhas de cópia: cheia = no deck, contorno = tenho e está livre, tracejada = não tenho */
 .lb-pips { display: inline-flex; gap: 3px; margin-left: 2px; }
 .lb-pips i { width: 8px; height: 8px; border-radius: 50%; border: 1px dashed rgba(147, 160, 141, 0.45); }
 .lb-pips i.own { border: 1px solid var(--paper); } .lb-pips i.on { border: 1px solid var(--green); background: var(--green); box-shadow: 0 0 5px rgba(134, 217, 143, 0.6); }
-/* + e − por cima da carta */
+.lb-pips i.over { border: 1px solid #ff8a80; background: #ff8a80; }
+/* + e − por cima da carta (aparecem no hover e no foco do teclado) */
 .lb-card__ctl { position: absolute; left: 0; right: 0; top: 0; aspect-ratio: 788 / 1100; display: flex; align-items: flex-end; justify-content: center; gap: 6px; padding-bottom: 8px; opacity: 0; transition: opacity 0.12s; background: linear-gradient(transparent 55%, rgba(0, 0, 0, 0.75)); pointer-events: none; }
-.lb-card:hover .lb-card__ctl { opacity: 1; }
+.lb-card:hover .lb-card__ctl, .lb-card:focus-within .lb-card__ctl { opacity: 1; }
 #lobby .lb-card__ctl button { pointer-events: auto; width: 34px; height: 30px; padding: 0; font: 700 18px/1 var(--sans); background: rgba(7, 11, 9, 0.92); border-color: var(--cream); color: var(--cream); }
-#lobby .lb-card__ctl button:hover:not(:disabled) { background: var(--cream); color: var(--ink); }
-#lobby .lb-card__ctl button:disabled { opacity: 0.25; }
+#lobby .lb-card__ctl button:hover:not(.is-off) { background: var(--cream); color: var(--ink); }
+/* "desligado" só no visual: o clique ainda chega e o jogo explica por que não dá */
+#lobby :is(.lb-card__ctl, .lb-drow__ctl) button.is-off { opacity: 0.3; cursor: not-allowed; }
+#lobby button:focus-visible, #lobby select:focus-visible { outline: 2px solid var(--cream); outline-offset: 2px; }
 
 /* ferramentas: busca, tipo, só as minhas, ordem */
 .lb-tools { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.lb-search { flex: 1 1 200px; min-width: 160px; font: 700 12px var(--sans); letter-spacing: 0.04em; color: var(--paper); background: rgba(0, 0, 0, 0.35); border: 1px solid var(--line); border-radius: 2px; padding: 8px 10px; outline: none; pointer-events: auto; user-select: text; -webkit-user-select: text; }
+.lb-search { flex: 1 1 150px; min-width: 120px; font: 700 12px var(--sans); letter-spacing: 0.04em; color: var(--paper); background: rgba(0, 0, 0, 0.35); border: 1px solid var(--line); border-radius: 2px; padding: 8px 10px; outline: none; pointer-events: auto; user-select: text; -webkit-user-select: text; }
 .lb-search::placeholder { color: var(--mute); opacity: 0.8; } .lb-search:focus { border-color: var(--cream); }
 .lb-sort { display: flex; align-items: center; gap: 6px; font: 700 10px var(--sans); letter-spacing: 0.1em; text-transform: uppercase; color: var(--mute); }
 .lb-sort select { font: 700 11px var(--sans); letter-spacing: 0.05em; text-transform: uppercase; color: var(--paper); background: #0b100d; border: 1px solid var(--line); border-radius: 2px; padding: 6px 8px; pointer-events: auto; cursor: pointer; }
+/* "Só as que tenho" é liga/desliga, não mais um tipo: caixinha de marcar, sem fundo cheio */
+#lobby .lb-toggle { background: none; border-color: var(--line); color: var(--mute); }
+#lobby .lb-toggle::before { content: ""; display: inline-block; width: 9px; height: 9px; border: 1px solid currentColor; margin-right: 7px; vertical-align: -1px; }
+#lobby .lb-toggle.on { background: none; color: var(--cream); border-color: var(--cream); } #lobby .lb-toggle.on::before { background: var(--cream); box-shadow: inset 0 0 0 2px var(--bg); }
+#lobby .lb-toggle:hover { background: rgba(242, 185, 76, 0.1); color: var(--cream); }
+.lb-shown { display: flex; align-items: center; gap: 6px; font: 700 10px var(--sans); letter-spacing: 0.08em; text-transform: uppercase; color: var(--cream); white-space: nowrap; }
+#lobby .lb-shown button { padding: 4px 6px; font-size: 10px; color: var(--paper); text-decoration: underline; }
 
 /* gaveta: todos os decks lado a lado, como pastas */
-.lb-folders { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 26px 18px; align-content: start; padding-top: 14px; }
+.lb-folders { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 26px 18px; align-content: start; padding-top: 14px; }
 .lb-folder { position: relative; display: flex; flex-direction: column; background: var(--folder); border: 1px solid rgba(0, 0, 0, 0.5); box-shadow: 0 10px 24px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.08); }
 .lb-folder__tab { position: absolute; left: 14px; top: -19px; padding: 4px 12px 3px; background: var(--folder); border: 1px solid rgba(0, 0, 0, 0.5); border-bottom: none; font: 700 10px var(--sans); letter-spacing: 0.1em; text-transform: uppercase; color: var(--paper); }
 .lb-folder.is-active { box-shadow: 0 0 0 2px var(--cream), 0 10px 28px rgba(0, 0, 0, 0.6); }
 .lb-folder.is-active .lb-folder__tab { background: var(--cream); color: var(--ink); border-color: var(--cream); }
-#lobby .lb-folder__open { display: grid; gap: 4px; text-align: left; padding: 14px 16px 12px; background: none; border: none; text-transform: none; letter-spacing: 0; }
+/* capa ao lado do texto: a pasta fica baixa e 2 fileiras cabem sem rolar */
+#lobby .lb-folder__open { display: grid; grid-template-columns: auto minmax(0, 1fr); grid-template-areas: "fan h3" "fan count" "fan mix" "fan st"; column-gap: 14px; row-gap: 3px; align-content: start; text-align: left; padding: 14px 16px 12px; background: none; border: none; text-transform: none; letter-spacing: 0; }
 #lobby .lb-folder__open:hover:not(:disabled) { background: rgba(255, 255, 255, 0.06); color: var(--paper); }
-.lb-folder .lb-fan { height: 104px; margin-bottom: 8px; } .lb-folder .lb-fan img { width: 72px; }
-.lb-folder h3 { font: 400 25px/1.05 var(--serif); color: var(--paper); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.lb-folder__count { font: 700 10.5px var(--sans); letter-spacing: 0.06em; text-transform: uppercase; color: var(--cream); } .lb-folder__count b { font: 400 17px var(--serif); color: var(--paper); }
-.lb-folder__st { font: 700 10.5px/1.35 var(--sans); letter-spacing: 0.05em; text-transform: uppercase; color: var(--green); }
+.lb-folder .lb-fan { grid-area: fan; height: auto; margin: 0; padding-left: 22px; align-self: center; } .lb-folder .lb-fan img { width: 54px; margin-left: -22px; }
+.lb-folder__open h3 { grid-area: h3; }
+.lb-folder h3 { font: 400 23px/1.05 var(--serif); color: var(--paper); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lb-folder__count { grid-area: count; font: 400 15px var(--serif); color: var(--mute); } .lb-folder__count b { font: 400 21px var(--serif); color: var(--paper); }
+.lb-folder .lb-mix { grid-area: mix; gap: 8px; font-size: 9.5px; }
+.lb-folder__st { grid-area: st; font: 700 10.5px/1.35 var(--sans); letter-spacing: 0.05em; text-transform: uppercase; color: var(--green); }
 .lb-folder.is-bad .lb-folder__st { color: #ffb0a8; }
-.lb-folder footer { display: flex; gap: 6px; align-items: center; padding: 10px 12px 12px; border-top: 1px solid rgba(0, 0, 0, 0.35); margin-top: auto; }
-#lobby .lb-folder footer button { padding: 7px 10px; font-size: 10.5px; } #lobby .lb-folder footer .ghost { color: var(--paper); opacity: 0.75; } #lobby .lb-folder footer .ghost:hover:not(:disabled) { opacity: 1; }
+.lb-folder footer { display: flex; gap: 6px; align-items: center; min-height: 52px; padding: 8px 12px 10px; border-top: 1px solid rgba(0, 0, 0, 0.35); margin-top: auto; }
+#lobby .lb-folder footer button { padding: 7px 10px; font-size: 10.5px; white-space: nowrap; } #lobby .lb-folder footer .ghost { color: var(--paper); opacity: 0.75; } #lobby .lb-folder footer .ghost:hover:not(:disabled) { opacity: 1; }
+#lobby .lb-folder footer button:disabled { opacity: 0.55; }
 #lobby .lb-folder footer button:last-child { margin-left: auto; }
 .lb-folder__on { font: 700 10.5px var(--sans); letter-spacing: 0.08em; text-transform: uppercase; color: var(--cream); padding: 0 6px; white-space: nowrap; }
 .lb-folder--new { background: none; border: 1px dashed rgba(242, 185, 76, 0.45); box-shadow: none; }
@@ -138,29 +160,38 @@
 .lb-saved { font: 700 10px var(--sans); letter-spacing: 0.1em; text-transform: uppercase; color: var(--mute); white-space: nowrap; } .lb-saved::before { content: "✓ "; color: var(--green); }
 .lb-deck { flex: 1; min-height: 0; display: grid; grid-template-columns: 1fr 320px; }
 .lb-col { display: flex; flex-direction: column; min-width: 0; min-height: 0; padding: 14px 16px 10px 22px; gap: 12px; }
-.lb-hintline { opacity: 0.7; }
+.lb-box--deck { width: min(1320px, 95%); height: min(880px, 91%); }
 .lb-side { display: flex; flex-direction: column; gap: 8px; padding: 14px 16px; border-left: 1px solid var(--line); min-height: 0; background: rgba(0, 0, 0, 0.22); }
 .lb-count { display: flex; align-items: baseline; gap: 4px; font: 400 18px var(--serif); color: var(--mute); }
-.lb-count b { font: 400 38px/1 var(--serif); color: #ff8a80; } .lb-count.ok b { color: var(--green); }
-.lb-count span { margin-left: auto; font: 700 10.5px var(--sans); letter-spacing: 0.08em; text-transform: uppercase; color: #ff8a80; } .lb-count.ok span { color: var(--green); }
+/* contador: verde = pronto, âmbar = em construção (só faltam cartas), vermelho = tem erro de verdade */
+.lb-count b { font: 400 38px/1 var(--serif); color: var(--cream); } .lb-count.ok b { color: var(--green); } .lb-count.is-bad b { color: #ff8a80; }
+.lb-count span { margin-left: auto; font: 700 10.5px var(--sans); letter-spacing: 0.08em; text-transform: uppercase; color: var(--cream); } .lb-count.ok span { color: var(--green); } .lb-count.is-bad span { color: #ff8a80; }
 .lb-meter { display: flex; gap: 2px; height: 8px; }
-.lb-meter i, .lb-mix i { display: block; background: var(--paper); } .lb-meter .c, .lb-mix .c { background: var(--green); } .lb-meter .e, .lb-mix .e { background: var(--cream); } .lb-meter .t, .lb-mix .t { background: #6fb7ff; }
-.lb-meter .gap { background: repeating-linear-gradient(45deg, transparent 0 3px, rgba(255, 138, 128, 0.35) 3px 5px); }
+/* cores de tipo, diferentes das de raridade (azul) e de erro (vermelho): criatura verde, efeito papel, armadilha azul-claro */
+.lb-meter i, .lb-mix i { display: block; background: var(--paper); } .lb-meter .c, .lb-mix .c { background: var(--green); } .lb-meter .e, .lb-mix .e { background: var(--paper); } .lb-meter .t, .lb-mix .t { background: var(--blue); }
+.lb-meter .gap { background: repeating-linear-gradient(45deg, transparent 0 3px, rgba(242, 185, 76, 0.35) 3px 5px); }
 .lb-mix { display: flex; gap: 10px; flex-wrap: wrap; font: 700 10px var(--sans); letter-spacing: 0.02em; text-transform: uppercase; color: var(--paper); }
 .lb-mix span { display: flex; align-items: center; gap: 5px; } .lb-mix i { width: 8px; height: 8px; }
 .lb-mix--sub { color: var(--mute); font-size: 10px; margin-top: -2px; }
 .lb-decklist { flex: 1; min-height: 0; overflow-y: auto; list-style: none; scrollbar-width: thin; scrollbar-color: rgba(242, 185, 76, 0.4) transparent; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
 .lb-decklist .lb-group { display: flex; justify-content: space-between; padding: 10px 4px 4px; font: 700 10px var(--sans); letter-spacing: 0.12em; text-transform: uppercase; color: var(--mute); }
 .lb-decklist .lb-group em { font-style: normal; color: var(--cream); }
-.lb-drow { display: flex; gap: 8px; align-items: center; padding: 3px 4px; font: 400 15px var(--serif); color: var(--paper); border-bottom: 1px dashed rgba(242, 185, 76, 0.12); }
-.lb-drow:hover { background: rgba(242, 185, 76, 0.08); }
-.lb-drow.is-short { background: rgba(238, 58, 48, 0.16); box-shadow: inset 2px 0 0 var(--red); } .lb-drow.is-short i { color: #ff8a80; }
+.lb-drow { position: relative; display: flex; gap: 8px; align-items: center; padding: 3px 4px; font: 400 15px var(--serif); color: var(--paper); border-bottom: 1px dashed rgba(242, 185, 76, 0.12); }
+.lb-drow:hover, .lb-drow:focus-within { background: rgba(242, 185, 76, 0.08); }
+.lb-drow.is-short { background: rgba(238, 58, 48, 0.16); box-shadow: inset 2px 0 0 var(--red); } .lb-drow.is-short > i { color: #ff8a80; }
+/* o que o "Completar automático" acabou de pôr */
+.lb-drow.is-new { box-shadow: inset 3px 0 0 var(--green); } .lb-drow.is-new .lb-drow__name::after { content: " novo"; font: 700 9px var(--sans); letter-spacing: 0.08em; text-transform: uppercase; color: var(--green); }
 .lb-drow__art { flex: none; width: 34px; height: 24px; background: #111 no-repeat center 32% / 150% auto; border: 1px solid rgba(0, 0, 0, 0.6); }
-.lb-drow i { font: 700 11px var(--sans); color: var(--cream); font-style: normal; width: 20px; }
+.lb-drow > i { font: 700 11px var(--sans); color: var(--cream); font-style: normal; width: 20px; flex: none; }
 .lb-drow__name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.lb-drow em { font: 700 10px var(--sans); color: var(--mute); font-style: normal; white-space: nowrap; } .lb-drow .lb-sac { color: #ff8a80; margin-right: 4px; font-weight: 700; }
-.lb-drow__ctl { display: flex; gap: 2px; opacity: 0.35; transition: opacity 0.12s; } .lb-drow:hover .lb-drow__ctl { opacity: 1; }
-#lobby .lb-drow__ctl button { width: 22px; height: 22px; padding: 0; font: 700 14px/1 var(--sans); }
+.lb-drow em { font: 700 10px var(--sans); color: var(--mute); font-style: normal; white-space: nowrap; }
+/* custo em sacrifícios: as mesmas bolinhas da ficha da carta (não é erro, então não é texto vermelho) */
+.lb-drow .lb-sac { display: inline-flex; gap: 1px; margin-right: 5px; vertical-align: 1px; }
+.lb-drow .lb-sac i { display: inline-grid; place-items: center; width: 12px; height: 12px; border-radius: 50%; background: #8b1d14; color: #fff; font: 700 8px/1 var(--sans); font-style: normal; }
+/* − e + por cima do fim da linha, só no hover ou no foco: o nome ganha o espaço todo */
+.lb-drow__ctl { position: absolute; right: 4px; top: 50%; transform: translateY(-50%); display: flex; gap: 3px; padding-left: 10px; background: linear-gradient(90deg, transparent, #10160f 10px); opacity: 0; pointer-events: none; transition: opacity 0.12s; }
+.lb-drow:hover .lb-drow__ctl, .lb-drow:focus-within .lb-drow__ctl { opacity: 1; pointer-events: auto; }
+#lobby .lb-drow__ctl button { width: 26px; height: 24px; padding: 0; font: 700 15px/1 var(--sans); background: #10160f; }
 .lb-decklist li.lb-empty { cursor: default; background: none; padding: 18px 4px; }
 .lb-errs { list-style: none; display: grid; gap: 3px; color: #ff8a80; font: 700 10.5px/1.4 var(--sans); letter-spacing: 0.04em; text-transform: uppercase; }
 .lb-errs li::before { content: "! "; }
@@ -261,7 +292,7 @@
 .lb-toast.good { border-left-color: var(--green); } .lb-toast.bad { border-left-color: var(--red); } .lb-toast.gold { border-left-color: var(--cream); background: rgba(40, 30, 8, 0.96); } .lb-toast.gold b { color: var(--cream); }
 .lb-toast.out { opacity: 0; transform: translateX(20px); }
 @keyframes lb-in { from { opacity: 0; transform: translateX(30px); } }
-@media (max-width: 1100px) { .lb-deck { grid-template-columns: 1fr 270px; } .lb-saved { display: none; } .lb-nav span { display: none; } }
+@media (max-width: 1100px) { .lb-saved { display: none; } .lb-nav span { display: none; } }
 
 /* campanha: a próxima reunião e a escada das 30 */
 .lb-next { margin: 4px 0 14px; padding: 12px 14px; background: rgba(0, 0, 0, 0.3); border: 1px solid var(--line); border-left: 3px solid var(--cream); }
@@ -272,3 +303,51 @@
 .lb-ladder li.cur { color: var(--cream); border-left-color: var(--cream); background: rgba(242, 185, 76, 0.1); }
 .lb-ladder li.boss span { color: #ff8a80; }
 .lb-ladder li.lb-tier { background: none; padding: 10px 2px 2px; font: 700 10.5px var(--sans); letter-spacing: 0.1em; text-transform: uppercase; color: var(--mute); border: none; }
+
+/* ════════ loja · rodada 2 (análise da tela da Loja) ════════ */
+/* janela maior, como a do Arquivo: as 19 cartas avulsas cabem em 2 fileiras de 10, sem rolar */
+.lb-box--shop { width: min(1320px, 95%); height: min(880px, 91%); }
+.lb-grid--shop { grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 14px 10px; }
+.lb-grid--shop .lb-card figcaption { font-size: 10.5px; letter-spacing: 0.03em; }
+/* contagem pelo estado: "nova" em âmbar (você não tem), parcial em papel, completa em verde; +N = sobrando */
+.lb-card figcaption b.new { color: var(--cream); } .lb-card figcaption b.part { color: var(--paper); } .lb-card figcaption b.full { color: var(--green); }
+.lb-card figcaption b em { font-style: normal; color: var(--cream); }
+.lb-grid--shop .lb-card.is-new img { outline: 1px dashed var(--cream); outline-offset: 3px; }
+.lb-grid--shop .lb-card.is-full img { opacity: 0.62; filter: grayscale(0.35); }
+#lobby .lb-card__extra { line-height: 1.25; padding: 5px 2px; }
+.lb-card__extra small { color: var(--green); }
+/* sem verba para nada da aba: diz como ganhar e leva até lá */
+.lb-broke { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border: 1px solid rgba(242, 185, 76, 0.35); border-left: 3px solid var(--cream); background: rgba(242, 185, 76, 0.07); font: 400 15px/1.35 var(--serif); color: var(--paper); }
+.lb-broke span { flex: 1; } .lb-broke b { font-weight: 400; color: var(--cream); }
+#lobby .lb-broke button { padding: 7px 10px; font-size: 10.5px; white-space: nowrap; }
+.lb-short { font: 700 11px var(--sans); letter-spacing: 0.06em; text-transform: uppercase; color: #ffb0a8; }
+#lobby .lb-linkish { align-self: flex-start; background: none; border: none; padding: 0; text-align: left; font: 400 16px var(--serif); text-transform: none; letter-spacing: 0; color: var(--paper); text-decoration: underline; text-decoration-color: rgba(242, 185, 76, 0.5); text-underline-offset: 3px; }
+#lobby .lb-linkish:hover { background: none; color: var(--cream); } .lb-linkish b { font-weight: 400; color: var(--cream); }
+/* pacotes: o bloco fica no meio da aba, não preso no topo */
+.lb-packshop { margin-block: auto; }
+.lb-odds { font-size: 12px; }
+/* decks prontos: o leque mostra o que vai chegar, com ×N; texto do ganho em papel; botão com a linha de "faltam" embaixo */
+.lb-row--deck .lb-fan { padding-left: 34px; min-width: 250px; }
+.lb-fanc { position: relative; display: block; margin-left: -34px; transform: rotate(-4deg); } .lb-fanc:nth-child(even) { transform: rotate(3deg) translateY(3px); }
+.lb-row--deck .lb-fanc img { width: 76px; margin: 0; transform: none; display: block; box-shadow: -4px 4px 10px rgba(0, 0, 0, 0.6); }
+.lb-fanc b { position: absolute; right: 2px; bottom: 4px; font: 700 11px var(--sans); color: var(--ink); background: var(--cream); padding: 1px 5px; }
+.lb-fanc.is-used img { opacity: 0.55; }
+.lb-row--deck .lb-deckgain { font: 400 15px/1.35 var(--serif); color: var(--paper); } .lb-deckgain b { font-weight: 400; color: var(--cream); }
+.lb-row__buy { display: grid; gap: 6px; justify-items: end; } #lobby .lb-row__buy button { white-space: nowrap; }
+/* abertura de pacote: a loja some por trás (o ✕ falso também), cartas maiores, nome e contagem na etiqueta */
+#lobby.is-pack .lb-win > * { visibility: hidden; }
+.lb-pack { background: rgba(2, 4, 3, 0.95); backdrop-filter: blur(4px); }
+.lb-flip { width: clamp(208px, 17vw, 250px); }
+.lb-flip.on { cursor: default; }
+.lb-flip__front span { bottom: -46px; display: grid; gap: 3px; justify-items: center; font-size: 12px; }
+.lb-flip__front span em { font: 400 17px/1.1 var(--serif); font-style: normal; text-transform: none; letter-spacing: 0; color: var(--paper); }
+.lb-flip__front span b, .lb-flip__front span i { margin: 0; }
+.lb-flip__front b.done { background: var(--cream); }
+.lb-flip__front i { color: var(--cream); }
+.lb-packsum { margin-top: 34px; min-height: 20px; font: 400 19px var(--serif); color: var(--cream); }
+.lb-pack .lb-actions { justify-content: center; } .lb-pack .primary { margin-top: 0; }
+/* avisos: com uma janela aberta, ficam dentro do canto de baixo da caixa, perto da ação */
+#lobby.is-open .lb-toasts { right: calc((100% - min(1180px, 95%)) / 2 + 14px); bottom: calc((100% - min(720px, 91%)) / 2 + 14px); }
+#lobby.is-open:is([data-panel="deck"], [data-panel="shop"]) .lb-toasts { right: calc((100% - min(1320px, 95%)) / 2 + 14px); bottom: calc((100% - min(880px, 91%)) / 2 + 14px); }
+.lb-toast { max-width: min(380px, 40vw); }
+#lobby .lb-toast button { justify-self: start; margin-top: 4px; padding: 6px 10px; font-size: 10.5px; }
