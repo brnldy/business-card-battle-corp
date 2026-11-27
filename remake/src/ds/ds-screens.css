@@ -383,7 +383,7 @@ body.rc-dragging, body.rc-dragging * { cursor: grabbing !important; }
 .rc-ghost { position: fixed; z-index: 100; pointer-events: none; border-radius: 4.1% / 3.5%; box-shadow: 0 0 0 1.5px #1b140d, 10px 14px 0 rgba(0, 0, 0, 0.35); transform-origin: 0 0; }
 
 /* ── Reciclar, proposta A (sala): a câmera foi até a trituradora 3D; a janela vira um painel à esquerda e a sala aparece ── */
-#lobby.is-shredroom .lb-win { justify-items: start; padding-left: 3vw; background: linear-gradient(to right, rgba(4, 7, 5, 0.82) 0, rgba(4, 7, 5, 0.6) 40%, rgba(4, 7, 5, 0) 58%); backdrop-filter: none; }
+#lobby.is-shredroom .lb-win { justify-items: start; padding-left: 3vw; background: linear-gradient(to right, rgba(4, 7, 5, 0.82) 0, rgba(4, 7, 5, 0.68) var(--rc-free, 48%), rgba(4, 7, 5, 0) var(--rc-clear, 66%)); backdrop-filter: none; }
 #lobby .lb-box--recycle.is-room { width: min(600px, 47%); }
 .rc-room { flex: 1; min-height: 0; grid-template-rows: auto minmax(0, 1fr) auto !important; }
 .rc-room .rc-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }

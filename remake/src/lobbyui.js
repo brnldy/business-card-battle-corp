@@ -106,7 +106,7 @@ export class LobbyUI {
     });
     window.addEventListener('pointermove', (e) => this.rcDragMove(e));
     window.addEventListener('pointerup', (e) => this.rcDragEnd(e));
-    window.addEventListener('resize', () => { if (this.panel === 'recycle' && this.shredder) { this.shredder.resize(); this.shredder.draw(); } });
+    window.addEventListener('resize', () => { if (this.panel === 'recycle' && this.shredder) { this.shredder.resize(); this.shredder.draw(); } if (this.panel === 'recycle' && ROOM) this.roomFree(); });
     root.addEventListener('pointerover', (e) => {
       const b = e.target.closest('[data-a="open"]'); if (b && !this.panel) lobby.setHover(b.dataset.id);
       if (this.panel) this.peek(e.target.closest('[data-card]'));
@@ -226,6 +226,13 @@ export class LobbyUI {
     this.lobby.focus?.(ROOM && id === 'recycle' ? 'recycle' : null); this.root.classList.toggle('is-shredroom', ROOM && id === 'recycle');
     this.win.classList.remove('hidden'); this.render();
   }
+  /** sala: diz à câmera onde termina o painel, para a trituradora ficar no meio do espaço livre à direita */
+  roomFree() {
+    const b = $('.lb-box', this.win); if (!b) return;
+    const f = b.getBoundingClientRect().right / innerWidth; this.lobby.focusFree?.(f);
+    // a sombra do painel vai até perto da máquina, apagando o resto da sala (a mesa do estagiário) em telas largas
+    this.root.style.setProperty('--rc-free', `${(f * 100).toFixed(1)}%`); this.root.style.setProperty('--rc-clear', `${((f + (1 - f) * 0.34) * 100).toFixed(1)}%`);
+  }
   close() { if (!this.panel) return; this.lobby.focus?.(null); this.root.classList.remove('is-shredroom'); if (this.panel === 'deck') { this.forgetDecks(); this.resetFilters(); } this.peek(null); this.panel = null; this.win.classList.add('hidden'); this.lobby.setHover(null); sfx('navBack'); }
   render() {
     const id = this.panel, [memo, title] = TITLES[id], s = this.s;
@@ -242,6 +249,7 @@ export class LobbyUI {
       ${NEW_HEAD.has(id) ? this.head(title, memo, htabs, s) : `<header><div>${htabs || `<p class="memo"><span>${esc(memo)}</span></p>`}<h2>${esc(title)}</h2></div><div class="lb-pat"><span>Patrimônio</span><b>${money(s.patrimonio)}</b></div><button class="lb-x" data-a="close" title="Fechar (Esc)">✕</button></header>`}
       ${body}</section>`;
     if (id === 'recycle' && !ROOM) this.mountShredder();
+    if (id === 'recycle' && ROOM) this.roomFree();
     const sc = $('.lb-scroll', this.win); if (sc) sc.scrollTop = scroll; const dl = $('.ed-list', this.win); if (dl) dl.scrollTop = scroll2;
     if (focus && ['lb-deck-name', 'lb-q', 'lb-sort'].includes(focus)) { const i = $(`#${focus}`, this.win); i?.focus(); if (sel) i?.setSelectionRange?.(...sel); }
     else if (sig) {

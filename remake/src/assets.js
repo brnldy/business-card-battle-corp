@@ -28,7 +28,7 @@ function loadImage(key) {
   });
 }
 // Modelos de terceiros, todos CC0: Poly Haven (cenário) e Quaternius (corpos do rival: Business Man e Formal Woman).
-export const MODEL_LIST = ['business_man', 'business_woman', 'Television_01', 'hanging_industrial_lamp', 'mounted_fluorescent_lights', 'drawer_cabinet', 'wall_clock', 'vintage_stapler', 'binder_notebook', 'metal_office_desk', 'metal_trash_can', 'modern_arm_chair_01'];
+export const MODEL_LIST = ['business_man', 'business_woman', 'Television_01', 'hanging_industrial_lamp', 'mounted_fluorescent_lights', 'drawer_cabinet', 'wall_clock', 'vintage_stapler', 'binder_notebook', 'metal_office_desk', 'modern_arm_chair_01'];
 
 export async function loadAll(onProgress) {
   const keys = [
