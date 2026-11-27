@@ -42,7 +42,7 @@ export function deskGrimy() {
   side('CRIATURAS', -2.02, 0.5, -Math.PI / 2); side('EFEITOS', -2.02, 1.38, -Math.PI / 2); side('CRIATURAS', 2.02, -0.5, Math.PI / 2); side('EFEITOS', 2.02, -1.38, Math.PI / 2);
   g.textAlign = 'center'; g.fillText('MORTO', px(LAYOUT.myDead.x), pz(LAYOUT.myDead.z) - (ch * sc) / 2 - 13); g.fillText('MORTO', px(LAYOUT.oppDead.x), pz(LAYOUT.oppDead.z) + (ch * sc) / 2 + 13);
   g.strokeStyle = ink(0.24); g.lineWidth = 1.5; g.setLineDash([4, 10]); g.beginPath(); g.moveTo(px(-1.95), pz(0)); g.lineTo(px(1.95), pz(0)); g.stroke(); g.setLineDash([]);
-  g.textAlign = 'left'; g.fillStyle = ink(0.3); g.fillText('FORM. 27-B · MESA DE NEGOCIAÇÃO · NÃO REMOVER', px(-1.9), pz(2.06));
+  g.textAlign = 'left'; g.fillStyle = ink(0.3); g.fillText('FORM. 27-B / MESA DE NEGOCIAÇÃO / NÃO REMOVER', px(-1.9), pz(2.06));
   // tinta gasta
   for (let i = 0; i < 3600; i++) {
     const x = Math.random() * W, y = Math.random() * H;

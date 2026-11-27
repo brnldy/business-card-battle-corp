@@ -14,7 +14,7 @@ const section = (id, title, why, frames) => sections.push(`<section class="lab-s
 const sw = (n, v, ink) => `<div class="lab-sw"><i style="background:var(${v})${ink ? ';outline:1px solid #0002' : ''}"></i><b>${n}</b><code>${v}</code></div>`;
 sections.push(`<section class="lab-sec" id="base"><header><h2>Fundamentos</h2><p>Papelaria (pasta, ficha) é o que é seu; terminal (painéis escuros com linha ciano) é o sistema falando com você. Ciano = vez/sistema, verde = jogável/ganho, vermelho = dano/bloqueio, amarelo = atenção.</p></header>
 <div class="lab-row">${[['Terminal', '--h-term'], ['Papel', '--h-paper', 1], ['Sálvia', '--h-sage'], ['Creme', '--h-cream', 1], ['Sistema', '--h-mdr'], ['Jogável', '--h-go'], ['Atenção', '--h-warn'], ['Dano', '--h-stop']].map(([n, v, i]) => sw(n, v, i)).join('')}</div>
-<div class="lab-type"><span class="h-cap">Legenda 11.5 · caixa alta</span><span style="font-size:13px">Apoio 13 · Helvena</span><span style="font-size:14.5px">Texto 14.5 · Helvena</span><span style="font-size:17px">Ênfase 17 · Helvena</span><span style="font:24px var(--h-num)">Título 24 · Garamond</span><span style="font:44px var(--h-num)">$ 8.000</span></div>
+<div class="lab-type"><span class="h-cap">Legenda 11.5 / caixa alta</span><span style="font-size:13px">Apoio 13 / Helvena</span><span style="font-size:14.5px">Texto 14.5 / Helvena</span><span style="font-size:17px">Ênfase 17 / Helvena</span><span style="font:24px var(--h-num)">Título 24 / Garamond</span><span style="font:44px var(--h-num)">$ 8.000</span></div>
 <div class="lab-row lab-dark">${[
   C.button({ label: 'Encerrar turno', keycap: 'Espaço', tone: 'primary', size: 'lg' }),
   C.button({ label: 'Encerrar turno', keycap: 'Espaço', tone: 'primary', size: 'lg', ready: true }),
@@ -29,10 +29,10 @@ sections.push(`<section class="lab-sec" id="base"><header><h2>Fundamentos</h2><p
 
 // ── pasta de CAIXA
 const folders = [
-  ['Rival · aguardando', { who: 'opp', name: 'MOCA-COLA', caixa: 8000, meta: [{ icon: 'hand', text: '5 cartas na mão' }] }],
-  ['Você · sua vez', { who: 'me', name: 'ORO CORP', caixa: 6200, active: true }],
-  ['CAIXA baixo + Frio', { who: 'me', name: 'ORO CORP', caixa: 1400, active: true, meta: [{ icon: 'cold', tone: 'cold', html: 'Frio ×2 · perde <b>$ 200</b> por turno' }] }],
-  ['Nome longo · acima do inicial', { who: 'opp', name: 'POLE STARTION INTERNACIONAL', caixa: 9500, max: 8000, meta: [{ icon: 'hand', text: '10 cartas na mão' }] }],
+  ['Rival / aguardando', { who: 'opp', name: 'MOCA-COLA', caixa: 8000, meta: [{ icon: 'hand', text: '5 cartas na mão' }] }],
+  ['Você / sua vez', { who: 'me', name: 'ORO CORP', caixa: 6200, active: true }],
+  ['CAIXA baixo + Frio', { who: 'me', name: 'ORO CORP', caixa: 1400, active: true, meta: [{ icon: 'cold', tone: 'cold', html: 'Frio ×2: perde <b>$ 200</b> por turno' }] }],
+  ['Nome longo / acima do inicial', { who: 'opp', name: 'POLE STARTION INTERNACIONAL', caixa: 9500, max: 8000, meta: [{ icon: 'hand', text: '10 cartas na mão' }] }],
 ];
 section('folder', 'Pasta de CAIXA', 'A vida de cada empresa. Lê-se de longe: número grande, barra de quanto resta, luz acesa na vez de quem joga. Dano sai de trás como etiqueta carimbada.',
   folders.map(([l, p], i) => frame(l, `<div data-folder="${i}">${C.folder(p)}</div>`, { w: 272, h: 172, x: 0, y: i % 2 ? 596 : 0 })));
@@ -54,10 +54,10 @@ section('turn', 'Painel do turno', 'Um único botão principal (embaixo, grande)
 
 // ── ficha da carta
 const sheets = [
-  ['Na mão · jogável', { cardId: 'BCB-008', where: 'hand', owner: 'me', status: { tone: 'go', text: 'Clique ou arraste para a mesa.' } }],
-  ['Na mão · bloqueada', { cardId: 'BCB-007', where: 'hand', owner: 'me', status: { tone: 'stop', text: 'Custa 2 sacrifícios: você precisa de 2 criaturas na mesa.' } }],
-  ['Na mesa · alterada', { cardId: 'BCB-004', where: 'table', owner: 'me', cur: { atk: 2500, def: 1200 }, notes: ['Em ataque (em pé).', 'Café com 8 colheres de pó: ATQ +600, DEF −1.000'] }],
-  ['Rival · efeito longo', { cardId: 'BCB-003', where: 'show', owner: 'opp' }],
+  ['Na mão / jogável', { cardId: 'BCB-008', where: 'hand', owner: 'me', status: { tone: 'go', text: 'Clique ou arraste para a mesa.' } }],
+  ['Na mão / bloqueada', { cardId: 'BCB-007', where: 'hand', owner: 'me', status: { tone: 'stop', text: 'Custa 2 sacrifícios: você precisa de 2 criaturas na mesa.' } }],
+  ['Na mesa / alterada', { cardId: 'BCB-004', where: 'table', owner: 'me', cur: { atk: 2500, def: 1200 }, notes: ['Em ataque (em pé).', 'Café com 8 colheres de pó: ATQ +600, DEF −1.000'] }],
+  ['Rival / efeito longo', { cardId: 'BCB-003', where: 'show', owner: 'opp' }],
   ['Armadilha do rival', { faceDown: true, notes: ['Carta virada para baixo do rival.', 'Pode disparar quando você atacar.'] }],
 ];
 section('sheet', 'Ficha da carta', 'Abre ao passar o mouse em qualquer carta. A ilustração identifica; o texto explica em linguagem direta. O rodapé diz se dá para jogar agora — e, se não, por quê.',
@@ -100,19 +100,19 @@ section('chip', 'Etiquetas da mesa', 'Ficam sob cada carta da mesa. O segmento c
 
 // ── avisos
 section('notice', 'Avisos', 'Faixa de turno (centro), erro (abaixo do topo), última jogada (topo) e dica de primeira vez.', [
-  frame('Faixa · sua vez', C.banner({ title: 'Sua vez', sub: 'turno 5', tone: 'me' }), { w: 520, h: 130, x: 423, y: 230, align: 'center' }),
-  frame('Faixa · rival', C.banner({ title: 'Vez de MOCA-COLA', sub: 'turno 6', tone: 'foe' }), { w: 640, h: 130, x: 363, y: 230, bg: RIVAL, align: 'center' }),
-  frame('Faixa · batalha', C.banner({ title: 'Batalha', sub: 'escolha quem ataca', tone: 'battle' }), { w: 520, h: 130, x: 423, y: 230, align: 'center' }),
+  frame('Faixa / sua vez', C.banner({ title: 'Sua vez', sub: 'turno 5', tone: 'me' }), { w: 520, h: 130, x: 423, y: 230, align: 'center' }),
+  frame('Faixa / rival', C.banner({ title: 'Vez de MOCA-COLA', sub: 'turno 6', tone: 'foe' }), { w: 640, h: 130, x: 363, y: 230, bg: RIVAL, align: 'center' }),
+  frame('Faixa / batalha', C.banner({ title: 'Batalha', sub: 'escolha quem ataca', tone: 'battle' }), { w: 520, h: 130, x: 423, y: 230, align: 'center' }),
   frame('Erro', C.toast({ text: 'É 1 invocação por turno — e você já fez a sua.' }), { w: 560, h: 70, x: 403, y: 60, align: 'center' }),
-  frame('Última jogada · rival', C.ticker({ text: 'MOCA-COLA invocou ROGER em ataque.', who: 'opp' }), { w: 560, h: 60, x: 403, y: 0, bg: RIVAL, align: 'center' }),
-  frame('Última jogada · você', C.ticker({ text: 'Você armou uma armadilha.', who: 'me' }), { w: 560, h: 60, x: 403, y: 0, align: 'center' }),
+  frame('Última jogada / rival', C.ticker({ text: 'MOCA-COLA invocou ROGER em ataque.', who: 'opp' }), { w: 560, h: 60, x: 403, y: 0, bg: RIVAL, align: 'center' }),
+  frame('Última jogada / você', C.ticker({ text: 'Você armou uma armadilha.', who: 'me' }), { w: 560, h: 60, x: 403, y: 0, align: 'center' }),
   frame('Dica', C.coach({ step: 1, of: 6, title: 'Objetivo', html: 'Zere o <b>CAIXA</b> do rival (pasta de cima) antes que ele zere o seu (pasta de baixo).' }), { w: 420, h: 210, x: 473, y: 84, align: 'center' }),
 ]);
 
 // ── barra superior e relatório
 const logDemo = [
-  { type: 'turnStart', text: '── Turno 4 · vez de MOCA-COLA ──' }, { text: 'MOCA-COLA comprou uma carta.', who: 'opp' }, { text: 'MOCA-COLA invocou ROGER em ataque.', who: 'opp' },
-  { type: 'turnStart', text: '── Turno 5 · sua vez ──' }, { text: 'Você comprou SIAMESAS BOREAL.', who: 'me' }, { text: 'NATH, A REDATORA atacou ROGER.', who: 'me' },
+  { type: 'turnStart', text: '── Turno 4 / vez de MOCA-COLA ──' }, { text: 'MOCA-COLA comprou uma carta.', who: 'opp' }, { text: 'MOCA-COLA invocou ROGER em ataque.', who: 'opp' },
+  { type: 'turnStart', text: '── Turno 5 / sua vez ──' }, { text: 'Você comprou SIAMESAS BOREAL.', who: 'me' }, { text: 'NATH, A REDATORA atacou ROGER.', who: 'me' },
   { text: '$2.200 contra $1.300.', who: 'sys' }, { text: 'MOCA-COLA perdeu $900 (CAIXA $7.100).', who: 'opp', type: 'damage' },
 ];
 section('chrome', 'Barra superior e relatório', 'Ações de sistema ficam juntas no canto. O relatório abre como gaveta, sem cobrir a mesa.', [
@@ -147,7 +147,7 @@ const comp3 = `<div class="lab-comp" style="background-image:url(${RIVAL})"><div
   <div class="h-slot--center">${C.ticker({ text: 'MOCA-COLA usou PÃO COM REQUEIJÃO.', who: 'opp' })}</div>
   <div class="h-slot--coach is-top">${C.coach({ step: 2, of: 7, title: 'Vez do rival', html: 'A carta que ele joga aparece ampliada à esquerda; cada jogada passa no topo. O histórico completo fica em <b>Relatório</b>.' })}</div>
 </div></div>`;
-sections.unshift(`<section class="lab-sec" id="comp"><header><h2>Composição · 1366×768</h2><p>Os componentes juntos na tela de notebook de referência, sobre quadros reais da partida: jogando cartas, mirando um ataque, e a vez do rival.</p></header>${comp}<div style="height:20px"></div>${comp2}<div style="height:20px"></div>${comp3}</section>`);
+sections.unshift(`<section class="lab-sec" id="comp"><header><h2>Composição / 1366×768</h2><p>Os componentes juntos na tela de notebook de referência, sobre quadros reais da partida: jogando cartas, mirando um ataque, e a vez do rival.</p></header>${comp}<div style="height:20px"></div>${comp2}<div style="height:20px"></div>${comp3}</section>`);
 
 app.innerHTML = `<nav class="lab-nav">${['comp', 'base', 'folder', 'turn', 'sheet', 'menu', 'prompt', 'preview', 'chip', 'notice', 'chrome'].map((id) => `<a href="#${id}">${id}</a>`).join('')}</nav>${sections.join('')}`;
 // pastas são vivas no jogo: montam vazias e recebem "patch"

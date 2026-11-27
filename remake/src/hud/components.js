@@ -145,7 +145,7 @@ export function cardSheet(p) {
   };
   const cost = d.cost ? `<div class="h-stat h-stat--cost"><span class="h-stat__label">${ICON.summon}Custo</span><span class="h-stat__value">${'<i class="h-pip">✕</i>'.repeat(d.cost)}</span><span class="h-stat__base">${d.cost} sacrifício${d.cost > 1 ? 's' : ''}</span></div>`
     : `<div class="h-stat h-stat--cost"><span class="h-stat__label">${ICON.summon}Custo</span><span class="h-stat__value h-stat__value--free">grátis</span></div>`;
-  const kindLine = [KIND[d.kind], d.element, `depto. ${DEPT[d.department] ?? d.department}`].join(' · ');
+  const kindLine = [KIND[d.kind], d.element, `depto. ${DEPT[d.department] ?? d.department}`].join(' / ');
   const extra = fx ? (d.kind === 'effect_trap' ? 'Virada até disparar.' : d.durationTurns ? `Dura ${d.durationTurns} turnos seus.` : 'Vale na hora e vai para o Morto.') : '';
   const where = { hand: 'Na sua mão', table: p.owner === 'opp' ? 'Na mesa do rival' : 'Na sua mesa', dead: 'No Morto', show: p.owner === 'opp' ? 'Jogada do rival' : 'Sua jogada' }[p.where] ?? '';
   return `<article class="${cx('h-sheet', p.owner === 'opp' && 'h-sheet--opp')}">

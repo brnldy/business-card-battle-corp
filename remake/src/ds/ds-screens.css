@@ -326,3 +326,5 @@ button.ds-check { background: none; border: none; padding: 6px 0; pointer-events
 .ed-peek.is-on { display: flex; } .ed-peek > .ds-file { flex: 0 1 auto; min-height: 0; margin: 0; box-shadow: var(--ds-frame-in), 7px 10px 0 rgba(27, 20, 13, 0.35); }
 /* pé do deck em montagem: links e o carimbo "No duelo" na mesma linha; um botão de ação ocupa a largura toda */
 .ed-foot { display: flex !important; flex-wrap: wrap; align-items: center; justify-content: space-between; } .ed-foot > .ds-btn { flex: 1 1 100%; } .ed-foot > .ds-stamp { flex: none; }
+/* dica do rodapé do editor: três pedaços separados por espaço (sem ponto do meio) */
+.ed-hint { display: flex; gap: 22px; }

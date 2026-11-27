@@ -9,7 +9,7 @@ const md = (m) => (m === 'ATK' ? 'ataque' : 'defesa');
 export function describeEvent(e, ctx) {
   switch (e.type) {
     case 'gameStart': return `${who(ctx, e.firstPlayer)} começa a partida.`;
-    case 'turnStart': return `── Turno ${e.turn} · ${e.player === ctx.human ? 'sua vez' : `vez de ${ctx.names[e.player]}`} ──`;
+    case 'turnStart': return `── Turno ${e.turn} / ${e.player === ctx.human ? 'sua vez' : `vez de ${ctx.names[e.player]}`} ──`;
     case 'draw': return e.player === ctx.human ? `Você comprou ${nm(ctx, e.cardId)}.` : `${ctx.names[e.player]} comprou uma carta.`;
     case 'drawSkipped': return e.reason === 'hand_limit' ? `${who(ctx, e.player)}: mão cheia, a compra espera.` : `${who(ctx, e.player)}: deck vazio, sem compra.`;
     case 'summon': return `${who(ctx, e.player)} invocou ${nm(ctx, e.cardId)} em ${md(e.mode)}.`;

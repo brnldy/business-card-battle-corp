@@ -118,9 +118,9 @@ export class UI {
    * on: { pick(n) → começar empresa nova no slot n, load(n) → passar a jogar no slot n, saved(n) → depois de salvar }
    */
   slots(mode, on = {}) {
-    const T = { new: ['Novo jogo · escolha uma gaveta', 'Onde abrir a empresa?'], load: ['Arquivo de empresas', 'Carregar expediente'], lobby: ['Arquivo de empresas · o slot em uso salva sozinho', 'Salvar ou carregar'] }[mode];
+    const T = { new: ['Novo jogo / escolha uma gaveta', 'Onde abrir a empresa?'], load: ['Arquivo de empresas', 'Carregar expediente'], lobby: ['Arquivo de empresas / o slot em uso salva sozinho', 'Salvar ou carregar'] }[mode];
     const card = (x) => {
-      const head = `<p class="memo">Gaveta ${x.n}${x.current ? ' · em uso' : ''}</p>`;
+      const head = `<p class="memo">Gaveta ${x.n}${x.current ? ' / em uso' : ''}</p>`;
       if (x.empty) {
         const btn = mode === 'new' ? `<button class="primary" data-sl="pick" data-n="${x.n}">Abrir empresa aqui</button>` : mode === 'lobby' ? `<button data-sl="copy" data-n="${x.n}">Salvar aqui</button>` : '';
         return `<article class="sl-card is-empty">${head}<h3>Gaveta vazia</h3><p class="fine">Só poeira e um clipe enferrujado.</p><footer>${btn}</footer></article>`;
@@ -214,10 +214,10 @@ export class UI {
   }
   nameEntry(onDone, cur = '') {
     const box = this.modal(`
-      <div class="memo">Formulário 01-A · registro de empresa</div>
+      <div class="memo">Formulário 01-A / registro de empresa</div>
       <h2>Como se chama a sua empresa?</h2>
       <input id="name-in" maxlength="${MAX_NAME}" value="${esc(cur)}" placeholder="Nome da empresa" autocomplete="off" spellcheck="false">
-      <p class="fine">Máx. ${MAX_NAME} · Enter confirma</p>
+      <p class="fine">Até ${MAX_NAME} letras. Enter confirma.</p>
       <nav><button data-close>Voltar</button><button id="name-ok" class="primary">Assinar e entrar</button></nav>`, 'form');
     const inp = $('#name-in', box), ok = $('#name-ok', box);
     const sync = () => { ok.disabled = !cleanName(inp.value); };
@@ -233,7 +233,7 @@ export class UI {
       <div class="help-grid help-grid--ico">
         <section><span class="hg-ico">${ICON.coin}</span><h3>Zere o CAIXA do rival</h3><p>Cada empresa começa com <b>$ 8.000</b>.</p></section>
         <section><span class="hg-ico">${ICON.card}</span><h3>Seu turno</h3><p class="hg-steps"><b>Compra</b><i>›</i><b>Joga</b><i>›</i><b>Batalha</b><i>›</i><b>Encerra</b></p><p>1 invocação por turno.</p></section>
-        <section><span class="hg-ico">${ICON.atk}</span><h3>Em pé ataca, deitada defende</h3><p><span class="ic">${ICON.atk}</span> <b>ATQ</b> · <span class="ic">${ICON.def}</span> <b>DEF</b></p></section>
+        <section><span class="hg-ico">${ICON.atk}</span><h3>Em pé ataca, deitada defende</h3><p><span class="ic">${ICON.atk}</span> <b>ATQ</b> / <span class="ic">${ICON.def}</span> <b>DEF</b></p></section>
         <section><span class="hg-ico"><span class="pip">✕</span></span><h3>Cada ✕ = 1 sacrifício</h3><p>Sem ✕, entra de graça.</p></section>
         <section><span class="hg-ico">${ICON.swap}</span><h3>O maior número vence</h3><ul class="hg-rows"><li><span class="ic">${ICON.atk}</span> vs em pé: quem perde paga a diferença</li><li><span class="ic">${ICON.def}</span> vs deitada: só o atacante paga, se perder</li><li><span class="ic">${ICON.coin}</span> mesa vazia: direto no CAIXA</li></ul></section>
         <section><span class="hg-ico">${ICON.trap}</span><h3>Efeitos e armadilhas</h3><ul class="hg-rows"><li><span class="ic">${ICON.fx}</span> efeito: vale na hora</li><li><span class="ic">${ICON.trap}</span> armadilha: dispara no ataque do rival</li><li><span class="ic">${ICON.dead}</span> Morto: o descarte</li></ul></section>
@@ -251,7 +251,7 @@ export class UI {
         <label>Imagem <span class="seg" data-s="pixel"><button data-v="1">Nítida</button><button data-v="2">Retrô</button><button data-v="3">Pixelada</button></span></label>
         <label>Tamanho <span class="seg" data-s="uiSize"><button data-v="0.85">Pequena</button><button data-v="1">Média</button><button data-v="1.15">Grande</button></span></label>
         <label>Animações <span class="seg" data-s="speed"><button data-v="1">Normal</button><button data-v="1.6">Rápida</button><button data-v="2.5">Turbo</button></span></label>
-        <label><span>Interface curva <small class="fine">${glass.isUhd() ? '· tela 4K: ligada por padrão' : '· ligada por padrão só em 4K'}</small></span> <span class="seg" data-s="hudCurve"><button data-v="true">Ligada</button><button data-v="false">Desligada</button></span></label>
+        <label><span>Interface curva <small class="fine">${glass.isUhd() ? '(tela 4K: ligada por padrão)' : '(ligada por padrão só em 4K)'}</small></span> <span class="seg" data-s="hudCurve"><button data-v="true">Ligada</button><button data-v="false">Desligada</button></span></label>
         <label>Tremor e clarões <span class="seg" data-s="shake"><button data-v="true">Ligado</button><button data-v="false">Reduzido</button></span></label>
         <label>Dicas <span class="seg" data-s="tipsOff"><button data-v="false">Ligadas</button><button data-v="true">Desligadas</button></span></label>
         <label>Som <span class="seg" data-s="muted"><button data-v="false">Ligado</button><button data-v="true">Mudo</button></span></label>
@@ -268,7 +268,7 @@ export class UI {
   }
   gallery() {
     const box = this.modal(`
-      <div class="memo">Arquivo · ${CARDS.length} fichas</div><h2>Arquivo de cartas</h2>
+      <div class="memo">Arquivo / ${CARDS.length} fichas</div><h2>Arquivo de cartas</h2>
       <div class="gal">${CARDS.map((c) => `<figure data-id="${c.id}"><img loading="lazy" src="${asset(c.art)}" alt="${esc(c.name)}"><figcaption>${esc(c.name)}</figcaption></figure>`).join('')}</div>
       <div class="gal-zoom hidden" id="gal-zoom"><img alt=""><div class="gal-text"></div></div>
       <nav><button data-close class="primary">Fechar arquivo</button></nav>`, 'full');
@@ -399,8 +399,8 @@ export class UI {
   ending(onClose) {
     this.onModalClose = onClose ?? null;
     this.modal(`
-      <div class="memo">Ata final · reservado ao Conselho</div><h2>O Conselho caiu.</h2>
-      <p>[CUTSCENE FINAL · EM PRODUÇÃO]</p>
+      <div class="memo">Ata final / reservado ao Conselho</div><h2>O Conselho caiu.</h2>
+      <p>[CUTSCENE FINAL / EM PRODUÇÃO]</p>
       <p class="fine">Espaço reservado para a cena de encerramento. Depois dela, a sala de reunião continua aberta para reuniões livres.</p>
       <nav><button data-close class="primary">Voltar ao expediente</button></nav>`, 'ending');
     sfx('win');
@@ -408,7 +408,7 @@ export class UI {
   gameOver(o) {
     this.show('over', !!o); if (!o) return;
     $('#over').className = `screen ${o.win ? 'win' : o.draw ? 'draw' : 'lose'}`;
-    $('#over-memo').textContent = o.win ? 'Comunicado aos acionistas · aprovado' : o.draw ? 'Ata de reunião · sem deliberação' : 'Aviso de falência · 2ª via';
+    $('#over-memo').textContent = o.win ? 'Comunicado aos acionistas / aprovado' : o.draw ? 'Ata de reunião / sem deliberação' : 'Aviso de falência / 2ª via';
     $('#over-title').textContent = o.title; $('#over-sub').textContent = o.sub; $('#over-stats').textContent = o.stats; $('#over-reward').textContent = o.reward ?? ''; $('#over-reward').className = `reward ${o.win ? 'good' : ''}`;
   }
 }

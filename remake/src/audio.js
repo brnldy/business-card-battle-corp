@@ -223,6 +223,17 @@ const SFX = {
   turn() { bell(1318, now(), 0.1, 1.6); bell(988, now() + 0.22, 0.1, 2.0); },
   turnFoe() { bell(740, now(), 0.08, 1.4); bell(554, now() + 0.22, 0.09, 1.9); },
   type() { noise({ f: rnd(2400, 3400), q: 4, d: 0.025, vol: 0.2 }); tone({ f: rnd(140, 180), d: 0.03, vol: 0.12 }); },
+  // impressora matricial: a cabeça martela uma linha (rajada de agulhadas ásperas, em dois trechos) e o papel avança um tique
+  print() {
+    const t0 = now(), base = rnd(2600, 3200);
+    for (let i = 0; i < 26; i++) {
+      const t = t0 + i * 0.0052 + (i >= 13 ? 0.022 : 0) + rnd(0, 0.0012);
+      noise({ t, f: base * rnd(0.9, 1.12), q: 2.5, a: 0.0006, d: 0.005, vol: 0.18 });
+      if (i % 2 === 0) tone({ t, f: rnd(1450, 1650), type: 'square', a: 0.0005, d: 0.0035, vol: 0.03 });
+    }
+    noise({ t: t0 + 0.175, type: 'lowpass', f: 1100, f2: 350, a: 0.003, d: 0.045, vol: 0.07 });
+    tone({ t: t0 + 0.175, f: 95, f2: 70, a: 0.002, d: 0.04, vol: 0.06 });
+  },
   start() {
     tone({ f: 49, d: 1.6, vol: 0.6, rev: 0.6 }); noise({ type: 'lowpass', f: 200, f2: 2400, a: 0.8, d: 0.5, vol: 0.25, rev: 0.6 });
     [0.0, 0.5, 1.0].forEach((dt, i) => bell(660 * (1 + i * 0.25), now() + dt, 0.07, 1.6));

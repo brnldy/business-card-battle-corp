@@ -491,21 +491,24 @@ button.ds-slot.is-filled:hover, button.ds-slot.is-filled:focus-visible { transfo
 .ds-sign.is-signed .ds-sign__hint { visibility: hidden; }
 .ds-confirm__foot .ds-btn:disabled { opacity: 0.45; cursor: not-allowed; }
 
-/* ── aviso impresso (toast), 27/11: tira de formulário contínuo, igual à tira do topo do duelo e ao relatório ──
-   Duas faixas de 22 px: o cabeçalho (tipo, hora, número) e a mensagem numa linha só; o valor em dinheiro fica na ponta
-   direita da mesma linha, como no relatório. Cresce para os lados antes de quebrar linha. Topo e fim retos.
-   Recusado = fita vermelha. Furos iguais aos da peça de referência (.ds-printout). */
-.ds-feed { --ink: #2a2a26; zoom: var(--lb-fix, 1); position: relative; width: max-content; min-width: 380px; max-width: 920px; padding: 0 38px; background: repeating-linear-gradient(to bottom, #f7f1df 0 22px, #dfeedd 22px 44px); color: var(--ink); border: var(--ds-line) solid var(--ds-ink); box-shadow: 4px 6px 0 rgba(0, 0, 0, 0.45); font: 400 20px/22px var(--f-title); letter-spacing: 0.02em; overflow: hidden; pointer-events: auto; transition: opacity 0.4s, transform 0.4s; animation: ds-feed-print 0.3s steps(3, end) both; }
+/* ── aviso impresso (toast), 27/11: tira de formulário contínuo, como a do topo do duelo e o relatório ──
+   Três faixas de 18 px no mínimo: cabeçalho miúdo (tipo, hora, número), título e detalhe; o valor em dinheiro fica na
+   ponta direita da última faixa. Cresce para os lados antes de quebrar linha. Topo e fim retos. Recusado = fita vermelha. */
+.ds-feed { --ink: #2a2a26; --band: 18px; zoom: var(--lb-fix, 1); position: relative; width: max-content; min-width: 340px; max-width: 920px; padding: 0 36px; background: repeating-linear-gradient(to bottom, #f7f1df 0 var(--band), #dfeedd var(--band) calc(var(--band) * 2)); color: var(--ink); border: var(--ds-line) solid var(--ds-ink); box-shadow: 4px 6px 0 rgba(0, 0, 0, 0.45); font: 400 17px/var(--band) var(--f-title); letter-spacing: 0.02em; overflow: hidden; pointer-events: auto; transition: opacity 0.4s, transform 0.4s; animation: ds-feed-print 0.24s steps(3, end) both; }
 @keyframes ds-feed-print { from { max-height: 0; } to { max-height: 200px; } }
 .ds-feed.out { opacity: 0; transform: translateY(-12px); }
 @media (prefers-reduced-motion: reduce) { .ds-feed { animation: none; transition: none; } }
-.ds-feed::before, .ds-feed::after { content: ""; position: absolute; top: 0; bottom: 0; width: 26px; background: radial-gradient(circle at 50% 11px, #141a16 0 4.5px, transparent 5px) 0 0 / 26px 22px, #efe8d2; }
+/* furos redondos de arraste, um por faixa, com a mesma medida da peça de referência (.ds-printout) */
+.ds-feed::before, .ds-feed::after { content: ""; position: absolute; top: 0; bottom: 0; width: 24px; background: radial-gradient(circle at 50% calc(var(--band) / 2), #141a16 0 4.5px, transparent 5px) 0 0 / 24px var(--band), #efe8d2; }
 .ds-feed::before { left: 0; border-right: 1.5px dashed rgba(27, 20, 13, 0.4); } .ds-feed::after { right: 0; border-left: 1.5px dashed rgba(27, 20, 13, 0.4); }
-.ds-feed__row { display: flex; justify-content: space-between; align-items: baseline; gap: 24px; margin: 0; padding: 0 2px; }
-.ds-feed__head { font-size: 17px; letter-spacing: 0.08em; text-transform: uppercase; white-space: nowrap; opacity: 0.85; }
-.ds-feed__txt { min-width: 0; }
-.ds-feed__txt b { font-weight: 400; text-transform: uppercase; } .ds-feed__txt b + span::before { content: " · "; }
+.ds-feed > p { display: flex; justify-content: space-between; align-items: baseline; gap: 24px; min-height: var(--band); margin: 0; padding: 0 2px; }
+.ds-feed__head { font-size: 13px; letter-spacing: 0.12em; text-transform: uppercase; white-space: nowrap; opacity: 0.8; }
+.ds-feed__line { justify-content: flex-start !important; } .ds-feed__line:last-child { justify-content: space-between !important; }
+.ds-feed__title { text-transform: uppercase; }
 /* confirmado: a marca "OK" impressa em negativo */
-.ds-feed__ok { margin-right: 8px; padding: 0 5px; background: var(--ink); color: #f7f1df; font-style: normal; }
+.ds-feed__ok { flex: none; margin-right: 8px; padding: 0 4px; background: var(--ink); color: #f7f1df; font-style: normal; }
 .ds-feed__amt { flex: none; font-weight: 400; white-space: nowrap; } .ds-feed__amt.pos { color: var(--ds-green); } .ds-feed__amt.neg { color: var(--ds-red); }
 .ds-feed.is-bad { --ink: #b8291c; }
+.ds-feed__line:not(:last-child) { gap: 0; }
+/* a etiqueta da pasta: contagem e estado separados por espaço (sem ponto do meio) */
+.ds-hangfile__front small { display: flex; gap: 12px; }

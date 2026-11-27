@@ -176,3 +176,6 @@ body.theme-buckshot .h-folder__name { text-transform: uppercase; }
 :is(.lb-box--duel, .lb-box--training, .lb-box--missions, .lb-box--shop-packs, .lb-box--shop-cards, .lb-box--shop-decks, .lb-box--shop-look, .lb-box--achievements, .lb-box--deck) .lb-pat { display: grid; justify-items: end; gap: 3px; padding: 0 2px 5px; background: none; clip-path: none; filter: none; border: none; border-bottom: 5px double var(--ds-ink); color: var(--ds-ink-2); font: 700 11px/1 var(--f-ui); letter-spacing: 0.16em; }
 :is(.lb-box--duel, .lb-box--training, .lb-box--missions, .lb-box--shop-packs, .lb-box--shop-cards, .lb-box--shop-decks, .lb-box--shop-look, .lb-box--achievements, .lb-box--deck) .lb-pat b { margin: 0; font: 400 34px/0.9 var(--f-title); color: var(--ds-ink); letter-spacing: 0; vertical-align: 0; }
 :is(.lb-box--duel, .lb-box--training, .lb-box--missions, .lb-box--shop-packs, .lb-box--shop-cards, .lb-box--shop-decks, .lb-box--shop-look, .lb-box--achievements, .lb-box--deck) > header { align-items: center; }
+
+/* fim de partida: as linhas da recompensa vêm separadas por quebra de linha (sem o ponto do meio) */
+#over-reward { white-space: pre-line; }

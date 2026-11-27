@@ -75,9 +75,9 @@ export class Duel {
     // o rival da mesa é sorteado a cada partida: o cabeça de monitor ou uma das 7 pessoas (scene.js → RIVAL_LOOKS)
     const looks = Object.keys(RIVAL_LOOKS); this.R.setRivalLook(looks[Math.floor(Math.random() * looks.length)]);
     setMusicMode(this.plan?.boss ? 'boss' : 'duel'); this.R.setBadge(rival);
-    const where = this.plan ? (this.plan.free ? 'reunião livre' : `batalha ${this.plan.stage} de ${this.plan.total} · ${this.plan.tierName}`) : '';
-    this.ui.log(this.training ? 'Treino com o estagiário · não vale PATRIMÔNIO' : `Partida contra ${rival}${where ? ` · ${where}` : ''} · protocolo ${seed.toString(36).toUpperCase()}`);
-    if (this.plan && !this.plan.free) setTimeout(() => this.active && this.ui.banner(this.plan.boss ? 'O CONSELHO' : rival, this.plan.boss ? 'batalha final · o conselho não perdoa' : `batalha ${this.plan.stage} de ${this.plan.total}`, 'foe'), 200);
+    const where = this.plan ? (this.plan.free ? 'reunião livre' : `batalha ${this.plan.stage} de ${this.plan.total} / ${this.plan.tierName}`) : '';
+    this.ui.log(this.training ? 'Treino com o estagiário / não vale PATRIMÔNIO' : `Partida contra ${rival}${where ? ` / ${where}` : ''} / protocolo ${seed.toString(36).toUpperCase()}`);
+    if (this.plan && !this.plan.free) setTimeout(() => this.active && this.ui.banner(this.plan.boss ? 'O CONSELHO' : rival, this.plan.boss ? 'batalha final / o conselho não perdoa' : `batalha ${this.plan.stage} de ${this.plan.total}`, 'foe'), 200);
     this.indexCards();
     this.refreshHud();
     await wait(350);
@@ -384,7 +384,7 @@ export class Duel {
           if (e.atk) parts.push(`ATQ ${e.atk > 0 ? '+' : ''}${e.atk}`);
           if (e.def) parts.push(`DEF ${e.def > 0 ? '+' : ''}${e.def}`);
           const bad = (e.mul ?? 1) < 1 || (e.atk ?? 0) + (e.def ?? 0) < 0;
-          if (p && parts.length) { this.floatAt(p, parts.join(' · '), bad ? 'bad' : 'good'); sfx(bad ? 'debuff' : 'buff'); this.sparkle(p, bad ? [1, 0.4, 0.3] : [0.5, 1, 0.6], 16); }
+          if (p && parts.length) { this.floatAt(p, parts.join(' / '), bad ? 'bad' : 'good'); sfx(bad ? 'debuff' : 'buff'); this.sparkle(p, bad ? [1, 0.4, 0.3] : [0.5, 1, 0.6], 16); }
           this.refreshChips(); await wait(D(380));
           break;
         }
@@ -489,10 +489,10 @@ export class Duel {
     this.ui.gameOver({
       win, draw,
       reward: [this.training ? 'Treino: não vale PATRIMÔNIO nem entra no histórico.' : out?.reward ? `+ ${money(out.reward)} de PATRIMÔNIO` : win ? '' : 'Os investidores não pagam derrota. As metas do mural pagam.',
-        this.plan && !this.plan.free ? (out?.finished ? 'Campanha concluída. O Conselho caiu.' : out?.advanced ? `Batalha ${this.plan.stage} de ${this.plan.total} vencida. A próxima porta está aberta.` : `Você continua na batalha ${this.plan.stage} de ${this.plan.total}.`) : ''].filter(Boolean).join(' · '),
+        this.plan && !this.plan.free ? (out?.finished ? 'Campanha concluída. O Conselho caiu.' : out?.advanced ? `Batalha ${this.plan.stage} de ${this.plan.total} vencida. A próxima porta está aberta.` : `Você continua na batalha ${this.plan.stage} de ${this.plan.total}.`) : ''].filter(Boolean).join('\n'),
       title: draw ? 'EMPATE' : win ? 'VOCÊ VENCEU' : 'VOCÊ FALIU',
       sub: e.reason === 'turn_limit' ? 'Limite de turnos: vence o maior CAIXA.' : win ? `${name} ficou sem CAIXA.` : `${name} leva o investimento.`,
-      stats: `Você ${money(s.players[ME].caixa)} · ${name} ${money(s.players[OP].caixa)} · ${s.turn} turnos`,
+      stats: `Você ${money(s.players[ME].caixa)} / ${name} ${money(s.players[OP].caixa)} / ${s.turn} turnos`,
     });
   }
 
@@ -833,7 +833,7 @@ export class Duel {
     const folder = (i) => {
       const p = s.players[i], frio = Object.values(p.frio).reduce((a, b) => a + b, 0), meta = [];
       if (i === OP) meta.push({ icon: 'hand', text: `${p.hand.length} carta${p.hand.length === 1 ? '' : 's'} na mão`, title: 'Cartas na mão do rival' });
-      if (frio) meta.push({ icon: 'cold', tone: 'cold', html: `Frio ×${frio} · perde <b>${C_money(frio * 100)}</b> por turno`, title: 'No início de cada turno, perde $100 por marcador de Frio' });
+      if (frio) meta.push({ icon: 'cold', tone: 'cold', html: `Frio ×${frio}: perde <b>${C_money(frio * 100)}</b> por turno`, title: 'No início de cada turno, perde $100 por marcador de Frio' });
       return { who: i === ME ? 'me' : 'opp', name: this.names[i], caixa: this.caixaShown[i], max: RULES.STARTING_CAIXA, active: !over && active === i, meta };
     };
     this.ui.setFolders({ me: folder(ME), opp: folder(OP), mine, over });
@@ -930,7 +930,7 @@ export class Duel {
     }
     if (p.kind === 'dead') {
       const dead = s.players[p.side].dead;
-      return { cardId: dead[dead.length - 1].cardId, where: 'dead', owner, notes: [`Morto de ${p.side === ME ? 'você' : this.names[OP]}: ${dead.length} carta${dead.length > 1 ? 's' : ''}.`, `Últimas: ${dead.slice(-3).reverse().map((d) => cardDef(d.cardId).name).join(' · ')}`] };
+      return { cardId: dead[dead.length - 1].cardId, where: 'dead', owner, notes: [`Morto de ${p.side === ME ? 'você' : this.names[OP]}: ${dead.length} carta${dead.length > 1 ? 's' : ''}.`, `Últimas: ${dead.slice(-3).reverse().map((d) => cardDef(d.cardId).name).join(', ')}`] };
     }
     return { cardId: c.cardId, owner };
   }

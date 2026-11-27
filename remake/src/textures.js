@@ -210,7 +210,7 @@ export function cardFaceCanvas(cardId) {
   } else {
     g.fillStyle = 'rgba(17,17,17,0.82)'; g.fillRect(art.x, art.y + art.h - 96, art.w, 96);
     g.fillStyle = '#f3f8f0'; g.font = `700 54px ${UI}`; g.textAlign = 'center';
-    g.fillText(def.kind === 'effect_trap' ? '▼ ARMADILHA ▼' : def.durationTurns ? `EFEITO · ${def.durationTurns} TURNOS` : 'EFEITO IMEDIATO', T.W / 2, art.y + art.h - 46);
+    g.fillText(def.kind === 'effect_trap' ? '▼ ARMADILHA ▼' : def.durationTurns ? `EFEITO DE ${def.durationTurns} TURNOS` : 'EFEITO IMEDIATO', T.W / 2, art.y + art.h - 46);
   }
   g.restore();
   return c;
