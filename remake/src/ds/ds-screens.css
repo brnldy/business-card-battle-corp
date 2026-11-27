@@ -89,8 +89,8 @@
 #menu .mn-card { counter-reset: mn; } #menu .mn-card .mn-row:not(.hidden) { counter-increment: mn; } #menu .mn-card .mn-row b::before { content: counter(mn, decimal-leading-zero); }
 
 /* ══ lobby novo (docs/UI_LOBBY.md): piso de tamanho, carta reduzida, detalhe da carta, loja ══ */
-.lb-box--duel, .lb-box--training, .lb-box--missions, .lb-box--shop-packs, .lb-box--shop-cards, .lb-box--shop-decks, .lb-box--shop-look, .lb-box--achievements, .lb-box--deck, .lb-pack > .pk, .lb-detail > .cd { zoom: var(--lb-fix, 1); }
-#lobby :is(.lb-box--shop-packs, .lb-box--shop-cards, .lb-box--shop-decks, .lb-box--shop-look, .lb-box--achievements, .lb-box--deck, .lb-box--deck) .lb-x { width: 46px; height: 46px; font-size: 16px; }
+.lb-box--duel, .lb-box--training, .lb-box--missions, .lb-box--shop-packs, .lb-box--shop-cards, .lb-box--shop-decks, .lb-box--shop-look, .lb-box--achievements, .lb-box--deck, .lb-box--profile, .lb-pack > .pk, .lb-detail > .cd { zoom: var(--lb-fix, 1); }
+#lobby :is(.lb-box--shop-packs, .lb-box--shop-cards, .lb-box--shop-decks, .lb-box--shop-look, .lb-box--achievements, .lb-box--deck, .lb-box--profile, .lb-box--deck, .lb-box--profile, .lb-box--profile) .lb-x { width: 46px; height: 46px; font-size: 16px; }
 /* carta reduzida (R4): a mesma face da mesa do duelo */
 .ds-mini { display: block; width: 100%; aspect-ratio: 1079 / 1257; border-radius: 4.1% / 3.5%; box-shadow: 0 0 0 1.5px var(--ds-ink), 3px 4px 0 rgba(0, 0, 0, 0.35); user-select: none; }
 /* detalhe da carta (R6) */
@@ -156,8 +156,8 @@
 
 
 /* ── loja → cartas avulsas: vitrine em grade à esquerda, ficha da carta sempre à direita (27/11) ── */
-:is(.lb-box--shop-cards, .lb-box--shop-decks, .lb-box--shop-look, .lb-box--achievements, .lb-box--deck, .lb-box--deck) { width: min(1180px, 96%); height: min(770px, 90%); max-height: none; display: flex; flex-direction: column; }
-:is(.lb-box--shop-cards, .lb-box--shop-decks, .lb-box--shop-look, .lb-box--achievements, .lb-box--deck, .lb-box--deck) > header { padding: 14px 0 12px; }
+:is(.lb-box--shop-cards, .lb-box--shop-decks, .lb-box--shop-look, .lb-box--achievements, .lb-box--deck, .lb-box--profile, .lb-box--deck, .lb-box--profile, .lb-box--profile) { width: min(1180px, 96%); height: min(770px, 90%); max-height: none; display: flex; flex-direction: column; }
+:is(.lb-box--shop-cards, .lb-box--shop-decks, .lb-box--shop-look, .lb-box--achievements, .lb-box--deck, .lb-box--profile, .lb-box--deck, .lb-box--profile, .lb-box--profile) > header { padding: 14px 0 12px; }
 .sc { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) 388px; gap: var(--ds-5); }
 .sc-shelf { min-height: 0; display: grid; grid-template-rows: auto minmax(0, 1fr); background: var(--ds-tex-card); border: var(--ds-line) solid var(--ds-ink); box-shadow: var(--ds-frame-in); }
 .sc-tools { display: flex; align-items: center; justify-content: space-between; gap: var(--ds-4); margin: 0 var(--ds-5); padding: 14px 0 12px; border-bottom: 1.5px dashed var(--ds-ink-3); } .sc-tools b { font: 400 22px/1 var(--f-title); letter-spacing: 0.06em; text-transform: uppercase; color: var(--ds-ink-2); }
@@ -221,7 +221,7 @@ button.ds-check { background: none; border: none; padding: 6px 0; pointer-events
 
 /* ── tamanho único das janelas novas (27/11, pedido do autor): a pasta não muda de tamanho entre abas nem entre janelas,
    então as abas não pulam. O conteúdo de cada tela ocupa a pasta. ── */
-:is(.lb-box--duel, .lb-box--training, .lb-box--missions, .lb-box--achievements, .lb-box--deck, .lb-box--shop-packs, .lb-box--shop-cards, .lb-box--shop-decks, .lb-box--shop-look) { width: min(1180px, 96%); height: min(770px, 90%); max-height: none; display: flex; flex-direction: column; }
+:is(.lb-box--duel, .lb-box--training, .lb-box--missions, .lb-box--achievements, .lb-box--deck, .lb-box--profile, .lb-box--shop-packs, .lb-box--shop-cards, .lb-box--shop-decks, .lb-box--shop-look) { width: min(1180px, 96%); height: min(770px, 90%); max-height: none; display: flex; flex-direction: column; }
 /* metas: a cortiça ocupa a pasta e os memorandos ficam no meio dela */
 .ms { grid-template-rows: minmax(0, 1fr) auto; } .ms-board { align-items: center; }
 .ms, .sh { flex: 1; min-height: 0; }
@@ -328,3 +328,36 @@ button.ds-check { background: none; border: none; padding: 6px 0; pointer-events
 .ed-foot { display: flex !important; flex-wrap: wrap; align-items: center; justify-content: space-between; } .ed-foot > .ds-btn { flex: 1 1 100%; } .ed-foot > .ds-stamp { flex: none; }
 /* dica do rodapé do editor: três pedaços separados por espaço (sem ponto do meio) */
 .ed-hint { display: flex; gap: 22px; }
+
+
+/* ══ Perfil (27/11): contrato social e extrato impresso ══ */
+.pf-file > .ds-body { grid-template-rows: auto auto 1fr auto; }
+.pf-list { margin: 0; display: grid; }
+.pf-list div { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 6px 2px 5px; border-bottom: 1px dashed rgba(27, 20, 13, 0.3); }
+.pf-list dt { font: 600 14px/1.2 var(--f-ui); color: var(--ds-ink-2); } .pf-list dd { margin: 0; font: 400 22px/1 var(--f-title); white-space: nowrap; }
+.pf-fav { display: flex; gap: 14px; align-items: center; } .pf-fav .ds-mini { width: 56px; flex: none; }
+.pf-fav > span { display: grid; gap: 4px; min-width: 0; } .pf-fav b { font: 400 20px/1 var(--f-title); text-transform: uppercase; } .pf-fav small { font: 500 13px/1.2 var(--f-ui); color: var(--ds-ink-2); }
+.pf-foot { align-self: end; }
+#lobby .fd-minor .pf-wipe { color: var(--ds-red); } #lobby .fd-minor .pf-wipe:hover:not(:disabled) { color: var(--ds-red); }
+#lobby .pf-rename { justify-self: start; width: auto; min-height: 28px; height: auto; margin: 4px 0 0; padding: 0; background: none; box-shadow: none; font-size: 12px; color: var(--ds-ink-2); border-bottom: 1.5px solid currentColor; }
+#lobby .pf-rename:hover { color: var(--ds-ink); background: none; }
+/* extrato: o papel rola dentro da pasta (os furos andam junto com o papel) */
+.pf-paper { min-height: 0; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--ds-ink) rgba(27, 20, 13, 0.12); box-shadow: 6px 8px 0 rgba(0, 0, 0, 0.35); }
+.pf-ledger { min-height: 100%; box-sizing: border-box; box-shadow: none; font-size: 19px; text-transform: uppercase; }
+.pf-ledger > .pf-top { padding-top: 0; }
+.pf-ledger > .pf-row { display: grid; grid-template-columns: 56px minmax(0, 1fr) 84px 62px 132px 108px; gap: 10px; }
+.pf-ledger > .pf-feed { height: 22px; }
+.pf-row > span { overflow: hidden; text-overflow: ellipsis; } .pf-row > span:nth-child(4), .pf-row > span:nth-child(5), .pf-row > span:nth-child(6) { text-align: right; }
+.pf-cols { color: rgba(42, 42, 38, 0.7); font-size: 16px; letter-spacing: 0.08em; border-bottom: 1.5px dashed rgba(27, 20, 13, 0.45); }
+.pf-row.is-win > span:nth-child(3) { color: var(--ds-green); } .pf-row.is-loss > span:nth-child(3) { color: var(--ds-red); }
+.pf-ledger .pos { color: var(--ds-green); }
+.pf-total { border-top: 1.5px dashed rgba(27, 20, 13, 0.45); }
+.pf-none { justify-content: center !important; color: rgba(42, 42, 38, 0.75); }
+/* placar por empresa */
+.pf-file .ds-body:has(.pf-scores) { grid-template-rows: auto minmax(0, 1fr); }
+.pf-scores { min-height: 0; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--ds-ink) transparent; }
+.pf-score { display: grid; grid-template-columns: minmax(0, 1fr) 40px 40px; gap: 8px; align-items: baseline; margin: 0; padding: 6px 2px 5px; border-bottom: 1px dashed rgba(27, 20, 13, 0.3); }
+.pf-score > span { font: 400 19px/1 var(--f-title); text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pf-score > b { font: 400 22px/1 var(--f-title); text-align: right; } .pf-score > b:nth-child(2) { color: var(--ds-green); } .pf-score > b:nth-child(3) { color: var(--ds-red); }
+.pf-score--h { border-bottom: var(--ds-line) solid var(--ds-ink); } .pf-score--h > span { font: 700 12px/1 var(--f-ui); letter-spacing: 0.12em; color: var(--ds-ink-2); text-align: right; } .pf-score--h > span:first-child { text-align: left; }
+.pf-score.is-ahead > span { color: var(--ds-ink); } .pf-score.is-behind > span { color: var(--ds-ink-2); }

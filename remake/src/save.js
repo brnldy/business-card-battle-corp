@@ -74,6 +74,9 @@ export const save = {
 
   // ───── nome da empresa (mora no slot) ─────
   company() { if (!rec) this.get(); return rec.name; },
+  /** data em que a empresa foi registrada (ms) e a gaveta em uso: só para mostrar no Perfil */
+  founded() { if (!rec) this.get(); return rec.createdAt; },
+  slotNo() { if (!rec) this.get(); return current; },
   rename(name) { if (!rec) this.get(); rec.name = name; persist(); notify(); },
 
   /** Apaga o progresso do slot em uso e mantém o nome (Perfil → Recomeçar do zero). */

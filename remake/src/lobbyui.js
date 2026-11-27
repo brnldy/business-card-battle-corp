@@ -41,6 +41,7 @@ const HTABS = {
   shop: ['tab', [['packs', 'Pacotes'], ['cards', 'Cartas'], ['decks', 'Decks'], ['look', 'Visual']]],
   duel: ['open', [['duel', 'Campanha'], ['training', 'Treino']]], training: ['open', [['duel', 'Campanha'], ['training', 'Treino']]],
   deck: ['tab', [['decks', 'Meus decks'], ['collection', 'Coleção']]],
+  profile: ['tab', [['card', 'Ficha'], ['history', 'Extrato']]],
   missions: ['open', [['missions', 'Metas do dia'], ['achievements', 'Troféus']]], achievements: ['open', [['missions', 'Metas do dia'], ['achievements', 'Troféus']]],
 };
 const inkLogo = (id) => logoUrl(id, { ink: '#1b140d', accent: '#c98a16', bg: '#f6efdc' });
@@ -57,10 +58,10 @@ const TITLES = {
   deck: ['Arquivo morto', 'Decks'], recycle: ['Trituradora', 'Reciclar repetidas'],
   duel: ['Sala de reunião', 'Campanha'], training: ['Mesa do estagiário', 'Treino sem valer'],
   missions: ['Mural de avisos', 'Metas do dia'], shop: ['Máquina de benefícios', 'Loja'],
-  achievements: ['Prateleira de troféus', 'Troféus'], profile: ['Recepção', 'Perfil da empresa'],
+  achievements: ['Prateleira de troféus', 'Troféus'], profile: ['Recepção', 'Perfil'],
 };
 // janelas que já usam o cabeçalho novo (papel timbrado com o recibo do patrimônio)
-const NEW_HEAD = new Set(['duel', 'training', 'missions', 'achievements', 'shop', 'deck']);
+const NEW_HEAD = new Set(['duel', 'training', 'missions', 'achievements', 'shop', 'deck', 'profile']);
 const sortCards = (ids) => [...ids].sort((a, b) => a.localeCompare(b));
 const group = (ids) => { const m = new Map(); for (const id of ids) m.set(id, (m.get(id) ?? 0) + 1); return [...m.entries()].sort((a, b) => a[0].localeCompare(b[0])); };
 const dateStr = (ms) => { const d = new Date(ms), p = (n) => String(n).padStart(2, '0'); return `${p(d.getDate())}/${p(d.getMonth() + 1)} ${p(d.getHours())}:${p(d.getMinutes())}`; };
@@ -168,7 +169,7 @@ export class LobbyUI {
   /** aviso impresso (peça .ds-feed): tira de formulário contínuo que sai da impressora matricial.
    *  tone: 'good' (confirmado), 'bad' (recusado, fita vermelha), 'gold' (crédito) ou nada (nota).
    *  amount: valor que entrou (+) ou saiu (−) do PATRIMÔNIO, na ponta direita da última faixa, como no relatório.
-   *  Sempre três faixas ou mais: cabeçalho miúdo, título, detalhe. Ao aparecer, toca o som da matricial. */
+   *  Sempre três faixas ou mais: cabeçalho miúdo, título, detalhe. */
   toast(text, tone = '', { amount = null } = {}) {
     const n = (this._feedNo = (this._feedNo ?? 41) + 1), d = new Date(), hh = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
     const label = tone === 'bad' ? 'Recusado' : amount != null ? (amount >= 0 ? 'Crédito' : 'Débito') : tone === 'good' ? 'Confirmado' : tone === 'gold' ? 'Crédito' : 'Nota';
@@ -180,7 +181,6 @@ export class LobbyUI {
     el.innerHTML = `<p class="ds-feed__head"><span>BCBC / ${label}</span><span>${hh} / Nº ${String(n).padStart(4, '0')}</span></p>
       <p class="ds-feed__line">${ok}<span class="${title != null ? 'ds-feed__title' : ''}">${title ?? text}</span></p>
       <p class="ds-feed__line"><span>${title != null ? detail : ''}</span>${amt}</p>`;
-    const now = performance.now(); if (now - (this._printAt ?? 0) > 150) { sfx('print'); this._printAt = now; }
     // aviso com botão fica mais tempo (dá para alcançar o botão)
     const t = text.includes('<button') ? 7000 : 4200;
     $('.lb-toasts', this.root).appendChild(el); setTimeout(() => el.classList.add('out'), t); setTimeout(() => el.remove(), t + 600);
@@ -990,24 +990,55 @@ export class LobbyUI {
         <footer class="ds-file__foot ds-manifest__foot">${on ? '<i class="ds-stamp ds-stamp--ok">Pago</i>' : '<p class="ds-manifest__line">Paga sozinha quando você cumprir.</p>'}</footer>
       </div></section>`;
   }
+  // ───────── recepção: perfil da empresa ─────────
   vProfile(s) {
-    const tabs = this.tabs('profile', [['card', 'Ficha'], ['history', 'Histórico'], ['look', 'Visual']]), t = this.tab.profile, st = s.stats;
-    let body = '';
-    if (t === 'card') {
-      const fav = Meta.favoriteCard(s);
-      body = `<div class="lb-id"><div class="lb-idcard"><img src="${logoUrl(s.cosmetics.logo)}" alt=""><p class="memo">Razão social</p><h3>${esc(this.company())}</h3><button data-a="rename">Mudar o nome</button></div>
-        <dl class="lb-stats"><div><dt>Partidas</dt><dd>${st.games}</dd></div><div><dt>Vitórias</dt><dd>${st.wins}</dd></div><div><dt>Derrotas</dt><dd>${st.losses}</dd></div><div><dt>Aproveitamento</dt><dd>${Meta.winRate(s)}%</dd></div>
-          <div><dt>Melhor sequência</dt><dd>${st.bestStreak}</dd></div><div><dt>Maior golpe</dt><dd>${money(st.biggestHit)}</dd></div><div><dt>Já faturou</dt><dd>${money(st.earned)}</dd></div><div><dt>Pacotes abertos</dt><dd>${st.packs}</dd></div>
-          <div class="wide"><dt>Carta mais usada</dt><dd>${fav ? `${esc(byId.get(fav)?.name ?? fav)} (${st.plays[fav]}×)` : 'nenhuma ainda'}</dd></div><div class="wide"><dt>Coleção</dt><dd>${Meta.distinctOwned(s)} de ${CARDS.length} cartas</dd></div></dl></div>
-        <p class="fine lb-wipe"><button data-a="wipe" class="ghost">Recomeçar do zero</button></p>`;
-    } else if (t === 'history') {
-      body = s.history.length ? `<div class="lb-scroll"><table class="lb-hist"><thead><tr><th>Quando</th><th>Rival</th><th>Resultado</th><th>Turnos</th><th>CAIXA final</th><th>Recebido</th></tr></thead><tbody>${s.history.map((h) => `<tr class="${h.result}"><td>${dateStr(h.at)}</td><td>${esc(h.rival)}</td><td><b>${h.result === 'win' ? 'Vitória' : h.result === 'loss' ? 'Derrota' : 'Empate'}</b></td><td>${h.turns}</td><td>${money(h.caixa[0])} × ${money(h.caixa[1])}</td><td>${h.reward ? `+ ${money(h.reward)}` : '—'}</td></tr>`).join('')}</tbody></table></div>`
-        : '<p class="lb-empty big">Nenhuma reunião ainda.</p>';
-    } else {
-      const item = (c) => { const own = s.cosmetics.owned.includes(c.id), on = s.cosmetics[c.kind] === c.id, img = c.kind === 'logo' ? logoUrl(c.id) : backUrl(c.id, s.cosmetics.logo, asset('cards/back.png')); return `<figure class="lb-cos lb-cos--${c.kind} ${on ? 'on' : ''} ${own ? '' : 'is-locked'}"><img src="${img}" alt=""><figcaption>${esc(c.name)}</figcaption>${own ? `<button data-a="equip" data-id="${c.id}" ${on ? 'disabled' : ''}>${on ? 'Em uso' : 'Usar'}</button>` : `<button data-a="open" data-id="shop" data-tab="look">${money(c.price)} na loja</button>`}</figure>`; };
-      body = `<div class="lb-scroll"><p class="memo">Logo da empresa</p><div class="lb-cosgrid">${META.cosmetics.filter((c) => c.kind === 'logo').map(item).join('')}</div><p class="memo">Verso das suas cartas no duelo</p><div class="lb-cosgrid">${META.cosmetics.filter((c) => c.kind === 'back').map(item).join('')}</div></div>`;
-    }
-    return `${tabs}<div class="lb-pad lb-fill">${body}</div>`;
+    const t = (this.tab.profile = ['card', 'history'].includes(this.tab.profile) ? this.tab.profile : 'card');
+    return t === 'history' ? this.vLedger(s) : this.vCharter(s);
   }
+  /** Ficha: o contrato social (peça .ds-charter) e, ao lado, os indicadores */
+  vCharter(s) {
+    const st = s.stats, c = s.campaign, fav = Meta.favoriteCard(s), d = new Date(save.founded() ?? Date.now()), n = save.slotNo() ?? 1, p2 = (x) => String(x).padStart(2, '0');
+    const stage = c.cleared ? 'campanha concluída' : `reunião ${Math.min(c.stage + 1, CAMPAIGN.length)} de ${CAMPAIGN.length}`;
+    const charter = `<section class="ds-charter">
+      <header class="ds-charter__head"><span>Registro Nº ${String(n).padStart(4, '0')}</span><b>Contrato social</b><span>Gaveta ${n}</span></header>
+      <div class="ds-charter__id"><span class="ds-seal"><img src="${inkLogo(s.cosmetics.logo)}" alt=""></span>
+        <div><span class="ds-formlabel">Razão social</span><h3 class="ds-charter__name">${esc(this.company())}</h3>
+          <p class="ds-charter__meta">Fundada em ${p2(d.getDate())}/${p2(d.getMonth() + 1)}/${d.getFullYear()} / ${stage}</p>
+          <button class="ds-btn ds-btn--link pf-rename" data-a="rename">Mudar o nome</button></div></div>
+      <dl class="ds-charter__nums"><div><dt>Vitórias</dt><dd>${st.wins}</dd></div><div><dt>Aproveitamento</dt><dd>${Meta.winRate(s)}<small>%</small></dd></div><div><dt>Coleção</dt><dd>${Meta.distinctOwned(s)}<small> de ${CARDS.length}</small></dd></div></dl>
+      <footer class="ds-charter__foot"><div class="ds-charter__sign"><svg class="ds-charter__sig" viewBox="0 0 220 60" aria-hidden="true"><path d="M8 44 C 18 10, 30 10, 26 40 C 24 52, 40 30, 48 22 C 56 12, 60 44, 70 36 C 78 28, 82 18, 90 30 C 96 40, 104 26, 112 24 C 122 22, 118 46, 132 38 C 146 30, 150 20, 160 30 C 168 38, 176 34, 186 28 M 20 50 C 70 46, 140 48, 210 40" /></svg><span>Diretoria</span></div><i class="ds-stamp ds-stamp--ok">Registrada</i></footer>
+    </section>`;
+    const row = (k, v) => `<div><dt>${k}</dt><dd>${v}</dd></div>`;
+    const file = `<section class="ds-sheet ds-file pf-file">
+      <div class="ds-bar"><span>Indicadores</span><b>${st.games} reuni${st.games === 1 ? 'ão' : 'ões'}</b></div>
+      <div class="ds-body">
+        <dl class="pf-list">${row('Derrotas', st.losses)}${row('Empates', st.draws)}${row('Sequência atual', st.streak)}${row('Melhor sequência', st.bestStreak)}${row('Maior golpe', money(st.biggestHit))}${row('Já faturou', money(st.earned))}${row('Pacotes abertos', st.packs)}</dl>
+        <div class="pf-fav">${fav ? `${mini(fav)}<span><span class="ds-formlabel">Carta mais usada</span><b>${esc(byId.get(fav)?.name ?? fav)}</b><small>jogada ${st.plays[fav]} ${st.plays[fav] === 1 ? 'vez' : 'vezes'}</small></span>` : '<span><span class="ds-formlabel">Carta mais usada</span><small>Nenhuma ainda.</small></span>'}</div>
+        <footer class="ds-file__foot pf-foot"><div class="fd-minor"><button class="ds-btn ds-btn--link" data-a="open" data-id="shop" data-tab="look">Trocar o logo</button><button class="ds-btn ds-btn--link pf-wipe" data-a="wipe">Recomeçar do zero</button></div></footer>
+      </div></section>`;
+    return `<div class="sc pf">${charter}${file}</div>`;
+  }
+  /** Extrato: o histórico impresso no formulário contínuo e, ao lado, o placar por empresa */
+  vLedger(s) {
+    const H = s.history, p2 = (x) => String(x).padStart(2, '0'), RES = { win: 'Venceu', loss: 'Perdeu', draw: 'Empate' };
+    const when = (ms) => { const d = new Date(ms); return `${p2(d.getDate())}/${p2(d.getMonth() + 1)}`; };
+    const num = (v) => money(v).replace(/^\$\s*/, '');
+    const rows = H.map((h) => `<p class="pf-row is-${h.result}" title="${esc(dateStr(h.at))}"><span>${when(h.at)}</span><span>${esc(h.rival)}</span><span>${RES[h.result]}</span><span>${h.turns}</span><span>${num(h.caixa[0])} x ${num(h.caixa[1])}</span><span class="${h.reward > 0 ? 'pos' : ''}">${h.reward > 0 ? `+ ${money(h.reward)}` : '-'}</span></p>`).join('');
+    const total = H.reduce((a, h) => a + (h.reward || 0), 0), wins = H.filter((h) => h.result === 'win').length;
+    const paper = `<div class="pf-paper"><div class="ds-printout pf-ledger">
+      <p class="pf-feed" aria-hidden="true"></p><p class="pf-top"><span>BCBC / Extrato de reuniões</span><span>FL 01</span></p>
+      <p class="pf-row pf-cols"><span>Data</span><span>Empresa</span><span>Resultado</span><span>Turnos</span><span>Caixa</span><span>Recebido</span></p>
+      ${rows || '<p class="pf-none">Nenhuma reunião registrada.</p><p class="pf-none">O extrato começa na primeira partida.</p>'}
+      ${H.length ? `<p class="pf-total"><span>Total: ${H.length} reuni${H.length === 1 ? 'ão' : 'ões'} / ${wins} ${wins === 1 ? 'vitória' : 'vitórias'}</span><span class="pos">+ ${money(total)}</span></p>` : ''}
+    </div></div>`;
+    const R = Object.entries(s.stats.rivals ?? {}).map(([name, r]) => ({ name, w: r.w ?? 0, l: r.l ?? 0 })).filter((r) => r.w + r.l > 0).sort((a, b) => b.w + b.l - (a.w + a.l) || b.w - a.w || a.name.localeCompare(b.name));
+    const file = `<section class="ds-sheet ds-file pf-file">
+      <div class="ds-bar"><span>Placar por empresa</span><b>${R.length} de ${CAMPAIGN.length}</b></div>
+      <div class="ds-body">
+        ${R.length ? `<p class="pf-score pf-score--h"><span>Empresa</span><span>V</span><span>D</span></p><div class="pf-scores">${R.map((r) => `<p class="pf-score ${r.w > r.l ? 'is-ahead' : r.l > r.w ? 'is-behind' : ''}"><span>${esc(r.name)}</span><b>${r.w}</b><b>${r.l}</b></p>`).join('')}</div>` : '<p class="ds-manifest__line">Nenhuma empresa enfrentada ainda.</p>'}
+      </div></section>`;
+    return `<div class="sc pf">${paper}${file}</div>`;
+  }
+
 }
 export { MAX_NAME, cleanName };
