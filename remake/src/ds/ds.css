@@ -318,3 +318,66 @@ button.ds-plaque { transition: transform 0.1s; } button.ds-plaque:hover, button.
   border: var(--ds-line) solid var(--ds-ink); border-radius: 3px; box-shadow: inset 0 0 0 3px var(--cash), inset 0 0 0 4.5px rgba(35, 96, 58, 0.6), 2px 3px 0 rgba(27, 20, 13, 0.3); }
 .ds-cash__seal { flex: none; display: grid; place-items: center; width: 30px; height: 30px; padding-top: 2px; border-radius: 50%; background: var(--cash-ink); color: #eef3e6; font: 400 24px/1 var(--f-title); font-style: normal; box-shadow: 0 0 0 2px var(--cash), 0 0 0 3.5px var(--cash-ink); }
 .ds-cash__note b { margin-left: auto; padding-top: 3px; font: 400 34px/1 var(--f-title); letter-spacing: 0.03em; color: #16301f; white-space: nowrap; }
+
+/* ── peças de 27/11 (Campanha e Treino) ── */
+/* agenda de reuniões: folha de planejamento presa por espiral. Na margem, cada faixa (nome e quanto paga); um dia por
+   reunião. Fechada = nome a caneta azul e riscada com X; a próxima = circulada a caneta vermelha; o chefe em vermelho. */
+.ds-agenda { position: relative; display: grid; grid-template-rows: auto minmax(0, 1fr); min-height: 0; background: var(--ds-tex-lines), var(--ds-card); color: var(--ds-ink); border: var(--ds-line) solid var(--ds-ink); box-shadow: 0 3px 0 -1px #e2d6b8, 0 3px 0 1px var(--ds-ink), 6px 10px 0 1px rgba(40, 24, 6, 0.3); }
+.ds-agenda__rings { position: absolute; left: 30px; right: 30px; top: -13px; display: flex; justify-content: space-between; pointer-events: none; }
+.ds-agenda__rings i { position: relative; width: 11px; height: 27px; }
+.ds-agenda__rings i::before { content: ""; position: absolute; left: 0; bottom: 0; width: 11px; height: 7px; border-radius: 50%; background: #2a2017; }
+.ds-agenda__rings i::after { content: ""; position: absolute; left: 2px; top: 0; bottom: 3px; width: 7px; box-sizing: border-box; border-radius: 4px; background: linear-gradient(to right, #6d6a64, #ece8de 45%, #8a867e); border: 1.5px solid var(--ds-ink); }
+.ds-agenda__head { display: flex; justify-content: space-between; align-items: baseline; gap: var(--ds-4); padding: 26px 22px 12px; border-bottom: 3px double var(--ds-ink); }
+.ds-agenda__head > b { font: 400 26px/1 var(--f-title); letter-spacing: 0.04em; text-transform: uppercase; }
+.ds-agenda__head > span { font: 700 12px/1 var(--f-ui); letter-spacing: 0.12em; text-transform: uppercase; color: var(--ds-ink-2); } .ds-agenda__head > span b { margin: 0 2px 0 4px; font: 400 20px/1 var(--f-title); color: var(--ds-ink); }
+.ds-agenda__grid { list-style: none; margin: 0; padding: 0 22px 16px 0; min-height: 0; overflow: hidden; display: grid; grid-template-columns: 150px repeat(5, minmax(0, 1fr)); grid-template-rows: repeat(6, minmax(0, 1fr)); }
+.ds-agenda__tier { position: relative; grid-column: 1; display: grid; align-content: center; justify-items: start; gap: 6px; padding: 8px 12px 8px 20px; }
+.ds-agenda__tier::before { content: ""; position: absolute; left: 0; top: -1px; width: 2000px; border-top: var(--ds-line) solid var(--ds-ink); }
+.ds-agenda__tier:first-child::before { display: none; }
+.ds-agenda__tier span { font: 700 12px/1.25 var(--f-ui); letter-spacing: 0.05em; text-transform: uppercase; color: var(--ds-ink-2); }
+.ds-agenda__tier b { font: 400 30px/1 var(--f-title); color: var(--ds-ink); }
+.ds-agenda__tier.is-on span { background: linear-gradient(to bottom, transparent 8%, #fff06a 8% 92%, transparent 92%); padding: 0 3px; margin-left: -3px; color: var(--ds-ink); }
+.ds-agenda__day { position: relative; display: grid; align-content: center; justify-items: center; text-align: center; gap: 6px; min-width: 0; padding: 7px 9px 8px; border-left: 1px solid rgba(27, 20, 13, 0.2); border-top: 1px solid rgba(27, 20, 13, 0.2); }
+.ds-agenda__day > i { font: 400 15px/1 var(--f-title); font-style: normal; color: var(--ds-ink-3); }
+.ds-agenda__day > b { font: 400 17px/0.95 var(--f-title); letter-spacing: 0.02em; text-transform: uppercase; color: var(--ds-ink-3); overflow-wrap: anywhere; }
+.ds-agenda__day.is-done > b { color: #1f3fa8; } .ds-agenda__day.is-done > i { color: var(--ds-ink-2); }
+.ds-agenda__day > s { position: absolute; left: 12px; right: 12px; top: 50%; height: min(calc(100% - 16px), 52px); transform: translateY(-50%); pointer-events: none; background: linear-gradient(to top right, transparent calc(50% - 1.3px), rgba(31, 63, 168, 0.55) calc(50% - 1.3px) calc(50% + 1.3px), transparent calc(50% + 1.3px)), linear-gradient(to bottom right, transparent calc(50% - 1.3px), rgba(31, 63, 168, 0.55) calc(50% - 1.3px) calc(50% + 1.3px), transparent calc(50% + 1.3px)); }
+.ds-agenda__day.is-cur > b { color: var(--ds-ink); } .ds-agenda__day.is-cur > i { color: var(--ds-ink); }
+.ds-agenda__day.is-cur::after { content: ""; position: absolute; left: 50%; top: 50%; width: calc(100% - 2px); height: min(calc(100% - 4px), 64px); border: 2.5px solid var(--ds-red); border-radius: 50%; transform: translate(-50%, -50%) rotate(-4deg); pointer-events: none; }
+.ds-agenda__day.is-boss { background: repeating-linear-gradient(45deg, transparent 0 7px, rgba(184, 41, 28, 0.08) 7px 9px); } .ds-agenda__day.is-boss > b, .ds-agenda__day.is-boss > i { color: var(--ds-red); }
+.ds-agenda__stamp { position: absolute; left: 50%; top: 58%; margin: 0; background: var(--ds-card); font-size: 24px; transform: translate(-50%, -50%) rotate(-8deg); }
+
+/* convocação: a ficha de ação de Campanha e Treino. Quem, quanto vale, o deck e o botão principal sempre no pé */
+.ds-invite > .ds-body { grid-template-rows: auto auto minmax(0, 1fr) auto; }
+.ds-invite .ds-title { margin-top: 8px; font-size: 36px; } .ds-invite.is-boss .ds-title { color: var(--ds-red); } .ds-invite.is-boss .ds-bar b { color: #ff8a7a; }
+.ds-invite .ds-deckline { align-self: end; }
+.ds-invite__foot .ds-btn { gap: 14px; }
+
+/* o deck que vai para a mesa: três cartas reduzidas em leque, nome, estado e um "Trocar" pequeno */
+.ds-deckline { display: grid; grid-template-columns: 88px minmax(0, 1fr); align-items: center; gap: 14px; padding: 10px 12px 10px 8px; background: var(--ds-tex-lines), var(--ds-card); color: var(--ds-ink); border: 1.5px dashed var(--ds-ink-3); }
+.ds-deckline.is-bad { border: var(--ds-line) solid var(--ds-red); } .ds-deckline.is-bad small { color: var(--ds-red); font-weight: 700; }
+.ds-deckline__fan { position: relative; height: 70px; }
+.ds-deckline__fan .ds-mini { position: absolute; left: 20px; top: 4px; width: 50px; transform-origin: 50% 100%; }
+.ds-deckline__fan .ds-mini:nth-child(1) { transform: rotate(-12deg) translateX(-15px); } .ds-deckline__fan .ds-mini:nth-child(2) { z-index: 1; transform: rotate(-1deg); } .ds-deckline__fan .ds-mini:nth-child(3) { z-index: 2; transform: rotate(10deg) translateX(15px); }
+.ds-deckline__txt { display: grid; gap: 5px; min-width: 0; }
+.ds-deckline__top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.ds-deckline__txt b { font: 400 24px/1 var(--f-title); text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ds-deckline__txt small { font: 500 13px/1.2 var(--f-ui); color: var(--ds-ink-2); }
+
+/* mata-borrão: base de mesa de feltro verde com cantoneiras de couro, onde ficam objetos soltos (crachá, bilhete) */
+.ds-deskpad { position: relative; overflow: hidden; min-height: 0; background: var(--ds-tex-speck), #2f4a3a; border: var(--ds-line) solid var(--ds-ink); border-radius: 4px; box-shadow: inset 0 0 0 7px #294133, inset 0 0 70px rgba(0, 0, 0, 0.35), 6px 10px 0 1px rgba(40, 24, 6, 0.3); }
+.ds-deskpad::before { content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(135deg, #5a3720 0 44px, #24160c 44px 46px, transparent 46.5px) top left / 72px 72px no-repeat, linear-gradient(225deg, #5a3720 0 44px, #24160c 44px 46px, transparent 46.5px) top right / 72px 72px no-repeat,
+    linear-gradient(45deg, #5a3720 0 44px, #24160c 44px 46px, transparent 46.5px) bottom left / 72px 72px no-repeat, linear-gradient(315deg, #5a3720 0 44px, #24160c 44px 46px, transparent 46.5px) bottom right / 72px 72px no-repeat; }
+
+/* crachá: cartão plástico com faixa da empresa, foto, nome e código de barras, preso por jacaré numa fita de tecido */
+.ds-badge { position: relative; margin: 0; padding-top: 52px; transform: rotate(-3deg); }
+.ds-badge__strap { position: absolute; left: 50%; top: -320px; height: 352px; width: 30px; margin-left: -15px; background: repeating-linear-gradient(to bottom, rgba(255, 255, 255, 0.1) 0 2px, transparent 2px 6px), #1d3f8a; border-left: var(--ds-line) solid var(--ds-ink); border-right: var(--ds-line) solid var(--ds-ink); box-shadow: inset 4px 0 0 rgba(255, 255, 255, 0.12), inset -4px 0 0 rgba(0, 0, 0, 0.18); }
+.ds-badge__clip { position: absolute; left: 50%; top: 24px; z-index: 2; width: 40px; height: 36px; margin-left: -20px; background: linear-gradient(to bottom, #e6e2d8, #9a968e); border: var(--ds-line) solid var(--ds-ink); border-radius: 5px 5px 3px 3px; box-shadow: inset 0 -8px 0 rgba(0, 0, 0, 0.12); }
+.ds-badge__card { position: relative; display: grid; justify-items: center; gap: 8px; width: 232px; padding: 32px 18px 16px; background: #fbf8f0; color: var(--ds-ink); border: var(--ds-line) solid var(--ds-ink); border-radius: 12px; box-shadow: inset 0 0 0 5px rgba(255, 255, 255, 0.75), 7px 10px 0 rgba(0, 0, 0, 0.35); }
+.ds-badge__card::before { content: ""; position: absolute; top: 11px; left: 50%; width: 46px; height: 10px; margin-left: -23px; border-radius: 5px; background: #2f4a3a; border: 1.5px solid var(--ds-ink); }
+.ds-badge__band { justify-self: stretch; margin: 0 -18px 2px; padding: 6px 0 5px; background: var(--ds-amber); border-top: var(--ds-line) solid var(--ds-ink); border-bottom: var(--ds-line) solid var(--ds-ink); font: 700 12px/1 var(--f-ui); letter-spacing: 0.16em; text-transform: uppercase; text-align: center; }
+.ds-badge__card img { width: 132px; height: 160px; object-fit: cover; background: #8d9a90; border: var(--ds-line) solid var(--ds-ink); }
+.ds-badge__card b { margin-top: 2px; font: 400 30px/1 var(--f-title); letter-spacing: 0.04em; text-transform: uppercase; }
+.ds-badge__card small { font: 700 12px/1 var(--f-ui); letter-spacing: 0.14em; text-transform: uppercase; color: var(--ds-ink-2); }
+.ds-badge__code { width: 150px; height: 24px; margin-top: 4px; background: repeating-linear-gradient(to right, var(--ds-ink) 0 2px, transparent 2px 4px, var(--ds-ink) 4px 5px, transparent 5px 8px, var(--ds-ink) 8px 11px, transparent 11px 12px, var(--ds-ink) 12px 13px, transparent 13px 16px); }

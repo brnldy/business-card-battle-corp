@@ -125,7 +125,7 @@ export class LobbyUI {
       if (this.pack) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (!e.repeat) this.packNext(); } return; }
       if (!this.panel && (e.key === 's' || e.key === 'S')) return this.openSlots();
       const n = Number(e.key); if (!this.panel && n >= 1 && n <= AREAS.length) this.open(AREAS[n - 1][0]);
-      if (this.panel === 'duel' && e.key === 'Enter') this.startDuel(false);
+      if (e.key === 'Enter' && !e.target.closest?.('button') && (this.panel === 'duel' || this.panel === 'training')) this.startDuel(this.panel === 'training');
     });
     save.onChange(() => { if (this.on) this.sync(); });
     settings.onChange(() => { if (this.on) this.sync(); });
@@ -615,66 +615,72 @@ export class LobbyUI {
   // ───────── sala de reunião e treino ─────────
   deckLine(s) { const d = Meta.activeDeck(s), ok = Meta.activeDeckValid(s); return `<div class="lb-deckline ${ok ? '' : 'bad'}"><span class="memo">Deck escolhido</span><b>${esc(d.name)}</b><span>${ok ? `${d.cards.length} cartas · pronto` : esc(Meta.deckErrors(s, d.cards)[0] ?? 'Deck inválido')}</span><button data-a="open" data-id="deck">Trocar no arquivo</button></div>`; }
   /** maço do deck escolhido: três cartas de verdade em leque, presas por uma cinta de papel com nome e contagem */
-  deckCard(s) {
+  /** o deck que vai para a mesa (peça .ds-deckline): três cartas reduzidas em leque, nome, estado e "Trocar" */
+  deckLine(s) {
     const d = Meta.activeDeck(s), ok = Meta.activeDeckValid(s), order = { legendary: 0, rare: 1, common: 2 };
-    const top = [...new Set(d.cards)].sort((x, y) => order[Meta.rarityOf(x)] - order[Meta.rarityOf(y)]).slice(0, 3);
-    const cr = d.cards.filter((id) => !isFx(byId.get(id))).length, fx = d.cards.length - cr, pct = d.cards.length ? Math.round((cr / d.cards.length) * 100) : 0;
-    return `<div class="dk ${ok ? '' : 'is-bad'}">
-      <div class="dk-fan">${top.map((id) => `<img src="${asset(byId.get(id).art)}" alt="">`).join('')}</div>
-      <div class="dk-band">
-        <span class="ds-label">Deck escolhido</span>
-        <b>${esc(d.name)}</b>
-        ${ok ? `<div class="dk-split"><i style="width:${pct}%"></i></div><p><span><b>${cr}</b> criaturas</span><span><b>${fx}</b> efeitos</span></p>` : `<p class="dk-err">${esc(Meta.deckErrors(s, d.cards)[0] ?? 'Deck inválido')}</p>`}
-      </div>
-      <div class="dk-side"><i class="ds-stamp ${ok ? 'ds-stamp--ok' : 'ds-stamp--no'}">${ok ? 'Pronto' : 'Inválido'}</i><button data-a="open" data-id="deck" class="ds-btn dk-swap">Trocar</button></div>
-    </div>`;
+    const top = [...new Set(d.cards)].sort((x, y) => order[Meta.rarityOf(x)] - order[Meta.rarityOf(y)] || x.localeCompare(y)).slice(0, 3);
+    return `<div class="ds-deckline ${ok ? '' : 'is-bad'}">
+      <span class="ds-deckline__fan" aria-hidden="true">${top.map((id) => mini(id)).join('')}</span>
+      <span class="ds-deckline__txt"><span class="ds-deckline__top"><span class="ds-formlabel">Seu deck</span><button class="ds-btn cg-swap" data-a="open" data-id="deck">Trocar</button></span><b title="${esc(d.name)}">${esc(d.name)}</b><small>${ok ? `${d.cards.length} cartas · pronto` : esc(Meta.deckErrors(s, d.cards)[0] ?? 'Deck inválido')}</small></span></div>`;
   }
+  /** convocação (peça .ds-invite): a ficha da direita de Campanha e Treino, com o botão principal sempre no mesmo lugar */
+  invite({ bar, tag, label, name, line = '', mid, act, ok, boss = false }) {
+    return `<section class="ds-sheet ds-file ds-invite ${boss ? 'is-boss' : ''}">
+      <div class="ds-bar"><span>${bar}</span><b>${tag}</b></div>
+      <div class="ds-body">
+        <div><span class="ds-formlabel">${label}</span><h3 class="ds-title">${esc(name)}</h3>${line ? `<p class="ds-manifest__line">${line}</p>` : ''}</div>
+        ${mid}
+        ${this.deckLine(this.s)}
+        <footer class="ds-file__foot ds-invite__foot"><button data-a="${act[0]}" class="ds-btn ds-btn--primary" ${ok ? '' : 'disabled'}><span class="ds-key">Enter</span>${act[1]}</button></footer>
+      </div></section>`;
+  }
+
+  // ───────── sala de reunião: campanha ─────────
+  /** Campanha: a agenda das 30 reuniões (duas linhas por faixa) e, ao lado, a convocação da próxima */
   vDuel(s) {
     const c = s.campaign, N = CAMPAIGN.length, cleared = c.cleared, st = Math.min(c.stage, N - 1), tier = tierOf(st), boss = !cleared && tier === 3;
-    const tierName = boss ? 'Chefe final' : CAMPAIGN.tiers[tier]?.name ?? '', ok = Meta.activeDeckValid(s);
-    const pay = boss ? `×${CAMPAIGN.boss.reward}` : ['×1', '×1,5', '×2'][tier] ?? '×1';
-    // a escada mostra só o trecho em volta da batalha da vez (2 vencidas, a atual, 3 seguintes) e o chefe no fim
-    const from = Math.max(0, st - 2), to = Math.min(N - 2, st + 3);
-    const row = (i) => { const r = c.order[i], done = i < c.stage, cur = !cleared && i === c.stage, last = i === N - 1, l = s.stats.rivals[r]?.l ?? 0;
-      return `<li class="${done ? 'is-on' : cur ? 'is-cur' : 'is-off'} ${last ? 'is-boss' : ''}"><span><i>${String(i + 1).padStart(2, '0')}</i>${done || cur || last ? esc(r) : '— — —'}</span><em>${done ? 'vencida' : cur ? (l ? `${l} derrota${l > 1 ? 's' : ''}` : 'a seguir') : last ? 'chefe' : ''}</em></li>`; };
-    const rows = `${from > 0 ? '<li class="is-gap">···</li>' : ''}${Array.from({ length: to - from + 1 }, (_, k) => row(from + k)).join('')}${to < N - 2 ? '<li class="is-gap">···</li>' : ''}${row(N - 1)}`;
-    return `<div class="ds-duel">
-      <section class="ds-sheet">
-        <div class="ds-bar"><span>Pauta</span><span>Sequência <b>${s.stats.streak}</b> · Recorde <b>${s.stats.bestStreak}</b></span></div>
-        <div class="ds-body">
-          <div class="cp-next ${boss ? 'is-boss' : ''}">
-            <span class="ds-label">${cleared ? 'Campanha concluída' : `Batalha ${st + 1} de ${N} · ${esc(tierName)}`}</span>
-            <h3 class="ds-title">${cleared ? 'Reunião livre' : esc(c.order[st])}</h3>
-            <p class="ds-text">${cleared ? 'Contra qualquer empresa. Paga, mas não avança.' : `Vitória paga <span class="ds-hl">${pay} o CAIXA que sobrar</span>.`}</p>
-          </div>
-          ${this.deckCard(s)}
-          <footer class="dk-foot"><button data-a="duel" class="ds-btn ds-btn--primary" ${ok ? '' : 'disabled'}>${cleared ? 'Reunião livre' : boss ? 'Enfrentar o Conselho' : 'Entrar na reunião'} <span class="ds-key">Enter</span></button><button data-a="open" data-id="training" class="ds-btn">Treinar antes</button></footer>
-        </div>
-      </section>
-      <section class="ds-sheet">
-        <div class="ds-bar"><span>Campanha</span><b>${Math.min(c.stage, N)}/${N}</b></div>
-        <ul class="ds-rows ds-body cp-ladder">${rows}</ul>
-      </section></div>`;
+    const name = c.order[st], losses = cleared ? 0 : s.stats.rivals[name]?.l ?? 0;
+    const day = (i) => {
+      const r = c.order[i], done = i < c.stage, cur = !cleared && i === c.stage, last = i === N - 1, shown = done || cur || last;
+      const tip = done ? `${r}: reunião fechada` : cur ? `${r}: próxima reunião` : last ? `${r}: chefe final` : 'Ainda em sigilo';
+      return `<li class="ds-agenda__day ${done ? 'is-done' : cur ? 'is-cur' : ''} ${last ? 'is-boss' : ''}" title="${esc(tip)}"><i>${String(i + 1).padStart(2, '0')}</i>${shown ? `<b>${esc(r)}</b>` : ''}${done ? '<s aria-hidden="true"></s>' : ''}</li>`;
+    };
+    const days = (from, to) => Array.from({ length: to - from + 1 }, (_, k) => day(from + k)).join('');
+    const label = (t, ti) => `<li class="ds-agenda__tier ${!cleared && (tier === ti || (boss && ti === 2)) ? 'is-on' : ''}" style="grid-row: ${ti * 2 + 1} / span 2"><span>${esc(t.name)}</span><b>×${String(t.reward).replace('.', ',')}</b></li>`;
+    const agenda = `<section class="ds-agenda ${cleared ? 'is-cleared' : ''}">
+      <span class="ds-agenda__rings" aria-hidden="true">${'<i></i>'.repeat(16)}</span>
+      <header class="ds-agenda__head"><b>Agenda de reuniões</b><span>Sequência <b>${s.stats.streak}</b> · Recorde <b>${s.stats.bestStreak}</b></span></header>
+      <ol class="ds-agenda__grid">${CAMPAIGN.tiers.map((t, ti) => label(t, ti) + days(t.from - 1, ti === 2 ? N - 1 : t.to - 1)).join('')}</ol>
+      ${cleared ? '<i class="ds-stamp ds-stamp--ok ds-agenda__stamp">Campanha concluída</i>' : ''}
+    </section>`;
+    const pay = cleared ? '×1' : boss ? `×${CAMPAIGN.boss.reward}` : `×${String(CAMPAIGN.tiers[tier].reward).replace('.', ',')}`;
+    const card = this.invite({
+      bar: 'Convocação', tag: cleared ? 'Reunião livre' : `Reunião ${st + 1} de ${N}`, boss, ok: Meta.activeDeckValid(s),
+      label: cleared ? 'Campanha concluída' : boss ? 'Chefe final' : esc(CAMPAIGN.tiers[tier].name), name: cleared ? 'Qualquer empresa' : name,
+      line: cleared ? 'Paga, mas não avança na agenda.' : '',
+      mid: `<dl class="ds-file__stats ds-file__stats--2"><div><dt>Vitória paga</dt><dd>${pay} <small>do caixa</small></dd></div>${cleared ? `<div><dt>Reuniões fechadas</dt><dd>${N} <small>de ${N}</small></dd></div>` : `<div><dt>Derrotas aqui</dt><dd>${losses}</dd></div>`}</dl>`,
+      act: ['duel', cleared ? 'Reunião livre' : boss ? 'Enfrentar o Conselho' : 'Entrar na reunião'],
+    });
+    return `<div class="cg">${agenda}${card}</div>`;
   }
+  /** Treino: a mesa do estagiário (mata-borrão com o crachá dele e o bilhete) e, ao lado, a ordem de treino */
   vTraining(s) {
-    const d = Meta.activeDeck(s), ok = Meta.activeDeckValid(s), back = backUrl(s.cosmetics.back, s.cosmetics.logo, asset('cards/back.png'));
-    const no = (t) => `<li><i class="tr-box"></i><span>${t}</span></li>`;
-    return `<div class="tr">
-      <section class="ds-sheet tr-term">
-        <i class="ds-staple"></i>
-        <div class="ds-bar"><span>Termo de estágio</span><b>não remunerado</b></div>
-        <div class="ds-body">
-          <div class="tr-id">
-            <div class="tr-photo"><img src="${this.lobby.internPortrait(this.lobby.renderer) ?? ''}" alt="Estagiário"><i class="ds-clip"></i></div>
-            <div><span class="ds-label">Funcionário</span><h3 class="ds-title">Estagiário</h3><p class="ds-text">Ele <span class="ds-hl">erra de propósito</span>. Bom para testar um deck.</p>
-              <div class="tr-nobox"><span class="ds-label">Esta partida não vale</span><ul class="tr-no">${no('Patrimônio')}${no('Metas')}${no('Conquistas')}${no('Histórico')}</ul></div></div>
-          </div>
-          ${this.deckCard(s)}
-          <footer class="dk-foot"><button data-a="train" class="ds-btn ds-btn--primary" ${ok ? '' : 'disabled'}>Treinar com ele</button><button data-a="open" data-id="duel" class="ds-btn">Duelo valendo</button></footer>
-        </div>
-      </section>
-      <div class="ds-postit tr-note"><i class="ds-tape ds-tape--top"></i><b>Chefe,</b>posso jogar com vc? prometo perder.<em>— o estagiário</em></div>
-    </div>`;
+    const photo = this.lobby.internPortrait(this.lobby.renderer) ?? '';
+    const no = (t) => `<li><i class="tw-x"></i><span>${t}</span></li>`;
+    const desk = `<section class="ds-deskpad tw-desk">
+      <figure class="ds-badge tw-badge">
+        <i class="ds-badge__strap" aria-hidden="true"></i><i class="ds-badge__clip" aria-hidden="true"></i>
+        <div class="ds-badge__card"><span class="ds-badge__band">BCBC · Estágio</span><img src="${photo}" alt="Retrato do estagiário"><b>Estagiário</b><small>Não remunerado</small><i class="ds-badge__code" aria-hidden="true"></i></div>
+      </figure>
+      <div class="ds-postit tw-note"><i class="ds-tape ds-tape--top"></i><b>Chefe,</b>posso jogar com vc? prometo perder.<em>— o estagiário</em></div>
+    </section>`;
+    const card = this.invite({
+      bar: 'Ordem de treino', tag: 'Sem valer', ok: Meta.activeDeckValid(s), label: 'Treino com', name: 'Estagiário',
+      line: 'Ele <span class="ds-hl">erra de propósito</span>. Bom para testar um deck.',
+      mid: `<div class="tw-no"><span class="ds-formlabel">Esta partida não vale</span><ul>${no('Patrimônio')}${no('Metas')}${no('Troféus')}${no('Histórico')}</ul></div>`,
+      act: ['train', 'Treinar com ele'],
+    });
+    return `<div class="cg">${desk}${card}</div>`;
   }
 
   // ───────── mural: metas do dia ─────────

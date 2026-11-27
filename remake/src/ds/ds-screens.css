@@ -57,49 +57,7 @@
 .lb-toast b { font: 400 22px/1 var(--f-title); text-transform: uppercase; word-spacing: -0.28em; } .lb-toast span { color: var(--ds-ink-2); }
 .lb-toast.good { border-left-color: var(--ds-green); } .lb-toast.bad { border-left-color: var(--ds-red); } .lb-toast.gold { border-left-color: var(--ds-amber); background: var(--ds-tex-card); } .lb-toast.gold b { color: var(--ds-ink); }
 
-/* ───────── janela do estagiário: termo de estágio grampeado + bilhete dele ───────── */
-.lb-box--training { width: min(820px, 95%); }
-.tr { position: relative; display: grid; grid-template-columns: 1fr 200px; gap: var(--ds-4); align-items: start; }
-.tr-term { box-shadow: var(--ds-frame-in), 6px 11px 0 3px rgba(40, 24, 6, 0.3); transform: rotate(-0.4deg); }
-.tr-term .ds-staple { left: auto; right: 16px; top: 44px; transform: rotate(32deg); }
-.tr-id { display: grid; grid-template-columns: 92px 1fr; gap: var(--ds-4); align-items: center; }
-.tr-id > div:last-child { display: grid; gap: 5px; }
-/* foto 3×4 do estagiário: render do modelo real da sala, presa com clipe */
-.tr-id { grid-template-columns: 124px 1fr; }
-.tr-photo { position: relative; width: 116px; height: 142px; margin: 4px; background: #8d9a90; border: var(--ds-line) solid var(--ds-ink); box-shadow: 0 0 0 4px #fbf6e8, 0 0 0 5px var(--ds-ink-3), 4px 6px 0 4px rgba(40, 24, 6, 0.25); transform: rotate(-2.5deg); }
-.tr-photo img { width: 100%; height: 100%; object-fit: cover; display: block; filter: saturate(0.75) contrast(1.08); }
-.tr-photo .ds-clip { top: -28px; right: auto; left: 8px; width: 16px; height: 42px; }
-/* o que não vale: caixinhas riscadas a caneta vermelha */
-.tr-no { list-style: none; margin: 8px 0 0; padding: 0; display: grid; grid-template-columns: repeat(4, auto); justify-content: start; gap: 8px 22px; }
-/* a lista do que não vale fica ao lado da foto, em duas colunas (cabe em 1280×720 sem esconder o botão de treinar) */
-.tr-term .ds-body { gap: 14px; }
-.tr-nobox { margin-top: 8px; padding-top: 8px; border-top: 1.5px dashed var(--ds-ink-3); } .tr-nobox .tr-no { display: flex; flex-wrap: wrap; gap: 10px 18px; }
-.tr-no li { display: flex; align-items: center; gap: 8px; font: 700 var(--t-md)/1 var(--f-ui); color: var(--ds-ink-2); }
-.tr-no span { position: relative; } .tr-no span::after { content: ""; position: absolute; left: -3px; right: -3px; top: 48%; height: 2px; background: var(--ds-red); transform: rotate(-3deg); }
-.tr-box { width: 18px; height: 18px; flex: none; background: linear-gradient(45deg, transparent 43%, var(--ds-red) 43% 57%, transparent 57%), linear-gradient(-45deg, transparent 43%, var(--ds-red) 43% 57%, transparent 57%), var(--ds-card); border: var(--ds-line) solid var(--ds-ink); }
-.tr-note { width: 200px; min-height: 170px; margin-top: 46px; transform: rotate(3deg); font: 700 var(--t-md)/1.35 var(--f-ui); }
-.tr-note em { font: 500 var(--t-cap)/1 var(--f-ui); font-style: normal; color: var(--ds-ink-2); margin-top: 8px; }
-.tr-note .ds-tape--top { top: -13px; }
 
-/* ───────── maço do deck (janelas de duelo e de treino) ─────────
-   Grade de 3 colunas: leque de cartas | nome e composição | carimbo em cima e "Trocar" embaixo, alinhados à direita. */
-.dk { display: grid; grid-template-columns: 132px minmax(0, 1fr) auto; align-items: center; column-gap: var(--ds-4); padding: 12px var(--ds-4) 12px 10px; background: var(--ds-tex-card); border: var(--ds-line) solid var(--ds-ink); box-shadow: 3px 4px 0 rgba(27, 20, 13, 0.22); }
-.dk-fan { position: relative; height: 104px; }
-.dk-fan img { position: absolute; left: 30px; top: 2px; height: 100px; border: 1.5px solid var(--ds-ink); box-shadow: 2px 3px 0 rgba(27, 20, 13, 0.3); transform-origin: 50% 100%; transform: rotate(-12deg) translateX(-20px); }
-.dk-fan img:nth-child(2) { transform: rotate(-1deg); z-index: 1; } .dk-fan img:nth-child(3) { transform: rotate(10deg) translateX(20px); z-index: 2; }
-.dk-band { display: grid; gap: 6px; min-width: 0; }
-.dk-band > b { font: 400 30px/1 var(--f-title); text-transform: uppercase; word-spacing: -0.28em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.dk-band p { margin: 0; display: flex; gap: 16px; font: 500 var(--t-sm)/1 var(--f-ui); color: var(--ds-ink-2); } .dk-band p b { font: 400 20px/1 var(--f-title); color: var(--ds-ink); margin-right: 3px; }
-.dk-split { height: 8px; max-width: 260px; background: var(--ds-ink-3); border: 1.5px solid var(--ds-ink); } .dk-split i { display: block; height: 100%; background: var(--ds-ink); border-right: 1.5px solid var(--ds-card); }
-.dk-err { color: var(--ds-red) !important; font-weight: 700 !important; }
-.dk-side { display: grid; grid-template-rows: 1fr auto; justify-items: end; align-items: start; align-self: stretch; gap: 10px; }
-.dk-side .ds-stamp { margin: 2px 4px 0 0; }
-#lobby .dk-swap { height: 36px; padding: 0 16px; font-size: var(--t-cap); margin-bottom: 4px; }
-.dk.is-bad { border-color: var(--ds-red); }
-/* rodapé destacável: dois botões da mesma altura e largura, lado a lado (âmbar e branco) */
-.dk-foot { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 6px calc(-1 * var(--ds-4)) calc(-1 * var(--ds-4) + 6px); padding: 16px var(--ds-4) 12px; border-top: 2px dashed rgba(27, 20, 13, 0.5); background: rgba(150, 118, 78, 0.14); }
-#lobby .dk-foot .ds-btn { height: 44px; padding: 0 16px; font-size: var(--t-lg); width: 100%; }
-#lobby .dk-foot .ds-btn:not(.ds-btn--primary) { background: var(--ds-tex-lines), linear-gradient(to bottom, #fffdf6, #f3ecd8); }
 
 /* ───────── metas do dia: quadro de cortiça com memorandos presos por alfinete ───────── */
 .lb-box--missions { width: min(1040px, 95%); }
@@ -129,11 +87,6 @@
 
 /* menu: a numeração das linhas conta só as que estão à vista */
 #menu .mn-card { counter-reset: mn; } #menu .mn-card .mn-row:not(.hidden) { counter-increment: mn; } #menu .mn-card .mn-row b::before { content: counter(mn, decimal-leading-zero); }
-/* sala de reunião: a batalha da vez e o trecho da escada da campanha */
-.cp-next { display: grid; gap: 6px; padding-bottom: var(--ds-3); border-bottom: 3px solid var(--ds-ink); } .cp-next .ds-title { font-size: 44px; line-height: 0.95; } .cp-next.is-boss .ds-title { color: var(--ds-red); }
-.cp-ladder li { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; } .cp-ladder li span { display: flex; align-items: baseline; gap: 10px; font-weight: 700; } .cp-ladder li i { font: 400 20px/1 var(--f-title); font-style: normal; color: var(--ds-ink-2); min-width: 24px; }
-.cp-ladder li em { font-style: normal; font-size: var(--t-cap); text-transform: uppercase; letter-spacing: 0.08em; } .cp-ladder .is-on em { color: var(--ds-green); }
-.cp-ladder .is-cur { background: var(--ds-amber); margin: 0 calc(var(--ds-4) * -1); padding-left: var(--ds-4); padding-right: var(--ds-4); } .cp-ladder .is-gap { justify-content: center; color: var(--ds-ink-3); letter-spacing: 0.3em; border: none; padding: 2px 0; } .cp-ladder .is-boss span { color: var(--ds-red); }
 
 /* ══ lobby novo (docs/UI_LOBBY.md): piso de tamanho, carta reduzida, detalhe da carta, loja ══ */
 .lb-box--duel, .lb-box--training, .lb-box--missions, .lb-box--shop-packs, .lb-box--shop-cards, .lb-box--shop-decks, .lb-box--shop-look, .lb-box--achievements, .lb-pack > .pk, .lb-detail > .cd { zoom: var(--lb-fix, 1); }
@@ -267,11 +220,21 @@ button.ds-check { background: none; border: none; padding: 6px 0; pointer-events
 /* ── tamanho único das janelas novas (27/11, pedido do autor): a pasta não muda de tamanho entre abas nem entre janelas,
    então as abas não pulam. O conteúdo de cada tela ocupa a pasta. ── */
 :is(.lb-box--duel, .lb-box--training, .lb-box--missions, .lb-box--achievements, .lb-box--shop-packs, .lb-box--shop-cards, .lb-box--shop-decks, .lb-box--shop-look) { width: min(1180px, 96%); height: min(770px, 90%); max-height: none; display: flex; flex-direction: column; }
-:is(.ds-duel, .tr, .ms, .sh) { flex: 1; min-height: 0; }
-/* campanha: as folhas na altura natural (a da escada acompanha a pauta), centradas na pasta */
-.ds-duel { align-content: center; }
-/* treino: mesma estrutura da campanha (folha de ação à esquerda, na mesma proporção), bilhete do estagiário à direita */
-.tr { grid-template-columns: 1.3fr 1fr; align-items: stretch; align-content: center; }
-.tr-note { align-self: center; justify-self: center; width: 250px; min-height: 200px; margin: 0; }
 /* metas: a cortiça ocupa a pasta e os memorandos ficam no meio dela */
 .ms { grid-template-rows: minmax(0, 1fr) auto; } .ms-board { align-items: center; }
+.ms, .sh { flex: 1; min-height: 0; }
+
+/* ── Campanha e Treino (27/11, refeitas para a pasta única): objeto à esquerda, convocação à direita (a mesma coluna
+   da ficha da Loja, então o botão principal fica sempre no mesmo lugar) ── */
+.cg { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) 388px; gap: var(--ds-5); padding-top: 12px; }
+.cg > .ds-invite { min-height: 0; margin: 0 5px 8px 0; }
+#lobby .cg-swap { height: 34px; padding: 0 14px; margin-bottom: 4px; font-size: 13px; }
+/* treino: o crachá e o bilhete soltos no mata-borrão */
+.tw-desk { display: grid; grid-template-columns: auto auto; justify-content: center; align-content: center; align-items: center; gap: 56px; }
+.tw-note { width: 230px; min-height: 190px; transform: rotate(4deg); font: 700 16px/1.35 var(--f-ui); }
+.tw-note em { margin-top: 8px; font: 500 13px/1 var(--f-ui); font-style: normal; color: var(--ds-ink-2); }
+.tw-no { display: grid; gap: 10px; align-content: start; }
+.tw-no ul { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 10px 16px; }
+.tw-no li { display: flex; align-items: center; gap: 8px; font: 700 14px/1 var(--f-ui); color: var(--ds-ink-2); }
+.tw-no li span { position: relative; } .tw-no li span::after { content: ""; position: absolute; left: -3px; right: -3px; top: 48%; height: 2px; background: var(--ds-red); transform: rotate(-3deg); }
+.tw-x { width: 18px; height: 18px; flex: none; background: linear-gradient(45deg, transparent 43%, var(--ds-red) 43% 57%, transparent 57%), linear-gradient(-45deg, transparent 43%, var(--ds-red) 43% 57%, transparent 57%), var(--ds-card); border: var(--ds-line) solid var(--ds-ink); }

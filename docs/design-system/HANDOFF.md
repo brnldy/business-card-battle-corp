@@ -44,10 +44,10 @@ O autor achou o resultado das regras antigas grande demais e sem respiro. Acessi
 |---|---|
 | Menu inicial (cartão de ponto) | Aprovado. Depois da junção ganhou Continuar, Novo jogo e Carregar; essa versão o autor ainda não viu. |
 | Lobby 3D (etiquetas discretas, sem barra embaixo) | Feito depois da recusa da primeira versão; sem resposta do autor. |
-| Treino (termo de estágio, foto do modelo real) | Aceito depois dos ajustes ("continua com outras telas"). |
+| Treino (mesa do estagiário: mata-borrão com crachá e bilhete + ordem de treino) | Refeito do zero em 27/11 para a pasta única; o autor ainda não viu. |
 | Metas do dia (quadro de cortiça) | Aprovado. |
 | Cabeçalho das janelas (abas + topo de formulário com a cédula) | Refeito em 27/11 depois da escolha do autor; ele ainda não viu a cédula. |
-| Sala de reunião | Refeita sobre a campanha de 30 batalhas; o autor ainda não comentou. |
+| Campanha (agenda de reuniões + convocação) | Refeita do zero em 27/11 para a pasta única; o autor ainda não viu. |
 | Loja → entrada com envelope e abertura do pacote | Entregue; envelope ajustado em 27/11 (só a aba). |
 | Loja → Cartas avulsas (grade + ficha sempre à direita) | Refeita em 27/11 a pedido do autor; ele ainda não viu. |
 | Loja → Decks prontos e Visual | Feitos em 27/11; o autor ainda não viu. |
@@ -62,6 +62,7 @@ Decisões do autor nesta rodada: o custo de sacrifício **fica** na carta reduzi
 
 Feito e conferido em captura (1280×720, 1440×900, 1920×1080):
 
+0000. **Campanha e Treino refeitas do zero** (liberdade criativa dada pelo autor). As duas seguem o padrão da Loja: objeto à esquerda, ficha de ação à direita na mesma coluna de 388 px, com o botão principal sempre no mesmo lugar. Campanha: agenda de reuniões presa por espiral (`.ds-agenda`), com duas linhas por faixa e a faixa e o pagamento na margem; fechada = nome a caneta azul riscado com X, próxima = circulada a caneta vermelha, Conselho em vermelho no dia 30; nomes futuros ficam em branco. Ficha: convocação (`.ds-invite`) com faixa, empresa, quanto paga, derrotas contra ela, o deck (`.ds-deckline`, com cartas reduzidas) e o botão. Treino: mata-borrão (`.ds-deskpad`) com o crachá do estagiário (`.ds-badge`) e o bilhete; ficha = ordem de treino com o que não vale. Saíram "Treinar antes" e "Duelo valendo" (repetiam as abas), o resumo de deck antigo (`deckCard`, com arte cheia, contra a R4) e o CSS antigo das duas telas. Enter também inicia o treino (não dispara com foco num botão). Conferido: os estados meio da campanha, chefe e campanha concluída (simulados com `window.__SAVE__`), Enter nas duas telas e Trocar.
 000. **Tamanho único das janelas** (pedido do autor: as abas não podem pular ao trocar). As oito janelas novas usam a mesma pasta, até 1180×770 (no máximo 96% × 90% da tela), definida no fim de `ds-screens.css`. Conferido: mesma posição e tamanho da pasta em todas, em 1280×720 e 1920×1080. Campanha e Treino centram as folhas na pasta; o Treino passou a ter a mesma estrutura da Campanha (folha de ação à esquerda na proporção 1,3 : 1, bilhete à direita); Metas estica a cortiça; Pacotes estica palco e prateleiras. **Tela nova com abas tem de usar essa mesma pasta.**
 00. **Zoom das janelas** (passo 6 do plano): Campanha, Treino e Metas passaram a usar `--lb-fix` como as outras. Medido nas oito janelas novas em 1280×720, 1440×900 e 1920×1080: menor texto 12 px (13,5 em 1920), menor alvo 34 px (as abas), nada rola nem é cortado. Para caber o Treino em 1280×720: a lista "Esta partida não vale" foi para o lado da foto, e os botões do rodapé (Treino e Campanha) foram de 52 para 44 px.
 0. **Cabeçalho das janelas** (decisão do autor: fica dentro da pasta, nada sai para fora; o patrimônio tem de lembrar dinheiro; fechar é ✕). Topo de formulário (`.ds-formhead`, `.ds-formlabel`) com três casas: lugar pequeno + título, patrimônio na cédula (`.ds-cash`: maço de notas verdes com guilhoché e selo "$") e o ✕. Recusada: o título na aba e o patrimônio num visor preso na borda de cima da pasta. Feito em `head()` do `lobbyui.js`, só nas janelas de `NEW_HEAD`.

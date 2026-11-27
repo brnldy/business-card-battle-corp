@@ -15,11 +15,6 @@
 :is(.lb-box--duel, .lb-box--training, .lb-box--missions, .lb-box--shop-packs, .lb-box--shop-cards, .lb-box--shop-decks, .lb-box--shop-look, .lb-box--achievements) .lb-pat b { color: var(--ds-ink); font-size: 24px; }
 #lobby :is(.lb-box--duel, .lb-box--training, .lb-box--missions, .lb-box--shop-packs, .lb-box--shop-cards, .lb-box--shop-decks, .lb-box--shop-look, .lb-box--achievements) .lb-x { width: 40px; height: 40px; background: var(--ds-tex-card); color: var(--ds-ink); border: var(--ds-line) solid var(--ds-ink); box-shadow: var(--ds-shadow-in); }
 #lobby :is(.lb-box--duel, .lb-box--training, .lb-box--missions, .lb-box--shop-packs, .lb-box--shop-cards, .lb-box--shop-decks, .lb-box--shop-look, .lb-box--achievements) .lb-x:hover { background: var(--ds-ink); color: var(--ds-paper); }
-.ds-duel { display: grid; grid-template-columns: 1.3fr 1fr; gap: var(--ds-4); align-items: stretch; }
-.ds-duel .ds-sheet { box-shadow: var(--ds-frame-in), 6px 11px 0 3px rgba(40, 24, 6, 0.3); }
-.ds-duel .ds-sheet:first-child { transform: rotate(0.4deg); } .ds-duel .ds-sheet:last-child { transform: rotate(-0.6deg) translateY(5px); }
-.ds-duel .ds-body { flex: 1; align-content: start; } .ds-duel .ds-actions { margin-top: auto; padding-top: var(--ds-3); }
-.ds-duel .ds-rows.ds-body { gap: 0; padding: var(--ds-2) var(--ds-4); }
 
 /* ── partida · peças presas às margens ── */
 .h-hud .h-slot--opp, .h-hud .h-slot--me, .h-hud .h-slot--sheet { left: 40px; } .h-hud .h-slot--turn, .h-hud .h-slot--bar { right: 40px; }
