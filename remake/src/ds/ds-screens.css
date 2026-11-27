@@ -123,3 +123,11 @@
 .ms-rules > span:not(.ds-dymo) { padding-left: 18px; position: relative; } .ms-rules > span:not(.ds-dymo)::before { content: ""; position: absolute; left: 0; top: 50%; width: 8px; height: 8px; margin-top: -4px; background: var(--ds-ink); }
 .ms-rules > b { margin-left: auto; font: 400 24px/1 var(--f-title); text-transform: uppercase; }
 .ms-rules { flex-wrap: nowrap; gap: 8px 14px; white-space: nowrap; } .ms-rules .ds-dymo { font-size: 18px; }
+
+/* menu: a numeração das linhas conta só as que estão à vista */
+#menu .mn-card { counter-reset: mn; } #menu .mn-card .mn-row:not(.hidden) { counter-increment: mn; } #menu .mn-card .mn-row b::before { content: counter(mn, decimal-leading-zero); }
+/* sala de reunião: a batalha da vez e o trecho da escada da campanha */
+.cp-next { display: grid; gap: 6px; padding-bottom: var(--ds-3); border-bottom: 3px solid var(--ds-ink); } .cp-next .ds-title { font-size: 44px; line-height: 0.95; } .cp-next.is-boss .ds-title { color: var(--ds-red); }
+.cp-ladder li { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; } .cp-ladder li span { display: flex; align-items: baseline; gap: 10px; font-weight: 700; } .cp-ladder li i { font: 400 20px/1 var(--f-title); font-style: normal; color: var(--ds-ink-2); min-width: 24px; }
+.cp-ladder li em { font-style: normal; font-size: var(--t-cap); text-transform: uppercase; letter-spacing: 0.08em; } .cp-ladder .is-on em { color: var(--ds-green); }
+.cp-ladder .is-cur { background: var(--ds-amber); margin: 0 calc(var(--ds-4) * -1); padding-left: var(--ds-4); padding-right: var(--ds-4); } .cp-ladder .is-gap { justify-content: center; color: var(--ds-ink-3); letter-spacing: 0.3em; border: none; padding: 2px 0; } .cp-ladder .is-boss span { color: var(--ds-red); }

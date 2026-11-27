@@ -27,6 +27,29 @@ export const DEFAULT_WEIGHTS: AIWeights = {
   minGain: 1,
 };
 
+/**
+ * Pesos da IA "afiada" (batalhas 21–30 da campanha): achados por busca em scripts/tune-ai.ts.
+ * Vence ~56% contra a IA padrão com decks aleatórios (600 partidas). Teme mais as criaturas fortes do rival
+ * e dá mais valor a ter cartas na mão.
+ */
+export const SHARP_WEIGHTS: AIWeights = {
+  creatureValue: 0.45,
+  creatureBase: 200,
+  handCard: 205,
+  trap: 390,
+  frioCounter: 260,
+  threat: 0.85,
+  minGain: 1,
+};
+
+/** Perfil de dificuldade: pesos + chance de fazer uma jogada qualquer em vez da melhor (o "erro humano"). */
+export interface AIProfile { weights: AIWeights; mistake: number }
+export function chooseWithProfile(s: GameState, p: AIProfile, rnd: () => number = Math.random): Action {
+  const actions = legalActions(s);
+  if (p.mistake > 0 && actions.length > 1 && rnd() < p.mistake) return actions[Math.floor(rnd() * actions.length)];
+  return chooseAction(s, p.weights);
+}
+
 function sideValue(s: GameState, side: PlayerId, w: AIWeights): number {
   const p = s.players[side];
   let v = p.caixa;

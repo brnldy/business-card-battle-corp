@@ -65,9 +65,8 @@ Criatura / Barulho · Dept. Criação · Custo 0 · ATQ $1.300 · DEF $1.100
 
 ### BCB-010 · TÊNIA DO LUCAS
 Entidade / Monstro · Dept. Externo · Custo 0 · ATQ $1.450 · DEF $500
-- **COMER! COMER! (ao ser invocada, obrigatória).** As **3 cartas do topo do SEU deck** vão para o Morto. É o preço de uma criatura de custo 0 com ATQ $1.450.
-- 💡 Fica ótima no futuro com cartas que se beneficiam do Morto (ex.: "ganha +$100 por criatura no seu Morto").
-- ✏️ Sugestão de texto: "Ao entrar na mesa, o verme come as 3 cartas do topo do seu baralho."
+- **COMER! COMER! (ao ser invocada, obrigatória).** O verme come as **3 cartas do topo do SEU deck** e elas vão para a **sua mão**, para ampliar as opções (corrigido pelo autor em 24/11; antes iam para o Morto). Se a mão chegar ao limite de 10, as que sobrarem ficam no deck.
+- ✏️ Sugestão de texto: "Ao entrar na mesa, o verme come as 3 cartas do topo do seu baralho e as traz para a sua mão."
 - 🎨 O ícone de baixo hoje é de monstro; no padrão novo seria o de Externo.
 
 ### BCB-011 · SIAMESAS BOREAL

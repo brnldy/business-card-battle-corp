@@ -8,6 +8,7 @@ import { buildLobby } from './lobby.js';
 import { LobbyUI } from './lobbyui.js';
 import { save, today } from './save.js';
 import { applyMatch, activeDeck } from '../../src/meta/meta.ts';
+import { rivalPlan } from '../../src/meta/campaign.ts';
 import { Duel } from './duel.js';
 import { UI } from './ui.js';
 import { settings } from './settings.js';
@@ -48,34 +49,43 @@ async function boot() {
   lobbyUi = new LobbyUI({ ui, lobby, canvas, actions: { duel: (training) => fade(() => startDuel(training)), exit: () => fade(() => toMenu()) } });
   window.__LOBBYUI__ = lobbyUi;
   // fim de partida: o lobby paga a recompensa, grava histórico, avança metas e confere conquistas
-  duel.onMatchEnd = (m) => { const out = applyMatch(save.get(), m, Date.now(), today(), RIVALS); if (out.save !== save.get()) save.set(out.save); if (!m.training) lastOutcome = lastOutcome ? { ...out, unlocked: [...lastOutcome.unlocked, ...out.unlocked], missionsDone: [...lastOutcome.missionsDone, ...out.missionsDone] } : out; return out; };
+  duel.onMatchEnd = (m) => { const out = applyMatch(save.get(), m, Date.now(), today(), RIVALS); if (out.save !== save.get()) save.set(out.save); if (!m.training) lastOutcome = lastOutcome ? { ...out, finished: out.finished || lastOutcome.finished, unlocked: [...lastOutcome.unlocked, ...out.unlocked], missionsDone: [...lastOutcome.missionsDone, ...out.missionsDone] } : out; return out; };
   duel.rematch = () => startDuel(duel.training);
   ui.boot(1);
   onResize();
   window.addEventListener('resize', onResize);
   settings.onChange(() => { onResize(); });
   ui.on({
-    // "Iniciar expediente": na primeira vez registra a empresa; depois entra direto no lobby
-    start: () => {
-      sfx('start');
-      if (settings.get().companyName) return fade(toLobby);
-      ui.mainMenu(false); ui.nameEntry(() => fade(toLobby)); ui.onModalClose = () => { if (mode === 'menu') ui.mainMenu(true); };
-      return undefined;
+    // menu: Continuar (último slot), Novo jogo (escolhe a gaveta e registra a empresa) e Carregar
+    continue: () => {
+      const n = save.lastSlot(); if (!n) return ui.h.newgame();
+      sfx('start'); save.use(n);
+      if (save.company()) return fade(toLobby);
+      return askName();
     },
+    newgame: () => { sfx('nav'); keepMenu(); ui.slots('new', { pick: (n) => askName((name) => save.create(n, name)) }); },
+    load: () => { sfx('nav'); keepMenu(); ui.slots('load', { load: (n) => { ui.closeModal(); save.use(n); sfx('start'); if (save.company()) fade(toLobby); else askName(); } }); },
     quit: () => (duel.over ? fade(toLobby) : ui.confirm('Abandonar a partida?', duel.training ? 'O treino acaba aqui. Não vale nada mesmo.' : 'A partida conta como derrota e o rival fica com o investimento.', 'ABANDONAR', () => { duel.forfeit(); fade(toLobby); }, 'Continuar jogando')),
     quit2: () => fade(toLobby),
   });
-  window.addEventListener('keydown', (e) => { if (mode === 'menu' && e.key === 'Enter' && document.getElementById('modal').classList.contains('hidden')) { unlockAudio(); ui.h.start(); } });
+  window.addEventListener('keydown', (e) => { if (mode === 'menu' && e.key === 'Enter' && document.getElementById('modal').classList.contains('hidden')) { unlockAudio(); if (save.lastSlot()) ui.h.continue(); else ui.h.newgame(); } });
   const unlock = () => { unlockAudio(); document.getElementById('unlock').classList.add('hidden'); };
   window.addEventListener('pointerdown', unlock); window.addEventListener('keydown', unlock);
   initAudio(); applyVolumes();
   setTimeout(() => { ui.bootDone(); toMenu(true); document.getElementById('unlock').classList.remove('hidden'); const q = new URLSearchParams(location.search); if (q.has('duel')) { settings.set({ seenHelp: true }); startDuel(); } else if (q.has('lobby')) toLobby(); }, 250);
   requestAnimationFrame(loop);
   // ganchos de depuração/teste
-  window.__DUEL__ = duel; duel.aiChoose = aiChoose;
+  window.__DUEL__ = duel; duel.aiChoose = aiChoose; window.__SAVE__ = save;
+  window.__STEP__ = async (ms = 1000) => { for (let t = 0; t < ms; t += 16) { updateTweens(16); for (let i = 0; i < 8; i++) await null; } }; // avança as animações sem depender da tela (testes)
   window.render_game_to_text = () => JSON.stringify({ mode, lobbyPanel: lobbyUi?.panel ?? null, patrimonio: save.get().patrimonio, turn: duel.state?.turn, active: duel.state?.active, phase: duel.state?.phase, busy: duel.busy, sel: duel.sel?.stage ?? null, cards: CARDS.length });
 }
 // troca de cena com um corte para o preto (a porta fecha atrás de você)
+// o menu volta a aparecer quando a janela fecha sem escolha
+function keepMenu() { ui.onModalClose = () => { if (mode === 'menu') ui.mainMenu(true); }; }
+// registro da empresa (nome); `onName` decide onde gravar (slot novo ou o slot carregado sem nome)
+function askName(onName = (name) => save.rename(name)) {
+  ui.mainMenu(false); ui.nameEntry((name) => { onName(name); fade(toLobby); }); keepMenu();
+}
 function fade(fn) {
   const f = document.getElementById('fade');
   f.classList.add('on'); sfx('whoosh');
@@ -97,7 +107,9 @@ function startDuel(training = false) {
   mode = 'duel'; ui.mainMenu(false); lobbyUi.show(false); document.getElementById('unlock').classList.add('hidden');
   duel.started = false;
   const s = save.get();
-  duel.newGame({ training, deck: [...activeDeck(s).cards], pool: CARDS.filter((c) => (s.collection[c.id] ?? 0) > 0).map((c) => c.id) });
+  const pool = CARDS.filter((c) => (s.collection[c.id] ?? 0) > 0).map((c) => c.id);
+  const plan = training ? null : rivalPlan(s.campaign, pool, Math.floor(Math.random() * 2 ** 31)); // a próxima batalha da campanha
+  duel.newGame({ training, deck: [...activeDeck(s).cards], pool, plan });
   if (!settings.get().seenHelp) { settings.set({ seenHelp: true }); setTimeout(() => ui.help(), 1400); }
 }
 function onResize() {
@@ -137,6 +149,7 @@ function loop(nowMs) {
   cam.position.set(camPos.x + mx * 0.3 + Math.sin(t * 0.5) * 0.02 + (Math.random() - 0.5) * sh, camPos.y - my * 0.14 + Math.sin(t * 0.8) * 0.015 + (Math.random() - 0.5) * sh, camPos.z);
   cam.lookAt(camLook.x + mx * 0.35, camLook.y - my * (mode === 'duel' ? 0.55 : 0.2), camLook.z);
   cam.rotation.z += (Math.random() - 0.5) * sh * 0.15;
+  if (window.__CAMOVR__) { const o = window.__CAMOVR__; cam.position.set(...o.pos); cam.lookAt(...o.look); } // testes: câmera fixa
   gfx.render(R.scene, cam);
   glass.render(gfx.renderer);   // interface curva (quando ligada): passe final, por cima da cena
 }

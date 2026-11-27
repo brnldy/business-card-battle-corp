@@ -3,7 +3,7 @@
 import * as THREE from 'three';
 import {
   RULES, cardDef, isEffect, other, creaturesOf, findCreature, statsOf, canAttack, maxAttacks,
-  legalActions, applyAction, aiChoose, aiWeak, createGame, handLimitStatus, previewAttack,
+  legalActions, applyAction, aiChoose, aiWeak, chooseWithProfile, createGame, handLimitStatus, previewAttack,
 } from './engine.js';
 import { backTexture } from './cosmetics.js';
 import { save } from './save.js';
@@ -12,9 +12,12 @@ import { RIVALS } from './cards.js';
 import { CARD, LAYOUT, TABLE, cardFaceTexture, cardBackTexture, money, coinTexture } from './textures.js';
 import { cardMaterial, glowMaterial, tween, wait, ease, LAYER, cardMats } from './gfx.js';
 import { T as TH } from './theme.js';
-import { sfx, setTension, setMusicMode } from './audio.js';
+import { sfx, setMusicMode } from './audio.js';
 import { settings } from './settings.js';
 import { describeEvent } from './log.js';
+import { CardFX } from './cardfx.js';
+import { RIVAL_LOOKS } from './scene.js';
+import { FrostScreen } from './frost.js';
 
 const ME = 0, OP = 1;
 const C_money = (n) => `$ ${Math.round(n).toLocaleString('pt-BR')}`;
@@ -43,21 +46,23 @@ export class Duel {
     this.ray = new THREE.Raycaster(); this.ray.layers.enableAll(); this.caixaShown = [RULES.STARTING_CAIXA, RULES.STARTING_CAIXA]; this.group = new THREE.Group(); this.R.scene.add(this.group);
     this.slotGlow = new THREE.Mesh(glowGeo, glowMaterial()); this.slotGlow.rotation.x = -Math.PI / 2; this.slotGlow.position.y = 0.006; this.slotGlow.visible = false; this.slotGlow.layers.set(LAYER.GLOW);
     this.slotGlow.material.uniforms.uAspect.value = CARD.w / CARD.h; this.R.scene.add(this.slotGlow);
-    this.buildArrow(); this.buildCoin();
+    this.buildArrow(); this.buildCoin(); this.fx = new CardFX(this); this.frost = new FrostScreen(this.gfx);
     this.oppMood = 0; this.oppGlitch = 0; this.oppTalk = 0; this.oppNod = 0; this.blinkT = 2;
     this.bindInput();
   }
 
   // ───────── ciclo de partida ─────────
-  // opts: { training, deck, pool } — treino é contra o estagiário (IA fraca) e não vale nada;
-  // deck = lista de 40 ids do lobby; pool = cartas que o rival pode usar (as que o jogador já tem)
+  // opts: { training, deck, pool, plan } — treino é contra o estagiário (IA fraca) e não vale nada;
+  // deck = lista de 40 ids do lobby; pool = cartas que o rival pode usar (as que o jogador já tem);
+  // plan = a batalha da campanha (src/meta/campaign.ts → rivalPlan): rival, deck, IA e recompensa
   async newGame(opts = {}) {
-    this.clearCards();
+    this.clearCards(); this.fx.clear(); this.frost.clear();
     this.ui.gameOver(null); this.ui.hud(true); this.ui.clearLog();
     this.training = !!opts.training;
-    const rival = this.training ? 'ESTAGIÁRIO' : RIVALS[Math.floor(Math.random() * RIVALS.length)];
-    this.names = [settings.get().companyName ?? 'SUA EMPRESA', rival];
-    const { state, events, seed } = createGame(this.names, { myDeck: opts.deck ?? null, rivalPool: opts.pool ?? null });
+    this.plan = this.training ? null : opts.plan ?? null;
+    const rival = this.training ? 'ESTAGIÁRIO' : this.plan?.name ?? RIVALS[Math.floor(Math.random() * RIVALS.length)];
+    this.names = [save.company() ?? 'SUA EMPRESA', rival];
+    const { state, events, seed } = createGame(this.names, { myDeck: opts.deck ?? null, rivalPool: opts.pool ?? null, rivalDeck: this.plan?.deck ?? null });
     // acompanha o que o jogador faz (metas, conquistas, estatísticas) e veste as cartas dele com o verso escolhido
     this.tracker = newTracker(state, ME); track(this.tracker, events, state);
     const look = save.get().cosmetics; this.myBack = backTexture(look.back, look.logo);
@@ -67,15 +72,19 @@ export class Duel {
     this.deckShown = [RULES.DECK_SIZE, RULES.DECK_SIZE];
     this.R.opp.face.uDead.value = 0; this.R.opp.face.uOn.value = 1; this.oppMood = 0;
     this.gfx.u.uFade.value = 0; this.lampOn = 1;
-    setMusicMode('duel'); setTension(0); this.R.setBadge(rival);
-    this.ui.log(this.training ? 'Treino com o estagiário · não vale PATRIMÔNIO' : `Partida contra ${rival} · protocolo ${seed.toString(36).toUpperCase()}`);
+    // o rival da mesa é sorteado a cada partida: o cabeça de monitor ou uma das 7 pessoas (scene.js → RIVAL_LOOKS)
+    const looks = Object.keys(RIVAL_LOOKS); this.R.setRivalLook(looks[Math.floor(Math.random() * looks.length)]);
+    setMusicMode(this.plan?.boss ? 'boss' : 'duel'); this.R.setBadge(rival);
+    const where = this.plan ? (this.plan.free ? 'reunião livre' : `batalha ${this.plan.stage} de ${this.plan.total} · ${this.plan.tierName}`) : '';
+    this.ui.log(this.training ? 'Treino com o estagiário · não vale PATRIMÔNIO' : `Partida contra ${rival}${where ? ` · ${where}` : ''} · protocolo ${seed.toString(36).toUpperCase()}`);
+    if (this.plan && !this.plan.free) setTimeout(() => this.active && this.ui.banner(this.plan.boss ? 'O CONSELHO' : rival, this.plan.boss ? 'batalha final · o conselho não perdoa' : `batalha ${this.plan.stage} de ${this.plan.total}`, 'foe'), 200);
     this.indexCards();
     this.refreshHud();
     await wait(350);
     await this.play(events, new Map());
     this.afterAction();
   }
-  stop() { this.active = false; this.clearCards(); this.ui.hud(false); this.ui.gameOver(null); this.setSel(null); }
+  stop() { this.active = false; this.fx.clear(); this.frost.clear(); this.clearCards(); this.ui.hud(false); this.ui.gameOver(null); this.setSel(null); }
   clearCards() {
     for (const uid of [...this.cards.keys()]) this.removeCard(uid);
     this.cards.clear(); this.cardIndex.clear();
@@ -118,7 +127,7 @@ export class Duel {
     wait(780 / sp).then(() => {
       this.thinking = false;
       if (!this.active || this.state.phase === 'over' || this.state.active !== OP) { this.busy = false; return; }
-      const a = this.training ? aiWeak(this.state) : aiChoose(this.state);
+      const a = this.training ? aiWeak(this.state) : this.plan ? chooseWithProfile(this.state, this.plan.ai) : aiChoose(this.state);
       this.busy = false;
       this.oppNod = 1;
       this.apply(a);
@@ -231,7 +240,7 @@ export class Duel {
     const rel = (uid, opts) => { this.setPlace(uid, next.get(uid) ?? null, opts); };
     const ctx = { human: ME, names: this.names, cardOf: (u) => this.cardIndex.get(u) };
     const posOf = (uid) => this.cards.get(uid)?.group.position.clone();
-    let lastCombat = null;
+    let lastCombat = null, tchan = false; // tchan: a Thays acabou de entrar (o próximo "volta pra mão" é dela)
 
     for (let i = 0; i < events.length; i++) {
       if (!this.active) return;
@@ -257,6 +266,7 @@ export class Duel {
           this.ui.banner(mine ? 'Sua vez' : `Vez de ${this.names[OP]}`, `turno ${e.turn}`, mine ? 'me' : 'foe');
           sfx(mine ? 'turn' : 'turnFoe');
           this.refreshHud(e.player, 'main');
+          if (this.frost.level && this.frostLevel() > this.frost.level) this.frost.set(this.frostLevel()); // o vidro trinca mais um pouco
           await wait(D(mine ? 820 : 620));
           break;
         }
@@ -273,9 +283,13 @@ export class Duel {
           sfx('summon'); this.bump(0.16); this.lampKick(0.5);
           this.puff(p, 26, [0.75, 0.72, 0.6]);
           await wait(D(260));
+          if (e.cardId === 'BCB-013' && e.mode === 'DEF') await this.fx.cross(p);      // Paulo orando
+          if (e.cardId === 'BCB-010') await this.fx.jaws(this.deckPos(e.player));       // a bocarra da Tênia morde o topo do deck
+          if (e.cardId === 'BCB-017') tchan = true;
           break;
         }
         case 'sacrifice': case 'destroy': case 'effectExpired': case 'discard': {
+          if (e.type === 'effectExpired' && e.cardId === 'BCB-003') this.frost.set(this.frostLevel()); // o disjuntor caiu: descongela ao contrário
           const c = this.cards.get(e.uid);
           if (c) {
             sfx(e.type === 'sacrifice' ? 'sacrifice' : e.type === 'discard' ? 'card' : 'destroy');
@@ -288,11 +302,14 @@ export class Duel {
           await wait(D(120));
           break;
         }
-        case 'toHand': { rel(e.uid, { hop: 0.9 }); sfx('whoosh'); this.floatAt(posOf(e.uid), 'de volta pra mão', 'info'); await wait(D(450)); break; }
+        case 'toHand': {
+          if (tchan) { tchan = false; const p0 = posOf(e.uid); if (p0) await this.fx.stamp(p0, 'FALTOU UM', 'TCHAN!'); }
+          rel(e.uid, { hop: 0.9 }); sfx('whoosh'); this.floatAt(posOf(e.uid), 'de volta pra mão', 'info'); await wait(D(450)); break; }
         case 'toDeck': {
           const c = this.cards.get(e.uid);
           if (c) {
             const owner = this.state.players.findIndex((p) => p.deck.some((d) => d.uid === e.uid));
+            if (e.cardId === 'BCB-005') await this.fx.cloud(c);                           // Chat GPT sobe pra nuvem
             this.floatAt(posOf(e.uid), 'voltou pra nuvem', 'info'); sfx('glitch');
             c.place = { kind: 'free' }; c.tPos.copy(this.deckPos(owner < 0 ? ME : owner)); c.tQuat.copy(Q_DOWN); c.hop = 1; c.hopH = 0.8;
             await wait(D(480)); this.removeCard(e.uid); this.deckShown[owner < 0 ? ME : owner]++;
@@ -317,6 +334,7 @@ export class Duel {
           c.place = { kind: 'show', x: 0 }; c.hop = 1; c.hopH = 0.3;
           sfx('effect'); await wait(D(360));
           this.sparkle(c.group.position, [0.6, 1, 0.85], 34); this.pulse('uAberr', 0.006, 500);
+          if (e.cardId === 'BCB-003') await this.frost.set(this.frostLevel());           // ar no 16: a tela congela e trinca
           await wait(D(700));
           if (next.get(e.uid)?.kind === 'dead') { await this.dissolve(c, 0, 1, D(380)); rel(e.uid, { noHop: true }); this.snap(c); this.dissolve(c, 1, 0, D(200)); }
           else { rel(e.uid, { hop: 0.6 }); await wait(D(380)); sfx('place'); }
@@ -325,11 +343,16 @@ export class Duel {
         case 'trapTriggered': {
           const c = this.cards.get(e.uid);
           this.ui.banner('Armadilha!', cardDef(e.cardId).name, 'trap'); this.ui.detail({ cardId: e.cardId, where: 'show', owner: e.player === ME ? 'me' : 'opp', status: { tone: e.player === ME ? 'go' : 'stop', text: e.player === ME ? 'Sua armadilha disparou.' : `Armadilha de ${this.names[OP]} disparou.` } }); sfx('trap'); this.bump(0.3); this.pulse('uFlash', 0.5, 500, [1, 0.75, 0.1]); this.pulse('uGlitch', 1, 450);
+          if (e.cardId === 'BCB-015') { const pa = posOf(e.against); if (pa) await this.fx.battery(pa); }   // a pilha de quem atacou morre
           if (c) { c.place = { kind: 'show', x: 0 }; c.hop = 1; c.hopH = 0.5; await wait(D(1000)); await this.dissolve(c, 0, 1, D(380)); rel(e.uid, { noHop: true }); this.snap(c); this.dissolve(c, 1, 0, D(200)); }
           break;
         }
         case 'controlChange': { rel(e.uid, { hop: 1.0 }); sfx('whoosh'); this.floatAt(posOf(e.uid), 'pegou carona', 'info'); await wait(D(520)); break; }
-        case 'modeChange': { rel(e.uid, { noHop: true }); const c = this.cards.get(e.uid); if (c) { c.hop = 1; c.hopH = 0.16; } sfx('card'); await wait(D(300)); sfx('place'); break; }
+        case 'modeChange': {
+          rel(e.uid, { noHop: true }); const c = this.cards.get(e.uid); if (c) { c.hop = 1; c.hopH = 0.16; } sfx('card'); await wait(D(300)); sfx('place');
+          if (e.mode === 'DEF' && this.cardIndex.get(e.uid) === 'BCB-013') { await wait(D(200)); const p = posOf(e.uid); if (p) await this.fx.cross(p); }
+          break;
+        }
         case 'attack': {
           const c = this.cards.get(e.attacker); if (!c) break;
           const side = this.sideOf(e.attacker, prev), to = e.target ? posOf(e.target) : this.directTarget(side);
@@ -353,9 +376,10 @@ export class Duel {
           const a = this.atkCtx; if (a) { this.floatAt(a.c.group.position, 'ataque anulado', 'bad'); await tween(D(300), (k) => a.c.offset.multiplyScalar(1 - k)); a.c.offset.set(0, 0, 0); a.c.glowT = 0; this.atkCtx = null; }
           break;
         }
-        case 'coin': await this.coinFlip(e.result, D); break;
+        case 'coin': { const b = this.cards.get(e.source); if (b) await this.fx.clap(b.group.position.clone()); await this.coinFlip(e.result, D); break; }
         case 'statMod': {
           const p = posOf(e.uid), parts = [];
+          if (e.source === 'BCB-016' && p) await this.fx.mug(p);                            // café com gosto de cigarro
           if (e.mul !== undefined && e.mul !== 1) parts.push(e.mul < 1 ? 'força pela metade' : `×${e.mul}`);
           if (e.atk) parts.push(`ATQ ${e.atk > 0 ? '+' : ''}${e.atk}`);
           if (e.def) parts.push(`DEF ${e.def > 0 ? '+' : ''}${e.def}`);
@@ -391,7 +415,7 @@ export class Duel {
           this.caixaShown[e.player] = e.caixa;
           sfx('damage'); this.bump(e.player === ME ? 0.45 : 0.2);
           this.coins(e.player === ME ? V(0, 0.2, 2.0) : V(0, 0.5, -2.0), Math.min(40, 8 + e.amount / 60));
-          if (e.player === ME) { this.pulse('uFlash', 0.5, 650, [0.93, 0.23, 0.19]); this.pulse('uAberr', 0.012, 600); this.oppMood = -0.8; this.lampFlicker(0.5); setTension(1 - e.caixa / RULES.STARTING_CAIXA); }
+          if (e.player === ME) { this.pulse('uFlash', 0.5, 650, [0.93, 0.23, 0.19]); this.pulse('uAberr', 0.012, 600); this.oppMood = -0.8; this.lampFlicker(0.5); }
           else { this.oppGlitch = 1; this.oppMood = 1; sfx('glitch'); this.pulse('uGlitch', 0.5, 280); }
           this.refreshHud();
           await wait(D(620));
@@ -400,11 +424,10 @@ export class Duel {
         case 'heal': {
           this.caixaShown[e.player] = e.caixa; sfx('heal');
           this.sparkle(e.player === ME ? V(0, 0.4, 1.9) : V(0, 0.6, -1.9), [0.5, 1, 0.55], 28);
-          if (e.player === ME) setTension(1 - e.caixa / RULES.STARTING_CAIXA);
           this.refreshHud(); await wait(D(520));
           break;
         }
-        case 'lock': { const p = posOf(e.uid); if (p) { this.floatAt(p, 'travada: não ataca', 'bad'); sfx('lock'); this.sparkle(p, [1, 0.8, 0.3], 14); } this.refreshChips(); await wait(D(400)); break; }
+        case 'lock': { const p = posOf(e.uid); if (p && e.source === 'BCB-008') await this.fx.phoneRec(p); if (p) { this.floatAt(p, 'travada: não ataca', 'bad'); sfx('lock'); this.sparkle(p, [1, 0.8, 0.3], 14); } this.refreshChips(); await wait(D(400)); break; }
         case 'frio': {
           sfx('frost'); this.pulse('uFrost', 0.75, 900);
           this.snow(e.player); this.floatAt(e.player === ME ? V(0, 0.3, 1.0) : V(0, 0.3, -1.0), `frio ×${e.counters}: −$${e.counters * 100} por turno`, 'cold');
@@ -425,6 +448,12 @@ export class Duel {
     this.caixaShown = [this.state.players[0].caixa, this.state.players[1].caixa];
     this.oppMood *= 0.4;
     this.refreshChips();
+  }
+  /** nível do gelo na tela: 1 no turno em que o Ar Condicionado entra, +1 a cada turno do dono, até 4 (0 = sem ar na mesa) */
+  frostLevel() {
+    let lv = 0;
+    for (const p of this.state.players) for (const fx of p.effects) if (fx && fx.cardId === 'BCB-003' && !fx.faceDown && fx.turnsLeft !== null) lv = Math.max(lv, 4 - fx.turnsLeft + 1);
+    return Math.min(4, lv);
   }
   sideOf(uid, prev) { return prev.get(uid)?.side ?? findCreature(this.state, uid)?.side ?? ME; }
   zonePos(kind, side, idx) { const r = kind === 'cr' ? (side === ME ? LAYOUT.myCr : LAYOUT.oppCr) : (side === ME ? LAYOUT.myFx : LAYOUT.oppFx); return V(r[idx].x, 0.02, r[idx].z); }
@@ -459,7 +488,8 @@ export class Duel {
     const out = this.closeMatch(draw ? 'draw' : win ? 'win' : 'loss');
     this.ui.gameOver({
       win, draw,
-      reward: this.training ? 'Treino: não vale nada.' : out?.reward ? `+ ${money(out.reward)} de PATRIMÔNIO` : win ? '' : 'Derrota não paga. As metas pagam.',
+      reward: [this.training ? 'Treino: não vale PATRIMÔNIO nem entra no histórico.' : out?.reward ? `+ ${money(out.reward)} de PATRIMÔNIO` : win ? '' : 'Os investidores não pagam derrota. As metas do mural pagam.',
+        this.plan && !this.plan.free ? (out?.finished ? 'Campanha concluída. O Conselho caiu.' : out?.advanced ? `Batalha ${this.plan.stage} de ${this.plan.total} vencida. A próxima porta está aberta.` : `Você continua na batalha ${this.plan.stage} de ${this.plan.total}.`) : ''].filter(Boolean).join(' · '),
       title: draw ? 'EMPATE' : win ? 'VOCÊ VENCEU' : 'VOCÊ FALIU',
       sub: e.reason === 'turn_limit' ? 'Limite de turnos: vence o maior CAIXA.' : win ? `${name} ficou sem CAIXA.` : `${name} leva o investimento.`,
       stats: `Você ${money(s.players[ME].caixa)} · ${name} ${money(s.players[OP].caixa)} · ${s.turn} turnos`,
@@ -471,7 +501,7 @@ export class Duel {
     if (this.closed || !this.tracker || !this.state) return null;
     this.closed = true;
     const s = this.state;
-    return this.onMatchEnd?.({ rival: this.names[OP], result, turns: s.turn, caixa: [s.players[ME].caixa, s.players[OP].caixa], counters: this.tracker.c, training: this.training, startingCaixa: RULES.STARTING_CAIXA }) ?? null;
+    return this.onMatchEnd?.({ rival: this.names[OP], result, turns: s.turn, caixa: [s.players[ME].caixa, s.players[OP].caixa], counters: this.tracker.c, training: this.training, startingCaixa: RULES.STARTING_CAIXA, campaignStage: this.plan && !this.plan.free ? this.plan.stage : undefined, rewardMul: this.plan?.reward ?? 1 }) ?? null;
   }
   /** Abandonar uma partida em andamento conta como derrota. */
   forfeit() { if (this.active && !this.over) this.closeMatch('loss'); }
@@ -981,7 +1011,7 @@ export class Duel {
     this.oppNod = Math.max(0, this.oppNod - dt * 2.4);
     o.head.rotation.set(0.14 + Math.sin(this.oppNod * Math.PI) * 0.14 + Math.sin(t * 0.7) * 0.015, f.uLook.value.x * 0.16 + Math.sin(t * 0.43) * 0.03, Math.sin(t * 0.31) * 0.035 + this.oppGlitch * (Math.random() - 0.5) * 0.1);
     R.crtLight.position.set(o.group.position.x, o.group.position.y + o.headRest.y + 1.2, o.group.position.z + 2.4);
-    R.crtLight.intensity = (4 + Math.sin(t * 40) * 0.25 + this.oppGlitch * 6) * f.uOn.value;
+    R.crtLight.intensity = (4 + Math.sin(t * 40) * 0.25 + this.oppGlitch * 6) * f.uOn.value * (o.tv ? 1 : 0.25); // pessoas: só um resto da luz do monitor
     R.crtLight.color.setRGB(0.62 + Math.max(0, f.uMood.value) * 0.4, 0.92 - Math.max(0, f.uMood.value) * 0.6, 1 - Math.max(0, f.uMood.value) * 0.7);
     // luz: no porão a luminária é um pêndulo amortecido que balança com os impactos; no andar seccionado ela é fixa
     if (TH.lamp.sway) {

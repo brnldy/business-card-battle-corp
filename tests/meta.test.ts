@@ -6,7 +6,7 @@ import { createGame } from '../src/engine/setup.ts';
 import {
   META, DECK_RULES, newSave, migrate, owned, deckErrors, activeDeckValid, saveDeck, deleteDeck, buySingle, buyBooster, buyReadyDeck,
   readyDeckMissing, buyCosmetic, equipCosmetic, recycle, extrasOf, rollMissions, claimMission, missionDef, applyMatch, newTracker, track,
-  priceOf, recycleValue, rarityOf, distinctOwned,
+  priceOf, recycleValue, rarityOf, distinctOwned, duplicateDeck, autoFill, readyDeckPrice, readyDeckValue,
 } from '../src/meta/meta.ts';
 import type { Counters, Save } from '../src/meta/meta.ts';
 
@@ -68,6 +68,60 @@ test('deck: salvar, criar, apagar e a conquista de montar o próprio deck', () =
   assert.equal(deleteDeck(ok(deleteDeck(r.save, 0)).save, 0).ok, false);
 });
 
+test('deck: duplicar copia as cartas, marca o nome e respeita o limite de decks', () => {
+  let s = newSave();
+  s = ok(saveDeck(s, 0, { name: 'Um nome comprido demais aa', cards: s.decks[0].cards })).save;
+  const r = ok(duplicateDeck(s, 0));
+  assert.equal(r.index, 1);
+  assert.deepEqual(r.save.decks[1].cards, s.decks[0].cards);
+  assert.ok(r.save.decks[1].name.endsWith('(cópia)') && r.save.decks[1].name.length <= 24, r.save.decks[1].name);
+  assert.equal(r.save.activeDeck, 0, 'a cópia não vira o deck do duelo');
+  let t = r.save;
+  while (t.decks.length < META.maxDecks) t = ok(saveDeck(t, -1, { name: 'x', cards: [] })).save;
+  assert.equal(duplicateDeck(t, 0).ok, false);
+  assert.equal(duplicateDeck(newSave(), 5).ok, false);
+});
+
+test('deck: completar automático fecha um deck válido só com cartas da coleção', () => {
+  const s = newSave();
+  const full = autoFill(s);
+  assert.equal(full.length, DECK_RULES.size);
+  assert.deepEqual(deckErrors(s, full), [], 'com o kit do novato, o automático monta um deck válido');
+  // mantém o que já estava no deck
+  const start = ['BCB-013', 'BCB-013', 'BCB-012'];
+  const kept = autoFill(s, start);
+  assert.equal(kept.filter((id) => id === 'BCB-013').length, 2 + Math.min(1, owned(s, 'BCB-013') - 2));
+  assert.ok(kept.includes('BCB-012'));
+  assert.deepEqual(deckErrors(s, kept), []);
+  // coleção maior: escolhe, não despeja tudo; respeita cópias, cota de efeitos e de sacrifício
+  const big = { ...s, collection: Object.fromEntries(CARDS.map((c) => [c.id, 3])) };
+  const best = autoFill(big);
+  assert.deepEqual(deckErrors(big, best), []);
+  const kind = (id: string) => CARDS.find((c) => c.id === id)!;
+  const fx = best.filter((id) => kind(id).kind.startsWith('effect')).length;
+  assert.equal(fx, Math.round(DECK_RULES.size * 0.2));
+  assert.ok(best.filter((id) => (kind(id).cost ?? 0) > 0).length <= 6);
+  // coleção pequena: devolve o máximo possível, sem inventar carta
+  const poor = { ...s, collection: { 'BCB-001': 3, 'BCB-003': 1 } };
+  assert.deepEqual(autoFill(poor), ['BCB-001', 'BCB-001', 'BCB-001', 'BCB-003']);
+  // deck cheio não muda
+  assert.deepEqual(autoFill(s, full), full);
+  // cópias que o jogador não tem saem e as vagas são repostas com cartas livres
+  const over = [...full.filter((id) => id !== 'BCB-001'), 'BCB-005', 'BCB-005', 'BCB-005'];
+  const fixed = autoFill(s, over);
+  assert.equal(fixed.includes('BCB-005'), false);
+  assert.deepEqual(deckErrors(s, fixed), []);
+});
+
+test('deck: a conquista de montar o próprio deck só vale para deck de 40 válido e diferente do kit', () => {
+  const s = newSave();
+  assert.equal(ok(saveDeck(s, -1, { name: 'em branco', cards: [] })).unlocked.length, 0, 'deck em branco não conta');
+  assert.equal(ok(saveDeck(s, 0, { name: 'kit', cards: s.decks[0].cards.slice(1) })).unlocked.length, 0, 'tirar uma carta do kit não conta');
+  const big = { ...rich(s), collection: { ...s.collection, 'BCB-005': 1 } };
+  const own = [...s.decks[0].cards.slice(1), 'BCB-005'];
+  assert.ok(ok(saveDeck(big, -1, { name: 'meu', cards: own })).unlocked.some((a) => a.id === 'deck_builder'));
+});
+
 test('loja: carta avulsa cobra pela raridade e respeita o limite de cópias', () => {
   const s = newSave();
   assert.equal(buySingle(s, 'BCB-005').ok, false, 'sem dinheiro para lendária');
@@ -124,6 +178,46 @@ test('deck pronto: entrega só o que falta, vira o deck ativo e fica válido', (
   assert.equal(r.save.decks[r.save.activeDeck].name, d.name);
   assert.equal(activeDeckValid(r.save), true);
   assert.deepEqual(readyDeckMissing(r.save, d.id), {});
+  assert.equal(r.price, d.price);
+  // comprar de novo: a lista já está no arquivo e não entrega nada → recusa sem cobrar
+  const again = buyReadyDeck(r.save, d.id);
+  assert.equal(again.ok, false);
+});
+
+test('deck pronto: nunca sobrescreve deck seu, é grátis sem cartas a entregar e respeita o limite de decks', () => {
+  const base = rich(newSave()), d = META.readyDecks[0];
+  // um deck seu com o mesmo nome e outra lista continua intacto; o comprado vira "Nome (2)"
+  const mine = ok(saveDeck(base, -1, { name: d.name, cards: base.decks[0].cards })).save;
+  const r = ok(buyReadyDeck(mine, d.id));
+  assert.deepEqual(r.save.decks[1].cards, base.decks[0].cards, 'o deck do jogador não mudou');
+  const nm = r.save.decks[r.index].name;
+  assert.ok(nm.endsWith(' (2)') && nm.length <= 24 && d.name.startsWith(nm.slice(0, -4)), nm);
+  // com todas as cartas na coleção e sem a lista no arquivo: guarda a lista de graça
+  const full = { ...base, collection: Object.fromEntries(CARDS.map((c) => [c.id, 3])) };
+  assert.equal(readyDeckPrice(full, d.id), 0);
+  const free = ok(buyReadyDeck(full, d.id));
+  assert.equal(free.save.patrimonio, full.patrimonio + free.unlocked.reduce((n, a) => n + a.reward, 0));
+  // arquivo cheio: recusa
+  let t = base;
+  while (t.decks.length < META.maxDecks) t = ok(saveDeck(t, -1, { name: 'x', cards: [] })).save;
+  assert.equal(buyReadyDeck(t, d.id).ok, false);
+  assert.ok(readyDeckValue(base, d.id) > 0);
+});
+
+test('pacote: cada carta diz quantas cópias você fica tendo', () => {
+  const s = rich(newSave(9)), r = ok(buyBooster(s));
+  const seen = new Map<string, number>();
+  for (const c of r.cards) {
+    seen.set(c.cardId, (seen.get(c.cardId) ?? owned(s, c.cardId)) + 1);
+    assert.equal(c.count, seen.get(c.cardId));
+    assert.equal(c.isNew, c.count === 1);
+  }
+});
+
+test('deck pronto: renomear ou duplicar um deck comprado não dá a conquista de montar o próprio deck', () => {
+  const r = ok(buyReadyDeck(rich(newSave()), META.readyDecks[0].id));
+  const renamed = ok(saveDeck(r.save, r.index, { name: 'Outro nome', cards: r.save.decks[r.index].cards }));
+  assert.equal(renamed.unlocked.some((a) => a.id === 'deck_builder'), false);
 });
 
 test('visual: comprar, equipar e a conquista de trocar logo e verso', () => {

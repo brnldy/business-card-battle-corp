@@ -1,9 +1,7 @@
-// Preferências salvas no navegador (mesma chave do protótipo original, para preservar nome/volume).
+// Preferências salvas no navegador (valem para os 3 slots). O nome da empresa mora no slot (save.js).
 const KEY = 'bcbc:settings';
 const DEFAULTS = {
-  companyName: null, music: 0.8, sfx: 0.9, muted: false,
-  soundtrack: 'original',   // 'original' (trilhas do autor) | 'procedural'
-  sfxSource: 'files',       // 'files' (efeitos gravados do autor + gerados onde não há arquivo) | 'procedural'
+  music: 0.8, sfx: 0.9, muted: false,
   uiSize: 1,               // tamanho da interface: 0.85 | 1 | 1.15
   pixel: 3,                 // 1 = nítida, 2 = retrô, 3 = pixelada (cartas sempre nítidas)
   hudCurve: null,           // interface curva: null = automático (ligada em telas 4K) | true | false

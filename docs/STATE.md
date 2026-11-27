@@ -1,6 +1,6 @@
 # Estado do projeto
 
-> Atualizado em 23/11/2026. Lido no começo de cada sessão de trabalho.
+> Atualizado em 26/11/2026. Lido no começo de cada sessão de trabalho.
 
 ## Repositório unificado (23/11/2026) — github.com/brnldy/business-card-battle-corp
 O projeto passou a viver neste repositório, juntando as duas frentes:
@@ -8,9 +8,36 @@ O projeto passou a viver neste repositório, juntando as duas frentes:
 - **De lá:** o remake visual em three.js (`remake/`), com o visual Buckshot e o HUD em design system. É a cara oficial do jogo.
 - **Ponte:** o remake usa o motor oficial (`remake/src/engine.js` e `cards.js` reexportam `src/engine`). Antes da troca, os dois motores foram comparados em 300 partidas (51.890 jogadas) e 10.730 previsões de ataque: nenhuma diferença.
 - A previsão de ataque criada lá virou `src/engine/preview.ts`, com testes. As constantes de regra estão em `src/engine/rules.ts`.
-- **Áudio:** as trilhas do autor são o padrão. Os efeitos gravados pelo autor tocam onde existe arquivo e os gerados por código preenchem o resto (Configurações → Trilha / Efeitos).
+- **Áudio:** as trilhas do autor são o padrão. Os efeitos gravados pelo autor tocam onde existe arquivo e os gerados por código preenchem o resto, sempre (a opção "Efeitos: gravados / gerados" saiu das configurações em 24/11). A opção "Trilha: original / gerada" também saiu, junto com a trilha gerada por código: a música é sempre a do autor.
 - A versão Phaser e a 3D feita aqui (descritas abaixo) ficaram guardadas num ramo local, `historico-yugioro`, que não sobe para o GitHub. A estética oficial é a do remake.
 - Regra de trabalho: tudo que fizermos sobe neste repositório.
+
+### Arquivo de decks refeito (27/11/2026)
+A tela "Decks e coleção" (`remake/src/lobbyui.js`, seção *arquivo*; estilos em `lobby.css`) virou três telas:
+- **Meus decks:** os até 6 decks lado a lado, como pastas, cada uma com 3 cartas de capa, contagem, criaturas/efeitos e se está pronto. O deck do duelo tem a aba ★. Ações por pasta: Editar, Usar no duelo, Duplicar, Apagar. A pasta vazia cria deck **em branco** ou **montado automático**.
+- **Editor:** coleção à esquerda (busca por nome/elemento/depto., filtro Criaturas/Efeitos/Armadilhas, "Só as que tenho", ordem por número/nome/ATQ/DEF/raridade) e deck à direita agrupado por tipo, com − e + em cada linha e em cada carta (clique põe, botão direito tira). Barra de composição, ATQ médio, quantas pedem sacrifício e todos os erros. **Grava sozinho** a cada mudança; "Desfazer alterações" volta ao deck como estava ao abrir. Esc volta para os decks. Linha em vermelho = o deck usa mais cópias do que você tem.
+- **Coleção:** a mesma grade com busca e filtros, bolinhas de cópia (cheia = no deck, contorno = tenho, tracejada = não tenho) e atalho para a loja.
+- A ficha da carta abre flutuando ao lado do mouse (vale também na loja), no lugar da coluna fixa de antes.
+- Regras novas em `src/meta/meta.ts`, com testes: `duplicateDeck` e `autoFill` (completa até 40 só com a coleção: ~1 efeito a cada 5 cartas, no máximo 6 cartas de sacrifício, criaturas por ATQ+DEF e raridade).
+- Correção: a janela do lobby descia quando o conteúdo passava da altura (linha da grade sem altura definida).
+- Referências usadas: Hearthstone ("Complete My Deck", lista à direita), Legends of Runeterra (40 cartas/3 cópias, deck inválido pode ser salvo, carta que falta destacada) e a seleção de decks do Balatro (um cartão grande por deck, tudo à vista).
+
+### Saves, animações, campanha e rivais (26/11/2026)
+- **Saves em 3 gavetas** (`remake/src/save.js`): menu com *Continuar expediente*, *Novo jogo* e *Carregar*; no lobby, botão *Salvar / Carregar* (tecla S). Cada gaveta é uma empresa inteira (nome, cartas, PATRIMÔNIO, campanha). A gaveta em uso salva sozinha a cada mudança; *Salvar aqui* copia para outra gaveta. Salvar só no lobby (decisão do autor). O progresso antigo virou a gaveta 1.
+- **Animações próprias das cartas** (`remake/src/cardfx.js`), em 3D low poly, só as aprovadas pelo autor: palma do Bruno, cruz do Paulo (em defesa), celular REC do Lucas, bocarra da Tênia, carimbo "FALTOU UM TCHAN!" da Thays, nuvem do Chat GPT, pilha AA descarregando e caneca de café. Saíram: olho da Duda, post do Filipe, ×2 do Ralph e etiqueta do pão.
+- **Ar Condicionado no Talo** (`remake/src/frost.js`): a tela esfria e congela mais a cada turno do dono (4 níveis) e descongela ao contrário quando a carta sai. Usa as imagens de gelo do autor (`assets-originais/ui/1..4.png` → `remake/assets/img/FROZEN_1..4.jpg`) em modo *screen*, dentro do filtro de imagem.
+- **Campanha de 30 batalhas** (`src/meta/campaign.ts`, `data/campaign.json`, 6 testes em `tests/campaign.test.ts`): 29 empresas fictícias sorteadas por Novo jogo + **O CONSELHO** como chefe na 30ª. 1–10: deck das suas cartas e IA que erra 22%; 11–20: decks do mercado; 21–29: decks temáticos e IA afiada (`SHARP_WEIGHTS` em `src/ai/ai.ts`); 30: deck mais forte achado pelo simulador e trilha do duelo mais lenta e grave. Derrota = tenta de novo. Recompensa ×1 / ×1,5 / ×2 / ×4. Calibragem em `docs/CAMPAIGN.md`.
+- **Cutscene final: MARCAÇÃO.** `ui.ending()` mostra "[CUTSCENE FINAL · EM PRODUÇÃO]" quando a campanha termina; o autor vai mandar a ideia. Depois, a sala de reunião vira "reuniões livres".
+- **Rivais da mesa** (`remake/src/scene.js → RIVAL_LOOKS`): sorteados a cada partida entre o cabeça de monitor e 7 pessoas de terno com o crachá da empresa: careca de barba preta (pele marrom), loiro sem barba (pele branca), cabelo preto de óculos (pele marrom clara), chanel ruivo (pele branca), cabelo preso preto (pele marrom), cabelo longo preto (pele marrom clara) e idoso de pele amarela, cabelo e bigode brancos. Mulheres usam o modelo Formal Woman (Quaternius, CC0, baixado de poly.pizza), mesmo esqueleto do Business Man. Careca = malha do cabelo escondida; chanel e preso = cabelo longo "cortado" na malha; barba, bigode, óculos e coque são peças low poly presas ao osso da cabeça.
+- Ganchos de teste novos: `window.__STEP__(ms)` avança as animações sem a tela, `window.__CAMOVR__` fixa a câmera, `window.__R__.previewLook({...})` monta um rival avulso.
+
+### Sons de interface (24/11/2026)
+- O lobby e as janelas (abrir área, abas, filtros, configurações, registro) ganharam um som próprio, gerado por código: um "toc" abafado de pasta de papelão, curto e grave, com leve variação de altura para não cansar (`nav`; ao fechar, `navBack`, um tom abaixo). Antes usavam o som de escolher carta.
+- O som de escolher carta (`CHOSING_CARD.mp3`) crescia devagar por ~0,3 s e soava arrastado. Agora toca só o trecho perto do pico, 25% mais rápido (~0,17 s). O arquivo original não foi alterado; o recorte fica em `FILE_SFX` (`from`, `to`, `rate`) em `remake/src/audio.js`.
+
+### Correções de 24/11/2026
+- **Tênia do Lucas:** o verme come as 3 cartas do topo do seu deck **para a sua mão** (antes iam para o Morto, leitura errada da carta). Com a mão no limite de 10, as que sobram ficam no deck. Efeito `drawSelf` em `data/cards.json`.
+- **Pasta de CAIXA do rival** desceu (de 16 px para 60 px do topo) para a etiqueta vermelha/verde de dano/cura, que sobe por trás da pasta, não sair da tela.
 
 ### Lobby 3D (23/11/2026)
 Entre o menu (a rua) e o duelo agora existe o **lobby**: a recepção da empresa por dentro, em 3D, no clima de escritório decadente, pós-apocalíptico e amaldiçoado. Cada área é um objeto clicável da sala (e também um atalho numérico na barra de baixo):
@@ -18,7 +45,7 @@ Entre o menu (a rua) e o duelo agora existe o **lobby**: a recepção da empresa
 | Objeto | Área | O que faz |
 |---|---|---|
 | Porta dupla "Sala de reunião" | Duelo | Entra num duelo valendo, com o deck escolhido |
-| Arquivos de aço | Decks e coleção | Montador de deck (até 6 decks), coleção com contador e ficha de cada carta |
+| Arquivos de aço | Decks e coleção | Pastas com os decks (até 6), editor com busca/filtros e "Completar automático", coleção com contador e ficha de cada carta |
 | Máquina de benefícios | Loja | Pacotes (com abertura carta a carta), cartas avulsas, decks prontos e visual |
 | Mural de cortiça | Metas do dia | 3 metas por dia que pagam mesmo na derrota |
 | Prateleira de troféus | Conquistas | 17 conquistas, cada uma com bônus |

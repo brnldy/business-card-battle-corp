@@ -4,6 +4,7 @@ import * as glass from './ds/glass.js';
 import { CARDS } from './cards.js';
 import { asset } from './assets.js';
 import { settings, cleanName, MAX_NAME } from './settings.js';
+import { save } from './save.js';
 import { sfx, applyVolumes, unlockAudio } from './audio.js';
 import * as C from './hud/components.js';
 
@@ -11,6 +12,9 @@ const $ = (sel, root = document) => root.querySelector(sel);
 const el = (tag, cls, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html !== undefined) e.innerHTML = html; return e; };
 const esc = C.esc;
 const { ICON } = C;
+const stamp = (ms) => { const d = new Date(ms), p = (n) => String(n).padStart(2, '0'); return `${p(d.getDate())}/${p(d.getMonth() + 1)}/${d.getFullYear()} às ${p(d.getHours())}:${p(d.getMinutes())}`; };
+/** Em que ponto da campanha um slot está, em uma linha. */
+export const slotStage = (x) => (x.done ? 'Campanha concluída' : `Batalha ${Math.min(30, (x.stage ?? 0) + 1)} de 30`);
 // jogadas que aparecem na faixa do topo (o resto fica só no relatório)
 const TICKER = new Set(['summon', 'effectPlayed', 'trapSet', 'trapTriggered', 'attack', 'attackNegated', 'attackRedirected', 'destroy', 'sacrifice', 'toHand', 'toDeck', 'controlChange', 'modeChange', 'coin', 'effectExpired', 'discard', 'mill']);
 
@@ -27,10 +31,13 @@ export class UI {
           <nav class="mn-card">
             <i class="ds-clip"></i>
             <div class="ds-bar"><span>Cartão de ponto</span><b id="mn-clock">--:--</b></div>
-            <button data-act="start" class="mn-punch"><span class="ds-key">Enter</span><span>Iniciar expediente</span><i>Entrada</i></button>
-            <button data-act="help" class="mn-row"><b>01</b><span>Como jogar</span><i>manual</i></button>
-            <button data-act="gallery" class="mn-row"><b>02</b><span>Arquivo de cartas</span><i>fichas</i></button>
-            <button data-act="settings" class="mn-row"><b>03</b><span>Configurações</span><i>quadro de luz</i></button>
+            <button data-act="continue" class="mn-punch" id="mm-continue"><span class="ds-key">Enter</span><span>Continuar expediente</span><i>Entrada</i></button>
+            <button data-act="newgame" class="mn-punch" id="mm-punch-new"><span class="ds-key">Enter</span><span>Iniciar expediente</span><i>Entrada</i></button>
+            <button data-act="newgame" class="mn-row" id="mm-new"><b></b><span>Novo jogo</span><i>outra gaveta</i></button>
+            <button data-act="load" class="mn-row" id="mm-load"><b></b><span>Carregar</span><i>gavetas</i></button>
+            <button data-act="help" class="mn-row"><b></b><span>Como jogar</span><i>manual</i></button>
+            <button data-act="gallery" class="mn-row"><b></b><span>Arquivo de cartas</span><i>fichas</i></button>
+            <button data-act="settings" class="mn-row"><b></b><span>Configurações</span><i>quadro de luz</i></button>
           </nav>
           <div class="company" id="menu-company"></div>
         </div>
@@ -95,14 +102,63 @@ export class UI {
   bootDone() { this.show('boot', false); }
   mainMenu(on) {
     this.show('menu', on);
-    const n = settings.get().companyName;
-    $('#menu-company').innerHTML = n ? `<span class="ds-dymo">${esc(n)}</span><i>empresa registrada</i>` : ''; const d = new Date(), ck = $('#mn-clock'); if (ck) ck.textContent = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+    // sem nenhum slot salvo, "Novo jogo" vira o botão principal e "Continuar"/"Carregar" somem
+    const last = save.lastSlot(), info = last ? save.slots()[last - 1] : null, any = save.hasAny();
+    $('#mm-continue').classList.toggle('hidden', !info);
+    $('#mm-load').classList.toggle('hidden', !any);
+    // sem gaveta salva, o botão de ponto vira "Iniciar expediente" (novo jogo) e a linha "Novo jogo" some
+    $('#mm-punch-new').classList.toggle('hidden', !!info); $('#mm-new').classList.toggle('hidden', !info);
+    $('#menu-company').innerHTML = info ? `<span class="ds-dymo">${esc(info.name)}</span><i>${esc(slotStage(info))}</i>` : '';
+    const d = new Date(), ck = $('#mn-clock'); if (ck) ck.textContent = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+  }
+  /**
+   * As 3 gavetas de progresso. mode: 'new' (Novo jogo), 'load' (Carregar, no menu) ou 'lobby' (Salvar/Carregar no lobby).
+   * on: { pick(n) → começar empresa nova no slot n, load(n) → passar a jogar no slot n, saved(n) → depois de salvar }
+   */
+  slots(mode, on = {}) {
+    const T = { new: ['Novo jogo · escolha uma gaveta', 'Onde abrir a empresa?'], load: ['Arquivo de empresas', 'Carregar expediente'], lobby: ['Arquivo de empresas · o slot em uso salva sozinho', 'Salvar ou carregar'] }[mode];
+    const card = (x) => {
+      const head = `<p class="memo">Gaveta ${x.n}${x.current ? ' · em uso' : ''}</p>`;
+      if (x.empty) {
+        const btn = mode === 'new' ? `<button class="primary" data-sl="pick" data-n="${x.n}">Abrir empresa aqui</button>` : mode === 'lobby' ? `<button data-sl="copy" data-n="${x.n}">Salvar aqui</button>` : '';
+        return `<article class="sl-card is-empty">${head}<h3>Gaveta vazia</h3><p class="fine">Só poeira e um clipe enferrujado.</p><footer>${btn}</footer></article>`;
+      }
+      let btns = '';
+      if (mode === 'new') btns = `<button data-sl="over" data-n="${x.n}">Sobrescrever</button>`;
+      else if (mode === 'load') btns = `<button class="primary" data-sl="load" data-n="${x.n}">Carregar</button><button class="ghost" data-sl="del" data-n="${x.n}">Apagar</button>`;
+      else if (x.current) btns = `<button class="primary" data-sl="save" data-n="${x.n}">Salvar agora</button>`;
+      else btns = `<button class="primary" data-sl="load" data-n="${x.n}">Carregar</button><button data-sl="copy" data-n="${x.n}">Salvar aqui</button>`;
+      return `<article class="sl-card ${x.current ? 'is-current' : ''}">${head}<h3>${esc(x.name)}</h3>
+        <dl><div><dt>Campanha</dt><dd>${esc(slotStage(x))}</dd></div><div><dt>Patrimônio</dt><dd>$ ${Math.round(x.patrimonio).toLocaleString('pt-BR')}</dd></div><div><dt>Vitórias</dt><dd>${x.wins}</dd></div></dl>
+        <p class="fine">Salvo em ${esc(stamp(x.savedAt))}</p><footer>${btns}</footer></article>`;
+    };
+    const render = () => {
+      const box = this.modal(`<div class="memo">${esc(T[0])}</div><h2>${esc(T[1])}</h2><div class="sl-grid">${save.slots().map(card).join('')}</div><nav><button data-close>Voltar</button></nav>`, 'wide slots');
+      box.onclick = (e) => {
+        const b = e.target.closest('[data-sl]'); if (!b) return;
+        const n = Number(b.dataset.n), x = save.slots()[n - 1], back = () => { this.slots(mode, on); };
+        sfx('nav');
+        switch (b.dataset.sl) {
+          case 'pick': return on.pick?.(n);
+          case 'over': return this.confirm(`Sobrescrever a gaveta ${n}?`, `${x.name} e todo o progresso dela vão para a trituradora. Não tem volta.`, 'SOBRESCREVER', () => on.pick?.(n), 'Voltar');
+          case 'load': return on.load?.(n);
+          case 'del': return this.confirm(`Apagar a gaveta ${n}?`, `${x.name} e todo o progresso dela serão apagados para sempre.`, 'APAGAR', () => { save.remove(n); this.mainMenu(!$('#menu').classList.contains('hidden')); back(); }, 'Voltar');
+          case 'save': { const t = save.commit(); sfx('trapSet'); render(); on.saved?.(n, t); return undefined; }
+          case 'copy': {
+            const go = () => { const t = save.copyTo(n); sfx('trapSet'); back(); on.saved?.(n, t); };
+            return x.empty ? go() : this.confirm(`Salvar por cima da gaveta ${n}?`, `${x.name} será substituída pelo progresso atual, e você passa a jogar nessa gaveta.`, 'SALVAR POR CIMA', go, 'Voltar');
+          }
+          default: return undefined;
+        }
+      };
+    };
+    render();
   }
   hud(on) {
     this.show('hud', on);
     if (!on) { this.show('slot-log', false); this.renderBar(); ['slot-ticker', 'slot-prompt', 'slot-limit', 'slot-coach', 'slot-toast'].forEach((id) => this.show(id, false)); this.chips([]); this.menu(null); this.detail(null); this.preview(null); this.tip(null); this.tutorQ = []; }
   }
-  closeModal() { const m = $('#modal'); if (m.classList.contains('hidden')) return; m.classList.add('hidden'); m.innerHTML = ''; sfx('cancel'); const cb = this.onModalClose; this.onModalClose = null; cb?.(); }
+  closeModal() { const m = $('#modal'); if (m.classList.contains('hidden')) return; m.classList.add('hidden'); m.innerHTML = ''; sfx('navBack'); const cb = this.onModalClose; this.onModalClose = null; cb?.(); }
   modal(html, cls = '') {
     const m = $('#modal'); m.innerHTML = `<div class="modal-box ${cls}">${html}</div>`; m.classList.remove('hidden');
     m.onclick = (e) => { if (e.target === m || e.target.closest('[data-close]')) this.closeModal(); };
@@ -112,8 +168,7 @@ export class UI {
     const box = this.modal(`<h2>${esc(title)}</h2><p>${esc(body)}</p><nav><button data-close>${esc(no)}</button><button id="cf-yes" class="primary">${esc(yes)}</button></nav>`);
     $('#cf-yes', box).onclick = () => { $('#modal').classList.add('hidden'); $('#modal').innerHTML = ''; onYes(); };
   }
-  nameEntry(onDone) {
-    const cur = settings.get().companyName ?? '';
+  nameEntry(onDone, cur = '') {
     const box = this.modal(`
       <div class="memo">Formulário 01-A · registro de empresa</div>
       <h2>Como se chama a sua empresa?</h2>
@@ -122,7 +177,7 @@ export class UI {
       <nav><button data-close>Voltar</button><button id="name-ok" class="primary">Assinar e entrar</button></nav>`, 'form');
     const inp = $('#name-in', box), ok = $('#name-ok', box);
     const sync = () => { ok.disabled = !cleanName(inp.value); };
-    const go = () => { const n = cleanName(inp.value); if (!n) return; settings.set({ companyName: n }); sfx('start'); this.onModalClose = null; $('#modal').classList.add('hidden'); $('#modal').innerHTML = ''; onDone(n); };
+    const go = () => { const n = cleanName(inp.value); if (!n) return; sfx('start'); this.onModalClose = null; $('#modal').classList.add('hidden'); $('#modal').innerHTML = ''; onDone(n); };
     inp.addEventListener('input', () => { sfx('type'); sync(); });
     inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') go(); e.stopPropagation(); });
     ok.onclick = go; sync(); setTimeout(() => { inp.focus(); inp.select(); }, 30);
@@ -147,10 +202,8 @@ export class UI {
     const box = this.modal(`
       <h2>Configurações</h2>
       <div class="rows">
-        <label>Música <input type="range" min="0" max="1" step="0.05" value="${s.music}" data-k2="music"></label>
-        <label>Efeitos <input type="range" min="0" max="1" step="0.05" value="${s.sfx}" data-k2="sfx"></label>
-        <label>Trilha <span class="seg" data-s="soundtrack"><button data-v="original">Original</button><button data-v="procedural">Gerada</button></span></label>
-        <label>Origem dos efeitos <span class="seg" data-s="sfxSource"><button data-v="files">Gravados</button><button data-v="procedural">Gerados</button></span></label>
+        <label>Música e ambiente <input type="range" min="0" max="1" step="0.05" value="${s.music}" data-k2="music"></label>
+        <label>Efeitos sonoros <input type="range" min="0" max="1" step="0.05" value="${s.sfx}" data-k2="sfx"></label>
         <label>Imagem <span class="seg" data-s="pixel"><button data-v="1">Nítida</button><button data-v="2">Retrô</button><button data-v="3">Pixelada</button></span></label>
         <label>Tamanho <span class="seg" data-s="uiSize"><button data-v="0.85">Pequena</button><button data-v="1">Média</button><button data-v="1.15">Grande</button></span></label>
         <label>Animações <span class="seg" data-s="speed"><button data-v="1">Normal</button><button data-v="1.6">Rápida</button><button data-v="2.5">Turbo</button></span></label>
@@ -162,11 +215,11 @@ export class UI {
       <nav><button data-close class="primary">Voltar</button></nav>`);
     const syncSeg = () => box.querySelectorAll('.seg').forEach((sg) => sg.querySelectorAll('button').forEach((b) => b.classList.toggle('on', String(sg.dataset.s === 'hudCurve' ? glass.curveOn() : settings.get()[sg.dataset.s]) === b.dataset.v)));
     syncSeg();
-    box.addEventListener('input', (e) => { const k = e.target.dataset?.k2; if (!k) return; settings.set({ [k]: Number(e.target.value) }); applyVolumes(); if (k === 'sfx') sfx('select'); });
+    box.addEventListener('input', (e) => { const k = e.target.dataset?.k2; if (!k) return; settings.set({ [k]: Number(e.target.value) }); applyVolumes(); if (k === 'sfx') sfx('nav'); });
     box.addEventListener('click', (e) => {
       const b = e.target.closest('.seg button'); if (!b) return;
       const k = b.parentElement.dataset.s, raw = b.dataset.v, v = raw === 'true' ? true : raw === 'false' ? false : isNaN(Number(raw)) ? raw : Number(raw);
-      settings.set(k === 'tipsOff' && v === false ? { tipsOff: false, tips: {} } : { [k]: v }); applyVolumes(); if (k === 'uiSize') this.setScale(); this.renderBar(); syncSeg(); sfx('select');
+      settings.set(k === 'tipsOff' && v === false ? { tipsOff: false, tips: {} } : { [k]: v }); applyVolumes(); if (k === 'uiSize') this.setScale(); this.renderBar(); syncSeg(); sfx('nav');
     });
   }
   gallery() {
@@ -201,7 +254,7 @@ export class UI {
     this.tutorQ = this.tutorQ.filter((t) => !t.ctx || t.ctx === ctx);
     if (this._tipCtx && this._tipCtx !== ctx && !$('#slot-coach').classList.contains('hidden')) this.tutorNext();
   }
-  toggleLog() { const l = $('#slot-log'); l.classList.toggle('hidden'); this.renderBar(); if (!l.classList.contains('hidden')) $('.h-log__list', l).scrollTop = 1e6; sfx('select'); }
+  toggleLog() { const l = $('#slot-log'); l.classList.toggle('hidden'); this.renderBar(); if (!l.classList.contains('hidden')) $('.h-log__list', l).scrollTop = 1e6; sfx('nav'); }
   clearLog() { $('.h-log__list').innerHTML = ''; }
   log(text, type = '', who = 'sys') {
     const list = $('.h-log__list'), tmp = el('div', '', C.logLine({ text, type, who }));
@@ -297,6 +350,16 @@ export class UI {
     const f = el('div', 'h-float is-clash', `<b>${a}</b><i>${ICON.atk}</i><span>×</span><i>${mode === 'DEF' ? ICON.def : ICON.atk}</i><b>${b}</b>`);
     f.style.left = `${pos.x / this.scale}px`; f.style.top = `${pos.y / this.scale - 44}px`;
     $('#floats').appendChild(f); setTimeout(() => f.remove(), 1500);
+  }
+  /** Fim da campanha. MARCAÇÃO: aqui entra a cutscene final que o autor vai mandar. */
+  ending(onClose) {
+    this.onModalClose = onClose ?? null;
+    this.modal(`
+      <div class="memo">Ata final · reservado ao Conselho</div><h2>O Conselho caiu.</h2>
+      <p>[CUTSCENE FINAL · EM PRODUÇÃO]</p>
+      <p class="fine">Espaço reservado para a cena de encerramento. Depois dela, a sala de reunião continua aberta para reuniões livres.</p>
+      <nav><button data-close class="primary">Voltar ao expediente</button></nav>`, 'ending');
+    sfx('win');
   }
   gameOver(o) {
     this.show('over', !!o); if (!o) return;

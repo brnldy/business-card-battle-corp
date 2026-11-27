@@ -1,11 +1,11 @@
-// Áudio (WebAudio): efeitos sintetizados, ambiente de escritório e trilha generativa,
+// Áudio (WebAudio): efeitos sintetizados, ambiente de escritório e as trilhas do autor,
 // mais os efeitos gravados pelo autor (remake/assets/sfx): onde existe arquivo para o momento, toca o arquivo;
-// onde não existe, toca o sintetizado. Configurações → "Efeitos: seus arquivos / gerados".
+// onde não existe, toca o sintetizado.
 import { settings } from './settings.js';
 import { asset } from './assets.js';
 
-let ctx = null, master, sfxBus, musicBus, ambBus, reverb, noiseBuf, brownBuf;
-let started = false, musicTimer = null, ambTimer = null, tension = 0, mode = 'menu';
+let ctx = null, master, sfxBus, ambBus, reverb, noiseBuf, brownBuf;
+let started = false, ambTimer = null, mode = 'menu';
 let origEl = null;
 
 const now = () => ctx.currentTime;
@@ -43,12 +43,12 @@ export function initAudio() {
   const comp = ctx.createDynamicsCompressor();
   comp.threshold.value = -16; comp.ratio.value = 5; comp.attack.value = 0.004; comp.release.value = 0.2;
   master.connect(comp).connect(ctx.destination);
-  sfxBus = ctx.createGain(); musicBus = ctx.createGain(); ambBus = ctx.createGain();
+  sfxBus = ctx.createGain(); ambBus = ctx.createGain();
   reverb = ctx.createConvolver();
   reverb.buffer = makeImpulse(2.8, 2.6);
   const revGain = ctx.createGain(); revGain.gain.value = 0.55;
   reverb.connect(revGain).connect(master);
-  sfxBus.connect(master); musicBus.connect(master); ambBus.connect(master);
+  sfxBus.connect(master); ambBus.connect(master);
   noiseBuf = makeNoise(false); brownBuf = makeNoise(true);
   applyVolumes();
 }
@@ -56,7 +56,7 @@ export function unlockAudio() {
   initAudio();
   if (!ctx) return;
   if (ctx.state === 'suspended') ctx.resume();
-  if (!started) { started = true; startAmbience(); startMusicLoop(); loadFileSfx(); }
+  if (!started) { started = true; startAmbience(); loadFileSfx(); }
   syncOriginal();
 }
 
@@ -71,7 +71,8 @@ const FILE_SFX = {
   trapSet: { file: 'TRAP.mp3', gain: 2.6 },
   sacrifice: { file: 'SACRIFICE.mp3', gain: 3.2 },    // -28,2 dB
   draw: { file: 'CARD.mp3', gain: 4 },                // -43,2 dB (baixinho de propósito)
-  select: { file: 'CHOSING_CARD.mp3', gain: 4.7 },    // -37,5 dB
+  // O arquivo cresce devagar por ~0,3 s antes do pico, e isso soava arrastado: começa já perto do pico e toca 25% mais rápido (~0,2 s).
+  select: { file: 'CHOSING_CARD.mp3', gain: 4, from: 0.26, to: 0.47, rate: 1.25 }, // -37,5 dB
   start: { file: 'START_BUTTON.mp3', gain: 2.6 },     // -26,4 dB
   battle: { file: 'BATTLE_BUTTON.mp3', gain: 4.5 },   // -31 dB
   bell: { file: 'END_TURN_BUTTON.mp3', gain: 1.5 },   // -21,8 dB (encerrar turno)
@@ -90,16 +91,23 @@ function loadFileSfx() {
       .catch(() => { /* sem o arquivo, fica o som sintetizado */ });
   }
 }
+// from/to (s) recortam um trecho do arquivo; rate acelera. O recorte ganha 4 ms de entrada e 30 ms de saída para não estalar.
 function playFile(name) {
-  if (settings.get().sfxSource === 'procedural') return false;
   const spec = FILE_SFX[name];
   const buf = spec && fileBufs.get(spec.file);
   if (!buf) return false;
-  const src = ctx.createBufferSource(), g = ctx.createGain();
+  const src = ctx.createBufferSource(), g = ctx.createGain(), t = now();
   src.buffer = buf;
-  g.gain.value = spec.gain;
+  src.playbackRate.value = spec.rate || 1;
+  const from = spec.from || 0, len = ((spec.to || buf.duration) - from) / (spec.rate || 1);
+  if (spec.from || spec.to) {
+    g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(spec.gain, t + 0.004);
+    g.gain.setValueAtTime(spec.gain, t + Math.max(0.005, len - 0.03));
+    g.gain.linearRampToValueAtTime(0, t + len);
+  } else g.gain.value = spec.gain;
   src.connect(g).connect(sfxBus);
-  src.start();
+  src.start(t, from, spec.to ? spec.to - from : undefined);
   return true;
 }
 export function applyVolumes() {
@@ -107,22 +115,21 @@ export function applyVolumes() {
   const s = settings.get(), m = s.muted ? 0 : 1;
   master.gain.setTargetAtTime(m, now(), 0.05);
   sfxBus.gain.setTargetAtTime(s.sfx * 0.9, now(), 0.05);
-  musicBus.gain.setTargetAtTime(s.soundtrack === 'procedural' ? s.music * 0.5 : 0, now(), 0.3);
   ambBus.gain.setTargetAtTime(s.music * 0.55 + 0.1 * s.sfx, now(), 0.3);
   syncOriginal();
 }
 function syncOriginal() {
   const s = settings.get();
-  const want = started && s.soundtrack === 'original' && !s.muted && s.music > 0;
+  const want = started && !s.muted && s.music > 0;
   if (!want) { if (origEl) origEl.pause(); return; }
-  const src = asset(mode === 'duel' ? 'music/BASE_SOUNDTRACK.mp3' : 'music/MENU_BG.m4a');
+  // chefe final: enquanto o autor não manda uma trilha própria, a do duelo toca mais lenta e grave (sem corrigir o tom)
+  const src = asset(mode === 'duel' || mode === 'boss' ? 'music/BASE_SOUNDTRACK.mp3' : 'music/MENU_BG.m4a');
   if (!origEl) { origEl = new Audio(); origEl.loop = true; }
-  if (origEl.dataset.k !== mode) { origEl.src = src; origEl.dataset.k = mode; }
-  origEl.volume = Math.min(1, s.music * (mode === 'duel' ? 0.25 : 0.35));
+  if (origEl.dataset.k !== mode) { if (origEl.dataset.src !== src) { origEl.src = src; origEl.dataset.src = src; } origEl.dataset.k = mode; origEl.preservesPitch = false; origEl.playbackRate = mode === 'boss' ? 0.8 : 1; }
+  origEl.volume = Math.min(1, s.music * (mode === 'duel' || mode === 'boss' ? 0.25 : 0.35));
   origEl.play().catch(() => {});
 }
 export function setMusicMode(m) { mode = m; if (ctx) syncOriginal(); }
-export function setTension(t) { tension = Math.max(0, Math.min(1, t)); }
 
 // ───────── blocos de síntese ─────────
 function env(g, t, a, peak, d, sustain = 0.0001) {
@@ -162,6 +169,9 @@ const SFX = {
   hover() { tone({ f: rnd(1900, 2100), type: 'square', d: 0.018, vol: 0.025 }); },
   select() { tone({ f: 1250, type: 'square', d: 0.03, vol: 0.06 }); tone({ f: 1870, type: 'square', t: now() + 0.03, d: 0.04, vol: 0.05 }); },
   cancel() { tone({ f: 620, f2: 310, type: 'square', d: 0.09, vol: 0.06 }); },
+  // Interface do lobby e das janelas: "toc" abafado de pasta de papelão, curto e grave, com leve variação para não cansar.
+  nav() { const p = rnd(0.94, 1.06); tone({ f: 330 * p, f2: 250 * p, d: 0.06, vol: 0.07 }); noise({ type: 'lowpass', f: 1500 * p, f2: 500, d: 0.035, vol: 0.05 }); },
+  navBack() { const p = rnd(0.94, 1.06); tone({ f: 260 * p, f2: 190 * p, d: 0.06, vol: 0.055 }); noise({ type: 'lowpass', f: 1100 * p, f2: 400, d: 0.03, vol: 0.04 }); },
   deny() { tone({ f: 140, type: 'sawtooth', d: 0.11, vol: 0.12 }); tone({ f: 140, type: 'sawtooth', t: now() + 0.14, d: 0.13, vol: 0.12 }); },
   card() { noise({ f: 3200, f2: 900, q: 0.8, d: 0.11, vol: 0.2 }); },
   draw() { noise({ f: 1800, f2: 4200, q: 0.7, d: 0.12, vol: 0.17 }); tone({ f: 190, f2: 120, d: 0.05, vol: 0.05 }); },
@@ -226,6 +236,21 @@ const SFX = {
   debuff() { tone({ f: 440, f2: 196, type: 'triangle', d: 0.26, vol: 0.1, rev: 0.4 }); },
   glitch() { for (let i = 0; i < 6; i++) tone({ f: rnd(90, 2400), type: 'square', t: now() + i * 0.028, d: 0.025, vol: 0.06 }); noise({ f: 2000, q: 0.5, d: 0.16, vol: 0.12 }); },
   flicker() { noise({ type: 'bandpass', f: 120, q: 9, d: 0.09, vol: 0.5 }); noise({ type: 'highpass', f: 5000, d: 0.03, vol: 0.08 }); },
+  // ── animações próprias das cartas (cardfx.js) ──
+  clap() { noise({ type: 'bandpass', f: 1400, q: 0.9, a: 0.001, d: 0.09, vol: 0.9, rev: 0.6 }); tone({ f: 170, f2: 90, d: 0.12, vol: 0.4, rev: 0.5 }); noise({ type: 'lowpass', f: 600, d: 0.25, vol: 0.2, rev: 0.9, t: now() + 0.04 }); },
+  choir() { [261.6, 329.6, 392, 523.3].forEach((f, i) => { tone({ f, type: 'triangle', a: 0.35, d: 1.3, vol: 0.07, rev: 1, detune: rnd(-12, 12) }); tone({ f: f * 1.003, type: 'sine', t: now() + 0.05 * i, a: 0.4, d: 1.2, vol: 0.05, rev: 1 }); }); bell(1568, now() + 0.1, 0.04, 1.8); },
+  acBeep() { [0, 0.16].forEach((dt) => tone({ f: 2730, type: 'square', t: now() + dt, d: 0.07, vol: 0.06 })); noise({ type: 'lowpass', f: 300, a: 0.2, d: 1.1, vol: 0.3, brown: true, t: now() + 0.25 }); },
+  shutter() { noise({ type: 'highpass', f: 3000, d: 0.03, vol: 0.35 }); noise({ type: 'bandpass', f: 1600, q: 3, d: 0.05, vol: 0.3, t: now() + 0.06 }); tone({ f: 3800, f2: 900, type: 'sine', t: now() + 0.07, d: 0.25, vol: 0.05 }); },
+  stare() { tone({ f: 55, d: 1.4, vol: 0.45, rev: 0.6 }); tone({ f: 58.3, type: 'sawtooth', a: 0.3, d: 1.1, vol: 0.06, rev: 0.6 }); for (let i = 0; i < 5; i++) tone({ f: rnd(1800, 3200), type: 'sine', t: now() + 0.2 + i * 0.12, d: 0.3, vol: 0.02, rev: 1 }); },
+  chomp() { noise({ type: 'lowpass', f: 900, f2: 200, d: 0.12, vol: 0.6 }); tone({ f: 120, f2: 60, d: 0.1, vol: 0.4 }); noise({ type: 'bandpass', f: 2200, q: 4, d: 0.04, vol: 0.2, t: now() + 0.05 }); },
+  register() { bell(2637, now(), 0.12, 0.9); bell(3520, now() + 0.09, 0.1, 1.1); noise({ type: 'highpass', f: 4000, d: 0.05, vol: 0.2 }); tone({ f: 90, f2: 60, t: now() + 0.12, d: 0.12, vol: 0.35 }); },
+  powerDown() { tone({ f: 620, f2: 38, type: 'sawtooth', a: 0.01, d: 0.8, vol: 0.12 }); tone({ f: 310, f2: 22, type: 'square', a: 0.01, d: 0.8, vol: 0.05 }); },
+  zap() { for (let i = 0; i < 8; i++) noise({ type: 'highpass', f: rnd(2500, 7000), t: now() + i * rnd(0.01, 0.03), d: 0.02, vol: 0.3 }); tone({ f: 60, type: 'sawtooth', d: 0.25, vol: 0.25 }); },
+  sip() { noise({ type: 'bandpass', f: 900, f2: 2400, q: 3, a: 0.08, d: 0.35, vol: 0.25 }); noise({ type: 'highpass', f: 5000, a: 0.3, d: 0.6, vol: 0.06, t: now() + 0.3 }); },
+  stamp() { tone({ f: 110, f2: 45, d: 0.2, vol: 0.85 }); noise({ type: 'lowpass', f: 1800, f2: 300, d: 0.1, vol: 0.5 }); noise({ type: 'bandpass', f: 3000, q: 2, d: 0.03, vol: 0.2, t: now() + 0.02 }); },
+  crack() { for (let i = 0; i < 9; i++) noise({ type: 'highpass', f: rnd(3000, 8000), t: now() + i * rnd(0.008, 0.03), d: 0.025, vol: 0.28 }); bell(3300, now(), 0.04, 0.4); tone({ f: 140, f2: 70, d: 0.12, vol: 0.25 }); },
+  thaw() { noise({ type: 'bandpass', f: 600, f2: 2400, q: 1.2, a: 0.4, d: 0.8, vol: 0.12 }); for (let i = 0; i < 5; i++) tone({ f: rnd(900, 1600), type: 'sine', t: now() + 0.2 + i * rnd(0.08, 0.18), d: 0.06, vol: 0.04, rev: 0.6 }); },
+  notify() { tone({ f: 1568, type: 'sine', d: 0.09, vol: 0.09 }); tone({ f: 2093, type: 'sine', t: now() + 0.1, d: 0.14, vol: 0.09 }); },
   win() {
     [0, 0.16, 0.32, 0.6].forEach((dt, i) => bell([784, 988, 1175, 1568][i], now() + dt, 0.13, 2.4));
     for (let i = 0; i < 16; i++) tone({ f: rnd(2600, 5200), type: 'triangle', t: now() + 0.5 + i * 0.05, d: 0.06, vol: 0.05 });
@@ -287,55 +312,4 @@ function startAmbience() {
     ambTimer = setTimeout(far, rnd(9000, 26000));
   };
   ambTimer = setTimeout(far, 6000);
-}
-
-// ───────── trilha generativa: piano de caixinha em compasso manco + pulso corporativo ─────────
-const SCALE = [0, 2, 3, 5, 7, 8, 10]; // menor natural
-const midi = (n) => 440 * Math.pow(2, (n - 69) / 12);
-function pianoNote(n, t, vol, long = 1) {
-  const f = midi(n);
-  tone({ f, type: 'triangle', t, a: 0.004, d: 1.6 * long, vol, bus: musicBus, rev: 0.9 });
-  tone({ f: f * 2.003, type: 'sine', t, a: 0.003, d: 0.5 * long, vol: vol * 0.35, bus: musicBus, rev: 0.6 });
-  tone({ f: f * 3.01, type: 'sine', t, a: 0.002, d: 0.18, vol: vol * 0.12, bus: musicBus });
-}
-function startMusicLoop() {
-  let bar = 0, mel = 4;
-  const root = 50; // ré
-  const prog = [0, 0, 5, 3, 0, 6, 5, 4]; // graus da escala para o baixo
-  const deg = (d, oct = 0) => root + SCALE[((d % 7) + 7) % 7] + 12 * (Math.floor(d / 7) + oct);
-  const step = () => {
-    const duel = mode === 'duel', bpm = duel ? 76 + tension * 22 : 62, beat = 60 / bpm;
-    const t0 = now() + 0.08, d = prog[bar % prog.length];
-    if (settings.get().soundtrack === 'procedural' && !settings.get().muted) {
-      // ostinato em 5 tempos: 1-5-8-5-3 com variação
-      const pat = [0, 4, 7, 4, 2];
-      pat.forEach((p, i) => {
-        if (Math.random() < 0.08) return;
-        pianoNote(deg(d + p, 0), t0 + i * beat, 0.055 + (i === 0 ? 0.035 : 0), 1);
-      });
-      // baixo
-      tone({ f: midi(deg(d, -2)), type: 'sine', t: t0, a: 0.04, d: beat * 4.6, vol: 0.16, bus: musicBus });
-      tone({ f: midi(deg(d, -1)), type: 'triangle', t: t0, a: 0.3, d: beat * 4.4, vol: 0.035, bus: musicBus, rev: 0.6 });
-      // melodia esparsa (passeio aleatório), mais frequente fora do menu
-      const n = duel ? 2 : 1;
-      for (let k = 0; k < n; k++) if (Math.random() < (duel ? 0.75 : 0.55)) {
-        mel += [-2, -1, -1, 1, 1, 2, 0][Math.floor(Math.random() * 7)];
-        mel = Math.max(0, Math.min(9, mel));
-        pianoNote(deg(d + mel, 1), t0 + (Math.floor(Math.random() * 5) + (Math.random() < 0.3 ? 0.5 : 0)) * beat, 0.07, 1.7);
-      }
-      if (duel) {
-        // relógio de parede + pulso
-        for (let i = 0; i < 5; i++) noise({ t: t0 + i * beat, f: i === 0 ? 3200 : 4600, q: 9, d: 0.02, vol: 0.05 + tension * 0.03, bus: musicBus });
-        if (tension > 0.35) for (let i = 0; i < 5; i += 1) {
-          tone({ f: 58, f2: 38, t: t0 + i * beat, d: 0.13, vol: 0.2 * tension, bus: musicBus });
-          tone({ f: 54, f2: 36, t: t0 + i * beat + beat * 0.28, d: 0.1, vol: 0.12 * tension, bus: musicBus });
-        }
-        if (tension > 0.6) tone({ f: midi(deg(d + 1, 0)), type: 'sawtooth', t: t0, a: beat * 2, d: beat * 3, vol: 0.02 * tension, bus: musicBus, rev: 0.8, detune: 30 });
-      }
-      if (bar % 8 === 7) noise({ type: 'bandpass', f: 800, f2: 3000, q: 2, a: beat * 3, d: beat * 2, vol: 0.02, bus: musicBus, rev: 1, t: t0 });
-    }
-    bar++;
-    musicTimer = setTimeout(step, beat * 5 * 1000);
-  };
-  step();
 }
