@@ -12,6 +12,8 @@ Objetivo: todas as telas do Business Card Battle Corp. falarem a mesma língua v
 5. **Legibilidade vem antes do efeito.** No modo padrão das telas comuns, nada passa por cima do texto do HUD (filtro, 3D, reamostragem). A **interface curva** em WebGL é uma opção nas Configurações, ligada por padrão só em telas 4K, onde o texto curvado fica nítido ([07-hud-webgl.md](07-hud-webgl.md)).
 6. **Títulos em caixa alta, em VT323.** Texto de interface em Basis Grotesque. O logo fica em Apple Garamond.
 7. **Materiais de escritório com função**: prender (clipe, grampo, fita, alfinete, prendedor), anotar (post-it, caneta, marca-texto), registrar (formulário contínuo, recibo, cartão de ponto, ficha) e decidir (carimbo). Desenho chapado, sem realismo.
+8. **Carta reduzida em todo o produto** (decisão do autor, 27/11/2026). No jogo inteiro e no site, duelo incluído, a carta aparece só na versão reduzida: foto, título, categorias e ATQ/DEF. O texto completo (habilidades, características e ações adicionais) aparece **somente** quando a carta é destacada por hover ou clique. Nenhuma tela imprime o texto de regras embaixo da carta. Detalhes na R4 e na R6 de [`UI_LOBBY.md`](../UI_LOBBY.md).
+9. **Equilíbrio entre respiro, leitura e visual** (decisão do autor, 27/11/2026). Acessibilidade e leitura continuam obrigatórias, mas não se resolvem aumentando tudo: a tela precisa de margem, de espaço vazio entre os grupos e de bom desenho. Os pisos de tamanho são pisos, não alvos. Quando não cabe, a tela rola ou pagina; não se espreme nem se encosta nada na borda. Números na R3, R8 e R11 de [`UI_LOBBY.md`](../UI_LOBBY.md).
 
 ## Sprints
 

@@ -29,6 +29,15 @@
 8. Cada tela é tratada como especial, em sub-etapas.
 9. Interface curva (WebGL) é opção nas Configurações, ligada por padrão só em telas 4K.
 
+## Mudança de diretriz (27/11/2026, depois dos pedidos abaixo)
+
+O autor achou o resultado das regras antigas grande demais e sem respiro. Acessibilidade e leitura continuam importantes, mas têm de conviver com margem, espaço vazio e bom visual. O que mudou:
+
+- **Respiro virou regra** (R11 nova) e os pisos baixaram: corpo de 14 a 16 px (era ≥ 16), rótulo ≥ 12 px (era ≥ 13), botão primário de 40 px e secundário de 32 px (era ≥ 44). Ver a tabela de [`UI_LOBBY.md`](../UI_LOBBY.md) e as regras 8 e 9 do [README](README.md).
+- **Carta reduzida no produto inteiro**, duelo e site incluídos: foto, título, categorias e ATQ/DEF. O texto completo (habilidades, características, ações adicionais) só aparece no destaque por hover ou clique (R4 e R6).
+- Os números novos são ponto de partida escolhido nesta sessão, **sem conferência em tela**. Validar com captura nas três resoluções antes de tratar como definitivos.
+- Trabalho que isso gera e ainda não foi feito: desenhar as categorias na carta reduzida (`cardFaceCanvas`), rever as telas já feitas com as regras novas (as medições do passo 0, abaixo, foram feitas contra os pisos antigos) e perguntar ao autor se o custo de sacrifício continua na carta reduzida.
+
 ## Estado das telas
 
 | Tela | Estado |
