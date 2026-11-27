@@ -167,7 +167,7 @@ export class UI {
     return m.firstElementChild;
   }
   /** pedido de autorização (peça .ds-confirm): uma pergunta, uma frase, a assinatura e dois botões. O botão de autorizar
-   *  só liga depois de assinar (qualquer rabisco serve; pelo teclado, Enter ou Espaço na linha faz uma rubrica).
+   *  só liga depois de assinar com o mouse (qualquer rabisco serve). Decisão do autor: não há outro jeito de autorizar.
    *  tone: 'danger' (sem volta: carimbo e botão vermelhos, foco começa em "Voltar"), 'money' (mostra a conta) ou nada.
    *  kind: o que vai na faixa de cima; sum: linhas da conta [[rótulo, valor], …] */
   confirm(title, body, yes, onYes, no = 'Cancelar', { tone = '', kind = '', sum = null } = {}) {
@@ -181,7 +181,7 @@ export class UI {
         ${danger ? '<i class="ds-stamp ds-stamp--no ds-confirm__stamp" aria-hidden="true">Sem volta</i>' : ''}
         <div class="ds-sign">
           <div class="ds-sign__top"><span class="ds-formlabel" id="cf-sl">Assinatura</span><button class="ds-sign__clear" type="button" hidden>Limpar</button></div>
-          <div class="ds-sign__pad"><canvas tabindex="0" role="img" aria-labelledby="cf-sl" aria-describedby="cf-sh"></canvas><span class="ds-sign__x" aria-hidden="true">✕</span><span class="ds-sign__hint" id="cf-sh">Assine aqui com o mouse · ou Enter para rubricar</span></div>
+          <div class="ds-sign__pad"><canvas role="img" aria-labelledby="cf-sl" aria-describedby="cf-sh"></canvas><span class="ds-sign__x" aria-hidden="true">✕</span><span class="ds-sign__hint" id="cf-sh">Assine aqui com o mouse</span></div>
         </div>
       </div>
       <footer class="ds-confirm__foot"><button class="ds-btn" data-close>${esc(no)}</button><button id="cf-yes" class="ds-btn ${danger ? 'ds-btn--danger' : 'ds-btn--primary'}" disabled title="Assine para autorizar">${esc(yes)}</button></footer>
@@ -191,8 +191,7 @@ export class UI {
     const yesBtn = $('#cf-yes', m);
     yesBtn.onclick = () => { if (yesBtn.disabled) return; m.classList.add('hidden'); m.innerHTML = ''; onYes(); };
     this.signPad($('.ds-sign', m), (ok) => { yesBtn.disabled = !ok; yesBtn.title = ok ? '' : 'Assine para autorizar'; });
-    // o foco começa na linha de assinatura; no "sem volta", em "Voltar", para um Enter distraído não assinar nada
-    setTimeout(() => $(danger ? '[data-close]' : '.ds-sign canvas', m)?.focus({ preventScroll: true }), 30);
+    setTimeout(() => $('[data-close]', m)?.focus({ preventScroll: true }), 30);
   }
   /** linha de assinatura (peça .ds-sign): desenho livre a caneta azul. onChange(true) quando já tem traço suficiente */
   signPad(root, onChange) {
@@ -210,20 +209,7 @@ export class UI {
       if (ink > 60) set(true);
     });
     const up = () => { last = null; }; cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up);
-    // teclado: uma rubrica automática (laçada e traço), diferente a cada vez
-    cv.addEventListener('keydown', (e) => {
-      if (e.key !== 'Enter' && e.key !== ' ') return; e.preventDefault(); e.stopPropagation(); fit(); pen();
-      g.clearRect(0, 0, cv.width, cv.height);
-      const W = cv.width, H = cv.height, base = H * 0.66, x0 = W * 0.14, len = W * (0.42 + Math.random() * 0.2), loops = 4 + Math.floor(Math.random() * 3), amp = H * (0.2 + Math.random() * 0.08);
-      // laçadas cursivas (ciclóide alongada) que diminuem para a direita, e um traço por baixo
-      const T = Math.PI * 2 * loops, step = len / T, back = step * 1.7;
-      g.beginPath();
-      for (let th = 0; th <= T; th += 0.05) { const k = 1 - (th / T) * 0.5, x = x0 + step * th - back * Math.sin(th) * k, y = base - amp * 0.5 * (1 - Math.cos(th)) * k; if (th === 0) g.moveTo(x, y); else g.lineTo(x, y); }
-      g.stroke();
-      g.beginPath(); g.moveTo(x0 - W * 0.02, base + H * 0.07); g.quadraticCurveTo(x0 + len * 0.55, base + H * 0.13, x0 + len * 1.1, base - H * 0.08); g.stroke();
-      ink = 999; set(true);
-    });
-    clear.addEventListener('click', () => { g.clearRect(0, 0, cv.width, cv.height); ink = 0; set(false); cv.focus(); });
+    clear.addEventListener('click', () => { g.clearRect(0, 0, cv.width, cv.height); ink = 0; set(false); });
     requestAnimationFrame(fit);
   }
   nameEntry(onDone, cur = '') {

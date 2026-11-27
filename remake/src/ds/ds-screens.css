@@ -301,7 +301,7 @@ button.ds-check { background: none; border: none; padding: 6px 0; pointer-events
 /* rodapé do editor: os links numa linha só em cima, a ação principal larga embaixo */
 .ed-foot { gap: 8px; grid-template-columns: minmax(0, 1fr); } .ed-foot .fd-minor { flex-wrap: wrap; gap: 0 18px; } .ed-foot > .ds-stamp { justify-self: center; margin: 0; font-size: 13px; }
 /* avisos com uma janela aberta: no centro do topo, acima da pasta (o canto de baixo à direita é a coluna da ficha, onde fica o botão principal) */
-#lobby.is-open .lb-toasts, #lobby.is-open[data-panel] .lb-toasts { top: 10px; bottom: auto; left: 50%; right: auto; transform: translateX(-50%); align-items: center; }
+#lobby.is-open .lb-toasts, #lobby.is-open[data-panel] .lb-toasts { gap: 10px; top: 10px; bottom: auto; left: 50%; right: auto; transform: translateX(-50%); align-items: center; }
 
 
 /* ── Decks, 2ª rodada (27/11): + e − explícitos, ficha enxuta, destaque compacto, barra de cima chapada ── */

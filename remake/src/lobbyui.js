@@ -165,10 +165,18 @@ export class LobbyUI {
     if (this._inert !== inert) { this._inert = inert; for (const el of this.root.querySelectorAll(':scope > .lb-top, :scope > .lb-labels, :scope > .lb-nav')) el.inert = inert; }
     if (this.win.inert !== pk) this.win.inert = pk;
   }
-  toast(text, tone = '') {
-    const el = document.createElement('div'); el.className = `lb-toast ${tone}`; el.innerHTML = text;
+  /** aviso impresso (peça .ds-feed): tira de formulário contínuo que sai da impressora matricial.
+   *  tone: 'good' (confirmado), 'bad' (recusado, fita vermelha), 'gold' (crédito) ou nada (nota).
+   *  amount: valor que entrou (+) ou saiu (−) do PATRIMÔNIO, impresso numa linha de conta grifada a marca-texto. */
+  toast(text, tone = '', { amount = null } = {}) {
+    const n = (this._feedNo = (this._feedNo ?? 41) + 1), d = new Date(), hh = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+    const label = tone === 'bad' ? 'Recusado' : amount != null ? (amount >= 0 ? 'Crédito' : 'Débito') : tone === 'good' ? 'Confirmado' : tone === 'gold' ? 'Crédito' : 'Nota';
+    const el = document.createElement('div'); el.className = `ds-feed is-${tone || 'note'}`;
+    el.innerHTML = `<div class="ds-feed__paper"><p class="ds-feed__head"><span>BCBC · ${label}</span><span>${hh} · Nº ${String(n).padStart(4, '0')}</span></p>
+      <div class="ds-feed__msg">${tone === 'good' ? '<i class="ds-feed__ok" aria-hidden="true">OK</i>' : ''}<div>${text}</div></div>
+      ${amount != null ? `<p class="ds-feed__amount"><span>${amount >= 0 ? 'Entrou' : 'Saiu'}</span><b>${amount >= 0 ? '+' : '−'} ${money(Math.abs(amount))}</b></p>` : ''}</div>`;
     // aviso com botão fica mais tempo (dá para alcançar o botão)
-    const t = text.includes('<button') ? 7000 : 3600;
+    const t = text.includes('<button') ? 7000 : 4200;
     $('.lb-toasts', this.root).appendChild(el); setTimeout(() => el.classList.add('out'), t); setTimeout(() => el.remove(), t + 600);
   }
   /** aplica o resultado de uma operação do meta-jogo: grava, avisa conquistas ou mostra o erro */
@@ -179,7 +187,7 @@ export class LobbyUI {
     this.announce(r.unlocked);
     return true;
   }
-  announce(list = []) { list.forEach((a, i) => setTimeout(() => { sfx('heal'); this.toast(`<b>Conquista: ${esc(a.name)}</b><span>${esc(a.text)} · bônus ${money(a.reward)}</span>`, 'gold'); }, 500 + i * 900)); }
+  announce(list = []) { list.forEach((a, i) => setTimeout(() => { sfx('heal'); this.toast(`<b>Troféu: ${esc(a.name)}</b><span>${esc(a.text)}</span>`, 'gold', { amount: a.reward }); }, 500 + i * 900)); }
   /** depois de um duelo: recompensa, metas cumpridas e conquistas */
   afterMatch(out) {
     if (!out) return;
@@ -305,7 +313,7 @@ export class LobbyUI {
       case 'deck-dup': { const r = Meta.duplicateDeck(this.s, Number(id), Date.now()); if (r.ok) { this._scrollTo = r.index; this.fdSel = String(r.index); } if (this.commit(r, `<b>Cópia criada</b><span>${esc(r.ok ? r.save.decks[r.index].name : '')}</span>`)) sfx('draw'); return undefined; }
       case 'deck-del': { const i = Number(id), name = this.s.decks[i]?.name ?? ''; return this.ui.confirm('Apagar este deck?', `"${name}" sai do arquivo. As cartas continuam na sua coleção.`, 'Apagar', () => { this.snaps.clear(); if (this.commit(Meta.deleteDeck(this.s, i))) sfx('sacrifice'); }, 'Voltar', { tone: 'danger', kind: 'Deck' }); }
       // reciclar
-      case 'recycle': { const r = Meta.recycle(this.s, id || null, Date.now()); if (this.commit(r)) { sfx('sacrifice'); this.toast(`<b>${r.count} carta${r.count > 1 ? 's' : ''} triturada${r.count > 1 ? 's' : ''}</b><span>+ ${money(r.gained)} de PATRIMÔNIO</span>`, 'good'); } return undefined; }
+      case 'recycle': { const r = Meta.recycle(this.s, id || null, Date.now()); if (this.commit(r)) { sfx('sacrifice'); this.toast(`<b>${r.count} carta${r.count > 1 ? 's' : ''} triturada${r.count > 1 ? 's' : ''}</b>`, 'gold', { amount: r.gained }); } return undefined; }
       // loja
       case 'buy-card': return this.buyCard(id);
       case 'buy-pack': { const r = Meta.buyBooster(this.s, Date.now()); if (this.commit(r)) this.openPack(r.cards); return undefined; }
@@ -335,7 +343,7 @@ export class LobbyUI {
         return undefined;
       }
       // metas
-      case 'claim': { const r = Meta.claimMission(this.s, Number(id), Date.now()); if (this.commit(r)) { sfx('heal'); this.toast(`<b>Meta resgatada</b><span>+ ${money(r.reward)} de PATRIMÔNIO</span>`, 'good'); } return undefined; }
+      case 'claim': { const r = Meta.claimMission(this.s, Number(id), Date.now()); if (this.commit(r)) { sfx('heal'); this.toast('<b>Meta resgatada</b>', 'gold', { amount: r.reward }); } return undefined; }
       // duelo
       case 'duel': return this.startDuel(false);
       case 'train': return this.startDuel(true);
@@ -409,14 +417,14 @@ export class LobbyUI {
   buyCard(id) {
     const r = Meta.buySingle(this.s, id, Date.now()); if (!this.commit(r)) return;
     sfx('draw');
-    const nm = esc(byId.get(id).name), left = `saldo ${money(this.s.patrimonio)}`, d = this.panel === 'deck' && this.edDeck;
+    const nm = esc(byId.get(id).name), d = this.panel === 'deck' && this.edDeck, paid = { amount: -Meta.priceOf(id) };
     if (d) {
       const why = this.whyNot(this.s, d.cards, id);
-      if (!why) { this.touch(); this.deckWrite([...d.cards, id]); this.toast(`<b>${nm}</b><span>comprada e posta no deck (${this.edDeck.cards.length}/${DECK_RULES.size}) · ${left}</span>`, 'good'); return; }
-      this.toast(`<b>${nm}</b><span>comprada · ${esc(why)} · ${left}</span>`, 'good'); return;
+      if (!why) { this.touch(); this.deckWrite([...d.cards, id]); this.toast(`<b>${nm}</b><span>comprada e posta no deck (${this.edDeck.cards.length}/${DECK_RULES.size})</span>`, 'good', paid); return; }
+      this.toast(`<b>${nm}</b><span>comprada · ${esc(why)}</span>`, 'good', paid); return;
     }
     // fora do editor (loja ou coleção): diz que a carta não entrou em deck nenhum e oferece pôr no deck do duelo
-    this.toast(`<b>${nm}</b><span>${Math.min(Meta.owned(this.s, id), DECK_RULES.maxCopies)} de ${DECK_RULES.maxCopies} no arquivo</span>`, 'good');
+    this.toast(`<b>${nm}</b><span>${Math.min(Meta.owned(this.s, id), DECK_RULES.maxCopies)} de ${DECK_RULES.maxCopies} no arquivo</span>`, 'good', paid);
     if (this.detailId) this.detail(this.detailId);
   }
   /** vista de detalhe (uma só para Loja, Arquivo e pacote): a carta completa à esquerda e a ficha legível à direita */

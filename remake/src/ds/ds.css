@@ -483,11 +483,37 @@ button.ds-slot.is-filled:hover, button.ds-slot.is-filled:focus-visible { transfo
 .ds-sign__top { display: flex; justify-content: space-between; align-items: center; min-height: 20px; }
 .ds-sign__clear { padding: 2px 0; background: none; border: none; border-bottom: 1.5px solid currentColor; color: var(--ds-ink-2); font: 700 12px/1 var(--f-ui); letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; pointer-events: auto; } .ds-sign__clear:hover { color: var(--ds-ink); }
 .ds-sign__clear[hidden] { display: none; }
-.ds-sign__pad { position: relative; height: 86px; background: #fffdf6; border: 1.5px dashed var(--ds-ink-3); border-radius: 2px; }
-.ds-sign__pad::after { content: ""; position: absolute; left: 34px; right: 18px; bottom: 22px; border-bottom: 1.5px solid var(--ds-ink); pointer-events: none; }
+.ds-sign__pad { position: relative; height: 140px; background: #fffdf6; border: 1.5px dashed var(--ds-ink-3); border-radius: 2px; }
+.ds-sign__pad::after { content: ""; position: absolute; left: 34px; right: 18px; bottom: 30px; border-bottom: 1.5px solid var(--ds-ink); pointer-events: none; }
 .ds-sign__pad canvas { position: absolute; inset: 0; z-index: 1; width: 100%; height: 100%; cursor: crosshair; touch-action: none; outline: none; pointer-events: auto; }
-.ds-sign__pad:has(canvas:focus-visible) { border: var(--ds-line) solid var(--ds-amber); box-shadow: 0 0 0 2px var(--ds-ink); }
-.ds-sign__x { position: absolute; left: 12px; bottom: 20px; font: 700 18px/1 var(--f-ui); color: var(--ds-ink); pointer-events: none; }
-.ds-sign__hint { position: absolute; left: 34px; right: 18px; bottom: 30px; font: 500 13px/1.2 var(--f-ui); color: var(--ds-ink-3); text-align: center; pointer-events: none; }
+.ds-sign__x { position: absolute; left: 12px; bottom: 28px; font: 700 18px/1 var(--f-ui); color: var(--ds-ink); pointer-events: none; }
+.ds-sign__hint { position: absolute; left: 34px; right: 18px; bottom: 40px; font: 500 13px/1.2 var(--f-ui); color: var(--ds-ink-3); text-align: center; pointer-events: none; }
 .ds-sign.is-signed .ds-sign__hint { visibility: hidden; }
 .ds-confirm__foot .ds-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* ── aviso impresso (toast), 27/11: tira de formulário contínuo que sai da impressora matricial ──
+   Fita de duas cores, como nas matriciais de escritório: preta (nota, confirmado, crédito) e vermelha (recusado).
+   Cabeçalho com a hora e o número de série; borda de baixo rasgada; a linha de conta é grifada a marca-texto âmbar.
+   .ds-feed leva a sombra; .ds-feed__paper leva o recorte (senão a sombra seria cortada junto). */
+.ds-feed { zoom: var(--lb-fix, 1); position: relative; width: max-content; min-width: 300px; max-width: 440px; filter: drop-shadow(4px 6px 0 rgba(0, 0, 0, 0.45)); pointer-events: auto; transition: opacity 0.4s, transform 0.4s; }
+.ds-feed.out { opacity: 0; transform: translateY(-16px) rotate(-1.5deg); }
+.ds-feed__paper { --ink: #2a2a26; position: relative; padding: 6px 36px 20px; background: repeating-linear-gradient(to bottom, #f7f1df 0 22px, #dfeedd 22px 44px); color: var(--ink); font: 400 20px/22px var(--f-title); letter-spacing: 0.02em; overflow: hidden; animation: ds-feed-print 0.42s steps(7, end) both;
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 7px), 95% 100%, 90% calc(100% - 7px), 85% 100%, 80% calc(100% - 7px), 75% 100%, 70% calc(100% - 7px), 65% 100%, 60% calc(100% - 7px), 55% 100%, 50% calc(100% - 7px), 45% 100%, 40% calc(100% - 7px), 35% 100%, 30% calc(100% - 7px), 25% 100%, 20% calc(100% - 7px), 15% 100%, 10% calc(100% - 7px), 5% 100%, 0 calc(100% - 7px)); }
+@keyframes ds-feed-print { from { max-height: 0; } to { max-height: 320px; } }
+@media (prefers-reduced-motion: reduce) { .ds-feed__paper { animation: none; } .ds-feed { transition: none; } }
+/* as tiras de arraste com os furos, dos dois lados */
+.ds-feed__paper::before, .ds-feed__paper::after { content: ""; position: absolute; top: 0; bottom: 0; width: 24px; background: radial-gradient(circle at 50% 11px, #141a16 0 4px, transparent 4.5px) 0 0 / 24px 22px, #efe8d2; }
+.ds-feed__paper::before { left: 0; border-right: 1.5px dashed rgba(27, 20, 13, 0.4); } .ds-feed__paper::after { right: 0; border-left: 1.5px dashed rgba(27, 20, 13, 0.4); }
+.ds-feed__head { display: flex; justify-content: space-between; gap: 18px; margin: 0 0 4px; padding: 0 10px 2px; border-bottom: 1.5px dashed rgba(42, 42, 38, 0.55); font-size: 17px; letter-spacing: 0.08em; text-transform: uppercase; white-space: nowrap; }
+.ds-feed__msg { display: flex; gap: 10px; align-items: flex-start; padding: 0 10px; }
+.ds-feed__msg > div { display: grid; min-width: 0; }
+.ds-feed__msg b { font-weight: 400; font-size: 24px; line-height: 26px; text-transform: uppercase; }
+.ds-feed__msg span { font-size: 20px; line-height: 22px; }
+/* confirmado: a marca "OK" impressa em negativo */
+.ds-feed__ok { flex: none; margin-top: 2px; padding: 1px 5px 0; background: var(--ink); color: #f7f1df; font: 400 20px/22px var(--f-title); font-style: normal; }
+/* recusado: fita vermelha */
+.ds-feed.is-bad .ds-feed__paper { --ink: #b8291c; }
+/* crédito ou débito: linha de conta com o total sublinhado duas vezes e grifado a marca-texto */
+.ds-feed__amount { display: flex; justify-content: space-between; align-items: baseline; gap: 18px; margin: 6px 0 0; padding: 2px 10px 0; border-top: 1.5px dashed rgba(42, 42, 38, 0.55); text-transform: uppercase; }
+.ds-feed__amount span { font-size: 17px; letter-spacing: 0.08em; }
+.ds-feed__amount b { font-weight: 400; font-size: 26px; line-height: 28px; padding: 0 4px; border-bottom: 4px double var(--ink); background: linear-gradient(to bottom, transparent 14%, rgba(242, 185, 76, 0.9) 14% 92%, transparent 92%); }
