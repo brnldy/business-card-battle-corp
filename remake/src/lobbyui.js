@@ -696,7 +696,7 @@ export class LobbyUI {
       const own = Math.min(Meta.owned(s, c.id), max), full = own >= max, p = Meta.priceOf(c.id), poor = p > s.patrimonio;
       return `<article class="sc-item sc-item--${Meta.rarityOf(c.id)} ${full ? 'is-full' : ''} ${c.id === this.scSel ? 'is-sel' : ''}" data-card="${c.id}">
         <button class="sc-card" data-a="sc-pick" data-card="${c.id}" aria-pressed="${c.id === this.scSel}" aria-label="${esc(c.name)}: você tem ${own} de ${max}">${mini(c.id)}</button>
-        <div class="sc-meta">${copies(own)}${full ? '<em class="sc-done">Completa</em>' : `<button class="ds-tag sc-buy ${poor ? 'is-poor' : ''}" data-a="buy-card" data-id="${c.id}" ${poor ? `disabled title="Faltam ${money(p - s.patrimonio)}"` : `title="Comprar ${esc(c.name)}"`}>${money(p)}</button>`}</div></article>`;
+        <div class="sc-meta">${copies(own)}${full ? '<em class="sc-done">Completa</em>' : `<button class="ds-price sc-buy ${poor ? 'is-poor' : ''}" data-a="buy-card" data-id="${c.id}" ${poor ? `disabled title="Faltam ${money(p - s.patrimonio)}"` : `title="Comprar ${esc(c.name)}"`}>${money(p)}</button>`}</div></article>`;
     };
     return `<div class="sc">
       <section class="sc-shelf">
