@@ -455,3 +455,39 @@ button.ds-slot.is-filled:hover, button.ds-slot.is-filled:focus-visible { transfo
 .ds-cardfile .ds-file__kind { margin-top: 8px; }
 .ds-cardfile .ds-file__stats dd { margin-top: 4px; font-size: 24px; } .ds-cardfile .ds-file__stats div { padding: 7px 10px 5px; }
 .ds-cardfile .ds-file__fx { padding: 8px 10px; font-size: 14px; }
+
+/* ── pedido de autorização (caixa de confirmação), 27/11 ── */
+/* folha grampeada: faixa escura com o tipo do pedido, a pergunta, uma frase, a conta (compra) e dois botões do mesmo tamanho.
+   Sem volta = carimbo e botão vermelhos. Não encolhe com o zoom da interface (mesmo piso das janelas do lobby). */
+.ds-confirm { zoom: var(--lb-fix, 1); position: relative; width: min(470px, 92vw); background: var(--ds-tex-paper); color: var(--ds-ink); border: var(--ds-line) solid var(--ds-ink); box-shadow: var(--ds-frame-in, none), 8px 12px 0 rgba(0, 0, 0, 0.45); transform: rotate(-0.6deg); animation: ds-confirm-in 0.16s ease-out; }
+@keyframes ds-confirm-in { from { transform: rotate(-0.6deg) translateY(10px); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .ds-confirm { animation: none; } }
+.ds-confirm > .ds-staple { left: 18px; top: -5px; z-index: 2; }
+.ds-confirm__head { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 9px 18px 8px 52px; background: var(--ds-tex-ink, #23201c); background-color: #23201c; color: #f4efe2; font: 700 12px/1 var(--f-ui); letter-spacing: 0.14em; text-transform: uppercase; }
+.ds-confirm__head b { color: var(--ds-amber); } .ds-confirm.is-danger .ds-confirm__head b { color: #ff8a7a; }
+.ds-confirm__body { position: relative; display: grid; gap: 12px; padding: 22px 24px 6px; }
+.ds-confirm h2 { margin: 0; padding-right: 96px; font: 400 32px/1 var(--f-title); letter-spacing: 0.02em; text-transform: uppercase; word-spacing: 0; color: var(--ds-ink); text-shadow: none; }
+.ds-confirm:not(.is-danger) h2 { padding-right: 0; }
+.ds-confirm p { margin: 0; font: 500 15px/1.45 var(--f-ui); color: var(--ds-ink-2); }
+.ds-confirm__stamp { position: absolute; right: 18px; top: 16px; margin: 0; font-size: 14px; transform: rotate(8deg); background: rgba(246, 239, 220, 0.6); }
+/* a conta, como num recibo: linhas pontilhadas e o total com sublinhado duplo */
+.ds-confirm__sum { margin: 4px 0 0; padding: 10px 14px; display: grid; gap: 6px; background: var(--ds-tex-lines), #fbf8ee; border: 1.5px dashed var(--ds-ink-3); }
+.ds-confirm__sum div { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+.ds-confirm__sum dt { font: 700 12px/1 var(--f-ui); letter-spacing: 0.12em; text-transform: uppercase; color: var(--ds-ink-2); }
+.ds-confirm__sum dd { margin: 0; font: 400 22px/1 var(--f-title); white-space: nowrap; }
+.ds-confirm__sum div:last-child { padding-top: 6px; border-top: 1.5px solid var(--ds-ink); } .ds-confirm__sum div:last-child dd { font-size: 26px; padding: 0 4px; background: linear-gradient(to bottom, transparent 20%, var(--ds-amber) 20% 88%, transparent 88%); }
+.ds-confirm__foot { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 18px 24px 20px; }
+.ds-confirm__foot .ds-btn { width: 100%; }
+/* linha de assinatura: papel com uma linha e o ✕ de "assine aqui"; a caneta é azul. Assinada = a dica some e aparece "Limpar" */
+.ds-sign { display: grid; gap: 6px; margin-top: 4px; }
+.ds-sign__top { display: flex; justify-content: space-between; align-items: center; min-height: 20px; }
+.ds-sign__clear { padding: 2px 0; background: none; border: none; border-bottom: 1.5px solid currentColor; color: var(--ds-ink-2); font: 700 12px/1 var(--f-ui); letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; pointer-events: auto; } .ds-sign__clear:hover { color: var(--ds-ink); }
+.ds-sign__clear[hidden] { display: none; }
+.ds-sign__pad { position: relative; height: 86px; background: #fffdf6; border: 1.5px dashed var(--ds-ink-3); border-radius: 2px; }
+.ds-sign__pad::after { content: ""; position: absolute; left: 34px; right: 18px; bottom: 22px; border-bottom: 1.5px solid var(--ds-ink); pointer-events: none; }
+.ds-sign__pad canvas { position: absolute; inset: 0; z-index: 1; width: 100%; height: 100%; cursor: crosshair; touch-action: none; outline: none; pointer-events: auto; }
+.ds-sign__pad:has(canvas:focus-visible) { border: var(--ds-line) solid var(--ds-amber); box-shadow: 0 0 0 2px var(--ds-ink); }
+.ds-sign__x { position: absolute; left: 12px; bottom: 20px; font: 700 18px/1 var(--f-ui); color: var(--ds-ink); pointer-events: none; }
+.ds-sign__hint { position: absolute; left: 34px; right: 18px; bottom: 30px; font: 500 13px/1.2 var(--f-ui); color: var(--ds-ink-3); text-align: center; pointer-events: none; }
+.ds-sign.is-signed .ds-sign__hint { visibility: hidden; }
+.ds-confirm__foot .ds-btn:disabled { opacity: 0.45; cursor: not-allowed; }

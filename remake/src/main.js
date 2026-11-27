@@ -65,7 +65,7 @@ async function boot() {
     },
     newgame: () => { sfx('nav'); keepMenu(); ui.slots('new', { pick: (n) => askName((name) => save.create(n, name)) }); },
     load: () => { sfx('nav'); keepMenu(); ui.slots('load', { load: (n) => { ui.closeModal(); save.use(n); sfx('start'); if (save.company()) fade(toLobby); else askName(); } }); },
-    quit: () => (duel.over ? fade(toLobby) : ui.confirm('Abandonar a partida?', duel.training ? 'O treino acaba aqui. Não vale nada mesmo.' : 'A partida conta como derrota e o rival fica com o investimento.', 'ABANDONAR', () => { duel.forfeit(); fade(toLobby); }, 'Continuar jogando')),
+    quit: () => (duel.over ? fade(toLobby) : ui.confirm('Abandonar a partida?', duel.training ? 'O treino acaba aqui. Não vale nada mesmo.' : 'A partida conta como derrota e o rival fica com o investimento.', 'Abandonar', () => { duel.forfeit(); fade(toLobby); }, 'Continuar jogando', { tone: duel.training ? '' : 'danger', kind: duel.training ? 'Treino' : 'Partida' })),
     quit2: () => fade(toLobby),
   });
   window.addEventListener('keydown', (e) => { if (mode === 'menu' && e.key === 'Enter' && document.getElementById('modal').classList.contains('hidden')) { unlockAudio(); if (save.lastSlot()) ui.h.continue(); else ui.h.newgame(); } });

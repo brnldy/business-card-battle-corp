@@ -300,10 +300,10 @@ export class LobbyUI {
         return undefined;
       }
       case 'deck-unfill': { const prev = this.ed.prev; if (!prev) return undefined; this.touch(); if (this.deckWrite(prev)) { sfx('cancel'); this.toast('As cartas do automático saíram.'); } return undefined; }
-      case 'deck-clear': return this.ui.confirm('Esvaziar o deck?', `Todas as cartas saem de "${this.edDeck.name}". Elas continuam na sua coleção, e "Desfazer alterações" traz de volta enquanto o arquivo estiver aberto.`, 'ESVAZIAR', () => { this.touch(); this.deckWrite([]); sfx('cancel'); });
+      case 'deck-clear': return this.ui.confirm('Esvaziar o deck?', `Todas as cartas saem de "${this.edDeck.name}". Elas continuam na sua coleção. "Desfazer alterações" traz de volta.`, 'Esvaziar', () => { this.touch(); this.deckWrite([]); sfx('cancel'); }, 'Voltar', { kind: 'Deck' });
       case 'deck-use': { const i = Number(id), name = this.s.decks[i]?.name ?? ''; if (this.commit(Meta.setActiveDeck(this.s, i), `<b>${esc(name)}</b><span>é o deck que vai para o duelo</span>`)) sfx('nav'); return undefined; }
       case 'deck-dup': { const r = Meta.duplicateDeck(this.s, Number(id), Date.now()); if (r.ok) { this._scrollTo = r.index; this.fdSel = String(r.index); } if (this.commit(r, `<b>Cópia criada</b><span>${esc(r.ok ? r.save.decks[r.index].name : '')}</span>`)) sfx('draw'); return undefined; }
-      case 'deck-del': { const i = Number(id), name = this.s.decks[i]?.name ?? ''; return this.ui.confirm('Apagar este deck?', `"${name}" sai do arquivo. As cartas continuam na sua coleção.`, 'APAGAR', () => { this.snaps.clear(); if (this.commit(Meta.deleteDeck(this.s, i))) sfx('sacrifice'); }); }
+      case 'deck-del': { const i = Number(id), name = this.s.decks[i]?.name ?? ''; return this.ui.confirm('Apagar este deck?', `"${name}" sai do arquivo. As cartas continuam na sua coleção.`, 'Apagar', () => { this.snaps.clear(); if (this.commit(Meta.deleteDeck(this.s, i))) sfx('sacrifice'); }, 'Voltar', { tone: 'danger', kind: 'Deck' }); }
       // reciclar
       case 'recycle': { const r = Meta.recycle(this.s, id || null, Date.now()); if (this.commit(r)) { sfx('sacrifice'); this.toast(`<b>${r.count} carta${r.count > 1 ? 's' : ''} triturada${r.count > 1 ? 's' : ''}</b><span>+ ${money(r.gained)} de PATRIMÔNIO</span>`, 'good'); } return undefined; }
       // loja
@@ -313,7 +313,7 @@ export class LobbyUI {
         const d = META.readyDecks.find((x) => x.id === id), s = this.s, price = Meta.readyDeckPrice(s, id), miss = Meta.readyDeckMissing(s, id), copies = Object.values(miss).reduce((a, k) => a + k, 0);
         const buy = () => { const r = Meta.buyReadyDeck(this.s, id, Date.now()); if (this.commit(r, `<b>${esc(r.ok ? r.save.decks[r.index].name : d.name)}</b><span>${r.ok && r.price ? `chegaram ${copies} cópias · ` : ''}está no Arquivo e é o deck do duelo</span>`)) { sfx('summon'); this.forgetDecks(); } };
         if (!price) return buy();
-        return this.ui.confirm(`Comprar ${d.name}?`, `Chegam ${copies} cópias que faltam na sua coleção e a lista vira o deck do duelo. Sai ${money(price)} · fica ${money(s.patrimonio - price)}.`, `COMPRAR · ${money(price)}`, buy, 'Voltar');
+        return this.ui.confirm(`Comprar ${d.name}?`, `Chegam ${copies} cópias que faltam na sua coleção, e a lista vira o deck do duelo.`, `Comprar · ${money(price)}`, buy, 'Voltar', { tone: 'money', kind: 'Deck pronto', sum: [['Patrimônio', money(s.patrimonio)], ['Sai', `− ${money(price)}`], ['Fica', money(s.patrimonio - price)]] });
       }
       case 'deck-open': this.open('deck', { tab: 'decks' }); this.editDeck(Number(id)); return this.render();
       case 'buy-cos': {
@@ -341,7 +341,7 @@ export class LobbyUI {
       case 'train': return this.startDuel(true);
       // perfil
       case 'rename': return this.ui.nameEntry((n) => { save.rename(n); this.toast('Razão social alterada.', 'good'); }, save.company() ?? '');
-      case 'wipe': return this.ui.confirm('Recomeçar do zero?', 'Coleção, decks, PATRIMÔNIO, histórico, conquistas e a campanha desta gaveta serão apagados para sempre. As outras gavetas não mudam.', 'APAGAR TUDO', () => { this.forgetDecks(); this.resetFilters(); save.reset(); this.toast('Ficha cadastral apagada. Bem-vindo de novo.', 'bad'); });
+      case 'wipe': return this.ui.confirm('Recomeçar do zero?', 'Coleção, decks, PATRIMÔNIO, histórico, conquistas e a campanha desta gaveta serão apagados para sempre. As outras gavetas não mudam.', 'Apagar tudo', () => { this.forgetDecks(); this.resetFilters(); save.reset(); this.toast('Ficha cadastral apagada. Bem-vindo de novo.', 'bad'); }, 'Voltar', { tone: 'danger', kind: 'Empresa' });
       default: return undefined;
     }
   }

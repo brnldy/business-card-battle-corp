@@ -12,10 +12,10 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg-d
 .hidden { display: none !important; }
 .screen { position: absolute; inset: 0; pointer-events: auto; }
 kbd { font: 400 0.74em var(--sans); border: 1px solid currentColor; padding: 1px 6px; opacity: 0.6; margin-left: 8px; border-radius: 5px; }
-.screen button { font: 400 14px var(--sans); color: var(--paper); background: rgba(243, 248, 240, 0.06); border: 1px solid rgba(243, 248, 240, 0.34); border-radius: 10px; padding: 10px 16px; cursor: pointer; pointer-events: auto; transition: background 0.14s, color 0.14s, border-color 0.14s, transform 0.08s; }
-.screen button:hover:not(:disabled) { background: var(--paper); color: var(--ink); border-color: var(--paper); }
-.screen button:active:not(:disabled) { transform: translateY(1px); }
-.screen button:disabled { opacity: 0.38; cursor: default; }
+.screen button:not([class*="ds-"]) { font: 400 14px var(--sans); color: var(--paper); background: rgba(243, 248, 240, 0.06); border: 1px solid rgba(243, 248, 240, 0.34); border-radius: 10px; padding: 10px 16px; cursor: pointer; pointer-events: auto; transition: background 0.14s, color 0.14s, border-color 0.14s, transform 0.08s; }
+.screen button:not([class*="ds-"]):hover:not(:disabled) { background: var(--paper); color: var(--ink); border-color: var(--paper); }
+.screen button:not([class*="ds-"]):active:not(:disabled) { transform: translateY(1px); }
+.screen button:not([class*="ds-"]):disabled { opacity: 0.38; cursor: default; }
 button.primary { background: var(--paper); color: var(--ink); border-color: var(--paper); }
 button.primary:hover:not(:disabled) { background: #fff; }
 button.ghost { border-color: transparent; background: none; color: var(--mute); }
@@ -84,8 +84,8 @@ body.theme-buckshot {
   --mute: #93a08d; --line: rgba(242, 185, 76, 0.26); --panel: rgba(7, 11, 9, 0.93); --green: #86d98f; --blue: #a8dcff;
   --r: 2px;
 }
-body.theme-buckshot :is(.screen button, .modal-box, .over-box, .help-grid section, .seg, .seg button, #name-in, kbd, .bar) { border-radius: 2px; }
-body.theme-buckshot .screen button { text-transform: uppercase; letter-spacing: 0.07em; font-weight: 700; font-size: var(--t-sm); }
+body.theme-buckshot :is(.screen button:not([class*="ds-"]), .modal-box, .over-box, .help-grid section, .seg, .seg button, #name-in, kbd, .bar) { border-radius: 2px; }
+body.theme-buckshot .screen button:not([class*="ds-"]) { text-transform: uppercase; letter-spacing: 0.07em; font-weight: 700; font-size: var(--t-sm); }
 body.theme-buckshot :is(.memo, .company, .credits, .fine) { text-transform: uppercase; letter-spacing: 0.08em; font-size: var(--t-cap); }
 body.theme-buckshot .help-grid section { background: #1b241e; border: 1px solid var(--line); } body.theme-buckshot .help-grid b { background: rgba(242, 185, 76, 0.16); color: var(--cream); }
 body.theme-buckshot #menu { background: linear-gradient(90deg, rgba(4, 8, 6, 0.95) 0%, rgba(4, 8, 6, 0.78) 32%, rgba(4, 8, 6, 0) 62%); }
