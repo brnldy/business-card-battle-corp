@@ -289,6 +289,11 @@ export class LobbyUI {
       <label class="lb-sort"><span>Ordem</span><select id="lb-sort">${S.map(([k, n]) => `<option value="${k}" ${f.sort === k ? 'selected' : ''}>${n}</option>`).join('')}</select></label>
     </div>`;
   }
+  /** botão de compra avulsa direto na grade, com o preço (desligado se o PATRIMÔNIO não dá) */
+  buyBtn(s, id) {
+    const p = Meta.priceOf(id), short = p - s.patrimonio;
+    return `<button class="lb-card__buy" data-a="buy-card" data-id="${id}" ${short > 0 ? `disabled title="Faltam ${money(short)} de PATRIMÔNIO"` : `title="Compra 1 cópia por ${money(p)}"`}>Comprar · ${money(p)}</button>`;
+  }
   /** as 3 bolinhas de cópia: no deck · tenho e está livre · não tenho */
   pips(s, id, inDeck) {
     const own = Math.min(Meta.owned(s, id), DECK_RULES.maxCopies);
@@ -345,7 +350,7 @@ export class LobbyUI {
       return `<figure class="lb-card ${own ? '' : 'is-missing'}" data-card="${c.id}">
         <img loading="lazy" src="${asset(c.art)}" alt="${esc(c.name)}">
         <figcaption>${rarityTag(c.id)}${this.pips(s, c.id, 0)}<b class="${own ? '' : 'no'}">${own ? `×${own}` : 'falta'}</b></figcaption>
-        ${own < DECK_RULES.maxCopies ? `<button class="lb-card__shop" data-a="open" data-id="shop" data-tab="cards">${own ? 'Comprar mais' : 'Ver na loja'}</button>` : ''}</figure>`;
+        ${own < DECK_RULES.maxCopies ? this.buyBtn(s, c.id) : ''}</figure>`;
     }).join('');
     return `${this.vTools(s)}
       <p class="fine">${Meta.distinctOwned(s)} de ${CARDS.length} cartas diferentes · ${copies} cópias no arquivo · ${miss ? `faltam ${miss} para ter ${DECK_RULES.maxCopies} de cada` : 'coleção completa'}</p>
@@ -360,7 +365,8 @@ export class LobbyUI {
       return `<figure class="lb-card ${own ? '' : 'is-missing'} ${maxed ? 'is-used' : ''} ${inDeck ? 'is-in' : ''}" data-a="deck-add" data-card="${c.id}">
         <img loading="lazy" src="${asset(c.art)}" alt="${esc(c.name)}">
         ${own ? `<div class="lb-card__ctl"><button data-a="deck-rem" data-card="${c.id}" ${inDeck ? '' : 'disabled'} title="Tirar uma (botão direito)">−</button><button data-a="deck-add" data-card="${c.id}" ${why ? 'disabled' : ''} title="Pôr uma (clique)">+</button></div>` : ''}
-        <figcaption>${rarityTag(c.id)}${this.pips(s, c.id, inDeck)}<b class="${own ? '' : 'no'}">${own ? (inDeck ? `${inDeck} no deck` : '') : 'falta'}</b></figcaption></figure>`;
+        <figcaption>${rarityTag(c.id)}${this.pips(s, c.id, inDeck)}<b class="${own ? '' : 'no'}">${own ? (inDeck ? `${inDeck} no deck` : '') : 'falta'}</b></figcaption>
+        ${own ? '' : this.buyBtn(s, c.id)}</figure>`;
     }).join('');
     const GROUPS = [['Criaturas', (c) => !isFx(c)], ['Efeitos', (c) => c.kind === 'effect_instant'], ['Armadilhas', (c) => c.kind === 'effect_trap']];
     const rows = GROUPS.map(([title, test]) => {

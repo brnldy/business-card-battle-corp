@@ -88,7 +88,9 @@
 .lb-card.is-used img { opacity: 0.45; }
 .lb-card.is-in img { outline: 2px solid var(--green); outline-offset: 2px; }
 .lb-grid--shop .lb-card, .lb-grid--big .lb-card { cursor: default; } .lb-grid--shop .lb-card:hover, .lb-grid--big .lb-card:hover { transform: none; }
-#lobby .lb-grid--shop .lb-card button, #lobby .lb-card__shop { width: 100%; margin-top: 6px; padding: 7px 4px; font-size: 11px; }
+#lobby .lb-grid--shop .lb-card button, #lobby .lb-card__buy { width: 100%; margin-top: 6px; padding: 7px 4px; font-size: 11px; }
+#lobby .lb-card__buy:not(:disabled) { border-color: var(--cream); color: var(--cream); }
+#lobby .lb-card__buy:hover:not(:disabled) { background: var(--cream); color: var(--ink); }
 /* bolinhas de cópia: cheia = no deck, contorno = tenho e está livre, tracejada = não tenho */
 .lb-pips { display: inline-flex; gap: 3px; margin-left: 2px; }
 .lb-pips i { width: 8px; height: 8px; border-radius: 50%; border: 1px dashed rgba(147, 160, 141, 0.45); }
