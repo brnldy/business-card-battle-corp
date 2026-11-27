@@ -11,6 +11,7 @@
 
 ## Como rodar e conferir
 
+- **Atalhos de teste no endereço** (somam com `?lobby`): `&verba=100000` garante esse patrimônio na gaveta em uso (sem número, $ 100.000); `&sobras` põe de 1 a 3 cópias sobrando em metade das cartas, para testar a trituradora. Ficam em `testShortcuts()` no `main.js`. **Tirar ou esconder antes de lançar**, junto com `?lobby` e `?duel`.
 - `npm test` e `npm run typecheck` na raiz (85 testes).
 - `cd remake && node build.mjs --dev` e `node serve.mjs` → `http://localhost:5178/dist/?lobby`. As janelas abrem pelas teclas 1 a 9 (3 = Loja, 1 = Sala de reunião, 4 = Metas, 7 = Treino).
 - `cd remake && node build.mjs` gera o arquivo único `BusinessCardBattleCorp_BUCKSHOT.html` na raiz. Conferir nele também: já houve defeito que só aparecia no arquivo único.

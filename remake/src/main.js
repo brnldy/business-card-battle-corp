@@ -72,7 +72,7 @@ async function boot() {
   const unlock = () => { unlockAudio(); document.getElementById('unlock').classList.add('hidden'); };
   window.addEventListener('pointerdown', unlock); window.addEventListener('keydown', unlock);
   initAudio(); applyVolumes();
-  setTimeout(() => { ui.bootDone(); toMenu(true); document.getElementById('unlock').classList.remove('hidden'); const q = new URLSearchParams(location.search); if (q.has('duel')) { settings.set({ seenHelp: true }); startDuel(); } else if (q.has('lobby')) toLobby(); }, 250);
+  setTimeout(() => { ui.bootDone(); toMenu(true); document.getElementById('unlock').classList.remove('hidden'); const q = new URLSearchParams(location.search); testShortcuts(q); if (q.has('duel')) { settings.set({ seenHelp: true }); startDuel(); } else if (q.has('lobby')) toLobby(); }, 250);
   requestAnimationFrame(loop);
   // ganchos de depuração/teste
   window.__DUEL__ = duel; duel.aiChoose = aiChoose; window.__SAVE__ = save;
@@ -90,6 +90,18 @@ function fade(fn) {
   const f = document.getElementById('fade');
   f.classList.add('on'); sfx('whoosh');
   setTimeout(() => { fn(); requestAnimationFrame(() => f.classList.remove('on')); }, 320);
+}
+/**
+ * Atalhos de teste pelo endereço (como ?lobby e ?duel): ?verba=100000 garante esse PATRIMÔNIO (sem número: $ 100.000);
+ * ?sobras põe de 1 a 3 cópias sobrando em metade das cartas, para testar a trituradora. Valem para a gaveta em uso.
+ * Antes de lançar o jogo: tirar ou esconder (ver docs/design-system/HANDOFF.md).
+ */
+function testShortcuts(q) {
+  if (!q.has('verba') && !q.has('sobras')) return;
+  const s = structuredClone(save.get());
+  if (q.has('verba')) s.patrimonio = Math.max(s.patrimonio, Number(q.get('verba')) || 100000);
+  if (q.has('sobras')) CARDS.forEach((c, i) => { if (i % 2 === 0) s.collection[c.id] = Math.max(s.collection[c.id] ?? 0, 3 + (i % 3) + 1); });
+  save.set(s);
 }
 function toLobby() {
   mode = 'lobby'; duel.stop(); setMusicMode('menu'); ui.mainMenu(false);
