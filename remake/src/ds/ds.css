@@ -538,3 +538,12 @@ button.ds-slot.is-filled:hover, button.ds-slot.is-filled:focus-visible { transfo
 .ds-charter__sig { width: 210px; height: 52px; margin-bottom: -10px; fill: none; stroke: #1f3fa8; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
 .ds-charter__sign span { justify-self: stretch; padding-top: 5px; border-top: 1.5px solid var(--ds-ink); text-align: center; font: 700 12px/1 var(--f-ui); letter-spacing: 0.14em; text-transform: uppercase; color: var(--ds-ink-2); }
 .ds-charter__foot .ds-stamp { margin: 0 6px 6px 0; font-size: 16px; transform: rotate(-9deg); }
+/* lápis de editar: botão redondo de papel com um lápis de escritório; fica junto do que ele edita (nome, logo) */
+button.ds-pencil { position: relative; display: grid; place-items: center; flex: none; width: 34px; height: 34px; padding: 0; background: var(--ds-card); border: var(--ds-line) solid var(--ds-ink); border-radius: 50%; box-shadow: 2px 3px 0 rgba(27, 20, 13, 0.3); cursor: pointer; pointer-events: auto; transition: transform 0.1s; }
+button.ds-pencil svg { width: 22px; height: 22px; }
+button.ds-pencil:hover, button.ds-pencil:focus-visible { background: #fffdf5; box-shadow: 0 0 0 3px var(--ds-amber), 0 0 0 4.5px var(--ds-ink), 2px 3px 0 4px rgba(27, 20, 13, 0.3); }
+button.ds-pencil:hover svg, button.ds-pencil:focus-visible svg { transform: rotate(-14deg) translate(-1px, -1px); transition: transform 0.1s; }
+button.ds-pencil:focus-visible { outline: 3px solid var(--ds-amber); outline-offset: 3px; }
+/* o lápis do nome vai colado na última palavra, mesmo quando o nome quebra linha */
+button.ds-pencil.ds-charter__pen { display: inline-grid; margin-left: 14px; vertical-align: 6px; }
+.ds-seal__edit { position: absolute !important; right: -8px; top: -8px; z-index: 2; }

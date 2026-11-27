@@ -44,6 +44,8 @@ const HTABS = {
   profile: ['tab', [['card', 'Ficha'], ['history', 'Extrato']]],
   missions: ['open', [['missions', 'Metas do dia'], ['achievements', 'Troféus']]], achievements: ['open', [['missions', 'Metas do dia'], ['achievements', 'Troféus']]],
 };
+/** lápis de editar (peça .ds-pencil): botão redondo com um lápis amarelo de escritório */
+const PENCIL = '<svg viewBox="0 0 24 24" aria-hidden="true"><g transform="rotate(45 12 12)"><rect x="9" y="1.5" width="6" height="4" rx="1" fill="#e98a8a" stroke="#1b140d" stroke-width="1.5"/><rect x="9" y="5.5" width="6" height="2.5" fill="#b9b6ae" stroke="#1b140d" stroke-width="1.5"/><rect x="9" y="8" width="6" height="9" fill="#f2b94c" stroke="#1b140d" stroke-width="1.5"/><path d="M9 17 L12 22.5 L15 17 Z" fill="#e8c99a" stroke="#1b140d" stroke-width="1.5" stroke-linejoin="round"/><path d="M11 20.6 L12 22.5 L13 20.6 Z" fill="#1b140d"/></g></svg>';
 const inkLogo = (id) => logoUrl(id, { ink: '#1b140d', accent: '#c98a16', bg: '#f6efdc' });
 const KINDS = [['Criaturas', (c) => !isFxKind(c.kind)], ['Efeitos', (c) => c.kind === 'effect_instant'], ['Armadilhas', (c) => c.kind === 'effect_trap']];
 function isFxKind(k) { return k === 'effect_instant' || k === 'effect_trap'; }
@@ -1001,10 +1003,9 @@ export class LobbyUI {
     const stage = c.cleared ? 'campanha concluída' : `reunião ${Math.min(c.stage + 1, CAMPAIGN.length)} de ${CAMPAIGN.length}`;
     const charter = `<section class="ds-charter">
       <header class="ds-charter__head"><span>Registro Nº ${String(n).padStart(4, '0')}</span><b>Contrato social</b><span>Gaveta ${n}</span></header>
-      <div class="ds-charter__id"><span class="ds-seal"><img src="${inkLogo(s.cosmetics.logo)}" alt=""></span>
-        <div><span class="ds-formlabel">Razão social</span><h3 class="ds-charter__name">${esc(this.company())}</h3>
-          <p class="ds-charter__meta">Fundada em ${p2(d.getDate())}/${p2(d.getMonth() + 1)}/${d.getFullYear()} / ${stage}</p>
-          <button class="ds-btn ds-btn--link pf-rename" data-a="rename">Mudar o nome</button></div></div>
+      <div class="ds-charter__id"><span class="ds-seal"><img src="${inkLogo(s.cosmetics.logo)}" alt=""><button class="ds-pencil ds-seal__edit" data-a="open" data-id="shop" data-tab="look" aria-label="Trocar o logo" title="Trocar o logo">${PENCIL}</button></span>
+        <div><span class="ds-formlabel">Razão social</span><h3 class="ds-charter__name">${esc(this.company())}<button class="ds-pencil ds-charter__pen" data-a="rename" aria-label="Mudar o nome" title="Mudar o nome">${PENCIL}</button></h3>
+          <p class="ds-charter__meta">Fundada em ${p2(d.getDate())}/${p2(d.getMonth() + 1)}/${d.getFullYear()} / ${stage}</p></div></div>
       <dl class="ds-charter__nums"><div><dt>Vitórias</dt><dd>${st.wins}</dd></div><div><dt>Aproveitamento</dt><dd>${Meta.winRate(s)}<small>%</small></dd></div><div><dt>Coleção</dt><dd>${Meta.distinctOwned(s)}<small> de ${CARDS.length}</small></dd></div></dl>
       <footer class="ds-charter__foot"><div class="ds-charter__sign"><svg class="ds-charter__sig" viewBox="0 0 220 60" aria-hidden="true"><path d="M8 44 C 18 10, 30 10, 26 40 C 24 52, 40 30, 48 22 C 56 12, 60 44, 70 36 C 78 28, 82 18, 90 30 C 96 40, 104 26, 112 24 C 122 22, 118 46, 132 38 C 146 30, 150 20, 160 30 C 168 38, 176 34, 186 28 M 20 50 C 70 46, 140 48, 210 40" /></svg><span>Diretoria</span></div><i class="ds-stamp ds-stamp--ok">Registrada</i></footer>
     </section>`;
@@ -1014,7 +1015,7 @@ export class LobbyUI {
       <div class="ds-body">
         <dl class="pf-list">${row('Derrotas', st.losses)}${row('Empates', st.draws)}${row('Sequência atual', st.streak)}${row('Melhor sequência', st.bestStreak)}${row('Maior golpe', money(st.biggestHit))}${row('Já faturou', money(st.earned))}${row('Pacotes abertos', st.packs)}</dl>
         <div class="pf-fav">${fav ? `${mini(fav)}<span><span class="ds-formlabel">Carta mais usada</span><b>${esc(byId.get(fav)?.name ?? fav)}</b><small>jogada ${st.plays[fav]} ${st.plays[fav] === 1 ? 'vez' : 'vezes'}</small></span>` : '<span><span class="ds-formlabel">Carta mais usada</span><small>Nenhuma ainda.</small></span>'}</div>
-        <footer class="ds-file__foot pf-foot"><div class="fd-minor"><button class="ds-btn ds-btn--link" data-a="open" data-id="shop" data-tab="look">Trocar o logo</button><button class="ds-btn ds-btn--link pf-wipe" data-a="wipe">Recomeçar do zero</button></div></footer>
+        <footer class="ds-file__foot pf-foot"><div class="fd-minor"><button class="ds-btn ds-btn--link pf-wipe" data-a="wipe">Recomeçar do zero</button></div></footer>
       </div></section>`;
     return `<div class="sc pf">${charter}${file}</div>`;
   }

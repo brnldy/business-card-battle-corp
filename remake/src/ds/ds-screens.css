@@ -339,8 +339,6 @@ button.ds-check { background: none; border: none; padding: 6px 0; pointer-events
 .pf-fav > span { display: grid; gap: 4px; min-width: 0; } .pf-fav b { font: 400 20px/1 var(--f-title); text-transform: uppercase; } .pf-fav small { font: 500 13px/1.2 var(--f-ui); color: var(--ds-ink-2); }
 .pf-foot { align-self: end; }
 #lobby .fd-minor .pf-wipe { color: var(--ds-red); } #lobby .fd-minor .pf-wipe:hover:not(:disabled) { color: var(--ds-red); }
-#lobby .pf-rename { justify-self: start; width: auto; min-height: 32px; height: auto; margin: 0; padding: 0; background: none; box-shadow: none; font-size: 12px; color: var(--ds-ink-2); border-bottom: 1.5px solid currentColor; }
-#lobby .pf-rename:hover { color: var(--ds-ink); background: none; }
 /* extrato: o papel rola dentro da pasta (os furos andam junto com o papel) */
 .pf-paper { min-height: 0; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--ds-ink) rgba(27, 20, 13, 0.12); box-shadow: 6px 8px 0 rgba(0, 0, 0, 0.35); }
 .pf-ledger { min-height: 100%; box-sizing: border-box; box-shadow: none; font-size: 19px; text-transform: uppercase; }
