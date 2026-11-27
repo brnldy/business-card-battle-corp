@@ -193,20 +193,34 @@
 .ds-env__shade { fill: rgba(27, 20, 13, 0.3); }
 .ds-env__flap { fill: #e2c896; stroke: var(--ds-ink); stroke-width: 2.5; stroke-linejoin: round; }
 .ds-env__edge { fill: none; stroke: rgba(255, 248, 225, 0.75); stroke-width: 2; }
-.ds-env__string { fill: none; stroke: #7a2a17; stroke-width: 2.2; stroke-linecap: round; }
-.ds-env__btn { fill: #c9502d; stroke: var(--ds-ink); stroke-width: 2.5; } .ds-env__hole { fill: var(--ds-ink); }
 .ds-env__label { position: absolute; left: 18px; bottom: 14px; padding: 7px 12px 5px; background: var(--ds-tex-card); border: 1.5px solid var(--ds-ink); font: 700 14px/1 var(--f-ui); letter-spacing: 0.1em; text-transform: uppercase; color: var(--ds-ink); transform: rotate(-2deg); box-shadow: 2px 2px 0 rgba(27, 20, 13, 0.25); }
 .sh-env > i { height: auto; }
 /* loja → cartas avulsas: vitrine de cartas reduzidas */
-.lb-box--shop-cards { width: min(1180px, 96%); height: min(790px, 93%); max-height: none; }
-.sc { flex: 1; min-height: 0; display: grid; grid-template-rows: auto minmax(0, 1fr); gap: var(--ds-3); }
-.sc-bar { display: flex; align-items: center; gap: 14px; } .sc-bar .ds-btn { height: 46px; } .sc-bar .ds-dymo { font-size: 22px; padding: 7px 12px 4px; } .sc-seg { margin-left: auto; } #lobby .sc-seg button { height: 44px; padding: 0 16px; font: 700 14px/1 var(--f-ui); letter-spacing: 0.08em; text-transform: uppercase; color: var(--ds-ink-2); background: none; border: none; border-right: var(--ds-line) solid var(--ds-ink); border-radius: 0; } #lobby .sc-seg button:last-child { border-right: none; } #lobby .sc-seg button.is-on { background: var(--ds-ink); color: var(--ds-paper); } #lobby .sc-seg button:hover:not(.is-on) { background: var(--ds-amber); color: var(--ds-ink); }
-.sc-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 26px 22px; align-content: start; padding: 22px 22px 26px; background: var(--ds-tex-card); border: var(--ds-line) solid var(--ds-ink); box-shadow: var(--ds-frame-in); scrollbar-width: thin; scrollbar-color: var(--ds-ink) rgba(27, 20, 13, 0.12); }
-.sc-item { display: grid; gap: 12px; align-content: start; }
-#lobby button.sc-card { all: unset; box-sizing: border-box; pointer-events: auto; cursor: pointer; position: relative; display: block; transition: transform 0.1s; } #lobby button.sc-card:hover, #lobby button.sc-card:focus-visible { transform: translateY(-5px) rotate(-0.6deg); }
-.sc-item--rare .ds-mini { box-shadow: 0 0 0 1.5px var(--ds-ink), 0 0 0 5px #5aa2e6, 0 0 0 6.5px var(--ds-ink), 5px 8px 0 rgba(0, 0, 0, 0.3); } .sc-item--legendary .ds-mini { box-shadow: 0 0 0 1.5px var(--ds-ink), 0 0 0 5px var(--ds-amber), 0 0 0 6.5px var(--ds-ink), 5px 8px 0 rgba(0, 0, 0, 0.3); }
-.sc-stamp { position: absolute; right: -12px; top: -14px; margin: 0; background: var(--ds-card); opacity: 1; font-size: 14px; }
-.sc-item.is-full .ds-mini { filter: grayscale(1) opacity(0.45); } .sc-item.is-full .sc-stamp { right: auto; left: 50%; top: 42%; transform: translate(-50%, -50%) rotate(-8deg); font-size: 16px; }
-#lobby .sc-buy { width: 100%; height: 46px; font: 400 26px/1 var(--f-title); letter-spacing: 0.02em; } #lobby .sc-buy.is-poor { color: var(--ds-red); }
-.sc-none { grid-column: 1 / -1; margin: 60px 0; text-align: center; font: 500 18px/1.4 var(--f-ui); color: var(--ds-ink-2); }
 .cd-full { margin: 0 6px; }
+
+
+/* ── loja → cartas avulsas: vitrine em grade à esquerda, ficha da carta sempre à direita (27/11) ── */
+.lb-box--shop-cards { width: min(1180px, 96%); height: min(770px, 90%); max-height: none; }
+.lb-box--shop-cards > header { padding: 14px 0 12px; }
+.sc { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) 388px; gap: var(--ds-5); }
+.sc-shelf { min-height: 0; display: grid; grid-template-rows: auto minmax(0, 1fr); background: var(--ds-tex-card); border: var(--ds-line) solid var(--ds-ink); box-shadow: var(--ds-frame-in); }
+.sc-tools { display: flex; align-items: center; justify-content: space-between; gap: var(--ds-4); margin: 0 var(--ds-5); padding: 14px 0 12px; border-bottom: 1.5px dashed var(--ds-ink-3); } .sc-tools b { font: 400 22px/1 var(--f-title); letter-spacing: 0.06em; text-transform: uppercase; color: var(--ds-ink-2); }
+.sc-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px 6px; align-content: start; padding: 14px 14px var(--ds-5); overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--ds-ink) rgba(27, 20, 13, 0.12); }
+.sc-item { display: grid; gap: 10px; align-content: start; padding: 12px 12px 10px; border-radius: 3px; border: var(--ds-line) solid transparent; }
+.sc-item.is-view { border: var(--ds-line) dashed var(--ds-ink-3); }
+.sc-item.is-sel { background: var(--ds-tex-lines), var(--ds-amber); border: var(--ds-line) solid var(--ds-ink); box-shadow: 3px 4px 0 rgba(27, 20, 13, 0.3); }
+#lobby button.sc-card { all: unset; box-sizing: border-box; pointer-events: auto; cursor: pointer; position: relative; display: block; transition: transform 0.1s; } #lobby button.sc-card:hover, #lobby button.sc-card:focus-visible { transform: translateY(-4px) rotate(-0.6deg); }
+.sc-item--rare .ds-mini { box-shadow: 0 0 0 1.5px var(--ds-ink), 0 0 0 4px #5aa2e6, 0 0 0 5.5px var(--ds-ink), 4px 6px 0 rgba(0, 0, 0, 0.3); } .sc-item--legendary .ds-mini { box-shadow: 0 0 0 1.5px var(--ds-ink), 0 0 0 4px var(--ds-amber), 0 0 0 5.5px var(--ds-ink), 4px 6px 0 rgba(0, 0, 0, 0.3); }
+.sc-item.is-sel.sc-item--legendary .ds-mini { box-shadow: 0 0 0 1.5px var(--ds-ink), 0 0 0 4px var(--ds-card), 0 0 0 5.5px var(--ds-ink), 4px 6px 0 rgba(0, 0, 0, 0.3); }
+.sc-item.is-full .ds-mini { filter: grayscale(1) opacity(0.5); }
+.sc-meta { display: flex; align-items: center; justify-content: space-between; gap: 6px; min-height: 34px; }
+.sc-done { font: 700 12px/1 var(--f-ui); font-style: normal; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ds-ink-2); }
+.sc-none { grid-column: 1 / -1; margin: 60px 0; text-align: center; font: 500 16px/1.4 var(--f-ui); color: var(--ds-ink-2); }
+.sc-view { min-height: 0; display: flex; } .sc-view > .ds-file { flex: 1; margin: 0 5px 8px 0; }
+button.ds-check { background: none; border: none; padding: 6px 0; pointer-events: auto; font-size: 14px; color: var(--ds-ink); } button.ds-check:hover::before { background: var(--ds-amber); }
+
+/* ── abas no topo das janelas (peça .ds-tabs no lugar da etiqueta com o nome do lugar) ── */
+.lb-htabs { position: absolute; left: 22px; bottom: 100%; z-index: 1; padding: 0; gap: 5px; align-items: flex-end; border-bottom: none; }
+#lobby .lb-htabs .ds-tab { height: 34px; margin: 0; padding: 2px 18px 0; background: linear-gradient(rgba(27, 20, 13, 0.2), rgba(27, 20, 13, 0.34)), var(--ds-tex-kraft); color: var(--ds-ink); border: var(--ds-line) solid var(--ds-ink); border-radius: 7px 11px 0 0; font: 700 13px/1 var(--f-ui); letter-spacing: 0.12em; text-transform: uppercase; white-space: nowrap; }
+#lobby .lb-htabs .ds-tab:hover:not(.is-on) { background: linear-gradient(rgba(242, 185, 76, 0.5), rgba(242, 185, 76, 0.5)), var(--ds-tex-kraft); }
+#lobby .lb-htabs .ds-tab.is-on { height: 42px; padding-bottom: 2px; background: var(--ds-tex-kraft); border-bottom-color: transparent; cursor: default; }

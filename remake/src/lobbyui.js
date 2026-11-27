@@ -21,16 +21,27 @@ const byId = new Map(CARDS.map((c) => [c.id, c]));
 const miniCache = new Map();
 const miniUrl = (id) => { if (!miniCache.has(id)) miniCache.set(id, cardFaceCanvas(id).toDataURL('image/webp', 0.92)); return miniCache.get(id); };
 const mini = (id, cls = '') => `<img class="ds-mini ${cls}" src="${miniUrl(id)}" alt="${esc(byId.get(id).name)}" draggable="false">`;
-/** envelope pardo de escritório: aba em V com sombra, dobras do fundo, fecho de botão e barbante, etiqueta de papel */
+/** envelope pardo de escritório: aba em V com sombra, dobras do fundo e etiqueta de papel (sem fecho) */
 const envelope = (label = '') => `<div class="ds-env"><svg viewBox="0 0 340 230" aria-hidden="true">
   <path class="ds-env__fold" d="M0 230 L170 118 L340 230"/>
   <path class="ds-env__shade" d="M0 0 L340 0 L170 140 Z"/>
   <path class="ds-env__flap" d="M0 0 L340 0 L170 128 Z"/>
   <path class="ds-env__edge" d="M3 3 L170 122 L337 3"/>
-  <path class="ds-env__string" d="M170 108 C152 124 152 138 170 150 C188 138 188 124 170 108"/>
-  <circle class="ds-env__btn" cx="170" cy="108" r="13"/><circle class="ds-env__hole" cx="170" cy="108" r="3"/>
-  <circle class="ds-env__btn" cx="170" cy="150" r="9"/><circle class="ds-env__hole" cx="170" cy="150" r="2.5"/>
 </svg>${label ? `<span class="ds-env__label">${label}</span>` : ''}</div>`;
+// foto da carta (só a ilustração, recortada da carta reduzida), para a ficha
+const photoCache = new Map();
+const photoUrl = (id) => {
+  if (!photoCache.has(id)) { const src = cardFaceCanvas(id), k = src.width / 1079, c = document.createElement('canvas'); c.width = Math.round(1006 * k); c.height = Math.round(794 * k); c.getContext('2d').drawImage(src, 36 * k, 205 * k, 1006 * k, 794 * k, 0, 0, c.width, c.height); photoCache.set(id, c.toDataURL('image/webp', 0.9)); }
+  return photoCache.get(id);
+};
+/** cópias no arquivo: uma casa por cópia que cabe num deck, cheia quando o jogador tem */
+const copies = (own, max = DECK_RULES.maxCopies) => `<span class="ds-copies" role="img" aria-label="Você tem ${own} de ${max}" title="Você tem ${own} de ${max}">${Array.from({ length: max }, (_, k) => `<i class="${k < own ? 'is-on' : ''}"></i>`).join('')}</span>`;
+// abas do topo da janela (peça .ds-tabs): seções da mesma tela ('tab') ou telas vizinhas ('open')
+const HTABS = {
+  shop: ['tab', [['packs', 'Pacotes'], ['cards', 'Cartas'], ['decks', 'Decks'], ['look', 'Visual']]],
+  duel: ['open', [['duel', 'Campanha'], ['training', 'Treino']]], training: ['open', [['duel', 'Campanha'], ['training', 'Treino']]],
+  missions: ['open', [['missions', 'Metas do dia']]],
+};
 const isFx = (c) => c.kind === 'effect_instant' || c.kind === 'effect_trap';
 const KIND = { creature: 'Criatura', entity: 'Entidade', effect_instant: 'Efeito', effect_trap: 'Armadilha' };
 const AREAS = [
@@ -76,10 +87,11 @@ export class LobbyUI {
     root.addEventListener('pointerover', (e) => {
       const b = e.target.closest('[data-a="open"]'); if (b && !this.panel) lobby.setHover(b.dataset.id);
       if (this.panel) this.peek(e.target.closest('[data-card]'));
+      const it = e.target.closest('.sc-item'); if (it) this.scShow(it.dataset.card);
     });
-    root.addEventListener('pointerout', (e) => { if (e.target.closest('[data-a="open"]') && !this.panel) lobby.setHover(null); if (!e.relatedTarget?.closest?.('[data-card]')) this.peek(null); });
+    root.addEventListener('pointerout', (e) => { if (e.target.closest('[data-a="open"]') && !this.panel) lobby.setHover(null); if (!e.relatedTarget?.closest?.('[data-card]')) this.peek(null); if (e.target.closest('.sc-grid') && !e.relatedTarget?.closest?.('.sc-item')) this.scShow(null); });
     // pelo teclado a ficha também abre (foco visível numa carta ou nos botões dela)
-    root.addEventListener('focusin', (e) => { if (this.panel && e.target.matches?.(':focus-visible')) this.peek(e.target.closest('[data-card]')); });
+    root.addEventListener('focusin', (e) => { if (this.panel && e.target.matches?.(':focus-visible')) { this.peek(e.target.closest('[data-card]')); const it = e.target.closest('.sc-item'); if (it) this.scShow(it.dataset.card); } });
     root.addEventListener('focusout', (e) => { if (!e.relatedTarget?.closest?.('[data-card]')) this.peek(null); });
     root.addEventListener('input', (e) => {
       const t = e.target;
@@ -187,8 +199,10 @@ export class LobbyUI {
     const act = document.activeElement, focus = act?.id, sel = focus && act.selectionStart != null ? [act.selectionStart, act.selectionEnd] : null;
     // botão focado (teclado): guarda a "assinatura" para devolver o foco ao botão equivalente depois de redesenhar
     const sig = !focus && act && this.win.contains(act) && act.dataset?.a ? { a: act.dataset.a, card: act.dataset.card, id: act.dataset.id, list: !!act.closest('.lb-decklist') } : null;
+    const ht = HTABS[id], here = id === 'shop' ? this.tab.shop : id, newLook = id !== 'shop' || ['packs', 'cards'].includes(this.tab.shop);
+    const htabs = ht && newLook ? `<nav class="ds-tabs lb-htabs" role="tablist" aria-label="${esc(memo.split(' · ')[0])}">${ht[1].map(([k, n]) => `<button class="ds-tab ${k === here ? 'is-on' : ''}" role="tab" aria-selected="${k === here}" data-a="${ht[0]}" data-id="${k}">${n}</button>`).join('')}</nav>` : '';
     this.win.innerHTML = `<section class="lb-box lb-box--${id} ${id === 'shop' ? `lb-box--shop-${this.tab.shop}` : ''}">
-      <header><div><p class="memo"><span>${esc(memo.split(' · ')[0])}</span></p><h2>${esc(title)}</h2></div><div class="lb-pat"><span>Patrimônio</span><b>${money(s.patrimonio)}</b></div><button class="lb-x" data-a="close" title="Fechar (Esc)">✕</button></header>
+      <header><div>${htabs || `<p class="memo"><span>${esc(memo.split(' · ')[0])}</span></p>`}<h2>${esc(title)}</h2></div><div class="lb-pat"><span>Patrimônio</span><b>${money(s.patrimonio)}</b></div><button class="lb-x" data-a="close" title="Fechar (Esc)">✕</button></header>
       ${body}</section>`;
     const sc = $('.lb-scroll', this.win); if (sc) sc.scrollTop = scroll; const dl = $('.lb-decklist', this.win); if (dl) dl.scrollTop = scroll2;
     if (focus && ['lb-deck-name', 'lb-q', 'lb-sort'].includes(focus)) { const i = $(`#${focus}`, this.win); i?.focus(); if (sel) i?.setSelectionRange?.(...sel); }
@@ -196,7 +210,7 @@ export class LobbyUI {
       const q = `[data-a="${sig.a}"]${sig.card ? `[data-card="${sig.card}"]` : ''}${sig.id != null ? `[data-id="${sig.id}"]` : ''}`;
       const el = (sig.list ? $(`.lb-decklist ${q}`, this.win) : null) ?? $(`.lb-grid ${q}`, this.win) ?? $(q, this.win);
       // o botão sumiu ou ficou desligado (virou "Completa", "Em uso"...): foco na aba ativa, para o Tab não recomeçar do zero
-      (el && !el.disabled ? el : $('.lb-tabs .on', this.win) ?? $('.lb-x', this.win))?.focus({ preventScroll: true });
+      (el && !el.disabled ? el : $('.lb-tabs .on', this.win) ?? $('.lb-htabs .is-on', this.win) ?? $('.lb-x', this.win))?.focus({ preventScroll: true });
     }
     if (this._scrollTo != null) { $(`[data-deck="${this._scrollTo}"]`, this.win)?.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); this._scrollTo = null; }
   }
@@ -210,10 +224,12 @@ export class LobbyUI {
     const a = b.dataset.a, id = b.dataset.id;
     // compras e "usar": o 2º clique de um clique duplo (ou um clique logo em seguida) não compra de novo
     if (/^(buy-|equip|put-active)/.test(a)) { const now = performance.now(); if (e.detail > 1 || now - (this._buyAt ?? 0) < 400) return; this._buyAt = now; }
+    if (a === 'buy-card' && b.closest('.sc-grid')) { this.scSel = id; this.scView = null; }
     switch (a) {
       case 'open': this.closeDetail(); return this.open(id, { tab: b.dataset.tab });
       case 'detail': return this.detail(b.dataset.card, b.dataset.buy === '1');
-      case 'sh-filter': this.shF = id; sfx('nav'); return this.render();
+      case 'sh-filter': this.shF = this.shF === 'all' ? 'miss' : 'all'; sfx('nav'); return this.render();
+      case 'sc-pick': this.scSel = b.dataset.card; this.scView = null; sfx('card'); return this.render();
       case 'detail-close': return this.closeDetail();
       case 'sh-odds': this.shOdds = !this.shOdds; sfx('nav'); return this.render();
       case 'close': return this.close();
@@ -670,21 +686,49 @@ export class LobbyUI {
   priceAttrs(s, p, what = '') { return s.patrimonio >= p ? `title="${what ? `${esc(what)} por ` : 'Compra por '}${money(p)}"` : `disabled title="Faltam ${money(p - s.patrimonio)} de PATRIMÔNIO"`; }
   /** linha visível de "faltam $X" embaixo das compras grandes */
   shortLine(s, p) { return s.patrimonio < p ? `<p class="lb-short">Faltam ${money(p - s.patrimonio)} de PATRIMÔNIO</p>` : ''; }
-  /** cartas avulsas: vitrine de cartas reduzidas com o preço embaixo; clicar na carta abre a ficha com "Comprar" */
+  /** cartas avulsas: a vitrine em grade à esquerda e, à direita, sempre a ficha de uma carta (a apontada; sem apontar, a escolhida) */
   vShopCards(s) {
     const max = DECK_RULES.maxCopies, f = (this.shF ??= 'miss');
     const list = CARDS.filter((c) => f === 'all' || Meta.owned(s, c.id) < max);
+    if (!list.some((c) => c.id === this.scSel)) this.scSel = list[0]?.id ?? null;
+    this.scView = null;
     const item = (c) => {
-      const own = Meta.owned(s, c.id), full = own >= max, p = Meta.priceOf(c.id), poor = p > s.patrimonio;
-      return `<article class="sc-item sc-item--${Meta.rarityOf(c.id)} ${full ? 'is-full' : ''}">
-        <button class="sc-card" data-a="detail" data-card="${c.id}" data-buy="1" aria-label="${esc(c.name)}: ver a ficha">${mini(c.id)}${full ? '<i class="ds-stamp sc-stamp">Completa</i>' : own ? '' : '<i class="ds-stamp ds-stamp--ok sc-stamp">Nova</i>'}</button>
-        ${full ? '' : `<button class="ds-btn sc-buy ${poor ? 'is-poor' : ''}" data-a="buy-card" data-id="${c.id}" ${poor ? `disabled title="Faltam ${money(p - s.patrimonio)}"` : ''}>${money(p)}</button>`}</article>`;
+      const own = Math.min(Meta.owned(s, c.id), max), full = own >= max, p = Meta.priceOf(c.id), poor = p > s.patrimonio;
+      return `<article class="sc-item sc-item--${Meta.rarityOf(c.id)} ${full ? 'is-full' : ''} ${c.id === this.scSel ? 'is-sel' : ''}" data-card="${c.id}">
+        <button class="sc-card" data-a="sc-pick" data-card="${c.id}" aria-pressed="${c.id === this.scSel}" aria-label="${esc(c.name)}: você tem ${own} de ${max}">${mini(c.id)}</button>
+        <div class="sc-meta">${copies(own)}${full ? '<em class="sc-done">Completa</em>' : `<button class="ds-tag sc-buy ${poor ? 'is-poor' : ''}" data-a="buy-card" data-id="${c.id}" ${poor ? `disabled title="Faltam ${money(p - s.patrimonio)}"` : `title="Comprar ${esc(c.name)}"`}>${money(p)}</button>`}</div></article>`;
     };
     return `<div class="sc">
-      <div class="sc-bar"><button class="ds-btn" data-a="tab" data-id="packs">‹ Loja</button><b class="ds-dymo">Cartas avulsas</b>
-        <span class="ds-seg sc-seg"><button data-a="sh-filter" data-id="miss" class="${f === 'miss' ? 'is-on' : ''}">Faltam para mim</button><button data-a="sh-filter" data-id="all" class="${f === 'all' ? 'is-on' : ''}">Todas</button></span></div>
-      <div class="lb-scroll sc-grid">${list.map(item).join('') || '<p class="sc-none">Arquivo completo. Não falta nenhuma carta.</p>'}</div>
+      <section class="sc-shelf">
+        <div class="sc-tools"><b>${list.length} carta${list.length === 1 ? '' : 's'}</b><button class="ds-check ${f === 'miss' ? 'is-on' : ''}" role="switch" aria-checked="${f === 'miss'}" data-a="sh-filter">Só as que faltam</button></div>
+        <div class="lb-scroll sc-grid">${list.map(item).join('') || '<p class="sc-none">Arquivo completo. Não falta nenhuma carta.</p>'}</div>
+      </section>
+      <aside class="sc-view" aria-live="polite">${this.scSel ? this.scFile(this.scSel) : ''}</aside>
     </div>`;
+  }
+  /** ficha da carta (peça .ds-file): foto presa por clipe, título, categorias, atributos, texto completo, cópias e a compra */
+  scFile(id) {
+    const c = byId.get(id), s = this.s, fx = isFx(c), max = DECK_RULES.maxCopies, own = Math.min(Meta.owned(s, id), max), price = Meta.priceOf(id), lack = price - s.patrimonio;
+    const kind = [KIND[c.kind], c.element, c.department ? `depto. ${DEPT[c.department] ?? c.department}` : ''].filter(Boolean);
+    const stats = fx ? `<p class="ds-file__fx">${c.kind === 'effect_trap' ? 'Fica virada na mesa até disparar.' : c.durationTurns ? `Fica na mesa por ${c.durationTurns} turnos seus.` : 'Vale na hora e vai para o Morto.'}</p>`
+      : `<dl class="ds-file__stats"><div><dt>Ataque</dt><dd>${money(c.atk)}</dd></div><div><dt>Defesa</dt><dd>${money(c.def)}</dd></div><div><dt>Custo</dt><dd>${c.cost ? `${c.cost} <small>sacrif.</small>` : '<small>grátis</small>'}</dd></div></dl>`;
+    const action = own >= max ? '<i class="ds-stamp ds-stamp--ok">Completa</i>' : lack > 0 ? `<button class="ds-btn ds-btn--primary" disabled>Faltam ${money(lack)}</button>` : `<button class="ds-btn ds-btn--primary" data-a="buy-card" data-id="${id}">Comprar · ${money(price)}</button>`;
+    return `<section class="ds-sheet ds-file ds-file--${Meta.rarityOf(id)}">
+      <div class="ds-bar"><span>Ficha da carta</span><b>${RARITY_PT[Meta.rarityOf(id)]}</b></div>
+      <div class="ds-body">
+        <div class="ds-file__top"><figure class="ds-photo"><i class="ds-clip"></i><img src="${photoUrl(id)}" alt=""></figure>
+          <div><h3 class="ds-title">${esc(c.name)}</h3><p class="ds-file__kind">${kind.map((k) => `<span>${esc(k)}</span>`).join('')}</p></div></div>
+        ${stats}
+        <ul class="ds-file__rules">${(RULES_TEXT[id] ?? []).map(([n, t]) => `<li><b>${esc(n)}</b>${esc(t)}</li>`).join('') || '<li>Sem habilidade.</li>'}</ul>
+        <footer class="ds-file__foot"><p>${copies(own)}<span>Você tem <b>${own} de ${max}</b></span></p>${action}</footer>
+      </div></section>`;
+  }
+  /** troca a ficha da direita sem redesenhar a tela (hover e foco); null volta para a carta escolhida */
+  scShow(id) {
+    const el = $('.sc-view', this.win); if (!el) return;
+    id ??= this.scSel; if (!id || id === (this.scView ?? this.scSel)) return;
+    this.scView = id; el.innerHTML = this.scFile(id);
+    for (const it of this.win.querySelectorAll('.sc-item')) it.classList.toggle('is-view', it.dataset.card === id && id !== this.scSel);
   }
   /** entrada da Loja: o envelope em palco (uma ação: abrir) e as três prateleiras ao lado */
   vShopHome(s) {

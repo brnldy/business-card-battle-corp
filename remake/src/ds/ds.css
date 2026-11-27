@@ -192,7 +192,6 @@
 /* envelope pardo: guarda algo fechado. Pacote, recompensa, deck pronto. */
 .ds-envelope { position: relative; width: 250px; height: 170px; background: var(--ds-tex-kraft); border: var(--ds-line) solid var(--ds-ink); box-shadow: 5px 6px 0 rgba(0, 0, 0, 0.45); display: grid; place-items: end center; padding-bottom: 16px; font: 700 var(--t-cap)/1.3 var(--f-ui); letter-spacing: 0.12em; text-transform: uppercase; color: var(--ds-ink); text-align: center; }
 .ds-envelope::before { content: ""; position: absolute; inset: 0 0 auto; height: 84px; background: linear-gradient(to bottom, #c9aa74, #b08e58); clip-path: polygon(0 0, 100% 0, 50% 100%); filter: drop-shadow(0 2px 0 var(--ds-ink)); }
-.ds-envelope::after { content: ""; position: absolute; left: 50%; top: 66px; width: 26px; height: 26px; margin-left: -13px; border-radius: 50%; background: radial-gradient(circle, var(--ds-ink) 0 3px, #d8552f 3.5px); border: var(--ds-line) solid var(--ds-ink); }
 /* recibo: comprovante de uma troca. Compra na loja, recompensa da partida. */
 .ds-receipt { position: relative; width: 250px; padding: 16px 16px 26px; background: #fbf8ee; color: #2a2a26; font: 400 20px/22px var(--f-title); text-transform: uppercase; box-shadow: 4px 5px 0 rgba(0, 0, 0, 0.4); border: var(--ds-line) solid var(--ds-ink); border-bottom: none;
   clip-path: polygon(0 0, 100% 0, 100% calc(100% - 9px), 95% 100%, 90% calc(100% - 9px), 85% 100%, 80% calc(100% - 9px), 75% 100%, 70% calc(100% - 9px), 65% 100%, 60% calc(100% - 9px), 55% 100%, 50% calc(100% - 9px), 45% 100%, 40% calc(100% - 9px), 35% 100%, 30% calc(100% - 9px), 25% 100%, 20% calc(100% - 9px), 15% 100%, 10% calc(100% - 9px), 5% 100%, 0 calc(100% - 9px)); }
@@ -235,3 +234,25 @@
 .ds-btn--tab { height: 40px; border-radius: 8px 12px 0 0; border-bottom: none; margin-bottom: 0; box-shadow: inset 0 0 0 1.5px rgba(255, 252, 240, 0.9); background: var(--ds-tex-kraft); } .ds-btn--tab.is-on { background: var(--ds-tex-card); height: 46px; }
 /* cores do carimbo (depois da definição base, para valerem) */
 .ds-stamp.ds-stamp--ok { color: var(--ds-green); } .ds-stamp.ds-stamp--no { color: var(--ds-red); }
+
+/* ── peças de 27/11: cópias, etiqueta de preço, foto presa e ficha da carta ── */
+/* cópias: uma casa por cópia que cabe num deck; cheia = o jogador tem */
+.ds-copies { display: inline-flex; gap: 3px; vertical-align: middle; } .ds-copies i { width: 9px; height: 13px; border: 1.5px dashed var(--ds-ink-3); border-radius: 1.5px; } .ds-copies i.is-on { background: var(--ds-ink); border-style: solid; border-color: var(--ds-ink); }
+/* etiqueta de preço: etiqueta de loja com o furo do barbante; é o botão de comprar */
+button.ds-tag { display: inline-flex; align-items: center; height: 30px; padding: 2px 8px 0 19px; background: radial-gradient(circle at 10px 50%, var(--ds-ink) 0 2px, transparent 2.6px) no-repeat, var(--ds-card); color: var(--ds-ink); border: var(--ds-line) solid var(--ds-ink); border-radius: 16px 3px 3px 16px; box-shadow: 2px 3px 0 var(--ds-ink); font: 400 19px/1 var(--f-title); letter-spacing: 0.02em; white-space: nowrap; cursor: pointer; pointer-events: auto; transition: transform 0.08s; }
+button.ds-tag:hover:not(:disabled), button.ds-tag:focus-visible { background-color: var(--ds-amber); transform: translate(-1px, -1px); } button.ds-tag:active:not(:disabled) { transform: translate(2px, 3px); box-shadow: none; }
+button.ds-tag:disabled, button.ds-tag.is-poor { color: var(--ds-red); border-style: dashed; box-shadow: none; cursor: not-allowed; background: none; }
+/* foto presa por clipe (ilustração da carta, retrato de ficha) */
+.ds-photo { position: relative; margin: 0; padding: 5px; background: #fffdf5; border: var(--ds-line) solid var(--ds-ink); box-shadow: 3px 4px 0 rgba(27, 20, 13, 0.3); transform: rotate(-2deg); } .ds-photo img { display: block; width: 100%; }
+.ds-photo .ds-clip { top: -16px; right: auto; left: 12px; width: 14px; height: 38px; }
+/* ficha da carta: o único lugar onde o texto completo aparece (R6) */
+.ds-file { min-height: 0; } .ds-file > .ds-body { flex: 1; min-height: 0; display: grid; grid-template-rows: auto auto minmax(0, 1fr) auto; gap: var(--ds-4); padding: var(--ds-4) var(--ds-4) var(--ds-4); }
+.ds-file__top { display: grid; grid-template-columns: 116px minmax(0, 1fr); gap: var(--ds-4); align-items: start; padding-top: 6px; }
+.ds-file .ds-title { margin: 0; font-size: 30px; line-height: 0.95; }
+.ds-file__kind { display: flex; flex-wrap: wrap; gap: 5px; margin: 10px 0 0; } .ds-file__kind span { padding: 4px 7px 3px; background: var(--ds-card); border: 1.5px solid var(--ds-ink); border-radius: 2px; font: 700 12px/1 var(--f-ui); letter-spacing: 0.06em; text-transform: uppercase; }
+.ds-file__stats { margin: 0; display: grid; grid-template-columns: repeat(3, 1fr); border: var(--ds-line) solid var(--ds-ink); background: rgba(255, 252, 240, 0.6); } .ds-file__stats div { padding: 8px 10px 5px; min-width: 0; } .ds-file__stats div + div { border-left: var(--ds-line) solid var(--ds-ink); }
+.ds-file__stats dt { font: 700 12px/1 var(--f-ui); letter-spacing: 0.1em; text-transform: uppercase; color: var(--ds-ink-2); } .ds-file__stats dd { margin: 5px 0 0; font: 400 28px/0.9 var(--f-title); white-space: nowrap; } .ds-file__stats dd small { font: 700 13px/1 var(--f-ui); }
+.ds-file__fx { margin: 0; padding: 10px 12px; border: var(--ds-line) solid var(--ds-ink); background: rgba(255, 252, 240, 0.6); font: 700 15px/1.35 var(--f-ui); }
+.ds-file__rules { list-style: none; margin: 0; padding: 0 4px 0 0; display: grid; gap: 12px; align-content: start; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--ds-ink) transparent; } .ds-file__rules li { font: 500 15px/1.45 var(--f-ui); } .ds-file__rules b { display: block; margin-bottom: 2px; font: 400 21px/1 var(--f-title); text-transform: uppercase; letter-spacing: 0.03em; }
+.ds-file__foot { display: grid; gap: var(--ds-3); padding-top: var(--ds-3); border-top: 1.5px dashed var(--ds-ink-3); } .ds-file__foot p { margin: 0; display: flex; align-items: center; gap: 10px; font: 500 15px/1 var(--f-ui); } .ds-file__foot b { font-weight: 700; }
+.ds-file__foot .ds-btn { width: 100%; height: 44px; font-size: 15px; } .ds-file__foot .ds-stamp { justify-self: center; }

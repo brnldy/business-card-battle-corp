@@ -46,26 +46,33 @@ O autor achou o resultado das regras antigas grande demais e sem respiro. Acessi
 | Lobby 3D (etiquetas discretas, sem barra embaixo) | Feito depois da recusa da primeira versão; sem resposta do autor. |
 | Treino (termo de estágio, foto do modelo real) | Aceito depois dos ajustes ("continua com outras telas"). |
 | Metas do dia (quadro de cortiça) | Aprovado. |
-| Cabeçalho das janelas (etiqueta de rotuladora + patrimônio em livro-caixa) | Feito; o autor agora pediu trocar a etiqueta por abas (ver pendências). |
+| Cabeçalho das janelas (abas de pasta + patrimônio em livro-caixa) | Abas feitas em 27/11; o autor ainda não viu. |
 | Sala de reunião | Refeita sobre a campanha de 30 batalhas; o autor ainda não comentou. |
-| Loja → entrada com envelope e abertura do pacote | Entregue; o autor mandou seguir, com ressalva no envelope. |
-| Loja → Cartas avulsas (grade + detalhe por clique) | Entregue; **o autor pediu mudanças** (ver pendências). |
+| Loja → entrada com envelope e abertura do pacote | Entregue; envelope ajustado em 27/11 (só a aba). |
+| Loja → Cartas avulsas (grade + ficha sempre à direita) | Refeita em 27/11 a pedido do autor; ele ainda não viu. |
 | Loja → Decks prontos e Visual | Não feitos (desenho escuro antigo). |
 | Arquivo, Conquistas, Perfil, Reciclar, Salvar/Carregar | Não feitos (desenho escuro antigo). |
 
 Recusados, para não repetir: a Loja como máquina de vendas (duas tentativas; o autor não entendeu o fluxo e mandou apagar) e um guia de estilo que copiava o Dispatch.
 
-## Pedidos do autor ainda não atendidos (27/11/2026)
+## Pedidos de 27/11/2026: o que foi feito e o que ficou
 
-Feitos sobre a tela de Cartas avulsas e a entrada da Loja como estão nesta branch:
+Feito e conferido em captura (1280×720, 1440×900 e 1920×1080; a tela de cartas também no arquivo único):
 
-1. A faixa de cima da tela de cartas ("‹ Loja", etiqueta "Cartas avulsas", filtro) está desconexa e precisa ser refeita.
-2. O autor gostou da vista de detalhe da carta, mas não quer clicar para ver: quer a visualização completa já no hover. Dividir a tela: grade de cartas à esquerda e, à direita, sempre a visualização de uma carta.
-3. Mostrar na própria vitrine quantas cópias o jogador já tem de cada carta (hoje só aparece depois de clicar).
-4. Envelope: tirar os círculos vermelhos e a fita vermelha; fica só a aba.
-5. No topo da janela, trocar a etiqueta com o nome do lugar ("Máquina de benefícios") pelo componente de abas alternáveis (`.ds-tabs`, as abas de pasta do catálogo), em todas as telas já feitas, não só na Loja.
-6. Não mexer em economia agora (a decisão do item 7 do plano fica em aberto).
-7. Gerar componentes novos.
+1. **Abas no topo da janela** (`.ds-tabs` com a variante `.lb-htabs`) no lugar da etiqueta com o nome do lugar. Loja: Pacotes, Cartas, Decks, Visual. Sala de reunião e Treino: Campanha e Treino (uma leva à outra). Metas: uma aba só. A lista fica em `HTABS`, em `lobbyui.js`.
+2. **Cartas avulsas dividida em duas**: grade à esquerda e, à direita, sempre a ficha de uma carta. Passar o mouse ou focar troca a ficha (`scShow`); clicar fixa a carta (`scSel`), para teclado e toque. A faixa antiga ("‹ Loja", etiqueta, filtro) saiu: a navegação foi para as abas e o filtro virou a caixa "Só as que faltam".
+3. **Cópias na vitrine**: três casas embaixo de cada carta (`.ds-copies`), cheias conforme o que o jogador tem.
+4. **Envelope só com a aba** (sem círculos nem barbante), no palco, na abertura e no catálogo.
+5. **Peças novas** em `ds.css` e no catálogo: `.ds-copies` (cópias), `.ds-tag` (etiqueta de preço, é o botão de comprar da vitrine), `.ds-photo` (foto presa por clipe) e `.ds-file` (ficha da carta).
+
+Ficou por fazer ou em aberto:
+
+- **Decks prontos e Visual** continuam no desenho escuro antigo, com a própria faixa "← Loja" e sem as abas novas. Quem clica nas abas Decks ou Visual cai nessa tela antiga.
+- Em 1280×720 a grade mostra uma fileira inteira e parte da segunda (rola), e a ficha rola quando a carta tem texto longo.
+- O aviso de compra (toast) aparece por cima do canto de baixo da ficha por alguns segundos.
+- Nas janelas de aba única (Metas) a aba repete o título. O autor não disse o que entra nas abas das telas que não têm seções; Campanha/Treino foi escolha desta sessão.
+- A vista de detalhe em tela cheia (`detail`) segue em uso só na abertura do pacote.
+- Economia: o autor não quer mexer agora (item 7 do plano segue em aberto).
 
 ## Medições do passo 0 (três telas já feitas)
 
