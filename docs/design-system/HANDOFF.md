@@ -62,6 +62,7 @@ Decisões do autor nesta rodada: o custo de sacrifício **fica** na carta reduzi
 
 Feito e conferido em captura (1280×720, 1440×900, 1920×1080):
 
+00. **Zoom das janelas** (passo 6 do plano): Campanha, Treino e Metas passaram a usar `--lb-fix` como as outras. Medido nas oito janelas novas em 1280×720, 1440×900 e 1920×1080: menor texto 12 px (13,5 em 1920), menor alvo 34 px (as abas), nada rola nem é cortado. Para caber o Treino em 1280×720: a lista "Esta partida não vale" foi para o lado da foto, e os botões do rodapé (Treino e Campanha) foram de 52 para 44 px.
 0. **Cabeçalho das janelas** (decisão do autor: fica dentro da pasta, nada sai para fora; o patrimônio tem de lembrar dinheiro; fechar é ✕). Topo de formulário (`.ds-formhead`, `.ds-formlabel`) com três casas: lugar pequeno + título, patrimônio na cédula (`.ds-cash`: maço de notas verdes com guilhoché e selo "$") e o ✕. Recusada: o título na aba e o patrimônio num visor preso na borda de cima da pasta. Feito em `head()` do `lobbyui.js`, só nas janelas de `NEW_HEAD`.
 1. **Abas no topo da janela** (`.ds-tabs` + `.lb-htabs`, lista em `HTABS` no `lobbyui.js`): Loja (Pacotes, Cartas, Decks, Visual), Campanha e Treino, Metas do dia e Troféus.
 2. **Padrão "vitrine com ficha"**, usado em Cartas, Decks, Visual e Troféus: grade à esquerda e uma ficha sempre à direita. Mouse ou foco troca a ficha (`showFile`); clique fixa o item. Cada vista diz o que fica na ficha em `viewer()`.
@@ -78,13 +79,15 @@ Armadilhas desta rodada (não repetir):
 
 Ficou por fazer ou em aberto:
 
-- **Metas, Campanha e Treino não têm o zoom das telas novas.** Em 1280×720 e 1440×900, trocar de Metas para Troféus muda o tamanho da janela. É o passo 6 do plano.
+- **Fora das janelas, ainda abaixo de 12 px:** crachá do perfil (`.lb-badge span`, 11 px), "Sair" (`.lb-exit`, 11 px) e etiquetas da sala 3D (`.lb-label span`, 10 px), sem contar o zoom.
 - Em 1280×720 as grades rolam (uma fileira e meia de cartas visível).
 - A confirmação de compra do deck ainda usa o diálogo antigo (`ui.confirm`).
 - Não conferido: placa conquistada com dados reais (vi só marcando a classe à mão) e compra de deck até o fim.
 - Arquivo, Perfil, Reciclar e Salvar/Carregar seguem no desenho antigo.
 
 ## Medições do passo 0 (três telas já feitas)
+
+> Superado em 27/11: as três telas foram medidas de novo com as regras revisadas e passam (ver "Zoom das janelas" acima). O texto abaixo fica como registro.
 
 Sala de reunião, Treino e Metas passam em R1, mas falham em R3 (texto abaixo de 13 px) por causa do zoom da interface: 74% em 1280×720, 83% em 1440×900, 103% em 1920×1080. Também têm de 53 a 69 palavras fora de botões (R2) e os botões "Trocar" e ✕ abaixo de 44 px (R8). O ajuste dessas telas é o passo 6 do plano.
 

@@ -1091,7 +1091,7 @@ button.ds-boxfile:hover:not(.is-on), button.ds-boxfile:focus-visible { transform
 button.ds-boxfile.is-on { transform: translateY(-5px); box-shadow: 0 4px 0 var(--ds-kraft-lo), 0 5px 0 1px var(--ds-ink), 4px 10px 0 1px rgba(27, 20, 13, 0.3); cursor: default; }
 .ds-boxfile__label { flex: 1; min-width: 0; display: grid; gap: 4px; padding: 7px 9px 6px; background: var(--ds-card); border: 3px solid #8d8a83; border-radius: 3px; box-shadow: inset 0 0 0 1px var(--ds-ink), 0 0 0 1px var(--ds-ink); }
 .ds-boxfile.is-on .ds-boxfile__label { background: var(--ds-amber); }
-.ds-boxfile__label b { font: 400 18px/0.95 var(--f-title); letter-spacing: 0.03em; text-transform: uppercase; } .ds-boxfile__label small { font: 700 11px/1 var(--f-ui); letter-spacing: 0.08em; text-transform: uppercase; color: var(--ds-ink-2); }
+.ds-boxfile__label b { font: 400 18px/0.95 var(--f-title); letter-spacing: 0.03em; text-transform: uppercase; } .ds-boxfile__label small { font: 700 12px/1 var(--f-ui); letter-spacing: 0.08em; text-transform: uppercase; color: var(--ds-ink-2); }
 .ds-boxfile.is-on .ds-boxfile__label small { color: var(--ds-ink); }
 .ds-boxfile__hole { flex: none; width: 12px; height: 30px; border-radius: 6px; background: #2a2017; box-shadow: inset 2px 2px 0 rgba(0, 0, 0, 0.6), 0 0 0 1.5px var(--ds-ink); }
 /* guia de remessa (deck), prova de gráfica (visual), placa (troféu): variações da ficha */
@@ -1121,7 +1121,7 @@ button.ds-plaque { transition: transform 0.1s; } button.ds-plaque:hover, button.
 
 /* ── cabeçalho das janelas (27/11): topo de formulário ── */
 /* rótulo de formulário: o mesmo do Formulário 01-A */
-.ds-formlabel { font: 700 11px/1 var(--f-ui); letter-spacing: 0.16em; text-transform: uppercase; color: var(--ds-ink-2); }
+.ds-formlabel { font: 700 12px/1 var(--f-ui); letter-spacing: 0.14em; text-transform: uppercase; color: var(--ds-ink-2); }
 /* topo de formulário: uma faixa de papel com casas separadas por fio */
 .ds-formhead { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; background: var(--ds-tex-lines), var(--ds-card); border: var(--ds-line) solid var(--ds-ink); box-shadow: 3px 4px 0 rgba(27, 20, 13, 0.3); }
 .ds-formhead__cell { display: grid; align-content: center; gap: 9px; padding: 12px 20px 10px; min-width: 0; } .ds-formhead__cell + .ds-formhead__cell { border-left: var(--ds-line) solid var(--ds-ink); }
@@ -1396,6 +1396,9 @@ body.theme-buckshot .h-folder__name { text-transform: uppercase; }
 .tr-photo .ds-clip { top: -28px; right: auto; left: 8px; width: 16px; height: 42px; }
 /* o que não vale: caixinhas riscadas a caneta vermelha */
 .tr-no { list-style: none; margin: 8px 0 0; padding: 0; display: grid; grid-template-columns: repeat(4, auto); justify-content: start; gap: 8px 22px; }
+/* a lista do que não vale fica ao lado da foto, em duas colunas (cabe em 1280×720 sem esconder o botão de treinar) */
+.tr-term .ds-body { gap: 14px; }
+.tr-nobox { margin-top: 8px; padding-top: 8px; border-top: 1.5px dashed var(--ds-ink-3); } .tr-nobox .tr-no { grid-template-columns: repeat(2, auto); gap: 10px 26px; }
 .tr-no li { display: flex; align-items: center; gap: 8px; font: 700 var(--t-md)/1 var(--f-ui); color: var(--ds-ink-2); }
 .tr-no span { position: relative; } .tr-no span::after { content: ""; position: absolute; left: -3px; right: -3px; top: 48%; height: 2px; background: var(--ds-red); transform: rotate(-3deg); }
 .tr-box { width: 18px; height: 18px; flex: none; background: linear-gradient(45deg, transparent 43%, var(--ds-red) 43% 57%, transparent 57%), linear-gradient(-45deg, transparent 43%, var(--ds-red) 43% 57%, transparent 57%), var(--ds-card); border: var(--ds-line) solid var(--ds-ink); }
@@ -1420,7 +1423,7 @@ body.theme-buckshot .h-folder__name { text-transform: uppercase; }
 .dk.is-bad { border-color: var(--ds-red); }
 /* rodapé destacável: dois botões da mesma altura e largura, lado a lado (âmbar e branco) */
 .dk-foot { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 6px calc(-1 * var(--ds-4)) calc(-1 * var(--ds-4) + 6px); padding: 16px var(--ds-4) 12px; border-top: 2px dashed rgba(27, 20, 13, 0.5); background: rgba(150, 118, 78, 0.14); }
-#lobby .dk-foot .ds-btn { height: 52px; padding: 0 16px; font-size: var(--t-lg); width: 100%; }
+#lobby .dk-foot .ds-btn { height: 44px; padding: 0 16px; font-size: var(--t-lg); width: 100%; }
 #lobby .dk-foot .ds-btn:not(.ds-btn--primary) { background: var(--ds-tex-lines), linear-gradient(to bottom, #fffdf6, #f3ecd8); }
 
 /* ───────── metas do dia: quadro de cortiça com memorandos presos por alfinete ───────── */
@@ -1458,7 +1461,7 @@ body.theme-buckshot .h-folder__name { text-transform: uppercase; }
 .cp-ladder .is-cur { background: var(--ds-amber); margin: 0 calc(var(--ds-4) * -1); padding-left: var(--ds-4); padding-right: var(--ds-4); } .cp-ladder .is-gap { justify-content: center; color: var(--ds-ink-3); letter-spacing: 0.3em; border: none; padding: 2px 0; } .cp-ladder .is-boss span { color: var(--ds-red); }
 
 /* ══ lobby novo (docs/UI_LOBBY.md): piso de tamanho, carta reduzida, detalhe da carta, loja ══ */
-.lb-box--shop-packs, .lb-box--shop-cards, .lb-box--shop-decks, .lb-box--shop-look, .lb-box--achievements, .lb-pack > .pk, .lb-detail > .cd { zoom: var(--lb-fix, 1); }
+.lb-box--duel, .lb-box--training, .lb-box--missions, .lb-box--shop-packs, .lb-box--shop-cards, .lb-box--shop-decks, .lb-box--shop-look, .lb-box--achievements, .lb-pack > .pk, .lb-detail > .cd { zoom: var(--lb-fix, 1); }
 #lobby :is(.lb-box--shop-packs, .lb-box--shop-cards, .lb-box--shop-decks, .lb-box--shop-look, .lb-box--achievements) .lb-x { width: 46px; height: 46px; font-size: 16px; }
 /* carta reduzida (R4): a mesma face da mesa do duelo */
 .ds-mini { display: block; width: 100%; aspect-ratio: 1079 / 1257; border-radius: 4.1% / 3.5%; box-shadow: 0 0 0 1.5px var(--ds-ink), 3px 4px 0 rgba(0, 0, 0, 0.35); user-select: none; }
@@ -5770,9 +5773,9 @@ void main() {`).replace("#include <map_fragment>",`#include <map_fragment>
         <div class="ds-body">
           <div class="tr-id">
             <div class="tr-photo"><img src="${this.lobby.internPortrait(this.lobby.renderer)??""}" alt="Estagi\xE1rio"><i class="ds-clip"></i></div>
-            <div><span class="ds-label">Funcion\xE1rio</span><h3 class="ds-title">Estagi\xE1rio</h3><p class="ds-text">Ele <span class="ds-hl">erra de prop\xF3sito</span>. Bom para testar um deck.</p></div>
+            <div><span class="ds-label">Funcion\xE1rio</span><h3 class="ds-title">Estagi\xE1rio</h3><p class="ds-text">Ele <span class="ds-hl">erra de prop\xF3sito</span>. Bom para testar um deck.</p>
+              <div class="tr-nobox"><span class="ds-label">Esta partida n\xE3o vale</span><ul class="tr-no">${r("Patrim\xF4nio")}${r("Metas")}${r("Conquistas")}${r("Hist\xF3rico")}</ul></div></div>
           </div>
-          <div><span class="ds-label">Esta partida n\xE3o vale</span><ul class="tr-no">${r("Patrim\xF4nio")}${r("Metas")}${r("Conquistas")}${r("Hist\xF3rico")}</ul></div>
           ${this.deckCard(e)}
           <footer class="dk-foot"><button data-a="train" class="ds-btn ds-btn--primary" ${n?"":"disabled"}>Treinar com ele</button><button data-a="open" data-id="duel" class="ds-btn">Duelo valendo</button></footer>
         </div>

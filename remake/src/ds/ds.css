@@ -271,7 +271,7 @@ button.ds-boxfile:hover:not(.is-on), button.ds-boxfile:focus-visible { transform
 button.ds-boxfile.is-on { transform: translateY(-5px); box-shadow: 0 4px 0 var(--ds-kraft-lo), 0 5px 0 1px var(--ds-ink), 4px 10px 0 1px rgba(27, 20, 13, 0.3); cursor: default; }
 .ds-boxfile__label { flex: 1; min-width: 0; display: grid; gap: 4px; padding: 7px 9px 6px; background: var(--ds-card); border: 3px solid #8d8a83; border-radius: 3px; box-shadow: inset 0 0 0 1px var(--ds-ink), 0 0 0 1px var(--ds-ink); }
 .ds-boxfile.is-on .ds-boxfile__label { background: var(--ds-amber); }
-.ds-boxfile__label b { font: 400 18px/0.95 var(--f-title); letter-spacing: 0.03em; text-transform: uppercase; } .ds-boxfile__label small { font: 700 11px/1 var(--f-ui); letter-spacing: 0.08em; text-transform: uppercase; color: var(--ds-ink-2); }
+.ds-boxfile__label b { font: 400 18px/0.95 var(--f-title); letter-spacing: 0.03em; text-transform: uppercase; } .ds-boxfile__label small { font: 700 12px/1 var(--f-ui); letter-spacing: 0.08em; text-transform: uppercase; color: var(--ds-ink-2); }
 .ds-boxfile.is-on .ds-boxfile__label small { color: var(--ds-ink); }
 .ds-boxfile__hole { flex: none; width: 12px; height: 30px; border-radius: 6px; background: #2a2017; box-shadow: inset 2px 2px 0 rgba(0, 0, 0, 0.6), 0 0 0 1.5px var(--ds-ink); }
 /* guia de remessa (deck), prova de gráfica (visual), placa (troféu): variações da ficha */
@@ -301,7 +301,7 @@ button.ds-plaque { transition: transform 0.1s; } button.ds-plaque:hover, button.
 
 /* ── cabeçalho das janelas (27/11): topo de formulário ── */
 /* rótulo de formulário: o mesmo do Formulário 01-A */
-.ds-formlabel { font: 700 11px/1 var(--f-ui); letter-spacing: 0.16em; text-transform: uppercase; color: var(--ds-ink-2); }
+.ds-formlabel { font: 700 12px/1 var(--f-ui); letter-spacing: 0.14em; text-transform: uppercase; color: var(--ds-ink-2); }
 /* topo de formulário: uma faixa de papel com casas separadas por fio */
 .ds-formhead { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; background: var(--ds-tex-lines), var(--ds-card); border: var(--ds-line) solid var(--ds-ink); box-shadow: 3px 4px 0 rgba(27, 20, 13, 0.3); }
 .ds-formhead__cell { display: grid; align-content: center; gap: 9px; padding: 12px 20px 10px; min-width: 0; } .ds-formhead__cell + .ds-formhead__cell { border-left: var(--ds-line) solid var(--ds-ink); }

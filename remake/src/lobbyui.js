@@ -666,9 +666,9 @@ export class LobbyUI {
         <div class="ds-body">
           <div class="tr-id">
             <div class="tr-photo"><img src="${this.lobby.internPortrait(this.lobby.renderer) ?? ''}" alt="Estagiário"><i class="ds-clip"></i></div>
-            <div><span class="ds-label">Funcionário</span><h3 class="ds-title">Estagiário</h3><p class="ds-text">Ele <span class="ds-hl">erra de propósito</span>. Bom para testar um deck.</p></div>
+            <div><span class="ds-label">Funcionário</span><h3 class="ds-title">Estagiário</h3><p class="ds-text">Ele <span class="ds-hl">erra de propósito</span>. Bom para testar um deck.</p>
+              <div class="tr-nobox"><span class="ds-label">Esta partida não vale</span><ul class="tr-no">${no('Patrimônio')}${no('Metas')}${no('Conquistas')}${no('Histórico')}</ul></div></div>
           </div>
-          <div><span class="ds-label">Esta partida não vale</span><ul class="tr-no">${no('Patrimônio')}${no('Metas')}${no('Conquistas')}${no('Histórico')}</ul></div>
           ${this.deckCard(s)}
           <footer class="dk-foot"><button data-a="train" class="ds-btn ds-btn--primary" ${ok ? '' : 'disabled'}>Treinar com ele</button><button data-a="open" data-id="duel" class="ds-btn">Duelo valendo</button></footer>
         </div>

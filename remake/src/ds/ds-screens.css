@@ -71,6 +71,9 @@
 .tr-photo .ds-clip { top: -28px; right: auto; left: 8px; width: 16px; height: 42px; }
 /* o que não vale: caixinhas riscadas a caneta vermelha */
 .tr-no { list-style: none; margin: 8px 0 0; padding: 0; display: grid; grid-template-columns: repeat(4, auto); justify-content: start; gap: 8px 22px; }
+/* a lista do que não vale fica ao lado da foto, em duas colunas (cabe em 1280×720 sem esconder o botão de treinar) */
+.tr-term .ds-body { gap: 14px; }
+.tr-nobox { margin-top: 8px; padding-top: 8px; border-top: 1.5px dashed var(--ds-ink-3); } .tr-nobox .tr-no { grid-template-columns: repeat(2, auto); gap: 10px 26px; }
 .tr-no li { display: flex; align-items: center; gap: 8px; font: 700 var(--t-md)/1 var(--f-ui); color: var(--ds-ink-2); }
 .tr-no span { position: relative; } .tr-no span::after { content: ""; position: absolute; left: -3px; right: -3px; top: 48%; height: 2px; background: var(--ds-red); transform: rotate(-3deg); }
 .tr-box { width: 18px; height: 18px; flex: none; background: linear-gradient(45deg, transparent 43%, var(--ds-red) 43% 57%, transparent 57%), linear-gradient(-45deg, transparent 43%, var(--ds-red) 43% 57%, transparent 57%), var(--ds-card); border: var(--ds-line) solid var(--ds-ink); }
@@ -95,7 +98,7 @@
 .dk.is-bad { border-color: var(--ds-red); }
 /* rodapé destacável: dois botões da mesma altura e largura, lado a lado (âmbar e branco) */
 .dk-foot { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 6px calc(-1 * var(--ds-4)) calc(-1 * var(--ds-4) + 6px); padding: 16px var(--ds-4) 12px; border-top: 2px dashed rgba(27, 20, 13, 0.5); background: rgba(150, 118, 78, 0.14); }
-#lobby .dk-foot .ds-btn { height: 52px; padding: 0 16px; font-size: var(--t-lg); width: 100%; }
+#lobby .dk-foot .ds-btn { height: 44px; padding: 0 16px; font-size: var(--t-lg); width: 100%; }
 #lobby .dk-foot .ds-btn:not(.ds-btn--primary) { background: var(--ds-tex-lines), linear-gradient(to bottom, #fffdf6, #f3ecd8); }
 
 /* ───────── metas do dia: quadro de cortiça com memorandos presos por alfinete ───────── */
@@ -133,7 +136,7 @@
 .cp-ladder .is-cur { background: var(--ds-amber); margin: 0 calc(var(--ds-4) * -1); padding-left: var(--ds-4); padding-right: var(--ds-4); } .cp-ladder .is-gap { justify-content: center; color: var(--ds-ink-3); letter-spacing: 0.3em; border: none; padding: 2px 0; } .cp-ladder .is-boss span { color: var(--ds-red); }
 
 /* ══ lobby novo (docs/UI_LOBBY.md): piso de tamanho, carta reduzida, detalhe da carta, loja ══ */
-.lb-box--shop-packs, .lb-box--shop-cards, .lb-box--shop-decks, .lb-box--shop-look, .lb-box--achievements, .lb-pack > .pk, .lb-detail > .cd { zoom: var(--lb-fix, 1); }
+.lb-box--duel, .lb-box--training, .lb-box--missions, .lb-box--shop-packs, .lb-box--shop-cards, .lb-box--shop-decks, .lb-box--shop-look, .lb-box--achievements, .lb-pack > .pk, .lb-detail > .cd { zoom: var(--lb-fix, 1); }
 #lobby :is(.lb-box--shop-packs, .lb-box--shop-cards, .lb-box--shop-decks, .lb-box--shop-look, .lb-box--achievements) .lb-x { width: 46px; height: 46px; font-size: 16px; }
 /* carta reduzida (R4): a mesma face da mesa do duelo */
 .ds-mini { display: block; width: 100%; aspect-ratio: 1079 / 1257; border-radius: 4.1% / 3.5%; box-shadow: 0 0 0 1.5px var(--ds-ink), 3px 4px 0 rgba(0, 0, 0, 0.35); user-select: none; }
