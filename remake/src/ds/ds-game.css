@@ -7,14 +7,14 @@
    ════════════════════════════════════════════════════════════════════════ */
 
 /* ── lobby · janela "Iniciar duelo" (pasta com duas folhas) ── */
-:is(.lb-box--duel, .lb-box--training, .lb-box--missions, .lb-box--shop-packs) { width: min(1080px, 95%); height: auto; max-height: 91%; margin-top: 28px; padding: 0 var(--ds-5) var(--ds-5); position: relative; background: var(--ds-tex-kraft); color: var(--ds-ink); border: var(--ds-line) solid var(--ds-ink); border-radius: var(--ds-r); box-shadow: 0 6px 0 0 var(--ds-kraft-lo), 0 7px 0 1px var(--ds-ink), 10px 18px 0 0 rgba(0, 0, 0, 0.6); }
-:is(.lb-box--duel, .lb-box--training, .lb-box--missions, .lb-box--shop-packs) > header { border: none; padding: 20px 0 16px; align-items: flex-end; }
-:is(.lb-box--duel, .lb-box--training, .lb-box--missions, .lb-box--shop-packs) > header .memo { position: absolute; left: 22px; bottom: 100%; margin: 0 0 calc(-1 * var(--ds-line)); padding: 8px 16px 6px; background: var(--ds-tex-lines), #c2a26b; color: var(--ds-ink); border: var(--ds-line) solid var(--ds-ink); border-bottom: none; border-radius: 6px 10px 0 0; font-weight: 700; letter-spacing: 0.14em; }
-:is(.lb-box--duel, .lb-box--training, .lb-box--missions, .lb-box--shop-packs) h2 { font-size: 52px; color: var(--ds-ink); text-shadow: none; }
-:is(.lb-box--duel, .lb-box--training, .lb-box--missions, .lb-box--shop-packs) .lb-pat { padding: 7px 12px 6px 24px; background: var(--ds-tex-card); border: none; color: var(--ds-ink-2); clip-path: polygon(13px 0, 100% 0, 100% 100%, 13px 100%, 0 50%); filter: drop-shadow(0 0 0 var(--ds-ink)) drop-shadow(3px 3px 0 rgba(0, 0, 0, 0.4)); }
-:is(.lb-box--duel, .lb-box--training, .lb-box--missions, .lb-box--shop-packs) .lb-pat b { color: var(--ds-ink); font-size: 24px; }
-#lobby :is(.lb-box--duel, .lb-box--training, .lb-box--missions, .lb-box--shop-packs) .lb-x { width: 40px; height: 40px; background: var(--ds-tex-card); color: var(--ds-ink); border: var(--ds-line) solid var(--ds-ink); box-shadow: var(--ds-shadow-in); }
-#lobby :is(.lb-box--duel, .lb-box--training, .lb-box--missions, .lb-box--shop-packs) .lb-x:hover { background: var(--ds-ink); color: var(--ds-paper); }
+:is(.lb-box--duel, .lb-box--training, .lb-box--missions, .lb-box--shop-packs, .lb-box--shop-cards) { width: min(1080px, 95%); height: auto; max-height: 91%; margin-top: 28px; padding: 0 var(--ds-5) var(--ds-5); position: relative; background: var(--ds-tex-kraft); color: var(--ds-ink); border: var(--ds-line) solid var(--ds-ink); border-radius: var(--ds-r); box-shadow: 0 6px 0 0 var(--ds-kraft-lo), 0 7px 0 1px var(--ds-ink), 10px 18px 0 0 rgba(0, 0, 0, 0.6); }
+:is(.lb-box--duel, .lb-box--training, .lb-box--missions, .lb-box--shop-packs, .lb-box--shop-cards) > header { border: none; padding: 20px 0 16px; align-items: flex-end; }
+:is(.lb-box--duel, .lb-box--training, .lb-box--missions, .lb-box--shop-packs, .lb-box--shop-cards) > header .memo { position: absolute; left: 22px; bottom: 100%; margin: 0 0 calc(-1 * var(--ds-line)); padding: 8px 16px 6px; background: var(--ds-tex-lines), #c2a26b; color: var(--ds-ink); border: var(--ds-line) solid var(--ds-ink); border-bottom: none; border-radius: 6px 10px 0 0; font-weight: 700; letter-spacing: 0.14em; }
+:is(.lb-box--duel, .lb-box--training, .lb-box--missions, .lb-box--shop-packs, .lb-box--shop-cards) h2 { font-size: 52px; color: var(--ds-ink); text-shadow: none; }
+:is(.lb-box--duel, .lb-box--training, .lb-box--missions, .lb-box--shop-packs, .lb-box--shop-cards) .lb-pat { padding: 7px 12px 6px 24px; background: var(--ds-tex-card); border: none; color: var(--ds-ink-2); clip-path: polygon(13px 0, 100% 0, 100% 100%, 13px 100%, 0 50%); filter: drop-shadow(0 0 0 var(--ds-ink)) drop-shadow(3px 3px 0 rgba(0, 0, 0, 0.4)); }
+:is(.lb-box--duel, .lb-box--training, .lb-box--missions, .lb-box--shop-packs, .lb-box--shop-cards) .lb-pat b { color: var(--ds-ink); font-size: 24px; }
+#lobby :is(.lb-box--duel, .lb-box--training, .lb-box--missions, .lb-box--shop-packs, .lb-box--shop-cards) .lb-x { width: 40px; height: 40px; background: var(--ds-tex-card); color: var(--ds-ink); border: var(--ds-line) solid var(--ds-ink); box-shadow: var(--ds-shadow-in); }
+#lobby :is(.lb-box--duel, .lb-box--training, .lb-box--missions, .lb-box--shop-packs, .lb-box--shop-cards) .lb-x:hover { background: var(--ds-ink); color: var(--ds-paper); }
 .ds-duel { display: grid; grid-template-columns: 1.3fr 1fr; gap: var(--ds-4); align-items: stretch; }
 .ds-duel .ds-sheet { box-shadow: var(--ds-frame-in), 6px 11px 0 3px rgba(40, 24, 6, 0.3); }
 .ds-duel .ds-sheet:first-child { transform: rotate(0.4deg); } .ds-duel .ds-sheet:last-child { transform: rotate(-0.6deg) translateY(5px); }
@@ -88,8 +88,8 @@ body.theme-buckshot .h-folder__name { text-transform: uppercase; }
 .h-turn__who, .h-sheet__name, .h-banner__title, .lb-box h2, .modal-box h2, .over-box h2 { text-transform: uppercase; word-spacing: -0.28em; }
 /* escala geral: as peças do HUD e a janela ficam 12% menores */
 .h-hud :is(.h-slot--opp, .h-slot--me, .h-slot--turn, .h-slot--bar, .h-slot--sheet) { zoom: 0.88; }
-:is(.lb-box--duel, .lb-box--training, .lb-box--missions, .lb-box--shop-packs) { zoom: 0.92; }
-#lobby :is(.lb-box--duel, .lb-box--training, .lb-box--missions, .lb-box--shop-packs) .lb-x { border-width: 3px; }
+:is(.lb-box--duel, .lb-box--training, .lb-box--missions, .lb-box--shop-packs, .lb-box--shop-cards) { zoom: 0.92; }
+#lobby :is(.lb-box--duel, .lb-box--training, .lb-box--missions, .lb-box--shop-packs, .lb-box--shop-cards) .lb-x { border-width: 3px; }
 
 /* ════════════════════════════════════════════════════════════════════════
    6.2 · Partida: cada peça é um material de escritório
@@ -176,8 +176,8 @@ body.theme-buckshot .h-folder__name { text-transform: uppercase; }
 /* ── cabeçalho das janelas em pasta (revisão de 27/11) ──
    Aba: fica só a forma da pasta, com o nome do lugar numa fita de rotuladora colada nela (sem subtítulo).
    Patrimônio: número de livro-caixa, sem caixa nem etiqueta; rótulo pequeno em cima e sublinhado duplo de total. */
-:is(.lb-box--duel, .lb-box--training, .lb-box--missions, .lb-box--shop-packs) > header .memo { padding: 7px 14px 6px 12px; letter-spacing: 0; }
-:is(.lb-box--duel, .lb-box--training, .lb-box--missions, .lb-box--shop-packs) > header .memo span { display: block; padding: 4px 9px 2px; background: #23201c; color: #efe8d6; font: 400 17px/1 var(--f-title); letter-spacing: 0.14em; border-radius: 1px; transform: rotate(-1deg); }
-:is(.lb-box--duel, .lb-box--training, .lb-box--missions, .lb-box--shop-packs) .lb-pat { display: grid; justify-items: end; gap: 3px; padding: 0 2px 5px; background: none; clip-path: none; filter: none; border: none; border-bottom: 5px double var(--ds-ink); color: var(--ds-ink-2); font: 700 11px/1 var(--f-ui); letter-spacing: 0.16em; }
-:is(.lb-box--duel, .lb-box--training, .lb-box--missions, .lb-box--shop-packs) .lb-pat b { margin: 0; font: 400 34px/0.9 var(--f-title); color: var(--ds-ink); letter-spacing: 0; vertical-align: 0; }
-:is(.lb-box--duel, .lb-box--training, .lb-box--missions, .lb-box--shop-packs) > header { align-items: center; }
+:is(.lb-box--duel, .lb-box--training, .lb-box--missions, .lb-box--shop-packs, .lb-box--shop-cards) > header .memo { padding: 7px 14px 6px 12px; letter-spacing: 0; }
+:is(.lb-box--duel, .lb-box--training, .lb-box--missions, .lb-box--shop-packs, .lb-box--shop-cards) > header .memo span { display: block; padding: 4px 9px 2px; background: #23201c; color: #efe8d6; font: 400 17px/1 var(--f-title); letter-spacing: 0.14em; border-radius: 1px; transform: rotate(-1deg); }
+:is(.lb-box--duel, .lb-box--training, .lb-box--missions, .lb-box--shop-packs, .lb-box--shop-cards) .lb-pat { display: grid; justify-items: end; gap: 3px; padding: 0 2px 5px; background: none; clip-path: none; filter: none; border: none; border-bottom: 5px double var(--ds-ink); color: var(--ds-ink-2); font: 700 11px/1 var(--f-ui); letter-spacing: 0.16em; }
+:is(.lb-box--duel, .lb-box--training, .lb-box--missions, .lb-box--shop-packs, .lb-box--shop-cards) .lb-pat b { margin: 0; font: 400 34px/0.9 var(--f-title); color: var(--ds-ink); letter-spacing: 0; vertical-align: 0; }
+:is(.lb-box--duel, .lb-box--training, .lb-box--missions, .lb-box--shop-packs, .lb-box--shop-cards) > header { align-items: center; }
