@@ -221,12 +221,20 @@ export class LobbyUI {
     if (this._scrollTo != null) { $(`[data-deck="${this._scrollTo}"]`, this.win)?.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); this._scrollTo = null; }
   }
   /** sai do editor de volta para as pastas */
+  /** cédula do patrimônio (peça .ds-cash): nota na proporção de cédula, com o logo da empresa no medalhão, "Patrimônio"
+   *  impresso como o nome do banco e o valor no canto; duas notas atrás fazem o maço */
+  cash(s) {
+    const pat = money(s.patrimonio), face = logoUrl(s.cosmetics.logo, { ink: '#1f5632', accent: '#1f5632', bg: '#e3ecd8' });
+    return `<div class="ds-cash" role="img" aria-label="Patrimônio: ${pat}"><div class="ds-cash__note">
+      <span class="ds-cash__face"><img src="${face}" alt=""></span><span class="ds-cash__bank">Patrimônio</span>
+      <b class="ds-cash__value"><small>$</small>${esc(pat.replace(/^\$\s*/, ''))}</b></div></div>`;
+  }
   /** cabeçalho das janelas novas: topo de formulário com três casas (lugar e título | patrimônio em cédula | fechar) */
   head(title, memo, htabs, s) {
     const place = esc(memo.split(' · ')[0]), pat = money(s.patrimonio);
     return `<header class="lb-head">${htabs}<div class="ds-formhead">
       <div class="ds-formhead__cell"><span class="ds-formlabel">${place}</span><h2>${esc(title)}</h2></div>
-      <div class="ds-formhead__cell ds-formhead__cash"><span class="ds-formlabel">Patrimônio</span><div class="ds-cash" role="img" aria-label="Patrimônio: ${pat}"><div class="ds-cash__note"><i class="ds-cash__seal">$</i><b>${esc(pat.replace(/^\$\s*/, ''))}</b></div></div></div>
+      <div class="ds-formhead__cell ds-formhead__cash">${this.cash(s)}</div>
       <div class="ds-formhead__cell ds-formhead__x"><button class="lb-x" data-a="close" title="Fechar (Esc)" aria-label="Fechar">✕</button></div>
     </div></header>`;
   }
