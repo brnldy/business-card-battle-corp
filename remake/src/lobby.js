@@ -244,6 +244,7 @@ export function buildLobby() {
     hotspot('achievements', 'Troféus', 'Conquistas', g, { hit: [1.85, 0.75, 0.5, 0, 0.3, 0.05], anchor: [0, 0.72, 0.2], light: l, lit: 3.2 });
   }
   // 2) TRITURADORA — reciclar cartas repetidas
+  let shredRig = null;
   {
     const g = new THREE.Group(); at(g, -2.35, 0, -1.2); g.rotation.y = 0.35;
     const can = fit(model('metal_trash_can'), { h: 0.62 }); g.add(can);
@@ -254,6 +255,7 @@ export function buildLobby() {
     const half = at(box(0.26, 0.2, 0.01, M(0xd9d3b8, { map: paperTexture(true, 9) })), 0.02, 0.88, 0.05); half.rotation.x = -0.08; g.add(half);
     const l = new THREE.PointLight(0xff7a4a, 3.2, 3, 1.7); at(l, 0.2, 1.1, 0.7); g.add(l);
     flick.push({ set: (k) => { led.material.color.setRGB(0.93 * k, 0.23 * k, 0.19 * k); }, rate: 2.2, seed: 41, hard: true });
+    shredRig = { g, head, led, light: l, half };
     hotspot('recycle', 'Trituradora', 'Reciclar repetidas', g, { hit: [0.7, 1.1, 0.7, 0, 0.55, 0.05], anchor: [0, 1.16, 0.2], light: l, lit: 4 });
   }
   // relógio andando para trás, acima da trituradora
@@ -387,6 +389,10 @@ export function buildLobby() {
   const hits = hot.map((h) => h.hit), ndc = new THREE.Vector2(), tmp = V(0, 0, 0);
   const base = V(0, 2.45, 6.2), look = V(0, 1.15, BACK);
   let hoverId = null, enterK = 1, aspect = 16 / 9;
+  // foco da câmera (Reciclar, proposta "sala"): viaja até a trituradora e deixa a esquerda da tela para o painel 2D
+  let focusId = null, focusK = 0, shredBusy = 0, shredHot = 0;
+  const FOCUS = { recycle: { pos: V(-1.6, 0.95, 0.35), look: V(-3.3, 0.28, -1.5) } };
+  const curPos = V(0, 0, 0), curLook = V(0, 0, 0), falling = [], landed = [];
   const api = {
     scene, camera, dust, hot,
     resize(a) {
@@ -432,14 +438,80 @@ export function buildLobby() {
     anchors() {
       return hot.map((h) => { h.anchor.getWorldPosition(tmp); tmp.project(camera); return { id: h.id, label: h.label, sub: h.sub, x: tmp.x * 0.5 + 0.5, y: -tmp.y * 0.5 + 0.5, on: tmp.z < 1 }; });
     },
+    /** câmera viaja até uma área (null volta para a sala) */
+    focus(id) { focusId = FOCUS[id] ? id : null; },
+    focusSpots: FOCUS,
+    /** a trituradora acende quando uma carta arrastada passa por cima */
+    setShredHot(b) { shredHot = b ? 1 : 0; },
+    /** ponto da fenda da trituradora na tela (pixels do navegador) */
+    shredderScreen() {
+      if (!shredRig) return null;
+      const p = V(0, 0.79, 0.05); shredRig.g.localToWorld(p); p.project(camera);
+      return { x: (p.x * 0.5 + 0.5) * window.innerWidth, y: (-p.y * 0.5 + 0.5) * window.innerHeight };
+    },
+    /** a carta entra pela fenda da trituradora da sala e sai pela frente em tiras, que caem e ficam no chão */
+    async shredIn(url, { feed = 1100 } = {}) {
+      if (!shredRig) return;
+      const r = this.renderer; if (r) r.localClippingEnabled = true;
+      const img = await new Promise((ok) => { const i = new Image(); i.onload = () => ok(i); i.src = url; });
+      const tex = new THREE.Texture(img); tex.colorSpace = THREE.SRGBColorSpace; tex.needsUpdate = true;
+      const g = shredRig.g, Wc = 0.26, Hc = Wc * (1257 / 1079), N = 9, slotY = 0.79, outY = 0.62;
+      const wy = (y) => { const v = V(0, y, 0.05); g.localToWorld(v); return v.y; };
+      const above = new THREE.Plane(V(0, 1, 0), -wy(slotY)), below = new THREE.Plane(V(0, -1, 0), wy(outY));
+      const card = at(new THREE.Mesh(new THREE.PlaneGeometry(Wc, Hc), new THREE.MeshBasicMaterial({ map: tex, side: THREE.DoubleSide, clippingPlanes: [above] })), 0, slotY + Hc / 2 + 0.02, 0.05);
+      g.add(card);
+      const mat = new THREE.MeshLambertMaterial({ map: tex, side: THREE.DoubleSide, clippingPlanes: [below] });
+      const strips = [];
+      for (let i = 0; i < N; i++) {
+        const geo = new THREE.PlaneGeometry(Wc / N - 0.002, Hc, 1, 6), uv = geo.attributes.uv, pos = geo.attributes.position, curl = (Math.random() - 0.5) * 0.12;
+        for (let k = 0; k < uv.count; k++) { uv.setX(k, (i + uv.getX(k)) / N); const y = pos.getY(k) / Hc + 0.5; pos.setZ(k, curl * (1 - y) * (1 - y)); }
+        const m = at(new THREE.Mesh(geo, mat), -Wc / 2 + (i + 0.5) * (Wc / N), outY + Hc / 2, 0.215); g.add(m); strips.push(m);
+      }
+      shredBusy++; shredRig.half.visible = false; // a folha decorativa presa na fenda sai enquanto a carta entra
+      const t0 = performance.now(), top = card.position.y, dist = Hc + 0.04;
+      await new Promise((ok) => {
+        const go = () => {
+          const k = Math.min(1, (performance.now() - t0) / feed), e = k < 0.15 ? k * 0.4 : 0.06 + ((k - 0.15) / 0.85) * 0.94;
+          card.position.y = top - dist * e; strips.forEach((m, i) => { m.position.y = outY + Hc / 2 - dist * e - (i % 3) * 0.004; m.rotation.x = e * 0.25; });
+          if (k < 1) requestAnimationFrame(go); else ok();
+        };
+        requestAnimationFrame(go);
+      });
+      g.remove(card); card.geometry.dispose(); shredBusy--; if (!shredBusy) shredRig.half.visible = true;
+      for (const m of strips) {
+        scene.attach(m); // passa a cair no mundo, com a posição que tinha
+        const out = V(Math.sin(g.rotation.y), 0, Math.cos(g.rotation.y));
+        falling.push({ m, v: V(out.x * (0.25 + Math.random() * 0.35) + (Math.random() - 0.5) * 0.25, Math.random() * 0.4, out.z * (0.25 + Math.random() * 0.35) + (Math.random() - 0.5) * 0.25), w: V((Math.random() - 0.5) * 6, (Math.random() - 0.5) * 6, (Math.random() - 0.5) * 6) });
+      }
+    },
     /** entrada: a câmera vem da porta da rua */
     enter() { enterK = 0; },
     setCompany(info) { crt.userData.draw(info); },
     update(dt, t, mouse) {
       enterK = Math.min(1, enterK + dt * 0.7);
       const e = 1 - Math.pow(1 - enterK, 3), mx = (mouse?.x ?? 0.5) - 0.5, my = (mouse?.y ?? 0.5) - 0.5;
-      camera.position.set(base.x + mx * 0.5 + Math.sin(t * 0.4) * 0.02, base.y - my * 0.16 + Math.sin(t * 0.7) * 0.012 - (1 - e) * 0.15, base.z + (1 - e) * 3.2);
-      camera.lookAt(look.x + mx * 0.7, look.y - my * 0.35, look.z);
+      focusK += ((focusId ? 1 : 0) - focusK) * Math.min(1, dt * 2.6);
+      const f = focusK * focusK * (3 - 2 * focusK), par = 1 - f; // no foco, o mouse quase não mexe a câmera
+      curPos.set(base.x + mx * 0.5 * par + Math.sin(t * 0.4) * 0.02, base.y - my * 0.16 * par + Math.sin(t * 0.7) * 0.012 - (1 - e) * 0.15, base.z + (1 - e) * 3.2);
+      curLook.set(look.x + mx * 0.7 * par, look.y - my * 0.35 * par, look.z);
+      if (f > 0.0005) { const F = FOCUS[focusId ?? 'recycle']; curPos.lerp(F.pos, f); curLook.lerp(F.look, f); }
+      camera.position.copy(curPos); camera.lookAt(curLook);
+      if (shredRig) {
+        shredRig.head.position.x = shredBusy ? Math.sin(t * 90) * 0.004 : 0; shredRig.head.position.y = 0.7 + (shredBusy ? Math.sin(t * 130) * 0.003 : 0);
+        if (shredBusy) shredRig.led.material.color.setRGB(Math.sin(t * 30) > 0 ? 1 : 0.3, 0.12, 0.1);
+        else if (shredHot) shredRig.led.material.color.setRGB(0.95, 0.72, 0.3);
+        shredRig.light.intensity = (shredHot ? 9 : 3.2) * (shredBusy ? 1.3 : 1);
+      }
+      for (const s of falling) {
+        s.v.y -= 4.2 * dt; s.m.position.addScaledVector(s.v, dt); s.m.rotation.x += s.w.x * dt; s.m.rotation.y += s.w.y * dt; s.m.rotation.z += s.w.z * dt;
+        if (shredRig && s.m.position.y < 0.6) { // não atravessa a lixeira de metal
+          const c = shredRig.g.position, dx = s.m.position.x - c.x, dz = s.m.position.z - c.z, d = Math.hypot(dx, dz);
+          if (d < 0.25) { s.m.position.x = c.x + (dx / (d || 1)) * 0.25; s.m.position.z = c.z + (dz / (d || 1)) * 0.25; s.v.x *= -0.3; s.v.z *= -0.3; }
+        }
+        if (s.m.position.y < 0.012) { s.m.position.y = 0.004 + (landed.length % 40) * 0.0004; s.m.rotation.set(-Math.PI / 2, 0, Math.random() * Math.PI * 2); s.done = true; landed.push(s.m); }
+      }
+      for (let i = falling.length - 1; i >= 0; i--) if (falling[i].done) falling.splice(i, 1);
+      while (landed.length > 270) { const m = landed.shift(); scene.remove(m); m.geometry.dispose(); }
       for (const f of flick) {
         const s = Math.sin(t * f.rate + f.seed * 13.1) + Math.sin(t * f.rate * 2.7 + f.seed * 3.3);
         f.set(s > 1.5 ? (hash(Math.floor(t * 18), f.seed, 1) > 0.45 ? (f.hard ? 0.04 : 0.35) : 1) : 0.93 + 0.07 * Math.sin(t * 23 + f.seed));

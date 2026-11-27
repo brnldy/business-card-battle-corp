@@ -9,6 +9,7 @@ import { save } from './save.js';
 import { logoUrl, backUrl } from './cosmetics.js';
 import * as C from './hud/components.js';
 import { cardFaceCanvas } from './textures.js';
+import { createShredder } from './shredder.js';
 import { RULES_TEXT, DEPT } from './cardtext.js';
 import * as Meta from '../../src/meta/meta.ts';
 import { CAMPAIGN, tierOf } from '../../src/meta/campaign.ts';
@@ -62,6 +63,10 @@ const TITLES = {
   missions: ['Mural de avisos', 'Metas do dia'], shop: ['Máquina de benefícios', 'Loja'],
   achievements: ['Prateleira de troféus', 'Troféus'], profile: ['Recepção', 'Perfil'],
 };
+// trituradora do Reciclar: duas propostas em teste. A (padrão): a câmera vai até a trituradora 3D da sala e a interface
+// vira um painel à esquerda. B (?triturador=b): a máquina em 2D dentro da ficha, com física de papel.
+const SHRED_KIND = new URLSearchParams(location.search).get('triturador') === 'b' ? '2d' : 'sala';
+const ROOM = SHRED_KIND === 'sala';
 // janelas que já usam o cabeçalho novo (papel timbrado com o recibo do patrimônio)
 const NEW_HEAD = new Set(['duel', 'training', 'missions', 'achievements', 'shop', 'deck', 'profile', 'recycle']);
 const sortCards = (ids) => [...ids].sort((a, b) => a.localeCompare(b));
@@ -101,6 +106,7 @@ export class LobbyUI {
     });
     window.addEventListener('pointermove', (e) => this.rcDragMove(e));
     window.addEventListener('pointerup', (e) => this.rcDragEnd(e));
+    window.addEventListener('resize', () => { if (this.panel === 'recycle' && this.shredder) { this.shredder.resize(); this.shredder.draw(); } });
     root.addEventListener('pointerover', (e) => {
       const b = e.target.closest('[data-a="open"]'); if (b && !this.panel) lobby.setHover(b.dataset.id);
       if (this.panel) this.peek(e.target.closest('[data-card]'));
@@ -217,9 +223,10 @@ export class LobbyUI {
     if (!TITLES[id]) return;
     sfx('nav'); this.panel = id; this.lobby.setHover(id); this.canvas.style.cursor = '';
     if (opts.tab) this.tab[id] = opts.tab;
+    this.lobby.focus?.(ROOM && id === 'recycle' ? 'recycle' : null); this.root.classList.toggle('is-shredroom', ROOM && id === 'recycle');
     this.win.classList.remove('hidden'); this.render();
   }
-  close() { if (!this.panel) return; if (this.panel === 'deck') { this.forgetDecks(); this.resetFilters(); } this.peek(null); this.panel = null; this.win.classList.add('hidden'); this.lobby.setHover(null); sfx('navBack'); }
+  close() { if (!this.panel) return; this.lobby.focus?.(null); this.root.classList.remove('is-shredroom'); if (this.panel === 'deck') { this.forgetDecks(); this.resetFilters(); } this.peek(null); this.panel = null; this.win.classList.add('hidden'); this.lobby.setHover(null); sfx('navBack'); }
   render() {
     const id = this.panel, [memo, title] = TITLES[id], s = this.s;
     const body = { deck: () => this.vDeck(s), recycle: () => this.vRecycle(s), duel: () => this.vDuel(s), training: () => this.vTraining(s), missions: () => this.vMissions(s), shop: () => this.vShop(s), achievements: () => this.vAchievements(s), profile: () => this.vProfile(s) }[id]();
@@ -231,9 +238,10 @@ export class LobbyUI {
     const sig = !focus && act && this.win.contains(act) && act.dataset?.a ? { a: act.dataset.a, card: act.dataset.card, id: act.dataset.id, list: !!act.closest('.ed-list') } : null;
     const ht = HTABS[id], here = ht?.[0] === 'tab' ? this.tab[id] : id;
     const htabs = ht ? `<nav class="ds-tabs lb-htabs" role="tablist" aria-label="${esc(memo)}">${ht[1].map(([k, n]) => `<button class="ds-tab ${k === here ? 'is-on' : ''}" role="tab" aria-selected="${k === here}" data-a="${ht[0]}" data-id="${k}">${n}</button>`).join('')}</nav>` : '';
-    this.win.innerHTML = `<section class="lb-box lb-box--${id} ${id === 'shop' ? `lb-box--shop-${this.tab.shop}` : ''}">
+    this.win.innerHTML = `<section class="lb-box lb-box--${id} ${id === 'shop' ? `lb-box--shop-${this.tab.shop}` : ''} ${ROOM && id === 'recycle' ? 'is-room' : ''}">
       ${NEW_HEAD.has(id) ? this.head(title, memo, htabs, s) : `<header><div>${htabs || `<p class="memo"><span>${esc(memo)}</span></p>`}<h2>${esc(title)}</h2></div><div class="lb-pat"><span>Patrimônio</span><b>${money(s.patrimonio)}</b></div><button class="lb-x" data-a="close" title="Fechar (Esc)">✕</button></header>`}
       ${body}</section>`;
+    if (id === 'recycle' && !ROOM) this.mountShredder();
     const sc = $('.lb-scroll', this.win); if (sc) sc.scrollTop = scroll; const dl = $('.ed-list', this.win); if (dl) dl.scrollTop = scroll2;
     if (focus && ['lb-deck-name', 'lb-q', 'lb-sort'].includes(focus)) { const i = $(`#${focus}`, this.win); i?.focus(); if (sel) i?.setSelectionRange?.(...sel); }
     else if (sig) {
@@ -257,7 +265,7 @@ export class LobbyUI {
 
   onClick(e) {
     if (this._rcDragged) { this._rcDragged = false; return; } // o clique que encerra um arraste não seleciona nada
-    if (e.target === this.win) return this.close();
+    if (e.target === this.win) return this.root.classList.contains('is-shredroom') ? undefined : this.close(); // na sala, o vazio é a trituradora
     const b = e.target.closest('[data-a]'); if (!b || b.disabled) return;
     const a = b.dataset.a, id = b.dataset.id;
     // compras e "usar": o 2º clique de um clique duplo (ou um clique logo em seguida) não compra de novo
@@ -679,17 +687,27 @@ export class LobbyUI {
         <button class="rc-card" data-a="rc-pick" data-id="${c.id}" aria-pressed="${sel}" aria-label="${esc(c.name)}: ${k} sobrando, valem ${money(v)}" title="Arraste até a trituradora">${mini(c.id)}<b class="ds-qty rc-qty">+${k}</b></button>
         <p class="rc-val">+ ${money(v)}</p></article>`;
     };
+    if (ROOM) {
+      const val = list.reduce((a, c) => a + Meta.extrasOf(s, c.id) * Meta.recycleValue(c.id), 0), sel = this.rcSel, sk = sel ? Meta.extrasOf(s, sel) : 0, sv = sk * (sel ? Meta.recycleValue(sel) : 0);
+      const foot = !n ? '<button class="ds-btn ds-btn--primary" disabled>Nada para triturar</button>'
+        : sel ? `<button class="ds-btn ds-btn--primary" data-a="recycle" data-id="${sel}">Triturar ${esc(byId.get(sel).name)} (+ ${money(sv)})</button><button class="ds-btn ds-btn--link" data-a="rc-all">Triturar tudo</button>`
+          : `<button class="ds-btn ds-btn--primary" data-a="rc-all">Triturar tudo e receber ${money(val)}</button>`;
+      return `<section class="sc-shelf rc-room">
+        <div class="sc-tools"><b>${n} ${n === 1 ? 'cópia sobrando' : 'cópias sobrando'}</b><span class="fd-tip">${n ? 'Arraste até a trituradora' : ''}</span></div>
+        ${list.length ? `<div class="lb-scroll sc-grid rc-grid">${list.map(item).join('')}</div>` : `<div class="rc-empty"><b>Nada sobrando</b><p>Quando você tiver mais de ${DECK_RULES.maxCopies} cópias de uma carta, as extras aparecem aqui e viram dinheiro.</p></div>`}
+        <footer class="rc-room__foot">${n ? `<p class="rc-total"><span>${sel ? 'Esta carta rende' : 'Entra no patrimônio'}</span><b>+ ${money(sel ? sv : val)}</b></p>` : ''}<div class="rc-foot">${foot}</div></footer>
+      </section>`;
+    }
     return `<div class="sc rc">
       <section class="sc-shelf"><div class="sc-tools"><b>${n} ${n === 1 ? 'cópia sobrando' : 'cópias sobrando'}</b><span class="fd-tip">Acima de ${DECK_RULES.maxCopies} cópias, a carta sobra e vale ${Math.round(META.recycleRate * 100)}% do preço.</span></div>
         ${list.length ? `<div class="lb-scroll sc-grid rc-grid">${list.map(item).join('')}</div>` : `<div class="rc-empty"><b>Nada sobrando</b><p>Quando você tiver mais de ${DECK_RULES.maxCopies} cópias de uma carta, as extras aparecem aqui e viram dinheiro.</p></div>`}</section>
       <aside class="sc-view">${this.rcOrder()}</aside>
     </div>`;
   }
-  /** a trituradora (peça .ds-shredder) e a ordem: uma linha por carta como num recibo, o total e a ação */
+  /** a trituradora (peça .ds-shredder, desenhada por src/shredder.js), o total e a ação */
   rcOrder() {
     const s = this.s, list = CARDS.filter((c) => Meta.extrasOf(s, c.id) > 0), n = Meta.totalExtras(s), sel = this.rcSel;
     const val = list.reduce((a, c) => a + Meta.extrasOf(s, c.id) * Meta.recycleValue(c.id), 0);
-    const lines = list.map((c) => { const k = Meta.extrasOf(s, c.id); return `<button class="rc-line ${c.id === sel ? 'is-sel' : ''}" data-a="rc-pick" data-id="${c.id}" aria-pressed="${c.id === sel}"><span>${esc(c.name)} <i>×${k}</i></span><b>+ ${money(k * Meta.recycleValue(c.id))}</b></button>`; }).join('');
     const sk = sel ? Meta.extrasOf(s, sel) : 0, sv = sk * (sel ? Meta.recycleValue(sel) : 0);
     const foot = !n ? '<button class="ds-btn ds-btn--primary" disabled>Nada para triturar</button>'
       : sel ? `<button class="ds-btn ds-btn--primary" data-a="recycle" data-id="${sel}">Triturar ${esc(byId.get(sel).name)} (+ ${money(sv)})</button><button class="ds-btn ds-btn--link" data-a="rc-all">Triturar tudo</button>`
@@ -697,15 +715,16 @@ export class LobbyUI {
     return `<section class="ds-sheet ds-file rc-file">
       <div class="ds-bar"><span>Trituradora</span><b>${n} ${n === 1 ? 'cópia' : 'cópias'} na fila</b></div>
       <div class="ds-body">
-        <div class="ds-shredder ${n ? '' : 'is-idle'}">
-          <div class="ds-shredder__mouth"><span class="ds-shredder__hint">${n ? 'Arraste uma carta até aqui' : 'Sem nada para triturar'}</span></div>
-          <div class="ds-shredder__body"><i class="ds-shredder__slot"></i><b>BCBC</b><i class="ds-shredder__vents"></i><i class="ds-shredder__led"></i></div>
-          <div class="ds-shredder__bin"><div class="ds-shredder__pile"></div><i class="ds-shredder__mesh"></i></div>
-        </div>
-        <div class="rc-lines">${lines || '<p class="rc-none">Nenhuma cópia na fila.</p>'}</div>
+        <div class="ds-shredder ${n ? '' : 'is-idle'}"><span class="ds-shredder__hint">${n ? 'Arraste uma carta até aqui' : 'Sem nada para triturar'}</span></div>
         ${n ? `<p class="rc-total"><span>${sel ? 'Esta carta rende' : 'Entra no patrimônio'}</span><b>+ ${money(sel ? sv : val)}</b></p>` : '<span></span>'}
         <footer class="ds-file__foot rc-foot">${foot}</footer>
       </div></section>`;
+  }
+  /** a máquina é uma só (a pilha de tiras fica enquanto o jogo está aberto); a cada redesenho o canvas volta para o lugar */
+  mountShredder() {
+    const box = $('.ds-shredder', this.win); if (!box) return;
+    this.shredder ??= createShredder();
+    this.shredder.mount(box); this.shredder.setIdle(box.classList.contains('is-idle'));
   }
   rcDragMove(e) {
     const d = this.rcDrag; if (!d) return;
@@ -716,69 +735,57 @@ export class LobbyUI {
       document.body.appendChild(g); d.on = true; d.g = g; d.r = r; d.el.classList.add('is-lifted'); document.body.classList.add('rc-dragging'); sfx('card');
     }
     d.g.style.transform = `translate(${e.clientX - d.x}px, ${e.clientY - d.y}px) rotate(${Math.max(-8, Math.min(8, (e.clientX - d.x) / 40))}deg)`;
-    const sh = $('.ds-shredder', this.win), q = sh?.getBoundingClientRect();
-    const hot = !!q && e.clientX > q.left - 20 && e.clientX < q.right + 20 && e.clientY > q.top - 30 && e.clientY < q.bottom;
-    if (hot !== d.hot) { d.hot = hot; sh?.classList.toggle('is-hot', hot); if (hot) sfx('hover'); }
+    let hot;
+    if (ROOM) {
+      const q = this.lobby.shredderScreen(), aim = (this.rcAim ??= Object.assign(document.createElement('div'), { className: 'rc-aim', innerHTML: '<i></i><span>Solte para triturar</span>' }));
+      if (!aim.isConnected) document.body.appendChild(aim);
+      aim.style.left = `${q.x}px`; aim.style.top = `${q.y}px`; aim.classList.add('is-on');
+      hot = Math.hypot(e.clientX - q.x, e.clientY - q.y) < 130;
+      if (hot !== d.hot) { aim.classList.toggle('is-hot', hot); this.lobby.setShredHot(hot); }
+    } else {
+      const sh = $('.ds-shredder', this.win), q = sh?.getBoundingClientRect();
+      hot = !!q && e.clientX > q.left - 20 && e.clientX < q.right + 20 && e.clientY > q.top - 30 && e.clientY < q.bottom;
+      if (hot !== d.hot) { sh?.classList.toggle('is-hot', hot); this.shredder?.setHot(hot); }
+    }
+    if (hot !== d.hot) { d.hot = hot; if (hot) sfx('hover'); }
   }
   rcDragEnd() {
     const d = this.rcDrag; this.rcDrag = null; if (!d || !d.on) return;
     this._rcDragged = true; setTimeout(() => { this._rcDragged = false; }, 0);
-    document.body.classList.remove('rc-dragging'); $('.ds-shredder', this.win)?.classList.remove('is-hot');
+    document.body.classList.remove('rc-dragging'); $('.ds-shredder', this.win)?.classList.remove('is-hot'); this.shredder?.setHot(false);
+    this.rcAim?.classList.remove('is-on', 'is-hot'); this.lobby.setShredHot?.(false);
     const g = d.g;
     if (d.hot) {
-      // a carta voa até a boca da máquina e a trituração começa
-      const m = $('.ds-shredder__mouth', this.win).getBoundingClientRect(), gr = g.getBoundingClientRect(), w = Math.min(gr.width, m.width * 0.42), k = w / gr.width;
-      g.animate([{ transform: g.style.transform, opacity: 1 }, { transform: `translate(${m.left + m.width / 2 - w / 2 - d.r.left}px, ${m.bottom - w * 1.165 - d.r.top}px) scale(${k})`, opacity: 1 }], { duration: 180, easing: 'ease-in', fill: 'forwards' }).onfinish = () => g.remove();
-      setTimeout(() => this.shred([d.id], { fromDrag: true }), 150);
+      // a carta voa até onde a máquina a recebe e a trituração começa
+      const q = ROOM && this.lobby.shredderScreen(), gr = g.getBoundingClientRect();
+      const m = ROOM ? { left: q.x - gr.width * 0.13, top: q.y - gr.height * 0.3, width: gr.width * 0.26 } : this.shredder?.cardStart();
+      if (m) g.animate([{ transform: g.style.transform }, { transform: `translate(${m.left - d.r.left}px, ${m.top - d.r.top}px) scale(${m.width / gr.width})` }], { duration: 170, easing: 'ease-in', fill: 'forwards' }).onfinish = () => g.remove();
+      else g.remove();
+      setTimeout(() => this.shred([d.id]), 150);
     } else {
       g.animate([{ transform: g.style.transform }, { transform: 'translate(0, 0) rotate(0)' }], { duration: 220, easing: 'ease-out', fill: 'forwards' }).onfinish = () => { g.remove(); d.el.classList.remove('is-lifted'); };
       sfx('cancel');
     }
   }
-  /** a máquina tritura as cartas uma a uma (a carta desce pela boca e sai em tiras no cesto); no fim, grava e avisa */
-  shred(ids, { fromDrag = false } = {}) {
+  /** a máquina tritura as cartas uma a uma (src/shredder.js); no fim, grava e imprime o aviso */
+  async shred(ids) {
     if (this.rcBusy || !ids.length) return;
-    const box = $('.ds-shredder', this.win), reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const eng = ROOM ? { shred: (u, o) => this.lobby.shredIn(u, o) } : this.shredder, reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
     const finish = () => {
-      const s = this.s, one = ids.length === 1 ? ids[0] : null, r = Meta.recycle(s, one, Date.now());
+      const one = ids.length === 1 ? ids[0] : null, r = Meta.recycle(this.s, one, Date.now());
       this.rcBusy = false; this.rcSel = null;
       if (this.commit(r)) this.toast(`<b>${r.count} ${r.count === 1 ? 'carta triturada' : 'cartas trituradas'}</b>${one ? `<span>${esc(byId.get(one).name)}</span>` : ''}`, 'gold', { amount: r.gained });
     };
-    if (!box || reduce) { finish(); return; }
+    if (!eng || reduce) { finish(); return; }
     this.rcBusy = true; this.win.querySelectorAll('.rc-file button, .rc-card').forEach((b) => { b.disabled = true; });
-    const mouth = $('.ds-shredder__mouth', box), pile = $('.ds-shredder__pile', box), z = box.currentCSSZoom || 1;
-    const W = Math.round(mouth.clientWidth * 0.42), H = Math.round(W * 1.165), STRIPS = 9, sw = W / STRIPS;
-    const left = (mouth.clientWidth - W) / 2, step = Math.max(520, Math.min(1100, 2600 / ids.length));
-    box.classList.add('is-busy');
-    ids.forEach((id, n) => {
-      const t0 = n * step, url = miniUrl(id);
-      setTimeout(() => {
-        sfx('sacrifice');
-        // a carta: entra pela boca (de cima, ou de onde o arraste a deixou) e desce até sumir na fenda
-        const card = document.createElement('img'); card.className = 'ds-shredder__card'; card.src = url; card.alt = '';
-        Object.assign(card.style, { width: `${W}px`, left: `${left}px`, top: `${mouth.clientHeight - H}px` });
-        mouth.appendChild(card);
-        const enter = n === 0 && fromDrag ? [] : [{ transform: `translateY(${-mouth.clientHeight}px)`, offset: 0 }];
-        card.animate([...enter, { transform: 'translateY(0)', offset: enter.length ? 0.25 : 0 }, { transform: `translateY(${H}px)`, offset: 1 }], { duration: step * 1.05, easing: 'cubic-bezier(.4,.1,.6,1)', fill: 'forwards' }).onfinish = () => card.remove();
-        // as tiras: a mesma carta fatiada, saindo por baixo enquanto ela entra, e caindo no cesto
-        for (let i = 0; i < STRIPS; i++) {
-          const st = document.createElement('i'); st.className = 'ds-shredder__strip';
-          Object.assign(st.style, { width: `${sw - 1}px`, height: `${H}px`, left: `${left + i * sw}px`, backgroundImage: `url(${url})`, backgroundSize: `${W}px ${H}px`, backgroundPosition: `${-i * sw}px 0` });
-          pile.appendChild(st);
-          const drop = 18 + Math.random() * 14, rot = (Math.random() - 0.5) * 34, dx = (Math.random() - 0.5) * 26, delay = step * 0.28 + i * 8;
-          st.animate([
-            { transform: `translateY(${-H}px)` },
-            { transform: `translateY(${-H * 0.15}px) rotate(${rot * 0.15}deg)`, offset: 0.62 },
-            { transform: `translate(${dx}px, ${drop}px) rotate(${rot}deg)` },
-          ], { duration: step * 1.25, delay, easing: 'ease-in', fill: 'forwards' });
-        }
-      }, t0);
-    });
-    const total = (ids.length - 1) * step + step * 1.25 + step * 0.28 + 120;
-    setTimeout(() => { pile.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 380, fill: 'forwards' }); }, total);
-    setTimeout(() => { box.classList.remove('is-busy'); finish(); }, total + 400);
-    void z;
+    $('.ds-shredder', this.win)?.classList.add('is-busy');
+    const feed = ids.length > 6 ? 520 : ids.length > 2 ? 750 : 1100;
+    for (const id of ids) { sfx('sacrifice'); await eng.shred(miniUrl(id), { feed }); }
+    await new Promise((ok) => setTimeout(ok, 700));
+    $('.ds-shredder', this.win)?.classList.remove('is-busy');
+    finish();
   }
+
 
 
 

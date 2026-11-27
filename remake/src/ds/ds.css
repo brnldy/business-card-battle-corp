@@ -548,32 +548,11 @@ button.ds-pencil:focus-visible { outline: 3px solid var(--ds-amber); outline-off
 button.ds-pencil.ds-charter__pen { display: inline-grid; margin-left: 14px; vertical-align: 6px; }
 .ds-seal__edit { position: absolute !important; right: -8px; top: -8px; z-index: 2; }
 
-/* ── trituradora (Reciclar), 27/11 ──
-   Boca (onde a carta entra, cortada na linha da fenda), corpo de metal escuro com fenda, ventilação e luz, e um cesto de
-   arame onde as tiras caem. Arrastando uma carta por cima: luz âmbar e a dica muda. Triturando: a máquina treme e a luz
-   pisca vermelha. As tiras são a própria carta fatiada (o JS cria uma por fatia). */
-.ds-shredder { position: relative; display: grid; grid-template-rows: 72px 44px 60px; justify-items: center; user-select: none; }
-.ds-shredder__mouth { position: relative; width: 100%; overflow: hidden; display: grid; place-items: center; border-radius: 6px 6px 0 0; transition: background 0.15s; }
-.ds-shredder__hint { padding: 6px 10px 5px; border: 1.5px dashed var(--ds-ink-3); border-radius: 3px; font: 600 13px/1 var(--f-ui); color: var(--ds-ink-2); transition: opacity 0.15s; }
+/* ── trituradora (Reciclar), 27/11: palco do canvas desenhado por src/shredder.js (A 3D ou B 2D) e a dica por cima ── */
+.ds-shredder { position: relative; min-height: 0; user-select: none; }
+.ds-shredder__canvas { position: absolute; inset: 0; display: block; width: 100%; height: 100%; }
+.ds-shredder__hint { position: absolute; z-index: 1; left: 50%; top: 10px; transform: translateX(-50%); padding: 6px 10px 5px; background: rgba(246, 239, 220, 0.85); border: 1.5px dashed var(--ds-ink-3); border-radius: 3px; font: 600 13px/1 var(--f-ui); color: var(--ds-ink-2); white-space: nowrap; pointer-events: none; transition: opacity 0.15s; }
 .ds-shredder.is-busy .ds-shredder__hint { opacity: 0; }
-.ds-shredder.is-hot .ds-shredder__mouth { background: repeating-linear-gradient(-45deg, rgba(242, 185, 76, 0.32) 0 8px, rgba(242, 185, 76, 0.14) 8px 16px); }
+.ds-shredder.is-hot { background: repeating-linear-gradient(-45deg, rgba(242, 185, 76, 0.22) 0 10px, rgba(242, 185, 76, 0.08) 10px 20px); border-radius: 6px; }
 .ds-shredder.is-hot .ds-shredder__hint { font-size: 0; border-style: solid; border-color: var(--ds-ink); background: var(--ds-amber); }
 .ds-shredder.is-hot .ds-shredder__hint::after { content: "Solte para triturar"; font: 700 13px/1 var(--f-ui); color: var(--ds-ink); }
-.ds-shredder__card { position: absolute; display: block; border-radius: 4.1% / 3.5%; box-shadow: 0 0 0 1.5px var(--ds-ink); }
-.ds-shredder__body { position: relative; z-index: 2; width: 92%; box-sizing: border-box; display: flex; align-items: center; gap: 12px; padding: 10px 16px 0; background: linear-gradient(to bottom, #565048 0 14px, #3a342d 14px); border: 2.5px solid var(--ds-ink); border-radius: 7px; box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.15), 0 4px 0 #1b140d; }
-.ds-shredder__slot { position: absolute; left: 10%; right: 10%; top: -2px; height: 7px; background: #0d0b09; border-radius: 3px; box-shadow: 0 1px 0 rgba(255, 255, 255, 0.2); }
-.ds-shredder__body b { margin-top: 6px; font: 400 15px/1 var(--f-title); letter-spacing: 0.2em; color: #cfc4ab; }
-.ds-shredder__vents { flex: 1; height: 14px; margin-top: 6px; background: repeating-linear-gradient(to right, #1f1b17 0 3px, transparent 3px 7px); opacity: 0.8; }
-.ds-shredder__led { width: 10px; height: 10px; margin-top: 6px; border-radius: 50%; background: #86d98f; box-shadow: 0 0 0 1.5px var(--ds-ink), 0 0 8px rgba(134, 217, 143, 0.7); }
-.ds-shredder.is-idle .ds-shredder__led { background: #5d5751; box-shadow: 0 0 0 1.5px var(--ds-ink); }
-.ds-shredder.is-hot .ds-shredder__led { background: var(--ds-amber); box-shadow: 0 0 0 1.5px var(--ds-ink), 0 0 10px rgba(242, 185, 76, 0.9); }
-.ds-shredder.is-busy .ds-shredder__led { background: #ee3a30; animation: ds-shred-led 0.18s steps(2) infinite; }
-.ds-shredder.is-busy .ds-shredder__body { animation: ds-shred-shake 0.07s linear infinite; }
-@keyframes ds-shred-led { 50% { background: #6b1a14; box-shadow: 0 0 0 1.5px var(--ds-ink); } }
-@keyframes ds-shred-shake { 0% { transform: translate(0, 0); } 25% { transform: translate(-1px, 1px); } 50% { transform: translate(1px, 0); } 75% { transform: translate(0, -1px); } }
-/* cesto de arame: as tiras caem dentro dele, por trás da tela da frente */
-.ds-shredder__bin { position: relative; width: 78%; overflow: hidden; border: 2.5px solid var(--ds-ink); border-top: none; border-radius: 0 0 10px 10px; background: rgba(27, 20, 13, 0.06); }
-.ds-shredder__pile { position: absolute; inset: 0; }
-.ds-shredder__mesh { position: absolute; inset: 0; z-index: 2; pointer-events: none; background: repeating-linear-gradient(45deg, rgba(27, 20, 13, 0.4) 0 1.2px, transparent 1.2px 9px), repeating-linear-gradient(-45deg, rgba(27, 20, 13, 0.4) 0 1.2px, transparent 1.2px 9px); }
-.ds-shredder__strip { position: absolute; top: 0; display: block; background-repeat: no-repeat; border-left: 1px solid rgba(27, 20, 13, 0.55); border-right: 1px solid rgba(27, 20, 13, 0.55); clip-path: polygon(0 0, 100% 0, 100% 96%, 70% 100%, 35% 95%, 0 99%); }
-@media (prefers-reduced-motion: reduce) { .ds-shredder.is-busy .ds-shredder__body, .ds-shredder.is-busy .ds-shredder__led { animation: none; } }
