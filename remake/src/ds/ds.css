@@ -299,19 +299,22 @@ button.ds-boxfile.is-on { transform: translateY(-5px); box-shadow: 0 4px 0 var(-
 button.ds-plaque { transition: transform 0.1s; } button.ds-plaque:hover, button.ds-plaque:focus-visible { transform: translateY(-3px); }
 .ds-plaque--lg { width: 240px; min-height: 120px; cursor: default; } .ds-plaque--lg > span { min-height: 86px; font-size: 24px; }
 
-/* ── cabeçalho das janelas (27/11, duas propostas) ── */
-.ds-sr { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+/* ── cabeçalho das janelas (27/11): topo de formulário ── */
 /* rótulo de formulário: o mesmo do Formulário 01-A */
 .ds-formlabel { font: 700 11px/1 var(--f-ui); letter-spacing: 0.16em; text-transform: uppercase; color: var(--ds-ink-2); }
-/* A · topo de formulário: uma faixa de papel com casas separadas por fio */
+/* topo de formulário: uma faixa de papel com casas separadas por fio */
 .ds-formhead { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; background: var(--ds-tex-lines), var(--ds-card); border: var(--ds-line) solid var(--ds-ink); box-shadow: 3px 4px 0 rgba(27, 20, 13, 0.3); }
 .ds-formhead__cell { display: grid; align-content: center; gap: 9px; padding: 12px 20px 10px; min-width: 0; } .ds-formhead__cell + .ds-formhead__cell { border-left: var(--ds-line) solid var(--ds-ink); }
 .ds-formhead h2 { margin: 0; font: 400 38px/1 var(--f-title); letter-spacing: 0.02em; text-transform: uppercase; color: var(--ds-ink); text-shadow: none; }
-.ds-formhead__x { padding: 0 16px; place-items: center; background: rgba(27, 20, 13, 0.06); }
-/* patrimônio como campo preenchido à máquina, em tinta azul, sobre a linha de assinatura */
-.ds-balance { min-width: 200px; } .ds-balance b { font: 400 34px/0.9 var(--f-title); letter-spacing: 0.02em; color: #1f3fa8; padding-bottom: 4px; border-bottom: 1.5px dotted var(--ds-ink-3); white-space: nowrap; }
-/* B · visor de máquina de somar: carcaça de plástico creme, janela escura com dígitos âmbar e a tecla Esc */
-.ds-register { display: flex; align-items: center; gap: 12px; padding: 8px 10px 8px 14px; background: linear-gradient(to bottom, #f1e9d6, #d6cbb0); border: var(--ds-line) solid var(--ds-ink); border-bottom: none; border-radius: 10px 10px 0 0; box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.7), inset 0 -3px 0 rgba(27, 20, 13, 0.12); }
-.ds-register__label { font: 700 11px/1 var(--f-ui); letter-spacing: 0.14em; text-transform: uppercase; color: var(--ds-ink-2); white-space: nowrap; }
-.ds-register__win { min-width: 150px; padding: 6px 12px 3px; background: linear-gradient(to bottom, #12140f, #22251b); border: var(--ds-line) solid var(--ds-ink); border-radius: 4px; box-shadow: inset 0 3px 6px rgba(0, 0, 0, 0.8), 0 1px 0 rgba(255, 255, 255, 0.6); font: 400 32px/1 var(--f-title); letter-spacing: 0.04em; color: var(--ds-amber); text-align: right; text-shadow: 0 0 8px rgba(242, 185, 76, 0.55); white-space: nowrap; }
-.ds-register .ds-btn--key { height: 40px; min-width: 52px; font-size: 15px; }
+.ds-formhead__cash { gap: 18px; padding-right: 30px; }
+.ds-formhead__x { padding: 0 18px; place-items: center; }
+/* cédula: o dinheiro do jogador. Nota verde com padrão de segurança (guilhoché), fio interno, selo com "$" e o valor;
+   duas notas atrás, deslocadas, fazem o maço. A nota da frente é a __note; as de trás são os pseudo-elementos. */
+.ds-cash { --cash: #dbe6cf; --cash-2: #cbdbbb; --cash-3: #bccfa9; --cash-ink: #23603a; position: relative; isolation: isolate; min-width: 200px; }
+.ds-cash::before, .ds-cash::after { content: ""; position: absolute; inset: 0; z-index: -1; background: var(--cash-2); border: var(--ds-line) solid var(--ds-ink); border-radius: 3px; }
+.ds-cash::before { transform: translate(5px, -4px) rotate(2deg); } .ds-cash::after { background: var(--cash-3); transform: translate(10px, -7px) rotate(4deg); }
+.ds-cash__note { position: relative; display: flex; align-items: center; gap: 14px; height: 48px; padding: 0 16px 0 9px;
+  background: repeating-radial-gradient(circle at 0 50%, transparent 0 6px, rgba(35, 96, 58, 0.15) 6px 7px), repeating-radial-gradient(circle at 100% 50%, transparent 0 6px, rgba(35, 96, 58, 0.11) 6px 7px), var(--cash);
+  border: var(--ds-line) solid var(--ds-ink); border-radius: 3px; box-shadow: inset 0 0 0 3px var(--cash), inset 0 0 0 4.5px rgba(35, 96, 58, 0.6), 2px 3px 0 rgba(27, 20, 13, 0.3); }
+.ds-cash__seal { flex: none; display: grid; place-items: center; width: 30px; height: 30px; padding-top: 2px; border-radius: 50%; background: var(--cash-ink); color: #eef3e6; font: 400 24px/1 var(--f-title); font-style: normal; box-shadow: 0 0 0 2px var(--cash), 0 0 0 3.5px var(--cash-ink); }
+.ds-cash__note b { margin-left: auto; padding-top: 3px; font: 400 34px/1 var(--f-title); letter-spacing: 0.03em; color: #16301f; white-space: nowrap; }

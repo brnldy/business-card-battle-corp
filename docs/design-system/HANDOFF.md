@@ -46,7 +46,7 @@ O autor achou o resultado das regras antigas grande demais e sem respiro. Acessi
 | Lobby 3D (etiquetas discretas, sem barra embaixo) | Feito depois da recusa da primeira versão; sem resposta do autor. |
 | Treino (termo de estágio, foto do modelo real) | Aceito depois dos ajustes ("continua com outras telas"). |
 | Metas do dia (quadro de cortiça) | Aprovado. |
-| Cabeçalho das janelas (abas de pasta + patrimônio em livro-caixa) | Abas feitas em 27/11; o autor ainda não viu. |
+| Cabeçalho das janelas (abas + topo de formulário com a cédula) | Refeito em 27/11 depois da escolha do autor; ele ainda não viu a cédula. |
 | Sala de reunião | Refeita sobre a campanha de 30 batalhas; o autor ainda não comentou. |
 | Loja → entrada com envelope e abertura do pacote | Entregue; envelope ajustado em 27/11 (só a aba). |
 | Loja → Cartas avulsas (grade + ficha sempre à direita) | Refeita em 27/11 a pedido do autor; ele ainda não viu. |
@@ -62,6 +62,7 @@ Decisões do autor nesta rodada: o custo de sacrifício **fica** na carta reduzi
 
 Feito e conferido em captura (1280×720, 1440×900, 1920×1080):
 
+0. **Cabeçalho das janelas** (decisão do autor: fica dentro da pasta, nada sai para fora; o patrimônio tem de lembrar dinheiro; fechar é ✕). Topo de formulário (`.ds-formhead`, `.ds-formlabel`) com três casas: lugar pequeno + título, patrimônio na cédula (`.ds-cash`: maço de notas verdes com guilhoché e selo "$") e o ✕. Recusada: o título na aba e o patrimônio num visor preso na borda de cima da pasta. Feito em `head()` do `lobbyui.js`, só nas janelas de `NEW_HEAD`.
 1. **Abas no topo da janela** (`.ds-tabs` + `.lb-htabs`, lista em `HTABS` no `lobbyui.js`): Loja (Pacotes, Cartas, Decks, Visual), Campanha e Treino, Metas do dia e Troféus.
 2. **Padrão "vitrine com ficha"**, usado em Cartas, Decks, Visual e Troféus: grade à esquerda e uma ficha sempre à direita. Mouse ou foco troca a ficha (`showFile`); clique fixa o item. Cada vista diz o que fica na ficha em `viewer()`.
 3. **Cartas avulsas**: cópias na vitrine (`.ds-copies`) e etiqueta de preço que compra (`.ds-price`).
@@ -77,7 +78,6 @@ Armadilhas desta rodada (não repetir):
 
 Ficou por fazer ou em aberto:
 
-- **Cabeçalho das janelas em escolha.** Duas propostas no código, alternadas pelo endereço: `?lobby&head=a` (topo de formulário: `.ds-formhead` + `.ds-balance`) e `?lobby&head=b` (aba ativa como título + visor `.ds-register` na borda). Sem parâmetro vale a A. Quando o autor escolher, apagar a outra (`HEAD` e `head()` no `lobbyui.js`, regras `.lb-head--a/--b`) e levar a escolhida para as telas antigas.
 - **Metas, Campanha e Treino não têm o zoom das telas novas.** Em 1280×720 e 1440×900, trocar de Metas para Troféus muda o tamanho da janela. É o passo 6 do plano.
 - Em 1280×720 as grades rolam (uma fileira e meia de cartas visível).
 - A confirmação de compra do deck ainda usa o diálogo antigo (`ui.confirm`).

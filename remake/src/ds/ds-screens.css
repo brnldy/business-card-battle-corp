@@ -256,13 +256,7 @@ button.ds-check { background: none; border: none; padding: 6px 0; pointer-events
 .ds-trfile > .ds-body { grid-template-rows: auto auto auto minmax(0, 1fr); } .ds-trfile .ds-file__foot { align-self: end; }
 .ds-trfile__plaque { display: grid; place-items: center; padding: 8px 0 4px; }
 
-/* ── cabeçalho das janelas: aplicação das duas propostas ── */
-#lobby .lb-box > header.lb-head { display: block; padding: 0; border: none; }
-#lobby .lb-box > header.lb-head--a { padding: 22px 0 var(--ds-5); }
-/* B: dentro da pasta só sobra o respiro; título e visor ficam na borda de cima */
-#lobby .lb-box > header.lb-head--b { height: var(--ds-5); }
-.lb-head--b .ds-register { position: absolute; right: 22px; bottom: 100%; margin-bottom: calc(-1 * var(--ds-line)); }
-#lobby .lb-head--b .lb-htabs .ds-tab { height: 38px; } #lobby .lb-head--b .lb-htabs .ds-tab.is-on { height: 54px; padding: 4px 22px 0; font: 400 30px/1 var(--f-title); letter-spacing: 0.06em; }
-#lobby .lb-head--b .lb-htabs { align-items: flex-end; }
-:is(.lb-box--duel, .lb-box--training, .lb-box--missions, .lb-box--shop-packs, .lb-box--shop-cards, .lb-box--shop-decks, .lb-box--shop-look, .lb-box--achievements):has(> .lb-head--b) { margin-top: 64px; max-height: calc(100% - 84px); }
-:is(.lb-box--shop-cards, .lb-box--shop-decks, .lb-box--shop-look, .lb-box--achievements):has(> .lb-head--b) { height: min(770px, calc(90% - 40px)); }
+/* ── cabeçalho das janelas: topo de formulário dentro da pasta ── */
+#lobby .lb-box > header.lb-head { display: block; padding: 22px 0 var(--ds-5); border: none; }
+/* o ✕ do cabeçalho: a regra genérica de botão do lobby.css (mais forte) apagava a borda no hover */
+#lobby .ds-formhead__x button.lb-x:hover:not(:disabled), #lobby .ds-formhead__x button.lb-x:focus-visible { background: var(--ds-ink); color: var(--ds-paper); border-color: var(--ds-ink); }
