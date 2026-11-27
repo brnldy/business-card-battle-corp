@@ -40,8 +40,12 @@ const copies = (own, max = DECK_RULES.maxCopies) => `<span class="ds-copies" rol
 const HTABS = {
   shop: ['tab', [['packs', 'Pacotes'], ['cards', 'Cartas'], ['decks', 'Decks'], ['look', 'Visual']]],
   duel: ['open', [['duel', 'Campanha'], ['training', 'Treino']]], training: ['open', [['duel', 'Campanha'], ['training', 'Treino']]],
-  missions: ['open', [['missions', 'Metas do dia']]],
+  missions: ['open', [['missions', 'Metas do dia'], ['achievements', 'Troféus']]], achievements: ['open', [['missions', 'Metas do dia'], ['achievements', 'Troféus']]],
 };
+const inkLogo = (id) => logoUrl(id, { ink: '#1b140d', accent: '#c98a16', bg: '#f6efdc' });
+const KINDS = [['Criaturas', (c) => !isFxKind(c.kind)], ['Efeitos', (c) => c.kind === 'effect_instant'], ['Armadilhas', (c) => c.kind === 'effect_trap']];
+function isFxKind(k) { return k === 'effect_instant' || k === 'effect_trap'; }
+const RANK_DESC = { legendary: 0, rare: 1, common: 2 };
 const isFx = (c) => c.kind === 'effect_instant' || c.kind === 'effect_trap';
 const KIND = { creature: 'Criatura', entity: 'Entidade', effect_instant: 'Efeito', effect_trap: 'Armadilha' };
 const AREAS = [
@@ -52,7 +56,7 @@ const TITLES = {
   deck: ['Arquivo morto · gaveta 3', 'Decks e coleção'], recycle: ['Trituradora · uso por conta e risco', 'Reciclar repetidas'],
   duel: ['Sala de reunião · porta entreaberta', 'Campanha'], training: ['Mesa do estagiário', 'Treino sem valer'],
   missions: ['Mural de avisos · leitura obrigatória', 'Metas do dia'], shop: ['Máquina de benefícios · não devolve troco', 'Loja'],
-  achievements: ['Prateleira de troféus · empoeirada', 'Conquistas'], profile: ['Recepção · ficha cadastral', 'Perfil da empresa'],
+  achievements: ['Prateleira de troféus · empoeirada', 'Troféus'], profile: ['Recepção · ficha cadastral', 'Perfil da empresa'],
 };
 const sortCards = (ids) => [...ids].sort((a, b) => a.localeCompare(b));
 const group = (ids) => { const m = new Map(); for (const id of ids) m.set(id, (m.get(id) ?? 0) + 1); return [...m.entries()].sort((a, b) => a[0].localeCompare(b[0])); };
@@ -87,11 +91,11 @@ export class LobbyUI {
     root.addEventListener('pointerover', (e) => {
       const b = e.target.closest('[data-a="open"]'); if (b && !this.panel) lobby.setHover(b.dataset.id);
       if (this.panel) this.peek(e.target.closest('[data-card]'));
-      const it = e.target.closest('.sc-item'); if (it) this.scShow(it.dataset.card);
+      const it = e.target.closest('[data-show]'); if (it) this.showFile(it.dataset.show);
     });
-    root.addEventListener('pointerout', (e) => { if (e.target.closest('[data-a="open"]') && !this.panel) lobby.setHover(null); if (!e.relatedTarget?.closest?.('[data-card]')) this.peek(null); if (e.target.closest('.sc-grid') && !e.relatedTarget?.closest?.('.sc-item')) this.scShow(null); });
+    root.addEventListener('pointerout', (e) => { if (e.target.closest('[data-a="open"]') && !this.panel) lobby.setHover(null); if (!e.relatedTarget?.closest?.('[data-card]')) this.peek(null); if (e.target.closest('[data-show]') && !e.relatedTarget?.closest?.('[data-show]')) this.showFile(null); });
     // pelo teclado a ficha também abre (foco visível numa carta ou nos botões dela)
-    root.addEventListener('focusin', (e) => { if (this.panel && e.target.matches?.(':focus-visible')) { this.peek(e.target.closest('[data-card]')); const it = e.target.closest('.sc-item'); if (it) this.scShow(it.dataset.card); } });
+    root.addEventListener('focusin', (e) => { if (this.panel && e.target.matches?.(':focus-visible')) { this.peek(e.target.closest('[data-card]')); const it = e.target.closest('[data-show]'); if (it) this.showFile(it.dataset.show); } });
     root.addEventListener('focusout', (e) => { if (!e.relatedTarget?.closest?.('[data-card]')) this.peek(null); });
     root.addEventListener('input', (e) => {
       const t = e.target;
@@ -199,8 +203,8 @@ export class LobbyUI {
     const act = document.activeElement, focus = act?.id, sel = focus && act.selectionStart != null ? [act.selectionStart, act.selectionEnd] : null;
     // botão focado (teclado): guarda a "assinatura" para devolver o foco ao botão equivalente depois de redesenhar
     const sig = !focus && act && this.win.contains(act) && act.dataset?.a ? { a: act.dataset.a, card: act.dataset.card, id: act.dataset.id, list: !!act.closest('.lb-decklist') } : null;
-    const ht = HTABS[id], here = id === 'shop' ? this.tab.shop : id, newLook = id !== 'shop' || ['packs', 'cards'].includes(this.tab.shop);
-    const htabs = ht && newLook ? `<nav class="ds-tabs lb-htabs" role="tablist" aria-label="${esc(memo.split(' · ')[0])}">${ht[1].map(([k, n]) => `<button class="ds-tab ${k === here ? 'is-on' : ''}" role="tab" aria-selected="${k === here}" data-a="${ht[0]}" data-id="${k}">${n}</button>`).join('')}</nav>` : '';
+    const ht = HTABS[id], here = id === 'shop' ? this.tab.shop : id;
+    const htabs = ht ? `<nav class="ds-tabs lb-htabs" role="tablist" aria-label="${esc(memo.split(' · ')[0])}">${ht[1].map(([k, n]) => `<button class="ds-tab ${k === here ? 'is-on' : ''}" role="tab" aria-selected="${k === here}" data-a="${ht[0]}" data-id="${k}">${n}</button>`).join('')}</nav>` : '';
     this.win.innerHTML = `<section class="lb-box lb-box--${id} ${id === 'shop' ? `lb-box--shop-${this.tab.shop}` : ''}">
       <header><div>${htabs || `<p class="memo"><span>${esc(memo.split(' · ')[0])}</span></p>`}<h2>${esc(title)}</h2></div><div class="lb-pat"><span>Patrimônio</span><b>${money(s.patrimonio)}</b></div><button class="lb-x" data-a="close" title="Fechar (Esc)">✕</button></header>
       ${body}</section>`;
@@ -225,10 +229,14 @@ export class LobbyUI {
     // compras e "usar": o 2º clique de um clique duplo (ou um clique logo em seguida) não compra de novo
     if (/^(buy-|equip|put-active)/.test(a)) { const now = performance.now(); if (e.detail > 1 || now - (this._buyAt ?? 0) < 400) return; this._buyAt = now; }
     if (a === 'buy-card' && b.closest('.sc-grid')) { this.scSel = id; this.scView = null; }
+    if (a === 'buy-cos' && b.closest('.lk-grid')) { this.lkSel = id; this.lkView = null; }
     switch (a) {
       case 'open': this.closeDetail(); return this.open(id, { tab: b.dataset.tab });
       case 'detail': return this.detail(b.dataset.card, b.dataset.buy === '1');
       case 'sh-filter': this.shF = this.shF === 'all' ? 'miss' : 'all'; sfx('nav'); return this.render();
+      case 'dk-pick': this.dkSel = id; this.dkView = null; sfx('nav'); return this.render();
+      case 'lk-pick': this.lkSel = id; this.lkView = null; sfx('card'); return this.render();
+      case 'tr-pick': this.trSel = id; this.trView = null; sfx('card'); return this.render();
       case 'sc-pick': this.scSel = b.dataset.card; this.scView = null; sfx('card'); return this.render();
       case 'detail-close': return this.closeDetail();
       case 'sh-odds': this.shOdds = !this.shOdds; sfx('nav'); return this.render();
@@ -694,7 +702,7 @@ export class LobbyUI {
     this.scView = null;
     const item = (c) => {
       const own = Math.min(Meta.owned(s, c.id), max), full = own >= max, p = Meta.priceOf(c.id), poor = p > s.patrimonio;
-      return `<article class="sc-item sc-item--${Meta.rarityOf(c.id)} ${full ? 'is-full' : ''} ${c.id === this.scSel ? 'is-sel' : ''}" data-card="${c.id}">
+      return `<article class="sc-item sc-item--${Meta.rarityOf(c.id)} ${full ? 'is-full' : ''} ${c.id === this.scSel ? 'is-sel' : ''}" data-show="${c.id}">
         <button class="sc-card" data-a="sc-pick" data-card="${c.id}" aria-pressed="${c.id === this.scSel}" aria-label="${esc(c.name)}: você tem ${own} de ${max}">${mini(c.id)}</button>
         <div class="sc-meta">${copies(own)}${full ? '<em class="sc-done">Completa</em>' : `<button class="ds-price sc-buy ${poor ? 'is-poor' : ''}" data-a="buy-card" data-id="${c.id}" ${poor ? `disabled title="Faltam ${money(p - s.patrimonio)}"` : `title="Comprar ${esc(c.name)}"`}>${money(p)}</button>`}</div></article>`;
     };
@@ -707,7 +715,7 @@ export class LobbyUI {
     </div>`;
   }
   /** ficha da carta (peça .ds-file): foto presa por clipe, título, categorias, atributos, texto completo, cópias e a compra */
-  scFile(id) {
+  scFile(id, buy = true) {
     const c = byId.get(id), s = this.s, fx = isFx(c), max = DECK_RULES.maxCopies, own = Math.min(Meta.owned(s, id), max), price = Meta.priceOf(id), lack = price - s.patrimonio;
     const kind = [KIND[c.kind], c.element, c.department ? `depto. ${DEPT[c.department] ?? c.department}` : ''].filter(Boolean);
     const stats = fx ? `<p class="ds-file__fx">${c.kind === 'effect_trap' ? 'Fica virada na mesa até disparar.' : c.durationTurns ? `Fica na mesa por ${c.durationTurns} turnos seus.` : 'Vale na hora e vai para o Morto.'}</p>`
@@ -720,15 +728,95 @@ export class LobbyUI {
           <div><h3 class="ds-title">${esc(c.name)}</h3><p class="ds-file__kind">${kind.map((k) => `<span>${esc(k)}</span>`).join('')}</p></div></div>
         ${stats}
         <ul class="ds-file__rules">${(RULES_TEXT[id] ?? []).map(([n, t]) => `<li><b>${esc(n)}</b>${esc(t)}</li>`).join('') || '<li>Sem habilidade.</li>'}</ul>
-        <footer class="ds-file__foot"><p>${copies(own)}<span>Você tem <b>${own} de ${max}</b></span></p>${action}</footer>
+        <footer class="ds-file__foot"><p>${copies(own)}<span>Você tem <b>${own} de ${max}</b></span></p>${buy ? action : ''}</footer>
       </div></section>`;
   }
-  /** troca a ficha da direita sem redesenhar a tela (hover e foco); null volta para a carta escolhida */
-  scShow(id) {
-    const el = $('.sc-view', this.win); if (!el) return;
-    id ??= this.scSel; if (!id || id === (this.scView ?? this.scSel)) return;
-    this.scView = id; el.innerHTML = this.scFile(id);
-    for (const it of this.win.querySelectorAll('.sc-item')) it.classList.toggle('is-view', it.dataset.card === id && id !== this.scSel);
+  /** vitrine com ficha ao lado (Cartas, Decks, Visual, Troféus): o que fica na ficha sem nada apontado e como desenhar cada item */
+  viewer() {
+    const t = this.panel === 'shop' ? this.tab.shop : this.panel;
+    return {
+      cards: { def: this.scSel, key: 'scView', file: (id) => this.scFile(id) },
+      decks: { def: null, key: 'dkView', file: (id) => (id ? this.scFile(id, false) : this.dkFile()) },
+      look: { def: this.lkSel, key: 'lkView', file: (id) => this.lkFile(id) },
+      achievements: { def: this.trSel, key: 'trView', file: (id) => this.trFile(id) },
+    }[t];
+  }
+  /** troca a ficha da direita sem redesenhar a tela (hover e foco); null volta para o que estava escolhido */
+  showFile(id) {
+    const el = $('.sc-view', this.win), v = this.viewer(); if (!el || !v) return;
+    id ??= v.def; if (id === (this[v.key] ?? v.def)) return;
+    this[v.key] = id; el.innerHTML = v.file(id);
+    for (const it of this.win.querySelectorAll('[data-show]')) it.classList.toggle('is-view', it.dataset.show === id && id !== v.def);
+  }
+
+  // ───────── loja → decks prontos ─────────
+  /** caixas-arquivo no topo (um deck por vez), as cartas do deck agrupadas por tipo e, ao lado, a guia de remessa do deck */
+  vShopDecks(s) {
+    const decks = META.readyDecks; if (!decks.some((d) => d.id === this.dkSel)) this.dkSel = decks[0].id;
+    const d = decks.find((x) => x.id === this.dkSel), miss = Meta.readyDeckMissing(s, d.id); this.dkView = null;
+    const box = (x) => {
+      const m = Meta.readyDeckMissing(s, x.id), n = Object.values(m).reduce((a, k) => a + k, 0), twin = Meta.readyDeckOwnedIndex(s, x.id);
+      const note = n ? `${n} cópia${n > 1 ? 's' : ''} nova${n > 1 ? 's' : ''}` : twin >= 0 ? 'No arquivo' : 'Você tem todas';
+      return `<button class="ds-boxfile ${x.id === d.id ? 'is-on' : ''}" data-a="dk-pick" data-id="${x.id}" aria-pressed="${x.id === d.id}"><span class="ds-boxfile__label"><b>${esc(x.name)}</b><small>${note}</small></span><i class="ds-boxfile__hole"></i></button>`;
+    };
+    const ids = Object.keys(d.cards).sort((a, b) => RANK_DESC[Meta.rarityOf(a)] - RANK_DESC[Meta.rarityOf(b)] || a.localeCompare(b));
+    const item = (id) => `<article class="rd-item sc-item--${Meta.rarityOf(id)}" data-show="${id}" tabindex="0" aria-label="${esc(byId.get(id).name)}, ${d.cards[id]} cópias"><span class="rd-card">${mini(id)}<b class="ds-qty">×${d.cards[id]}</b>${miss[id] && !Meta.owned(s, id) ? '<i class="ds-stamp ds-stamp--ok rd-new">Nova</i>' : ''}</span></article>`;
+    const groups = KINDS.map(([name, f]) => { const g = ids.filter((id) => f(byId.get(id))); return g.length ? `<h4 class="sv-h"><span>${name}</span><em>${g.reduce((a, id) => a + d.cards[id], 0)}</em></h4><div class="rd-grid">${g.map(item).join('')}</div>` : ''; }).join('');
+    return `<div class="sc rd">
+      <section class="sc-shelf rd-shelf"><nav class="rd-boxes" aria-label="Decks prontos">${decks.map(box).join('')}</nav><div class="lb-scroll rd-list">${groups}</div></section>
+      <aside class="sc-view" aria-live="polite">${this.dkFile()}</aside>
+    </div>`;
+  }
+  /** guia de remessa (peça .ds-manifest): o que o deck traz, o que chega para você e a única ação */
+  dkFile() {
+    const s = this.s, d = META.readyDecks.find((x) => x.id === this.dkSel), miss = Meta.readyDeckMissing(s, d.id), ids = Object.keys(miss);
+    const n = Object.values(miss).reduce((a, k) => a + k, 0), twin = Meta.readyDeckOwnedIndex(s, d.id), price = Meta.readyDeckPrice(s, d.id), full = s.decks.length >= META.maxDecks;
+    const per = KINDS.map(([name, f]) => [name, Object.entries(d.cards).filter(([id]) => f(byId.get(id))).reduce((a, [, k]) => a + k, 0)]);
+    let action;
+    if (twin >= 0 && !ids.length) action = `<i class="ds-stamp ds-stamp--ok">No arquivo</i><button class="ds-btn" data-a="deck-open" data-id="${twin}">Abrir no Arquivo</button>`;
+    else if (full && twin < 0) action = `<button class="ds-btn ds-btn--primary" disabled title="Apague um deck no Arquivo para comprar">Arquivo cheio (${META.maxDecks}/${META.maxDecks})</button>`;
+    else if (!price) action = `<button class="ds-btn ds-btn--primary" data-a="buy-deck" data-id="${d.id}">Guardar lista · grátis</button>`;
+    else if (price > s.patrimonio) action = `<button class="ds-btn ds-btn--primary" disabled>Faltam ${money(price - s.patrimonio)}</button>`;
+    else action = `<button class="ds-btn ds-btn--primary" data-a="buy-deck" data-id="${d.id}">Comprar · ${money(price)}</button>`;
+    return `<section class="ds-sheet ds-file ds-manifest">
+      <div class="ds-bar"><span>Guia de remessa</span><b>${Object.values(d.cards).reduce((a, k) => a + k, 0)} cartas</b></div>
+      <div class="ds-body">
+        <div><h3 class="ds-title">${esc(d.name)}</h3><p class="ds-manifest__line">${esc(d.text)}</p></div>
+        <dl class="ds-file__stats">${per.map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join('')}</dl>
+        <div class="ds-manifest__gain">${ids.length ? `<p>Chegam <b>${n} cópia${n > 1 ? 's' : ''}</b> de ${ids.length} carta${ids.length > 1 ? 's' : ''} que faltam na sua coleção.</p><small>Avulsas, sairiam por ${money(Meta.readyDeckValue(s, d.id))}.</small>` : '<p>Você já tem todas as cartas deste deck.</p>'}</div>
+        <footer class="ds-file__foot ds-manifest__foot">${action}</footer>
+      </div></section>`;
+  }
+
+  // ───────── loja → visual ─────────
+  /** logos e versos em grade; ao lado, a prova de gráfica do item apontado ou escolhido */
+  vShopLook(s) {
+    if (!META.cosmetics.some((c) => c.id === this.lkSel)) this.lkSel = s.cosmetics.back; this.lkView = null;
+    const item = (c) => {
+      const own = s.cosmetics.owned.includes(c.id), on = s.cosmetics[c.kind] === c.id, poor = c.price > s.patrimonio;
+      const pic = c.kind === 'logo' ? `<span class="lk-logo"><img src="${inkLogo(c.id)}" alt=""></span>` : `<img class="lk-back" src="${backUrl(c.id, s.cosmetics.logo, asset('cards/back.png'))}" alt="">`;
+      const meta = on ? '<em class="lk-on">Em uso</em>' : own ? '<em class="lk-own">Seu</em>' : `<button class="ds-price" data-a="buy-cos" data-id="${c.id}" ${poor ? `disabled title="Faltam ${money(c.price - s.patrimonio)}"` : `title="Comprar e usar ${esc(c.name)}"`}>${money(c.price)}</button>`;
+      return `<article class="lk-item lk-item--${c.kind} ${on ? 'is-on' : ''} ${c.id === this.lkSel ? 'is-sel' : ''}" data-show="${c.id}"><button class="lk-pick" data-a="lk-pick" data-id="${c.id}" aria-pressed="${c.id === this.lkSel}" aria-label="${esc(c.name)}">${pic}</button><div class="sc-meta">${meta}</div></article>`;
+    };
+    const sec = (kind, name) => { const l = META.cosmetics.filter((c) => c.kind === kind); return `<h4 class="sv-h"><span>${name}</span><em>${l.filter((c) => s.cosmetics.owned.includes(c.id)).length} de ${l.length}</em></h4><div class="lk-grid lk-grid--${kind}">${l.map(item).join('')}</div>`; };
+    return `<div class="sc lk">
+      <section class="sc-shelf lk-shelf"><div class="lb-scroll lk-list">${sec('logo', 'Logo da empresa')}${sec('back', 'Verso das cartas')}</div></section>
+      <aside class="sc-view" aria-live="polite">${this.lkFile(this.lkSel)}</aside>
+    </div>`;
+  }
+  /** prova de gráfica (peça .ds-proof): o item impresso grande, com marcas de corte e tira de cor, e a única ação */
+  lkFile(id) {
+    const s = this.s, c = META.cosmetics.find((x) => x.id === id), own = s.cosmetics.owned.includes(id), on = s.cosmetics[c.kind] === id;
+    const art = c.kind === 'logo' ? `<img class="ds-proof__logo" src="${inkLogo(id)}" alt="">` : `<img class="ds-proof__back" src="${backUrl(id, s.cosmetics.logo, asset('cards/back.png'))}" alt="">`;
+    const action = on ? '<i class="ds-stamp ds-stamp--ok">Em uso</i>' : own ? `<button class="ds-btn ds-btn--primary" data-a="equip" data-id="${id}">Usar</button>`
+      : c.price > s.patrimonio ? `<button class="ds-btn ds-btn--primary" disabled>Faltam ${money(c.price - s.patrimonio)}</button>` : `<button class="ds-btn ds-btn--primary" data-a="buy-cos" data-id="${id}">Comprar e usar · ${money(c.price)}</button>`;
+    return `<section class="ds-sheet ds-file ds-proof">
+      <div class="ds-bar"><span>Prova de gráfica</span><b>${c.kind === 'logo' ? 'Logo' : 'Verso'}</b></div>
+      <div class="ds-body">
+        <figure class="ds-proof__sheet ds-proof__sheet--${c.kind}">${art}<i class="ds-proof__reg"></i><i class="ds-proof__reg"></i><span class="ds-proof__bar"><i></i><i></i><i></i><i></i></span></figure>
+        <div><h3 class="ds-title">${esc(c.name)}</h3><p class="ds-manifest__line">${c.kind === 'logo' ? 'Vai no meio do verso das suas cartas.' : 'Verso das suas cartas no duelo.'}</p></div>
+        <footer class="ds-file__foot ds-manifest__foot">${action}</footer>
+      </div></section>`;
   }
   /** entrada da Loja: o envelope em palco (uma ação: abrir) e as três prateleiras ao lado */
   vShopHome(s) {
@@ -755,49 +843,7 @@ export class LobbyUI {
   }
   vShop(s) {
     const t = (this.tab.shop ??= 'packs');
-    if (t === 'packs') return this.vShopHome(s);
-    if (t === 'cards') return this.vShopCards(s);
-    const tabs = `<div class="lb-tabs"><button data-a="tab" data-id="packs">← Loja</button><span class="lb-tabs__here">${{ cards: 'Cartas avulsas', decks: 'Decks prontos', look: 'Visual' }[t]}</span></div>`;
-    const back = backUrl(s.cosmetics.back, s.cosmetics.logo, asset('cards/back.png')), max = DECK_RULES.maxCopies;
-    const cheapest = {
-      cards: Math.min(...CARDS.filter((c) => Meta.owned(s, c.id) < max).map((c) => Meta.priceOf(c.id))),
-      decks: Math.min(...META.readyDecks.filter((d) => Meta.readyDeckOwnedIndex(s, d.id) < 0 || Object.keys(Meta.readyDeckMissing(s, d.id)).length).map((d) => Meta.readyDeckPrice(s, d.id))),
-      look: Math.min(...META.cosmetics.filter((c) => !s.cosmetics.owned.includes(c.id)).map((c) => c.price)),
-    }[t];
-    const broke = Number.isFinite(cheapest) && s.patrimonio < cheapest ? `<div class="lb-broke"><span><b>Sem verba para esta prateleira.</b> Vença uma reunião (o CAIXA que sobra vira PATRIMÔNIO), resgate metas no mural ou triture cópias sobrando.</span><button data-a="open" data-id="duel">Sala de reunião</button><button data-a="open" data-id="missions">Mural</button></div>` : '';
-    let body = '';
-    if (t === 'cards') {
-      // ordem fixa (a numeração), as 19 cabem em 2 fileiras; a que você não tem fica marcada como "nova", sem trocar de lugar
-      body = `<div class="lb-scroll lb-grid lb-grid--shop">${CARDS.map((c) => {
-        const own = Meta.owned(s, c.id), full = own >= max, extra = Meta.extrasOf(s, c.id), state = own ? (full ? 'full' : 'part') : 'new';
-        const count = own ? `${Math.min(own, max)}/${max}${extra ? ` <em>+${extra}</em>` : ''}` : 'nova';
-        const btn = !full ? this.buyBtn(s, c.id)
-          : extra ? `<button data-a="open" data-id="recycle" class="lb-card__buy lb-card__extra" title="${extra} cópia${extra > 1 ? 's' : ''} sobrando valem ${money(extra * Meta.recycleValue(c.id))} na trituradora">Triturar ${extra}<small>+ ${money(extra * Meta.recycleValue(c.id)).replace(' ', ' ')}</small></button>`
-            : `<button disabled title="Você já tem as ${max} que cabem num deck">Completa</button>`;
-        return `<figure class="lb-card is-${state}" data-card="${c.id}"><img loading="lazy" src="${asset(c.art)}" alt="${esc(c.name)}"><figcaption>${rarityTag(c.id)}<span>${RARITY_PT[Meta.rarityOf(c.id)]}</span><b class="${state}">${count}</b></figcaption>${btn}</figure>`;
-      }).join('')}</div>`;
-    } else if (t === 'decks') {
-      const RANK = { common: 0, rare: 1, legendary: 2 }, full = s.decks.length >= META.maxDecks;
-      body = `<div class="lb-scroll lb-rows">${META.readyDecks.map((d) => {
-        const miss = Meta.readyDeckMissing(s, d.id), ids = Object.keys(miss), copies = Object.values(miss).reduce((a, b) => a + b, 0), twin = Meta.readyDeckOwnedIndex(s, d.id), price = Meta.readyDeckPrice(s, d.id);
-        // o leque mostra o que vai chegar (as mais raras na frente); sem nada a chegar, as cartas do deck esmaecidas
-        const show = (ids.length ? ids : Object.keys(d.cards)).sort((a, b) => RANK[Meta.rarityOf(b)] - RANK[Meta.rarityOf(a)] || a.localeCompare(b)).slice(0, 5);
-        const fan = show.map((id) => `<span class="lb-fanc ${ids.length ? '' : 'is-used'}" data-card="${id}"><img src="${asset(byId.get(id).art)}" alt="${esc(byId.get(id).name)}">${ids.length ? `<b>×${miss[id]}</b>` : ''}</span>`).join('');
-        const leg = ids.filter((id) => Meta.rarityOf(id) === 'legendary').length, rare = ids.filter((id) => Meta.rarityOf(id) === 'rare').length;
-        const gain = ids.length
-          ? `Chegam <b>${copies} cópia${copies > 1 ? 's' : ''}</b> de ${ids.length} carta${ids.length > 1 ? 's' : ''}${leg || rare ? ` (${[leg && `${leg} lendária${leg > 1 ? 's' : ''}`, rare && `${rare} rara${rare > 1 ? 's' : ''}`].filter(Boolean).join(', ')})` : ''} · avulsas, sairiam por <b>${money(Meta.readyDeckValue(s, d.id))}</b>`
-          : 'Você já tem todas as cartas: guardar a lista sai de graça';
-        let btn;
-        if (twin >= 0 && !ids.length) btn = `<button data-a="deck-open" data-id="${twin}" title="Abre &quot;${esc(s.decks[twin].name)}&quot; no Arquivo">No arquivo · abrir</button>`;
-        else if (full && twin < 0) btn = `<button disabled title="Arquivo cheio (${META.maxDecks}/${META.maxDecks}): apague um deck no Arquivo para comprar">Arquivo cheio</button>`;
-        else btn = `<button data-a="buy-deck" data-id="${d.id}" class="${price ? 'primary' : ''}" aria-label="${price ? `Comprar o deck ${esc(d.name)} por ${money(price)}` : `Guardar a lista de ${esc(d.name)} de graça`}" ${this.priceAttrs(s, price, `Comprar ${d.name}`)}>${price ? `Comprar · ${money(price)}` : 'Guardar lista · grátis'}</button>`;
-        return `<div class="lb-row lb-row--deck"><div class="lb-fan">${fan}</div><div><b>${esc(d.name)}</b><span>${esc(d.text)}</span><span class="lb-deckgain">${gain}</span><span class="fine">A lista vai para o Arquivo e vira o deck do duelo.</span></div><div class="lb-row__buy">${btn}${price ? this.shortLine(s, price) : ''}</div></div>`;
-      }).join('')}</div>`;
-    } else {
-      const item = (c) => { const own = s.cosmetics.owned.includes(c.id), on = s.cosmetics[c.kind] === c.id, img = c.kind === 'logo' ? logoUrl(c.id) : backUrl(c.id, s.cosmetics.logo, asset('cards/back.png')); return `<figure class="lb-cos lb-cos--${c.kind} ${on ? 'on' : ''}"><img src="${img}" alt="${esc(c.name)}"><figcaption>${esc(c.name)}</figcaption>${own ? `<button data-a="equip" data-id="${c.id}" ${on ? 'disabled' : ''}>${on ? 'Em uso' : 'Usar'}</button>` : `<button data-a="buy-cos" data-id="${c.id}" class="primary" ${this.priceAttrs(s, c.price, `Comprar e usar ${c.name}`)}>Comprar · ${money(c.price)}</button>`}</figure>`; };
-      body = `<div class="lb-scroll"><p class="memo">Logo da empresa</p><div class="lb-cosgrid">${META.cosmetics.filter((c) => c.kind === 'logo').map(item).join('')}</div><p class="memo">Verso das cartas (o logo vai no meio)</p><div class="lb-cosgrid">${META.cosmetics.filter((c) => c.kind === 'back').map(item).join('')}</div></div>`;
-    }
-    return `${tabs}<div class="lb-pad lb-fill" role="tabpanel">${broke}${body}</div>`;
+    return { packs: () => this.vShopHome(s), cards: () => this.vShopCards(s), decks: () => this.vShopDecks(s), look: () => this.vShopLook(s) }[t]();
   }
   // ───────── abertura de pacote ─────────
   // Cada carta vira com um clique nela ou com Enter/botão (a próxima fechada). Carta virada não fecha nada: só o botão
@@ -852,10 +898,26 @@ export class LobbyUI {
   }
 
   // ───────── troféus e recepção ─────────
+  /** troféus: placas de mérito na parede e, ao lado, a ficha da placa (o que pede, quanto paga, quando saiu) */
   vAchievements(s) {
-    const got = META.achievements.filter((a) => s.achievements[a.id] !== undefined).length;
-    return `<div class="lb-pad"><p class="lb-lead"><b>${got}/${META.achievements.length}</b> troféus · cada um paga na hora.</p>
-      <div class="lb-scroll lb-trophies">${META.achievements.map((a) => { const on = s.achievements[a.id] !== undefined; return `<article class="${on ? 'on' : ''}"><i>${on ? '★' : '?'}</i><div><b>${esc(a.name)}</b><span>${esc(a.text)}</span></div><em>${on ? 'pago' : money(a.reward)}</em></article>`; }).join('')}</div></div>`;
+    const L = META.achievements, got = L.filter((a) => s.achievements[a.id] !== undefined).length;
+    if (!L.some((a) => a.id === this.trSel)) this.trSel = L[0].id; this.trView = null;
+    const item = (a) => { const on = s.achievements[a.id] !== undefined; return `<article class="tf-item ${a.id === this.trSel ? 'is-sel' : ''}" data-show="${a.id}"><button class="ds-plaque ${on ? 'is-on' : ''}" data-a="tr-pick" data-id="${a.id}" aria-pressed="${a.id === this.trSel}"><span>${esc(a.name)}</span></button></article>`; };
+    return `<div class="sc tf">
+      <section class="sc-shelf"><div class="sc-tools"><b>${got} de ${L.length} na parede</b></div><div class="lb-scroll tf-grid">${L.map(item).join('')}</div></section>
+      <aside class="sc-view" aria-live="polite">${this.trFile(this.trSel)}</aside>
+    </div>`;
+  }
+  trFile(id) {
+    const a = META.achievements.find((x) => x.id === id), at = this.s.achievements[id], on = at !== undefined;
+    return `<section class="ds-sheet ds-file ds-trfile">
+      <div class="ds-bar"><span>Placa de mérito</span><b>${on ? 'Na parede' : 'A conquistar'}</b></div>
+      <div class="ds-body">
+        <div class="ds-trfile__plaque"><span class="ds-plaque ${on ? 'is-on' : ''} ds-plaque--lg"><span>${esc(a.name)}</span></span></div>
+        <div><h3 class="ds-title">${esc(a.text)}</h3></div>
+        <dl class="ds-file__stats ds-file__stats--2"><div><dt>Paga</dt><dd>${money(a.reward)}</dd></div><div><dt>${on ? 'Ganha em' : 'Situação'}</dt><dd class="${on ? '' : 'is-small'}">${on ? (at ? dateStr(at).split(' ')[0] : '—') : 'em aberto'}</dd></div></dl>
+        <footer class="ds-file__foot ds-manifest__foot">${on ? '<i class="ds-stamp ds-stamp--ok">Pago</i>' : '<p class="ds-manifest__line">Paga sozinha quando você cumprir.</p>'}</footer>
+      </div></section>`;
   }
   vProfile(s) {
     const tabs = this.tabs('profile', [['card', 'Ficha'], ['history', 'Histórico'], ['look', 'Visual']]), t = this.tab.profile, st = s.stats;

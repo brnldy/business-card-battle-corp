@@ -133,8 +133,8 @@
 .cp-ladder .is-cur { background: var(--ds-amber); margin: 0 calc(var(--ds-4) * -1); padding-left: var(--ds-4); padding-right: var(--ds-4); } .cp-ladder .is-gap { justify-content: center; color: var(--ds-ink-3); letter-spacing: 0.3em; border: none; padding: 2px 0; } .cp-ladder .is-boss span { color: var(--ds-red); }
 
 /* ══ lobby novo (docs/UI_LOBBY.md): piso de tamanho, carta reduzida, detalhe da carta, loja ══ */
-.lb-box--shop-packs, .lb-box--shop-cards, .lb-pack > .pk, .lb-detail > .cd { zoom: var(--lb-fix, 1); }
-#lobby :is(.lb-box--shop-packs, .lb-box--shop-cards) .lb-x { width: 46px; height: 46px; font-size: 16px; }
+.lb-box--shop-packs, .lb-box--shop-cards, .lb-box--shop-decks, .lb-box--shop-look, .lb-box--achievements, .lb-pack > .pk, .lb-detail > .cd { zoom: var(--lb-fix, 1); }
+#lobby :is(.lb-box--shop-packs, .lb-box--shop-cards, .lb-box--shop-decks, .lb-box--shop-look, .lb-box--achievements) .lb-x { width: 46px; height: 46px; font-size: 16px; }
 /* carta reduzida (R4): a mesma face da mesa do duelo */
 .ds-mini { display: block; width: 100%; aspect-ratio: 1079 / 1257; border-radius: 4.1% / 3.5%; box-shadow: 0 0 0 1.5px var(--ds-ink), 3px 4px 0 rgba(0, 0, 0, 0.35); user-select: none; }
 /* detalhe da carta (R6) */
@@ -200,14 +200,14 @@
 
 
 /* ── loja → cartas avulsas: vitrine em grade à esquerda, ficha da carta sempre à direita (27/11) ── */
-.lb-box--shop-cards { width: min(1180px, 96%); height: min(770px, 90%); max-height: none; }
-.lb-box--shop-cards > header { padding: 14px 0 12px; }
+:is(.lb-box--shop-cards, .lb-box--shop-decks, .lb-box--shop-look, .lb-box--achievements) { width: min(1180px, 96%); height: min(770px, 90%); max-height: none; display: flex; flex-direction: column; }
+:is(.lb-box--shop-cards, .lb-box--shop-decks, .lb-box--shop-look, .lb-box--achievements) > header { padding: 14px 0 12px; }
 .sc { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) 388px; gap: var(--ds-5); }
 .sc-shelf { min-height: 0; display: grid; grid-template-rows: auto minmax(0, 1fr); background: var(--ds-tex-card); border: var(--ds-line) solid var(--ds-ink); box-shadow: var(--ds-frame-in); }
 .sc-tools { display: flex; align-items: center; justify-content: space-between; gap: var(--ds-4); margin: 0 var(--ds-5); padding: 14px 0 12px; border-bottom: 1.5px dashed var(--ds-ink-3); } .sc-tools b { font: 400 22px/1 var(--f-title); letter-spacing: 0.06em; text-transform: uppercase; color: var(--ds-ink-2); }
 .sc-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px 6px; align-content: start; padding: 14px 14px var(--ds-5); overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--ds-ink) rgba(27, 20, 13, 0.12); }
 .sc-item { display: grid; gap: 10px; align-content: start; padding: 12px 12px 10px; border-radius: 3px; border: var(--ds-line) solid transparent; }
-.sc-item.is-view { border: var(--ds-line) dashed var(--ds-ink-3); }
+.is-view:is(.sc-item, .rd-item, .lk-item, .tf-item) { border: var(--ds-line) dashed var(--ds-ink-3); }
 .sc-item.is-sel { background: var(--ds-tex-lines), var(--ds-amber); border: var(--ds-line) solid var(--ds-ink); box-shadow: 3px 4px 0 rgba(27, 20, 13, 0.3); }
 #lobby button.sc-card { all: unset; box-sizing: border-box; pointer-events: auto; cursor: pointer; position: relative; display: block; transition: transform 0.1s; } #lobby button.sc-card:hover, #lobby button.sc-card:focus-visible { transform: translateY(-4px) rotate(-0.6deg); }
 .sc-item--rare .ds-mini { box-shadow: 0 0 0 1.5px var(--ds-ink), 0 0 0 4px #5aa2e6, 0 0 0 5.5px var(--ds-ink), 4px 6px 0 rgba(0, 0, 0, 0.3); } .sc-item--legendary .ds-mini { box-shadow: 0 0 0 1.5px var(--ds-ink), 0 0 0 4px var(--ds-amber), 0 0 0 5.5px var(--ds-ink), 4px 6px 0 rgba(0, 0, 0, 0.3); }
@@ -224,3 +224,34 @@ button.ds-check { background: none; border: none; padding: 6px 0; pointer-events
 #lobby .lb-htabs .ds-tab { height: 34px; margin: 0; padding: 2px 18px 0; background: linear-gradient(rgba(27, 20, 13, 0.2), rgba(27, 20, 13, 0.34)), var(--ds-tex-kraft); color: var(--ds-ink); border: var(--ds-line) solid var(--ds-ink); border-radius: 7px 11px 0 0; font: 700 13px/1 var(--f-ui); letter-spacing: 0.12em; text-transform: uppercase; white-space: nowrap; }
 #lobby .lb-htabs .ds-tab:hover:not(.is-on) { background: linear-gradient(rgba(242, 185, 76, 0.5), rgba(242, 185, 76, 0.5)), var(--ds-tex-kraft); }
 #lobby .lb-htabs .ds-tab.is-on { height: 42px; padding-bottom: 2px; background: var(--ds-tex-kraft); border-bottom-color: transparent; cursor: default; }
+
+/* ── loja → decks prontos: caixas-arquivo no topo, cartas por tipo, guia de remessa ao lado ── */
+.rd-shelf { grid-template-rows: auto minmax(0, 1fr); }
+.rd-boxes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--ds-3); margin: 0 var(--ds-5); padding: var(--ds-4) 0 var(--ds-4); border-bottom: 1.5px dashed var(--ds-ink-3); }
+.rd-list { overflow-y: auto; padding: 4px 14px var(--ds-5); scrollbar-width: thin; scrollbar-color: var(--ds-ink) rgba(27, 20, 13, 0.12); }
+.sv-h { display: flex; align-items: baseline; gap: 10px; margin: var(--ds-4) 12px 0; font: 400 20px/1 var(--f-title); letter-spacing: 0.06em; text-transform: uppercase; color: var(--ds-ink-2); }
+.sv-h em { font: 700 12px/1 var(--f-ui); font-style: normal; letter-spacing: 0.08em; color: var(--ds-ink-3); }
+.rd-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px 6px; }
+.rd-item { padding: 12px; border: var(--ds-line) solid transparent; border-radius: 3px; cursor: default; outline: none; } .rd-item:focus-visible { border-color: var(--ds-ink); }
+.rd-card { position: relative; display: block; }
+.rd-card .ds-qty { position: absolute; right: -8px; bottom: -15px; }
+.rd-new { position: absolute; right: -12px; top: 24%; transform: rotate(8deg); margin: 0; background: var(--ds-card); opacity: 1; font-size: 12px; padding: 5px 7px 4px; }
+.rd-item.sc-item--rare .ds-mini { box-shadow: 0 0 0 1.5px var(--ds-ink), 0 0 0 4px #5aa2e6, 0 0 0 5.5px var(--ds-ink), 4px 6px 0 rgba(0, 0, 0, 0.3); } .rd-item.sc-item--legendary .ds-mini { box-shadow: 0 0 0 1.5px var(--ds-ink), 0 0 0 4px var(--ds-amber), 0 0 0 5.5px var(--ds-ink), 4px 6px 0 rgba(0, 0, 0, 0.3); }
+
+/* ── loja → visual: logos e versos em grade, prova de gráfica ao lado ── */
+.lk-list { overflow-y: auto; padding: 4px 14px var(--ds-5); scrollbar-width: thin; scrollbar-color: var(--ds-ink) rgba(27, 20, 13, 0.12); }
+.lk-grid { display: grid; gap: 6px; } .lk-grid--logo { grid-template-columns: repeat(5, minmax(0, 1fr)); } .lk-grid--back { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.lk-item { display: grid; gap: 10px; align-content: start; padding: 12px 10px 10px; border: var(--ds-line) solid transparent; border-radius: 3px; }
+.lk-item.is-sel { background: var(--ds-tex-lines), var(--ds-amber); border: var(--ds-line) solid var(--ds-ink); box-shadow: 3px 4px 0 rgba(27, 20, 13, 0.3); }
+#lobby button.lk-pick { all: unset; box-sizing: border-box; pointer-events: auto; cursor: pointer; display: block; transition: transform 0.1s; } #lobby button.lk-pick:hover, #lobby button.lk-pick:focus-visible { transform: translateY(-3px) rotate(-0.8deg); }
+.lk-logo { display: grid; place-items: center; aspect-ratio: 1; background: var(--ds-card); border: var(--ds-line) solid var(--ds-ink); border-radius: 50%; box-shadow: 3px 4px 0 rgba(27, 20, 13, 0.3); } .lk-logo img { width: 74%; }
+.lk-back { display: block; width: 100%; aspect-ratio: 270 / 314; object-fit: cover; border-radius: 6px; box-shadow: 0 0 0 1.5px var(--ds-ink), 3px 4px 0 rgba(0, 0, 0, 0.3); }
+.lk-item .sc-meta { justify-content: center; min-height: 30px; }
+.lk-on, .lk-own { font: 700 12px/1 var(--f-ui); font-style: normal; letter-spacing: 0.1em; text-transform: uppercase; } .lk-on { padding: 6px 8px 5px; background: var(--ds-ink); color: var(--ds-card); border-radius: 2px; } .lk-own { color: var(--ds-ink-2); }
+
+/* ── troféus: placas de mérito ── */
+.tf-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; align-content: start; padding: 14px 14px var(--ds-5); overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--ds-ink) rgba(27, 20, 13, 0.12); }
+.tf-item { padding: 10px; border: var(--ds-line) solid transparent; border-radius: 3px; }
+.tf-item.is-sel { background: var(--ds-tex-lines), var(--ds-amber); border: var(--ds-line) solid var(--ds-ink); box-shadow: 3px 4px 0 rgba(27, 20, 13, 0.3); }
+.ds-trfile > .ds-body { grid-template-rows: auto auto auto minmax(0, 1fr); } .ds-trfile .ds-file__foot { align-self: end; }
+.ds-trfile__plaque { display: grid; place-items: center; padding: 8px 0 4px; }

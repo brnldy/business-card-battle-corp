@@ -50,29 +50,38 @@ O autor achou o resultado das regras antigas grande demais e sem respiro. Acessi
 | Sala de reunião | Refeita sobre a campanha de 30 batalhas; o autor ainda não comentou. |
 | Loja → entrada com envelope e abertura do pacote | Entregue; envelope ajustado em 27/11 (só a aba). |
 | Loja → Cartas avulsas (grade + ficha sempre à direita) | Refeita em 27/11 a pedido do autor; ele ainda não viu. |
-| Loja → Decks prontos e Visual | Não feitos (desenho escuro antigo). |
-| Arquivo, Conquistas, Perfil, Reciclar, Salvar/Carregar | Não feitos (desenho escuro antigo). |
+| Loja → Decks prontos e Visual | Feitos em 27/11; o autor ainda não viu. |
+| Troféus (era Conquistas), em aba com Metas | Feito em 27/11; o autor ainda não viu. |
+| Arquivo, Perfil, Reciclar, Salvar/Carregar | Não feitos (desenho escuro antigo). |
 
 Recusados, para não repetir: a Loja como máquina de vendas (duas tentativas; o autor não entendeu o fluxo e mandou apagar) e um guia de estilo que copiava o Dispatch.
 
-## Pedidos de 27/11/2026: o que foi feito e o que ficou
+## Estado em 27/11/2026 (fim da sessão)
 
-Feito e conferido em captura (1280×720, 1440×900 e 1920×1080; a tela de cartas também no arquivo único):
+Decisões do autor nesta rodada: o custo de sacrifício **fica** na carta reduzida; Metas e Troféus viram um par de abas; economia não se mexe agora.
 
-1. **Abas no topo da janela** (`.ds-tabs` com a variante `.lb-htabs`) no lugar da etiqueta com o nome do lugar. Loja: Pacotes, Cartas, Decks, Visual. Sala de reunião e Treino: Campanha e Treino (uma leva à outra). Metas: uma aba só. A lista fica em `HTABS`, em `lobbyui.js`.
-2. **Cartas avulsas dividida em duas**: grade à esquerda e, à direita, sempre a ficha de uma carta. Passar o mouse ou focar troca a ficha (`scShow`); clicar fixa a carta (`scSel`), para teclado e toque. A faixa antiga ("‹ Loja", etiqueta, filtro) saiu: a navegação foi para as abas e o filtro virou a caixa "Só as que faltam".
-3. **Cópias na vitrine**: três casas embaixo de cada carta (`.ds-copies`), cheias conforme o que o jogador tem.
-4. **Envelope só com a aba** (sem círculos nem barbante), no palco, na abertura e no catálogo.
-5. **Peças novas** em `ds.css` e no catálogo: `.ds-copies` (cópias), `.ds-tag` (etiqueta de preço, é o botão de comprar da vitrine), `.ds-photo` (foto presa por clipe) e `.ds-file` (ficha da carta).
+Feito e conferido em captura (1280×720, 1440×900, 1920×1080):
+
+1. **Abas no topo da janela** (`.ds-tabs` + `.lb-htabs`, lista em `HTABS` no `lobbyui.js`): Loja (Pacotes, Cartas, Decks, Visual), Campanha e Treino, Metas do dia e Troféus.
+2. **Padrão "vitrine com ficha"**, usado em Cartas, Decks, Visual e Troféus: grade à esquerda e uma ficha sempre à direita. Mouse ou foco troca a ficha (`showFile`); clique fixa o item. Cada vista diz o que fica na ficha em `viewer()`.
+3. **Cartas avulsas**: cópias na vitrine (`.ds-copies`) e etiqueta de preço que compra (`.ds-price`).
+4. **Decks prontos**: três caixas-arquivo no topo (`.ds-boxfile`), as cartas do deck por tipo com a fita `.ds-qty` (×3) e o selo "Nova" nas que o jogador nunca teve. A ficha padrão é a guia de remessa (`.ds-manifest`): composição, o que chega, o valor avulso (uma vez) e a única ação (comprar, guardar grátis, abrir no Arquivo, arquivo cheio ou faltam $).
+5. **Visual**: logos (impressos em tinta escura com `logoUrl(id, { ink })`) e versos em grade; a ficha é a prova de gráfica (`.ds-proof`, com marcas de corte e tira de cor) com Usar / Comprar e usar / Em uso.
+6. **Troféus** (era Conquistas): placas de mérito (`.ds-plaque`: madeira e latão quando conquistada, contorno tracejado quando não), ficha com o que pede, quanto paga e a data.
+7. **Envelope** só com a aba.
+
+Armadilhas desta rodada (não repetir):
+
+- **Nome de classe repetido.** `.ds-tag`, `.dk` (Sala de reunião) e `.tr` (Treino) já existiam; usar o mesmo nome misturou estilos. Antes de criar classe, procurar o nome exato em todos os `.css`. As telas novas usam `sc-`, `rd-` (decks prontos), `lk-` (visual), `tf-` (troféus) e `sv-h` (título de seção da vitrine).
+- **Método repetido.** `LobbyUI.show(on)` liga e desliga o lobby inteiro; um método novo com o mesmo nome escondeu o lobby sem erro no console.
 
 Ficou por fazer ou em aberto:
 
-- **Decks prontos e Visual** continuam no desenho escuro antigo, com a própria faixa "← Loja" e sem as abas novas. Quem clica nas abas Decks ou Visual cai nessa tela antiga.
-- Em 1280×720 a grade mostra uma fileira inteira e parte da segunda (rola), e a ficha rola quando a carta tem texto longo.
-- O aviso de compra (toast) aparece por cima do canto de baixo da ficha por alguns segundos.
-- Nas janelas de aba única (Metas) a aba repete o título. O autor não disse o que entra nas abas das telas que não têm seções; Campanha/Treino foi escolha desta sessão.
-- A vista de detalhe em tela cheia (`detail`) segue em uso só na abertura do pacote.
-- Economia: o autor não quer mexer agora (item 7 do plano segue em aberto).
+- **Metas, Campanha e Treino não têm o zoom das telas novas.** Em 1280×720 e 1440×900, trocar de Metas para Troféus muda o tamanho da janela. É o passo 6 do plano.
+- Em 1280×720 as grades rolam (uma fileira e meia de cartas visível).
+- A confirmação de compra do deck ainda usa o diálogo antigo (`ui.confirm`).
+- Não conferido: placa conquistada com dados reais (vi só marcando a classe à mão) e compra de deck até o fim.
+- Arquivo, Perfil, Reciclar e Salvar/Carregar seguem no desenho antigo.
 
 ## Medições do passo 0 (três telas já feitas)
 
