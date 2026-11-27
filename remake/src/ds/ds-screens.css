@@ -304,7 +304,7 @@ button.ds-check { background: none; border: none; padding: 6px 0; pointer-events
 #lobby input.ed-name { height: auto; background: none; color: var(--ds-ink); border: none; border-bottom: 2px dashed var(--ds-ink-3); border-radius: 0; box-shadow: none; }
 #lobby input.ed-name:hover { border-bottom-color: var(--ds-ink); } #lobby input.ed-name:focus { border-bottom: 2px solid var(--ds-amber); background: rgba(242, 185, 76, 0.15); }
 #lobby input.ds-search { color: var(--ds-ink); }
-.fd-file > .ds-body { grid-template-rows: auto auto auto minmax(0, 1fr); } .fd-file .fd-foot { align-self: end; }
+.fd-file > .ds-body { grid-template-rows: auto auto 1fr auto; } .fd-file .fd-faces { align-self: center; }
 .fd-faces .ds-mini { width: 74px; margin: 0 -8px; }
 .sc-shelf { grid-template-columns: minmax(0, 1fr); }
 /* rodapé do editor: os links numa linha só em cima, a ação principal larga embaixo */
