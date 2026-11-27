@@ -302,24 +302,33 @@ button.ds-plaque { transition: transform 0.1s; } button.ds-plaque:hover, button.
 /* ── cabeçalho das janelas (27/11): topo de formulário ── */
 /* rótulo de formulário: o mesmo do Formulário 01-A */
 .ds-formlabel { font: 700 12px/1 var(--f-ui); letter-spacing: 0.14em; text-transform: uppercase; color: var(--ds-ink-2); }
-/* topo de formulário: uma faixa de papel com casas separadas por fio */
-.ds-formhead { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; background: var(--ds-tex-lines), var(--ds-card); border: var(--ds-line) solid var(--ds-ink); box-shadow: 3px 4px 0 rgba(27, 20, 13, 0.3); }
-.ds-formhead__cell { display: grid; align-content: center; gap: 9px; padding: 12px 20px 10px; min-width: 0; } .ds-formhead__cell + .ds-formhead__cell { border-left: var(--ds-line) solid var(--ds-ink); }
-.ds-formhead h2 { margin: 0; font: 400 38px/1 var(--f-title); letter-spacing: 0.02em; text-transform: uppercase; color: var(--ds-ink); text-shadow: none; }
-.ds-formhead__cash { padding: 12px 34px 10px 22px; }
-/* cédula: o dinheiro do jogador, na proporção de uma nota de verdade (cerca de 2,3 : 1). Fundo verde com guilhoché,
-   moldura dupla, medalhão oval com o logo da empresa (como o retrato de uma cédula), "Patrimônio" impresso como o nome
-   do banco e o valor grande no canto. As notas de trás (pseudo-elementos) fazem o maço. */
-.ds-cash { --cash: #dbe6cf; --cash-2: #c9dab9; --cash-3: #b9cda6; --cash-ink: #1f5632; position: relative; isolation: isolate; }
-.ds-cash::before, .ds-cash::after { content: ""; position: absolute; inset: 0; z-index: -1; background: var(--cash-2); border: var(--ds-line) solid var(--ds-ink); border-radius: 4px; }
-.ds-cash::before { transform: translate(6px, -3px) rotate(2deg); } .ds-cash::after { background: var(--cash-3); transform: translate(11px, -5px) rotate(3.5deg); }
-.ds-cash__note { position: relative; display: grid; grid-template-columns: 46px auto; grid-template-rows: auto 1fr; column-gap: 12px; align-items: end; min-width: 174px; height: 74px; padding: 9px 15px 9px 16px;
-  background: radial-gradient(circle at 39px 50%, rgba(31, 86, 50, 0.16) 0 1px, transparent 1.5px) 0 0 / 7px 7px, repeating-radial-gradient(circle at 39px 50%, transparent 0 7px, rgba(31, 86, 50, 0.13) 7px 8px), repeating-radial-gradient(circle at 115% 50%, transparent 0 7px, rgba(31, 86, 50, 0.1) 7px 8px), var(--cash);
-  border: var(--ds-line) solid var(--ds-ink); border-radius: 4px; box-shadow: inset 0 0 0 3px var(--cash), inset 0 0 0 4.5px rgba(31, 86, 50, 0.65), inset 0 0 0 6.5px var(--cash), inset 0 0 0 7.5px rgba(31, 86, 50, 0.35), 2px 3px 0 rgba(27, 20, 13, 0.3); }
-.ds-cash__face { grid-row: 1 / span 2; align-self: center; display: grid; place-items: center; width: 46px; height: 56px; border-radius: 50%; background: #e3ecd8; box-shadow: 0 0 0 1.5px var(--cash-ink), 0 0 0 3.5px var(--cash), 0 0 0 4.5px var(--cash-ink); }
-.ds-cash__face img { width: 36px; height: 36px; }
-.ds-cash__bank { align-self: start; padding-top: 3px; font: 700 12px/1 var(--f-ui); letter-spacing: 0.14em; text-transform: uppercase; color: var(--cash-ink); white-space: nowrap; }
-.ds-cash__value { justify-self: end; font: 400 34px/0.85 var(--f-title); letter-spacing: 0.02em; color: #12301c; white-space: nowrap; } .ds-cash__value small { margin-right: 4px; font-size: 22px; }
+/* A · papel timbrado: título direto no papel, sobre linha dupla de tinta; o recibo e o ✕ à direita */
+.ds-letterhead { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: 28px; padding: 0 0 12px; border-bottom: 5px double var(--ds-ink); }
+.ds-letterhead__title { display: grid; gap: 8px; min-width: 0; } .ds-letterhead__title .ds-formlabel { color: var(--ds-ink); }
+#lobby .lb-head .ds-letterhead h2 { margin: 0; font: 400 46px/1 var(--f-title); letter-spacing: 0.02em; text-transform: uppercase; color: var(--ds-ink); text-shadow: none; }
+/* recibo de caixa: papel térmico, texto de impressora, saldo grifado a marca-texto âmbar, borda de baixo rasgada */
+.ds-till { position: relative; z-index: 2; margin: -4px 0 -20px; transform: rotate(-1.5deg); filter: drop-shadow(3px 4px 0 rgba(27, 20, 13, 0.3)); }
+.ds-till__paper { display: grid; grid-template-columns: auto auto; align-items: baseline; column-gap: 22px; row-gap: 7px; min-width: 250px; padding: 13px 18px 17px; background: var(--ds-tex-lines), #fbf8ee; color: var(--ds-ink); border: var(--ds-line) solid var(--ds-ink); border-bottom: none;
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 7px), 93.75% 100%, 87.5% calc(100% - 7px), 81.25% 100%, 75% calc(100% - 7px), 68.75% 100%, 62.5% calc(100% - 7px), 56.25% 100%, 50% calc(100% - 7px), 43.75% 100%, 37.5% calc(100% - 7px), 31.25% 100%, 25% calc(100% - 7px), 18.75% 100%, 12.5% calc(100% - 7px), 6.25% 100%, 0 calc(100% - 7px)); }
+/* o clipe fica fora do papel recortado, para sair inteiro por cima da borda */
+.ds-till > .ds-clip { top: -31px; right: 30px; width: 24px; height: 62px; }
+.ds-till__head { grid-column: 1 / -1; justify-self: stretch; padding: 0 34px 5px 0; margin-bottom: 1px; border-bottom: 2px dashed var(--ds-ink-2); font: 400 16px/1 var(--f-title); letter-spacing: 0.08em; text-transform: uppercase; color: var(--ds-ink-2); }
+.ds-till__label { font: 700 12px/1 var(--f-ui); letter-spacing: 0.14em; text-transform: uppercase; color: var(--ds-ink); }
+.ds-till__total { justify-self: end; font: 400 36px/1 var(--f-title); letter-spacing: 0.02em; white-space: nowrap; }
+.ds-till__total span { padding: 0 4px; margin-left: -4px; background: linear-gradient(to bottom, transparent 22%, var(--ds-amber) 22% 86%, transparent 86%); }
+/* B · placa da sala: placa escura de porta, filete âmbar por dentro e quatro parafusos de latão */
+.ds-nameplate { --screw: radial-gradient(circle, #e8c46a 0 2.4px, #6b4a14 2.6px 3.4px, transparent 3.6px); position: relative; display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: 26px; padding: 14px 18px 14px 28px;
+  background: var(--screw) 9px 9px / 8px 8px no-repeat, var(--screw) calc(100% - 9px) 9px / 8px 8px no-repeat, var(--screw) 9px calc(100% - 9px) / 8px 8px no-repeat, var(--screw) calc(100% - 9px) calc(100% - 9px) / 8px 8px no-repeat, linear-gradient(to bottom, #302b25, #1f1b17);
+  border: var(--ds-line) solid var(--ds-ink); border-radius: 4px; box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.1), inset 0 0 0 5px #2c2722, inset 0 0 0 6.5px rgba(242, 185, 76, 0.55), 4px 6px 0 rgba(27, 20, 13, 0.35); }
+.ds-nameplate__title { display: grid; gap: 8px; min-width: 0; }
+.ds-nameplate__title span { font: 700 12px/1 var(--f-ui); letter-spacing: 0.16em; text-transform: uppercase; color: var(--ds-amber); }
+#lobby .lb-head .ds-nameplate h2, .ds-nameplate h2 { margin: 0; font: 400 44px/1 var(--f-title); letter-spacing: 0.04em; text-transform: uppercase; color: #f4efe2; text-shadow: 0 2px 0 rgba(0, 0, 0, 0.5); }
+/* pilha de moedas: o dinheiro do jogador, em âmbar (a cor do dinheiro no sistema) */
+.ds-coinstack { display: flex; align-items: center; gap: 12px; padding-left: 24px; border-left: 1.5px solid rgba(242, 185, 76, 0.35); }
+.ds-coinstack__art { width: 60px; height: 50px; flex: none; } .ds-coinstack__s { font: 400 17px/1 var(--f-title); fill: #1b140d; }
+.ds-coinstack > span { display: grid; gap: 6px; }
+.ds-coinstack small { font: 700 12px/1 var(--f-ui); letter-spacing: 0.16em; text-transform: uppercase; color: #cfc4ab; }
+.ds-coinstack b { font: 400 38px/0.9 var(--f-title); letter-spacing: 0.02em; color: var(--ds-amber); white-space: nowrap; text-shadow: 0 2px 0 rgba(0, 0, 0, 0.5); }
 
 /* ── peças de 27/11 (Campanha e Treino) ── */
 /* agenda de reuniões: folha de planejamento presa por espiral. Na margem, cada faixa (nome e quanto paga); um dia por
@@ -350,7 +359,7 @@ button.ds-plaque { transition: transform 0.1s; } button.ds-plaque:hover, button.
 .ds-agenda__stamp { position: absolute; left: 50%; top: 58%; margin: 0; background: var(--ds-card); font-size: 24px; transform: translate(-50%, -50%) rotate(-8deg); }
 
 /* convocação: a ficha de ação de Campanha e Treino. Quem, quanto vale, o deck e o botão principal sempre no pé */
-.ds-invite > .ds-body { grid-template-rows: auto auto minmax(0, 1fr) auto; }
+.ds-invite > .ds-body { grid-template-rows: auto auto 1fr auto; }
 .ds-invite .ds-title { margin-top: 8px; font-size: 36px; } .ds-invite.is-boss .ds-title { color: var(--ds-red); } .ds-invite.is-boss .ds-bar b { color: #ff8a7a; }
 .ds-invite .ds-deckline { align-self: end; }
 .ds-invite__foot .ds-btn { gap: 14px; }

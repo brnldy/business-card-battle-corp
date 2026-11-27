@@ -214,8 +214,10 @@ button.ds-check { background: none; border: none; padding: 6px 0; pointer-events
 
 /* ── cabeçalho das janelas: topo de formulário dentro da pasta ── */
 #lobby .lb-box > header.lb-head { display: block; padding: 22px 0 var(--ds-5); border: none; }
+#lobby .lb-box > header.lb-head--slip { padding: 20px 0 22px; }
+#lobby .lb-head .lb-x { width: 46px; height: 46px; font-size: 16px; }
 /* o ✕ do cabeçalho: a regra genérica de botão do lobby.css (mais forte) apagava a borda no hover */
-#lobby .ds-formhead__x button.lb-x:hover:not(:disabled), #lobby .ds-formhead__x button.lb-x:focus-visible { background: var(--ds-ink); color: var(--ds-paper); border-color: var(--ds-ink); }
+#lobby .lb-head button.lb-x:hover:not(:disabled), #lobby .lb-head button.lb-x:focus-visible { background: var(--ds-ink); color: var(--ds-paper); border-color: var(--ds-ink); }
 
 /* ── tamanho único das janelas novas (27/11, pedido do autor): a pasta não muda de tamanho entre abas nem entre janelas,
    então as abas não pulam. O conteúdo de cada tela ocupa a pasta. ── */

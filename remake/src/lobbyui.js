@@ -58,7 +58,10 @@ const TITLES = {
   missions: ['Mural de avisos · leitura obrigatória', 'Metas do dia'], shop: ['Máquina de benefícios · não devolve troco', 'Loja'],
   achievements: ['Prateleira de troféus · empoeirada', 'Troféus'], profile: ['Recepção · ficha cadastral', 'Perfil da empresa'],
 };
-// janelas que já usam o cabeçalho novo (topo de formulário com a cédula do patrimônio)
+// cabeçalho das janelas novas: duas propostas em teste (?lobby&head=b); a escolhida fica e a outra sai
+const HEAD = new URLSearchParams(location.search).get('head') === 'b' ? 'b' : 'a';
+/** pilha de moedas (peça .ds-coinstack): quatro moedas empilhadas e uma de pé, com o "$" */
+const COINS = '<svg class="ds-coinstack__art" viewBox="0 0 60 50" aria-hidden="true"><path d="M5 38 v6 a17 5.5 0 0 0 34 0 v-6" fill="#c98a16" stroke="#1b140d" stroke-width="2"/><ellipse cx="22" cy="38" rx="17" ry="5.5" fill="#f2b94c" stroke="#1b140d" stroke-width="2"/><path d="M5 31 v6 a17 5.5 0 0 0 34 0 v-6" fill="#c98a16" stroke="#1b140d" stroke-width="2"/><ellipse cx="22" cy="31" rx="17" ry="5.5" fill="#f2b94c" stroke="#1b140d" stroke-width="2"/><path d="M5 24 v6 a17 5.5 0 0 0 34 0 v-6" fill="#c98a16" stroke="#1b140d" stroke-width="2"/><ellipse cx="22" cy="24" rx="17" ry="5.5" fill="#f2b94c" stroke="#1b140d" stroke-width="2"/><path d="M5 17 v6 a17 5.5 0 0 0 34 0 v-6" fill="#c98a16" stroke="#1b140d" stroke-width="2"/><ellipse cx="22" cy="17" rx="17" ry="5.5" fill="#f2b94c" stroke="#1b140d" stroke-width="2"/><circle cx="44" cy="31" r="13" fill="#c98a16" stroke="#1b140d" stroke-width="2"/><circle cx="42" cy="31" r="13" fill="#f2b94c" stroke="#1b140d" stroke-width="2"/><circle cx="42" cy="31" r="9.3" fill="none" stroke="#a8701a" stroke-width="1.5"/><text x="42" y="37.5" text-anchor="middle" class="ds-coinstack__s">$</text></svg>';
 const NEW_HEAD = new Set(['duel', 'training', 'missions', 'achievements', 'shop']);
 const sortCards = (ids) => [...ids].sort((a, b) => a.localeCompare(b));
 const group = (ids) => { const m = new Map(); for (const id of ids) m.set(id, (m.get(id) ?? 0) + 1); return [...m.entries()].sort((a, b) => a[0].localeCompare(b[0])); };
@@ -221,22 +224,17 @@ export class LobbyUI {
     if (this._scrollTo != null) { $(`[data-deck="${this._scrollTo}"]`, this.win)?.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); this._scrollTo = null; }
   }
   /** sai do editor de volta para as pastas */
-  /** cédula do patrimônio (peça .ds-cash): nota na proporção de cédula, com o logo da empresa no medalhão, "Patrimônio"
-   *  impresso como o nome do banco e o valor no canto; duas notas atrás fazem o maço */
-  cash(s) {
-    const pat = money(s.patrimonio), face = logoUrl(s.cosmetics.logo, { ink: '#1f5632', accent: '#1f5632', bg: '#e3ecd8' });
-    return `<div class="ds-cash" role="img" aria-label="Patrimônio: ${pat}"><div class="ds-cash__note">
-      <span class="ds-cash__face"><img src="${face}" alt=""></span><span class="ds-cash__bank">Patrimônio</span>
-      <b class="ds-cash__value"><small>$</small>${esc(pat.replace(/^\$\s*/, ''))}</b></div></div>`;
-  }
-  /** cabeçalho das janelas novas: topo de formulário com três casas (lugar e título | patrimônio em cédula | fechar) */
+  /** cabeçalho das janelas novas, duas propostas em teste (?lobby&head=b mostra a B; sem nada, a A).
+   *  A · recibo: título direto na pasta sobre linha dupla de papel timbrado; patrimônio num recibo de caixa preso por clipe.
+   *  B · placa: placa de porta escura com parafusos; patrimônio numa pilha de moedas com o valor em âmbar. */
   head(title, memo, htabs, s) {
-    const place = esc(memo.split(' · ')[0]), pat = money(s.patrimonio);
-    return `<header class="lb-head">${htabs}<div class="ds-formhead">
-      <div class="ds-formhead__cell"><span class="ds-formlabel">${place}</span><h2>${esc(title)}</h2></div>
-      <div class="ds-formhead__cell ds-formhead__cash">${this.cash(s)}</div>
-      <div class="ds-formhead__cell ds-formhead__x"><button class="lb-x" data-a="close" title="Fechar (Esc)" aria-label="Fechar">✕</button></div>
-    </div></header>`;
+    const place = esc(memo.split(' · ')[0]), pat = money(s.patrimonio), x = '<button class="lb-x" data-a="close" title="Fechar (Esc)" aria-label="Fechar">✕</button>';
+    if (HEAD === 'b') return `<header class="lb-head lb-head--plate">${htabs}<div class="ds-nameplate">
+      <div class="ds-nameplate__title"><span>${place}</span><h2>${esc(title)}</h2></div>
+      <div class="ds-coinstack" role="img" aria-label="Patrimônio: ${pat}">${COINS}<span><small>Patrimônio</small><b>${pat}</b></span></div>${x}</div></header>`;
+    return `<header class="lb-head lb-head--slip">${htabs}<div class="ds-letterhead">
+      <div class="ds-letterhead__title"><span class="ds-formlabel">${place}</span><h2>${esc(title)}</h2></div>
+      <div class="ds-till" role="img" aria-label="Patrimônio: ${pat}"><i class="ds-clip"></i><div class="ds-till__paper"><span class="ds-till__head">Caixa · saldo</span><span class="ds-till__label">Patrimônio</span><b class="ds-till__total"><span>${pat}</span></b></div></div>${x}</div></header>`;
   }
   leaveEditor() { this.ed = null; this.resetFilters(); this.peek(null); sfx('navBack'); this.render(); }
   tabs(id, list) { const cur = this.tab[id] ?? list[0][0]; this.tab[id] = cur; return `<div class="lb-tabs" role="tablist">${list.map(([k, n]) => `<button data-a="tab" data-id="${k}" role="tab" aria-selected="${k === cur}" class="${k === cur ? 'on' : ''}">${n}</button>`).join('')}</div>`; }
