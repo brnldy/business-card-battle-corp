@@ -316,7 +316,7 @@ button.ds-check { background: none; border: none; padding: 6px 0; pointer-events
 .ed-item .sc-meta { gap: 6px; }
 .ed-hint { font-size: 13px; }
 /* lista do deck: quantidade, nome e − + em cada linha */
-.ed-row { display: flex; align-items: center; gap: 8px; min-height: 40px; padding: 2px 6px; border-bottom: 1px dashed rgba(27, 20, 13, 0.25); font: 600 14px/1.2 var(--f-ui); color: var(--ds-ink); }
+.ed-row { display: flex; align-items: center; gap: 8px; min-height: 36px; padding: 2px 6px; border-bottom: 1px dashed rgba(27, 20, 13, 0.25); font: 600 14px/1.2 var(--f-ui); color: var(--ds-ink); }
 .ed-row > b { flex: none; width: 26px; font: 400 18px/1 var(--f-title); } .ed-row__name { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ed-row.is-short { color: var(--ds-red); } .ed-row .ds-stepper { margin-left: auto; box-shadow: none; }
 /* deck em montagem: topo mais baixo, para a lista ganhar linhas */

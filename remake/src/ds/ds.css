@@ -424,11 +424,12 @@ button.ds-slot.is-filled:hover, button.ds-slot.is-filled:focus-visible { transfo
 /* ── peças de 27/11, 2ª rodada (Decks) ── */
 /* − e +: dois botões colados. O + vira compra (fundo âmbar, com o preço) quando a próxima cópia ainda não é sua */
 .ds-stepper { display: inline-flex; flex: none; background: var(--ds-card); border: var(--ds-line) solid var(--ds-ink); border-radius: var(--ds-r); box-shadow: 2px 2px 0 rgba(27, 20, 13, 0.3); }
-.ds-stepper__btn { box-sizing: border-box; display: grid; place-items: center; min-width: 32px; height: 32px; padding: 0 6px; margin: 0; background: none; border: none; border-radius: 0; color: var(--ds-ink); font: 400 24px/1 var(--f-title); cursor: pointer; pointer-events: auto; }
+.ds-stepper__btn { position: relative; box-sizing: border-box; display: grid; place-items: center; min-width: 26px; height: 26px; padding: 0 5px; margin: 0; background: none; border: none; border-radius: 0; color: var(--ds-ink); font: 400 20px/1 var(--f-title); cursor: pointer; pointer-events: auto; }
+.ds-stepper__btn::after { content: ""; position: absolute; inset: -3px -3px; }
 .ds-stepper__btn + .ds-stepper__btn { border-left: var(--ds-line) solid var(--ds-ink); }
 .ds-stepper__btn:hover:not(:disabled), .ds-stepper__btn:focus-visible { background: var(--ds-amber); }
 .ds-stepper__btn:disabled { color: var(--ds-ink-3); cursor: not-allowed; opacity: 0.55; }
-.ds-stepper__btn.is-buy { padding: 1px 7px 0; background: var(--ds-tex-lines), var(--ds-amber); font-size: 17px; letter-spacing: 0; white-space: nowrap; }
+.ds-stepper__btn.is-buy { padding: 1px 6px 0; background: var(--ds-tex-lines), var(--ds-amber); font-size: 16px; letter-spacing: 0; white-space: nowrap; }
 .ds-stepper__btn.is-buy:hover:not(:disabled) { background: var(--ds-tex-lines), #ffd98c; } .ds-stepper__btn.is-buy:disabled { background: none; color: var(--ds-red); opacity: 1; }
 /* ficha da carta: topo calmo (foto pequena e reta, nome, uma linha de categorias), atributos numa faixa, regras, cópias e ação no pé */
 .ds-cardfile > .ds-body { grid-template-rows: auto auto minmax(0, 1fr) auto; gap: 12px; padding: 14px 16px 14px; }
@@ -447,3 +448,10 @@ button.ds-slot.is-filled:hover, button.ds-slot.is-filled:focus-visible { transfo
 .ds-cardfile__own { display: flex; align-items: center; gap: 8px; font: 500 14px/1.2 var(--f-ui); } .ds-cardfile__own b { font-weight: 700; }
 .ds-cardfile__foot .ds-btn { height: 40px; padding: 0 14px; margin-bottom: 4px; font-size: 13px; } .ds-cardfile__foot .ds-stamp { margin: 0 4px 0 0; font-size: 13px; }
 .ds-cardfile.is-compact > .ds-body { gap: 10px; padding: 12px 14px; } .ds-cardfile.is-compact .ds-file__rules { -webkit-mask-image: none; mask-image: none; padding-bottom: 0; }
+
+/* ficha grande com a foto presa por clipe (de volta a pedido do autor): mais compacta para a regra caber sem rolar */
+.ds-cardfile .ds-file__top { grid-template-columns: 104px minmax(0, 1fr); gap: 16px; padding-top: 8px; }
+.ds-cardfile .ds-file__top .ds-title { font-size: 26px; line-height: 0.95; }
+.ds-cardfile .ds-file__kind { margin-top: 8px; }
+.ds-cardfile .ds-file__stats dd { margin-top: 4px; font-size: 24px; } .ds-cardfile .ds-file__stats div { padding: 7px 10px 5px; }
+.ds-cardfile .ds-file__fx { padding: 8px 10px; font-size: 14px; }

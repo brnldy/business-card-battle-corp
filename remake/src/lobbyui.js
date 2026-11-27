@@ -494,6 +494,8 @@ export class LobbyUI {
     const max = DECK_RULES.maxCopies, own = Meta.owned(s, id), p = Meta.priceOf(id), nm = esc(byId.get(id).name);
     const full = cards.length >= DECK_RULES.size, buy = inDeck >= Math.min(own, max) && own < max && inDeck < max;
     const why = inDeck >= max ? `Máximo de ${max} cópias por carta` : full ? `O deck já tem ${DECK_RULES.size} cartas` : null;
+    if (!own && !inDeck) return p > s.patrimonio ? `<button class="ds-price" disabled title="Faltam ${money(p - s.patrimonio)}">${money(p)}</button>`
+      : `<button class="ds-price" data-a="buy-card" data-id="${id}" title="Comprar e pôr no deck">${money(p)}</button>`;
     const minus = `<button class="ds-stepper__btn" data-a="deck-rem" data-card="${id}" ${inDeck ? '' : 'disabled'} aria-label="Tirar uma ${nm}" title="Tirar uma">−</button>`;
     let plus;
     if (why) plus = `<button class="ds-stepper__btn" disabled aria-label="Pôr mais uma ${nm}" title="${why}">+</button>`;
@@ -768,16 +770,17 @@ export class LobbyUI {
    *  linha de categorias), atributos numa faixa, regras e, no pé, as cópias junto da ação. compact = destaque do editor */
   scFile(id, mode = true, { compact = false, inDeck = null } = {}) {
     const c = byId.get(id), s = this.s, fx = isFx(c), max = DECK_RULES.maxCopies, own = Math.min(Meta.owned(s, id), max), price = Meta.priceOf(id), lack = price - s.patrimonio;
-    const kind = [KIND[c.kind], c.element, c.department ? `Depto. ${DEPT[c.department] ?? c.department}` : ''].filter(Boolean).join(' · ');
-    const stats = fx ? `<p class="ds-cardfile__fx">${c.kind === 'effect_trap' ? 'Fica virada na mesa até disparar.' : c.durationTurns ? `Fica na mesa por ${c.durationTurns} turnos seus.` : 'Vale na hora e vai para o Morto.'}</p>`
-      : `<dl class="ds-cardfile__stats"><div><dt>Ataque</dt><dd>${money(c.atk)}</dd></div><div><dt>Defesa</dt><dd>${money(c.def)}</dd></div><div><dt>Custo</dt><dd>${c.cost ? `${c.cost} <small>sacrif.</small>` : '<small>grátis</small>'}</dd></div></dl>`;
+    const kinds = [KIND[c.kind], c.element, c.department ? `Depto. ${DEPT[c.department] ?? c.department}` : ''].filter(Boolean), kind = kinds.join(' · ');
+    const stats = fx ? `<p class="${compact ? 'ds-cardfile__fx' : 'ds-file__fx'}">${c.kind === 'effect_trap' ? 'Fica virada na mesa até disparar.' : c.durationTurns ? `Fica na mesa por ${c.durationTurns} turnos seus.` : 'Vale na hora e vai para o Morto.'}</p>`
+      : `<dl class="${compact ? 'ds-cardfile__stats' : 'ds-file__stats'}"><div><dt>Ataque</dt><dd>${money(c.atk)}</dd></div><div><dt>Defesa</dt><dd>${money(c.def)}</dd></div><div><dt>Custo</dt><dd>${c.cost ? `${c.cost} <small>sacrif.</small>` : '<small>grátis</small>'}</dd></div></dl>`;
     const action = mode === 'shop' ? (own >= max ? '<i class="ds-stamp ds-stamp--ok">Completa</i>' : `<button class="ds-btn ds-btn--primary" data-a="to-shop" data-id="${id}">${own ? 'Comprar mais' : 'Comprar na Loja'}</button>`)
       : own >= max ? '<i class="ds-stamp ds-stamp--ok">Completa</i>' : lack > 0 ? `<button class="ds-btn ds-btn--primary" disabled>Faltam ${money(lack)}</button>` : `<button class="ds-btn ds-btn--primary" data-a="buy-card" data-id="${id}">Comprar · ${money(price)}</button>`;
     const own$ = inDeck != null ? `<b>${inDeck}</b> no deck · tem <b>${own}</b>` : `Você tem <b>${own} de ${max}</b>`;
     return `<section class="ds-sheet ds-file ds-cardfile ${compact ? 'is-compact' : ''}">
       <div class="ds-bar"><span>${compact ? esc(RARITY_PT[Meta.rarityOf(id)]) : 'Ficha da carta'}</span><b>${compact ? '' : RARITY_PT[Meta.rarityOf(id)]}</b></div>
       <div class="ds-body">
-        <header class="ds-cardfile__head">${compact ? '' : `<img class="ds-cardfile__pic" src="${photoUrl(id)}" alt="">`}<div><h3 class="ds-title">${esc(c.name)}</h3><p class="ds-cardfile__kind">${esc(kind)}</p></div></header>
+        ${compact ? `<header class="ds-cardfile__head"><div><h3 class="ds-title">${esc(c.name)}</h3><p class="ds-cardfile__kind">${esc(kind)}</p></div></header>`
+          : `<div class="ds-file__top"><figure class="ds-photo"><i class="ds-clip"></i><img src="${photoUrl(id)}" alt=""></figure><div><h3 class="ds-title">${esc(c.name)}</h3><p class="ds-file__kind">${kinds.map((k) => `<span>${esc(k)}</span>`).join('')}</p></div></div>`}
         ${stats}
         <ul class="ds-file__rules">${(RULES_TEXT[id] ?? []).map(([n, t]) => `<li><b>${esc(n)}</b>${esc(t)}</li>`).join('') || '<li>Sem habilidade.</li>'}</ul>
         <footer class="ds-cardfile__foot"><span class="ds-cardfile__own">${copies(own)}<span>${own$}</span></span>${mode ? action : ''}</footer>
