@@ -12,6 +12,16 @@ O projeto passou a viver neste repositório, juntando as duas frentes:
 - A versão Phaser e a 3D feita aqui (descritas abaixo) ficaram guardadas num ramo local, `historico-yugioro`, que não sobe para o GitHub. A estética oficial é a do remake.
 - Regra de trabalho: tudo que fizermos sobe neste repositório.
 
+### Arquivo de decks refeito (27/11/2026)
+A tela "Decks e coleção" (`remake/src/lobbyui.js`, seção *arquivo*; estilos em `lobby.css`) virou três telas:
+- **Meus decks:** os até 6 decks lado a lado, como pastas, cada uma com 3 cartas de capa, contagem, criaturas/efeitos e se está pronto. O deck do duelo tem a aba ★. Ações por pasta: Editar, Usar no duelo, Duplicar, Apagar. A pasta vazia cria deck **em branco** ou **montado automático**.
+- **Editor:** coleção à esquerda (busca por nome/elemento/depto., filtro Criaturas/Efeitos/Armadilhas, "Só as que tenho", ordem por número/nome/ATQ/DEF/raridade) e deck à direita agrupado por tipo, com − e + em cada linha e em cada carta (clique põe, botão direito tira). Barra de composição, ATQ médio, quantas pedem sacrifício e todos os erros. **Grava sozinho** a cada mudança; "Desfazer alterações" volta ao deck como estava ao abrir. Esc volta para os decks. Linha em vermelho = o deck usa mais cópias do que você tem.
+- **Coleção:** a mesma grade com busca e filtros, bolinhas de cópia (cheia = no deck, contorno = tenho, tracejada = não tenho) e atalho para a loja.
+- A ficha da carta abre flutuando ao lado do mouse (vale também na loja), no lugar da coluna fixa de antes.
+- Regras novas em `src/meta/meta.ts`, com testes: `duplicateDeck` e `autoFill` (completa até 40 só com a coleção: ~1 efeito a cada 5 cartas, no máximo 6 cartas de sacrifício, criaturas por ATQ+DEF e raridade).
+- Correção: a janela do lobby descia quando o conteúdo passava da altura (linha da grade sem altura definida).
+- Referências usadas: Hearthstone ("Complete My Deck", lista à direita), Legends of Runeterra (40 cartas/3 cópias, deck inválido pode ser salvo, carta que falta destacada) e a seleção de decks do Balatro (um cartão grande por deck, tudo à vista).
+
 ### Saves, animações, campanha e rivais (26/11/2026)
 - **Saves em 3 gavetas** (`remake/src/save.js`): menu com *Continuar expediente*, *Novo jogo* e *Carregar*; no lobby, botão *Salvar / Carregar* (tecla S). Cada gaveta é uma empresa inteira (nome, cartas, PATRIMÔNIO, campanha). A gaveta em uso salva sozinha a cada mudança; *Salvar aqui* copia para outra gaveta. Salvar só no lobby (decisão do autor). O progresso antigo virou a gaveta 1.
 - **Animações próprias das cartas** (`remake/src/cardfx.js`), em 3D low poly, só as aprovadas pelo autor: palma do Bruno, cruz do Paulo (em defesa), celular REC do Lucas, bocarra da Tênia, carimbo "FALTOU UM TCHAN!" da Thays, nuvem do Chat GPT, pilha AA descarregando e caneca de café. Saíram: olho da Duda, post do Filipe, ×2 do Ralph e etiqueta do pão.
@@ -35,7 +45,7 @@ Entre o menu (a rua) e o duelo agora existe o **lobby**: a recepção da empresa
 | Objeto | Área | O que faz |
 |---|---|---|
 | Porta dupla "Sala de reunião" | Duelo | Entra num duelo valendo, com o deck escolhido |
-| Arquivos de aço | Decks e coleção | Montador de deck (até 6 decks), coleção com contador e ficha de cada carta |
+| Arquivos de aço | Decks e coleção | Pastas com os decks (até 6), editor com busca/filtros e "Completar automático", coleção com contador e ficha de cada carta |
 | Máquina de benefícios | Loja | Pacotes (com abertura carta a carta), cartas avulsas, decks prontos e visual |
 | Mural de cortiça | Metas do dia | 3 metas por dia que pagam mesmo na derrota |
 | Prateleira de troféus | Conquistas | 17 conquistas, cada uma com bônus |

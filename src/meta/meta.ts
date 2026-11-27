@@ -141,6 +141,46 @@ export function setActiveDeck(save: Save, index: number): Result {
   if (!save.decks[index]) return fail('Deck não encontrado.');
   return { ok: true, save: { ...clone(save), activeDeck: index }, unlocked: [] };
 }
+/** Copia um deck para uma gaveta nova, no fim da lista, com "(cópia)" no nome. */
+export function duplicateDeck(save: Save, index: number, now = 0): Result<{ index: number }> {
+  const d = save.decks[index];
+  if (!d) return fail('Deck não encontrado.');
+  if (save.decks.length >= META.maxDecks) return fail(`Você já tem ${META.maxDecks} decks. Apague um para copiar este.`);
+  const tag = ' (cópia)';
+  return saveDeck(save, -1, { name: d.name.slice(0, 24 - tag.length).trim() + tag, cards: [...d.cards] }, now);
+}
+
+/** Quanto cada tipo de carta pesa na montagem automática. */
+const AUTO = { effectShare: 0.2, maxSacrifice: 6 };
+const autoScore = (id: string): number => {
+  const c = CARDS_BY_ID.get(id)!, r = rarityOf(id), bonus = r === 'legendary' ? 0.6 : r === 'rare' ? 0.3 : 0;
+  if (c.kind === 'effect_instant' || c.kind === 'effect_trap') return 1 + bonus;
+  return ((c.atk ?? 0) + (c.def ?? 0)) / 1000 + bonus - (c.cost ?? 0) * 0.9;
+};
+/**
+ * Completa um deck até o tamanho oficial só com cartas da coleção, sem tirar nada do que já está nele.
+ * Critério: as criaturas mais fortes (ATQ + DEF, raridade, menos sacrifício), cerca de 1 efeito a cada 5 cartas
+ * e no máximo 6 cartas que pedem sacrifício. Se a coleção não fecha o deck, devolve o máximo possível.
+ */
+export function autoFill(s: Save, cards: string[] = []): string[] {
+  const out = cards.filter((id) => CARDS_BY_ID.has(id)).slice(0, DECK_RULES.size);
+  const inDeck = (id: string) => out.filter((x) => x === id).length;
+  const free = (id: string) => Math.max(0, Math.min(owned(s, id), DECK_RULES.maxCopies) - inDeck(id));
+  const isEffect = (id: string) => { const k = CARDS_BY_ID.get(id)!.kind; return k === 'effect_instant' || k === 'effect_trap'; };
+  const needsSac = (id: string) => (CARDS_BY_ID.get(id)!.cost ?? 0) > 0;
+  const ranked = CARDS.map((c) => c.id).filter((id) => free(id) > 0).sort((a, b) => autoScore(b) - autoScore(a) || a.localeCompare(b));
+  const effectGoal = Math.round(DECK_RULES.size * AUTO.effectShare);
+  const add = (pick: (id: string) => boolean) => {
+    for (const id of ranked) {
+      while (out.length < DECK_RULES.size && free(id) > 0 && pick(id)) out.push(id);
+    }
+  };
+  // 1) efeitos até a cota, 2) criaturas, 3) o que sobrar (se faltar criatura ou efeito para fechar)
+  add((id) => isEffect(id) && out.filter(isEffect).length < effectGoal);
+  add((id) => !isEffect(id) && (!needsSac(id) || out.filter(needsSac).length < AUTO.maxSacrifice) && out.filter((x) => !isEffect(x)).length < DECK_RULES.size - effectGoal);
+  add(() => true);
+  return out.sort((a, b) => a.localeCompare(b));
+}
 
 // ───────── loja ─────────
 export function buySingle(save: Save, cardId: string, now = 0): Result {

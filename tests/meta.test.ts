@@ -6,7 +6,7 @@ import { createGame } from '../src/engine/setup.ts';
 import {
   META, DECK_RULES, newSave, migrate, owned, deckErrors, activeDeckValid, saveDeck, deleteDeck, buySingle, buyBooster, buyReadyDeck,
   readyDeckMissing, buyCosmetic, equipCosmetic, recycle, extrasOf, rollMissions, claimMission, missionDef, applyMatch, newTracker, track,
-  priceOf, recycleValue, rarityOf, distinctOwned,
+  priceOf, recycleValue, rarityOf, distinctOwned, duplicateDeck, autoFill,
 } from '../src/meta/meta.ts';
 import type { Counters, Save } from '../src/meta/meta.ts';
 
@@ -66,6 +66,46 @@ test('deck: salvar, criar, apagar e a conquista de montar o próprio deck', () =
   assert.ok(r.unlocked.some((a) => a.id === 'deck_builder'));
   assert.equal(ok(deleteDeck(r.save, 0)).save.decks.length, 1);
   assert.equal(deleteDeck(ok(deleteDeck(r.save, 0)).save, 0).ok, false);
+});
+
+test('deck: duplicar copia as cartas, marca o nome e respeita o limite de decks', () => {
+  let s = newSave();
+  s = ok(saveDeck(s, 0, { name: 'Um nome comprido demais aa', cards: s.decks[0].cards })).save;
+  const r = ok(duplicateDeck(s, 0));
+  assert.equal(r.index, 1);
+  assert.deepEqual(r.save.decks[1].cards, s.decks[0].cards);
+  assert.ok(r.save.decks[1].name.endsWith('(cópia)') && r.save.decks[1].name.length <= 24, r.save.decks[1].name);
+  assert.equal(r.save.activeDeck, 0, 'a cópia não vira o deck do duelo');
+  let t = r.save;
+  while (t.decks.length < META.maxDecks) t = ok(saveDeck(t, -1, { name: 'x', cards: [] })).save;
+  assert.equal(duplicateDeck(t, 0).ok, false);
+  assert.equal(duplicateDeck(newSave(), 5).ok, false);
+});
+
+test('deck: completar automático fecha um deck válido só com cartas da coleção', () => {
+  const s = newSave();
+  const full = autoFill(s);
+  assert.equal(full.length, DECK_RULES.size);
+  assert.deepEqual(deckErrors(s, full), [], 'com o kit do novato, o automático monta um deck válido');
+  // mantém o que já estava no deck
+  const start = ['BCB-013', 'BCB-013', 'BCB-012'];
+  const kept = autoFill(s, start);
+  assert.equal(kept.filter((id) => id === 'BCB-013').length, 2 + Math.min(1, owned(s, 'BCB-013') - 2));
+  assert.ok(kept.includes('BCB-012'));
+  assert.deepEqual(deckErrors(s, kept), []);
+  // coleção maior: escolhe, não despeja tudo; respeita cópias, cota de efeitos e de sacrifício
+  const big = { ...s, collection: Object.fromEntries(CARDS.map((c) => [c.id, 3])) };
+  const best = autoFill(big);
+  assert.deepEqual(deckErrors(big, best), []);
+  const kind = (id: string) => CARDS.find((c) => c.id === id)!;
+  const fx = best.filter((id) => kind(id).kind.startsWith('effect')).length;
+  assert.equal(fx, Math.round(DECK_RULES.size * 0.2));
+  assert.ok(best.filter((id) => (kind(id).cost ?? 0) > 0).length <= 6);
+  // coleção pequena: devolve o máximo possível, sem inventar carta
+  const poor = { ...s, collection: { 'BCB-001': 3, 'BCB-003': 1 } };
+  assert.deepEqual(autoFill(poor), ['BCB-001', 'BCB-001', 'BCB-001', 'BCB-003']);
+  // deck cheio não muda
+  assert.deepEqual(autoFill(s, full), full);
 });
 
 test('loja: carta avulsa cobra pela raridade e respeita o limite de cópias', () => {
