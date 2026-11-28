@@ -474,7 +474,9 @@ export class Duel {
   }
   async finale(e, D) {
     this.over = true; this.setSel(null);
-    const win = e.winner === ME, draw = e.winner === 'draw';
+    const win = e.winner === ME, draw = e.winner === 'draw', s = this.state, name = this.names[OP];
+    // fecha a partida já (antes da animação): se o jogador sair no meio dela, o resultado certo vai para o lobby
+    const out = this.closeMatch(draw ? 'draw' : win ? 'win' : 'loss');
     await wait(D(400));
     if (win) {
       sfx('glitch'); this.oppGlitch = 2; this.pulse('uGlitch', 1, 900);
@@ -484,17 +486,12 @@ export class Duel {
       sfx('lose'); this.lampFlicker(1); this.pulse('uFlash', 0.9, 1400, [1, 0.05, 0.02]);
       await tween(1600, (k) => { this.lampOn = 1 - k * 0.92; });
     }
-    const s = this.state, name = this.names[OP];
-    const out = this.closeMatch(draw ? 'draw' : win ? 'win' : 'loss');
+    if (!this.active || this.state !== s) return; // saiu durante a animação ou já começou outra partida
     const camp = this.plan && !this.plan.free ? { stage: this.plan.stage, total: this.plan.total, advanced: !!out?.advanced, finished: !!out?.finished } : null;
     this.ui.gameOver({
-      win, draw, me: this.names[ME], rival: name, caixa: [s.players[ME].caixa, s.players[OP].caixa], turns: s.turn, limit: e.reason === 'turn_limit',
+      win, draw, me: this.names[ME], rival: name, caixa: [s.players[ME].caixa, s.players[OP].caixa], turns: e.reason === 'turn_limit' ? s.turn - 1 : s.turn, limit: e.reason === 'turn_limit',
       gain: out?.reward ?? 0, training: this.training, camp, free: !!this.plan?.free,
-      reward: [this.training ? 'Treino: não vale PATRIMÔNIO nem entra no histórico.' : out?.reward ? `+ ${money(out.reward)} de PATRIMÔNIO` : win ? '' : 'Os investidores não pagam derrota. As metas do mural pagam.',
-        this.plan && !this.plan.free ? (out?.finished ? 'Campanha concluída. O Conselho caiu.' : out?.advanced ? `Batalha ${this.plan.stage} de ${this.plan.total} vencida. A próxima porta está aberta.` : `Você continua na batalha ${this.plan.stage} de ${this.plan.total}.`) : ''].filter(Boolean).join('\n'),
       title: draw ? 'EMPATE' : win ? 'VOCÊ VENCEU' : 'VOCÊ FALIU',
-      sub: e.reason === 'turn_limit' ? 'Limite de turnos: vence o maior CAIXA.' : win ? `${name} ficou sem CAIXA.` : `${name} leva o investimento.`,
-      stats: `Você ${money(s.players[ME].caixa)} / ${name} ${money(s.players[OP].caixa)} / ${s.turn} turnos`,
     });
   }
 

@@ -187,7 +187,7 @@ function loop(nowMs) {
   const cam = R.camera, wide = Math.max(1, 1.62 / cam.aspect);
   if (mode === 'duel') {
     // na vez do rival a câmera só levanta um pouquinho (antes ela subia o olhar para o rival e as cartas jogadas saíam de quadro)
-    const up = duel.lookUp * 0.22;
+    const up = duel.lookUp * (duel.over ? 1 : 0.22); // no fim da partida ela ainda olha o rival (atrás da tela final)
     tmpP.set(0, 4.75 * wide - up * 0.35, 0.25 + 4.45 * wide + up * 0.3);
     tmpL.set(0, up * 1.3, 0.3 - up * 1.55);
   } else {

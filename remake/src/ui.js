@@ -452,7 +452,7 @@ export class UI {
     let camp = '';
     if (o.camp) camp = `<p class="ov-camp"><span class="ds-formlabel">Campanha</span><span>${o.camp.finished ? 'Campanha concluída. O Conselho caiu.' : o.camp.advanced ? `Reunião ${o.camp.stage} de ${o.camp.total} vencida. A próxima porta está aberta.` : `Você continua na reunião ${o.camp.stage} de ${o.camp.total}.`}</span></p>`;
     const again = o.training ? 'Treinar de novo' : o.camp?.finished ? 'Reunião livre' : o.camp?.advanced ? 'Próxima reunião' : o.win || o.draw ? 'Nova reunião' : 'Revanche';
-    const box = $('#over'); box.className = `screen ov-screen is-${kind}`;
+    const box = $('#over'); box.classList.remove('is-win', 'is-lose', 'is-draw'); box.classList.add('ov-screen', `is-${kind}`); // sem apagar a classe do vidro curvo
     box.innerHTML = `<article class="ov" role="dialog" aria-modal="true" aria-labelledby="ov-t">
       <i class="ov-staple"></i>
       <header class="ov-bar"><span>${esc(doc)}</span>${where ? `<b>${esc(where)}</b>` : ''}</header>
@@ -465,7 +465,7 @@ export class UI {
       </div>
       <nav class="ov-acts"><button class="ds-btn" data-act="quit2">Voltar ao lobby</button><button class="ds-btn ds-btn--primary" data-act="again"><span class="ds-key">Enter</span>${esc(again)}</button></nav>
     </article>`;
-    setTimeout(() => box.querySelector('[data-act="again"]')?.focus({ preventScroll: true }), 50);
+    setTimeout(() => { if ($('#modal').classList.contains('hidden')) box.querySelector('[data-act="again"]')?.focus({ preventScroll: true }); }, 50);
   }
 
 }

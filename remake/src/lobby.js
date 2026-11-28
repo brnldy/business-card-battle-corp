@@ -575,7 +575,8 @@ export function buildLobby() {
       aspect = a; camera.aspect = a;
       // afasta a câmera em telas estreitas para a parede do fundo caber inteira
       // e a fileira da frente (estagiário e recepção, em z = -1) caber nos cantos
-      const th = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * a;
+      // pela lente de base: a caminhada até o duelo abre a lente por um instante e não pode mudar o enquadramento da sala
+      const th = Math.tan(THREE.MathUtils.degToRad(WALK.fov / 2)) * a;
       base.z = Math.max(BACK + 6.2 / th, -1 + 4.75 / th, 5.4); camera.updateProjectionMatrix();
     },
     /** id da área sob o cursor (x, y de 0 a 1 na tela) ou null */
@@ -678,7 +679,7 @@ export function buildLobby() {
       for (const m of strips) falling.push({ m, v: V((Math.random() - 0.5) * 0.3, -0.15 - Math.random() * 0.25, (Math.random() - 0.5) * 0.3), spin: (Math.random() - 0.5) * 6, fr: 5 + Math.random() * 4, ph: Math.random() * 6, st: -1 });
     },
     /** entrada: a câmera vem da porta da rua */
-    enter() { enterK = 0; walk = null; walkFade = 0; doorLeft.rotation.y = 0; walkFx.aberr = walkFx.wobble = 0; if (camera.fov !== WALK.fov) { camera.fov = WALK.fov; camera.updateProjectionMatrix(); } },
+    enter() { enterK = 0; walk = null; walkFade = 0; doorLeft.rotation.y = 0; walkFx.aberr = walkFx.wobble = 0; if (camera.fov !== WALK.fov) { camera.fov = WALK.fov; api.resize(aspect); } },
     /**
      * Ir para o duelo sem corte: a câmera anda até o centro da porta da sala de reunião, a folha da esquerda abre e, do meio do
      * caminho em diante, a câmera acelera, treme de leve, a lente abre e a imagem ondula, como quem entra num sonho; aí some

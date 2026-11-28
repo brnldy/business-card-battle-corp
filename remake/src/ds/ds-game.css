@@ -80,7 +80,7 @@ body.theme-buckshot .h-folder__name { text-transform: uppercase; }
 .h-hud .h-slot--sheet { transform: none; translate: 0 -50%; }
 
 /* títulos sempre em caixa alta (VT323 é monoespaçada: aperta o espaço entre palavras) */
-.h-turn__who, .h-sheet__name, .h-banner__title, .lb-box h2, .modal-box h2, .over-box h2 { text-transform: uppercase; word-spacing: -0.28em; }
+.h-turn__who, .h-sheet__name, .h-banner__title, .lb-box h2, .modal-box h2 { text-transform: uppercase; word-spacing: -0.28em; }
 /* escala geral: as peças do HUD e a janela ficam 12% menores */
 .h-hud :is(.h-slot--opp, .h-slot--me, .h-slot--turn, .h-slot--bar, .h-slot--sheet) { zoom: 0.88; }
 :is(.lb-box--duel, .lb-box--training, .lb-box--missions, .lb-box--shop-packs, .lb-box--shop-cards, .lb-box--shop-decks, .lb-box--shop-look, .lb-box--achievements, .lb-box--deck, .lb-box--profile, .lb-box--recycle, .lb-box--slots) { zoom: 0.92; }
@@ -147,7 +147,8 @@ body.theme-buckshot .h-folder__name { text-transform: uppercase; }
 .h-preview::before { content: ""; position: absolute; left: 14px; top: 12px; width: 26px; height: 7px; background: linear-gradient(to bottom, #d7dade 0 35%, #8e9399 35%); border: 1.5px solid var(--ds-ink); border-radius: 2px; transform: rotate(-32deg); }
 .h-preview__title { font: 400 26px/1 var(--f-title); text-transform: uppercase; word-spacing: -0.28em; } .h-preview.is-stop .h-preview__title, .h-preview__out .is-stop { color: var(--ds-red); } .h-preview__out { font-weight: 700; }
 /* ── fim de partida (28/11, peça .ov): documento com carimbo; vitória verde, derrota vermelha, empate em tinta ── */
-#over.ov-screen { background: rgba(6, 9, 7, 0.8); }
+#over.ov-screen { background: rgba(6, 9, 7, 0.8); overflow: auto; place-items: safe center; padding: 16px 0; } /* tela baixa: rola, o topo não corta */
+@media (prefers-reduced-motion: reduce) { .ov, .ov-stamp { animation: none; } }
 .ov { --tone: var(--ds-ink); zoom: var(--lb-fix, 1); position: relative; width: min(600px, 92vw); background: var(--ds-tex-paper); color: var(--ds-ink); border: var(--ds-line) solid var(--ds-ink); box-shadow: var(--ds-frame); transform: rotate(-0.6deg); animation: ov-in 0.28s ease-out both; }
 .is-win .ov { --tone: var(--ds-green); } .is-lose .ov { --tone: var(--ds-red); }
 @keyframes ov-in { from { opacity: 0; translate: 0 26px; rotate: 1.5deg; } to { opacity: 1; translate: 0 0; rotate: 0deg; } }
