@@ -137,6 +137,7 @@ export function buildStreet() {
   scene.fog = new THREE.FogExp2(0x1d170e, 0.018);
   const camera = new THREE.PerspectiveCamera(48, 16 / 9, 0.1, 400);
   const flick = []; // luzes que piscam: { set(k), rate, seed }
+  const powered = []; // janelas acesas sem pisca: também acendem na abertura { set(p), on, seed }
 
   scene.add(new THREE.HemisphereLight(0x8a7858, 0x0b0805, 1.3));
   const moon = new THREE.DirectionalLight(0xc9b490, 0.9); moon.position.set(4, 20, 8); scene.add(moon);
@@ -183,7 +184,8 @@ export function buildStreet() {
   hall.add(at(box(door.w, 0.05, 3.2, M(0x3a2616)), 0, 0.17, -2.7));
   const back = new THREE.Mesh(new THREE.PlaneGeometry(door.w, door.h), new THREE.MeshBasicMaterial({ map: glowTexture('door'), color: 0xffffff })); at(back, 0, door.h / 2, -4.25); hall.add(back);
   const hallLight = new THREE.PointLight(WARM, 60, 12, 1.2); at(hallLight, 0, 2.2, -2.2); hq.add(hallLight);
-  flick.push({ set: (k) => { hallLight.intensity = 60 * k; back.material.color.setScalar(0.65 + 0.35 * k); }, rate: 0.6, seed: 1 });
+  // k abaixo de 0,2 só acontece na abertura (luz ainda desligada): aí o brilho vai a zero de verdade
+  flick.push({ set: (k) => { hallLight.intensity = 60 * k; back.material.color.setScalar(k < 0.2 ? k * 3 : 0.65 + 0.35 * k); }, rate: 0.6, seed: 1 });
   // batente e porta aberta para fora
   const frameM = M(0x2a2018);
   hq.add(at(box(0.16, door.h + 0.1, 0.3, frameM), -door.w / 2 - 0.08, door.h / 2, 0.02));
@@ -211,7 +213,8 @@ export function buildStreet() {
     if (kind === 'lit') { m = winLit.clone(); m.color.setScalar(0.3 + hash(i, 7, 3) * 0.45); }
     else m = winDark;
     const pane = new THREE.Mesh(new THREE.PlaneGeometry(w, h), m); at(pane, x, y, 0.09); hq.add(pane);
-    if (kind === 'lit' && hash(i, 9, 3) > 0.5) flick.push({ set: (k) => { m.color.setScalar((0.3 + hash(i, 7, 3) * 0.45) * (0.3 + 0.7 * k)); }, rate: 0.5 + hash(i, 8, 3), seed: 10 + i });
+    if (kind === 'lit' && hash(i, 9, 3) > 0.5) flick.push({ set: (k) => { m.color.setScalar((0.3 + hash(i, 7, 3) * 0.45) * (k < 0.2 ? k * 1.5 : 0.3 + 0.7 * k)); }, rate: 0.5 + hash(i, 8, 3), seed: 10 + i });
+    else if (kind === 'lit') powered.push({ set: (p) => { m.color.setScalar((0.3 + hash(i, 7, 3) * 0.45) * (0.04 + 0.96 * p)); }, seed: 10 + i });
     if (kind === 'broken') { const s = new THREE.Mesh(new THREE.PlaneGeometry(w * 0.5, h * 0.4), M(0x2a2620)); at(s, x - w * 0.2, y + h * 0.25, 0.1); s.rotation.z = 0.5; hq.add(s); }
     if (kind === 'boarded') for (let b = 0; b < 3; b++) { const p = box(w * 1.1, 0.18, 0.06, M(0x4a3626)); at(p, x, y - h * 0.3 + b * h * 0.3, 0.14); p.rotation.z = (hash(i, b, 5) - 0.5) * 0.4; hq.add(p); }
   };
@@ -235,7 +238,7 @@ export function buildStreet() {
     const b = new THREE.Mesh(new THREE.SphereGeometry(0.08, 8, 6), new THREE.MeshBasicMaterial({ color: 0xffe0a8 })); at(b, x, 3.9, 0.85); sign.add(b);
   }
   const signLight = new THREE.SpotLight(0xffd59a, 260, 16, 0.75, 0.7, 1.2); at(signLight, 0, bh + 4.8, 2.4); signLight.target.position.set(0, bh + 2.2, -0.7); scene.add(signLight, signLight.target);
-  flick.push({ set: (k) => { signGlow.material.opacity = 0.55 * k; signLight.intensity = 260 * (0.6 + 0.4 * k); }, rate: 0.35, seed: 3 });
+  flick.push({ set: (k) => { signGlow.material.opacity = 0.55 * k; signLight.intensity = k < 0.2 ? 260 * k : 260 * (0.6 + 0.4 * k); }, rate: 0.35, seed: 3 });
 
   // ── prédios em ruínas dos lados e silhuetas ao fundo ──
   const ruin = M(0x6a5c4e, { map: (() => { const t = brickTexture(5, 0.7); t.repeat.set(3, 3); return t; })() });
@@ -337,9 +340,25 @@ export function buildStreet() {
   };
   people.forEach(place);
 
+  // ───────── abertura ─────────
+  // A câmera começa no céu, olhando o redemoinho, e desce até a fachada enquanto a luz volta: primeiro o poste, depois o
+  // corredor e a luminária da porta, as janelas uma a uma e por último o letreiro, que custa a pegar. Clique ou tecla pula.
+  const INTRO = { cam: 3.4, end: 3.5, fade: 1.1 }, ON = { 4: 0.8, 1: 1.35, 2: 1.5, 3: 2.35 };
+  const onAt = (seed) => ON[seed] ?? 1.75 + ((seed * 7) % 9) * 0.07;
+  for (const f of flick) f.on = onAt(f.seed);
+  for (const w of powered) w.on = onAt(w.seed);
+  // acende piscando: nos primeiros 0,5 s depois da hora dela, liga e desliga com chance crescente de ficar ligada
+  const power = (x, seed) => (x < 0 ? 0 : x > 0.5 ? 1 : hash(Math.floor(x * 24), seed, 7) < 0.25 + x * 1.5 ? 1 : 0.05);
+  // o céu é um painel: a câmera sobe só até a borda de cima dele não aparecer (senão surge uma faixa preta no alto)
+  const camStart = new THREE.Vector3(-0.8, 5.5, 30), lookStart = new THREE.Vector3(0.5, 21, -40);
+  const ease = (x) => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2);
+  let intro = null;
+  const finishIntro = () => { if (!intro) return; const cb = intro.done; intro = null; powered.forEach((w) => w.set(1)); cb?.(); };
+
   // ───────── animação ─────────
-  const camBase = new THREE.Vector3(-2.5, 1.5, 24), lookBase = new THREE.Vector3(-5.2, 6.2, 0);
+  const camBase = new THREE.Vector3(-2.5, 1.5, 24), lookBase = new THREE.Vector3(-5.2, 6.2, 0), camNow = new THREE.Vector3(), lookNow = new THREE.Vector3();
   function update(dt, t, mouse = { x: 0.5, y: 0.5 }) {
+    const ti = intro ? (intro.t += dt) : Infinity;
     for (const d of digits) {
       d.a += d.w * dt;
       d.m.position.set(vortex.x + Math.cos(d.a) * d.r * 1.5, vortex.y + Math.sin(d.a) * d.r * 0.55, vortex.z + 4 + Math.sin(d.a) * 2);
@@ -352,8 +371,9 @@ export function buildStreet() {
       let k = 1;
       if (s > 1.55) k = hash(Math.floor(t * 18), f.seed, 1) > 0.45 ? (f.hard ? 0.04 : 0.35) : 1;
       else k = 0.93 + 0.07 * Math.sin(t * 23 + f.seed);
-      f.set(k);
+      f.set(ti < INTRO.end ? k * power(ti - f.on, f.seed) : k);
     }
+    if (ti < INTRO.end) for (const w of powered) w.set(power(ti - w.on, w.seed));
     // a fila: a cada ~4,5 s o primeiro entra e todos andam uma vaga
     cycle += dt;
     if (cycle > 4.6) {
@@ -377,10 +397,22 @@ export function buildStreet() {
       place(p);
     }
     const mx = mouse.x - 0.5, my = mouse.y - 0.5;
-    camera.position.set(camBase.x + Math.sin(t * 0.07) * 0.5 + mx * 0.6, camBase.y + Math.sin(t * 0.11) * 0.08 - my * 0.25, camBase.z);
-    camera.lookAt(lookBase.x + mx * 0.8, lookBase.y - my * 0.4, lookBase.z);
+    camNow.set(camBase.x + Math.sin(t * 0.07) * 0.5 + mx * 0.6, camBase.y + Math.sin(t * 0.11) * 0.08 - my * 0.25, camBase.z);
+    lookNow.set(lookBase.x + mx * 0.8, lookBase.y - my * 0.4, lookBase.z);
+    if (ti < INTRO.cam) { const e = ease(ti / INTRO.cam); camNow.lerpVectors(camStart, camNow, e); lookNow.lerpVectors(lookStart, lookNow, e); }
+    camera.position.copy(camNow); camera.lookAt(lookNow);
+    api.fade = ti < INTRO.fade ? 1 - ease(ti / INTRO.fade) : 0;
+    if (ti >= INTRO.end) finishIntro();
   }
-  update(0, 0);
   const resize = (aspect) => { camera.aspect = aspect; camera.updateProjectionMatrix(); };
-  return { scene, camera, update, resize, people };
+  const api = {
+    scene, camera, update, resize, people, fade: 0,
+    /** a abertura: começa no escuro, no céu; done é chamado quando a câmera chega na fachada (ou quando pulam) */
+    intro(done) { intro = { t: 0, done }; api.fade = 1; },
+    get introOn() { return !!intro; },
+    get introT() { return intro ? intro.t : null; }, // para os testes acompanharem a abertura
+    skipIntro() { if (intro) { intro.t = INTRO.end; finishIntro(); api.fade = 0; } },
+  };
+  update(0, 0);
+  return api;
 }

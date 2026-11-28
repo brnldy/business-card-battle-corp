@@ -57,18 +57,24 @@ async function boot() {
   settings.onChange(() => { onResize(); });
   ui.on({
     // menu: Continuar (último slot), Novo jogo (escolhe a gaveta e registra a empresa) e Carregar
+    // bate o ponto (carimbo com a hora) e entra
     continue: () => {
       const n = save.lastSlot(); if (!n) return ui.h.newgame();
-      sfx('start'); save.use(n);
-      if (save.company()) return fade(toLobby);
-      return askName();
+      ui.punch(() => {
+        sfx('start'); save.use(n);
+        if (save.company()) return fade(toLobby);
+        return askName();
+      });
     },
     newgame: () => { sfx('nav'); keepMenu(); ui.slots('new', { pick: (n) => askName((name) => save.create(n, name)) }); },
     load: () => { sfx('nav'); keepMenu(); ui.slots('load', { load: (n) => { ui.closeModal(); save.use(n); sfx('start'); if (save.company()) fade(toLobby); else askName(); } }); },
     quit: () => (duel.over ? fade(toLobby) : ui.confirm('Abandonar a partida?', duel.training ? 'O treino acaba aqui. Não vale nada mesmo.' : 'A partida conta como derrota e o rival fica com o investimento.', 'Abandonar', () => { duel.forfeit(); fade(toLobby); }, 'Continuar jogando', { tone: duel.training ? '' : 'danger', kind: duel.training ? 'Treino' : 'Partida' })),
     quit2: () => fade(toLobby),
   });
-  window.addEventListener('keydown', (e) => { if (mode === 'menu' && e.key === 'Enter' && document.getElementById('modal').classList.contains('hidden')) { unlockAudio(); if (save.lastSlot()) ui.h.continue(); else ui.h.newgame(); } });
+  // abertura do menu: qualquer clique ou tecla pula a animação e mostra tudo no lugar (e não vale como escolha)
+  const skip = (e) => { if (mode === 'menu' && street.introOn) { street.skipIntro(); ui.menuStage('show'); unlock(); e.preventDefault(); e.stopImmediatePropagation(); } };
+  window.addEventListener('pointerdown', skip, true); window.addEventListener('keydown', skip, true);
+  window.addEventListener('keydown', (e) => { if (mode === 'menu' && e.key === 'Enter' && !ui.menuBusy && !document.activeElement?.closest?.('#menu .mn-card') && document.getElementById('modal').classList.contains('hidden')) { unlockAudio(); if (save.lastSlot()) ui.h.continue(); else ui.h.newgame(); } });
   const unlock = () => { unlockAudio(); document.getElementById('unlock').classList.add('hidden'); };
   window.addEventListener('pointerdown', unlock); window.addEventListener('keydown', unlock);
   initAudio(); applyVolumes();
@@ -114,6 +120,11 @@ function toMenu(first) {
   mode = 'menu'; duel.stop(); setMusicMode('menu'); lobbyUi?.show(false); ui.mainMenu(true);
   gfx.u.uFade.value = 0; duel.lampOn = 1; R.opp.face.uDead.value = 0; R.opp.face.uOn.value = 1;
   if (!first) sfx('cancel');
+  // ao abrir o jogo: a rua acende e a câmera desce do céu até a fachada; só então o logotipo e o cartão de ponto aparecem.
+  // Voltando da sala, só o logotipo e o cartão entram. Com "reduzir movimento", aparece tudo de uma vez.
+  const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (first && !still) { ui.menuStage('intro'); street.intro(() => ui.menuStage('reveal')); }
+  else ui.menuStage(still ? 'show' : 'reveal');
 }
 function startDuel(training = false) {
   mode = 'duel'; ui.mainMenu(false); lobbyUi.show(false); document.getElementById('unlock').classList.add('hidden');
@@ -144,7 +155,7 @@ function loop(nowMs) {
   // lobby: a recepção por dentro
   if (mode === 'lobby') { lobby.update(dt, t, duel.mouse); gfx.render(lobby.scene, lobby.camera); lobbyUi.frame(); return; }
   // menu: a rua com o prédio e a fila (cena própria, mesmo filtro de imagem)
-  if (mode !== 'duel') { street.update(dt, t, duel.mouse); gfx.render(street.scene, street.camera); return; }
+  if (mode !== 'duel') { street.update(dt, t, duel.mouse); gfx.u.uFade.value = street.fade; gfx.render(street.scene, street.camera); return; }
   // câmera: pose-alvo por modo + paralaxe do mouse + respiração + tremor
   const cam = R.camera, wide = Math.max(1, 1.62 / cam.aspect);
   if (mode === 'duel') {

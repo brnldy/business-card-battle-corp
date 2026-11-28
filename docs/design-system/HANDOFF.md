@@ -43,7 +43,7 @@ O autor achou o resultado das regras antigas grande demais e sem respiro. Acessi
 
 | Tela | Estado |
 |---|---|
-| Menu inicial (cartão de ponto) | Aprovado. Depois da junção ganhou Continuar, Novo jogo e Carregar; essa versão o autor ainda não viu. |
+| Menu inicial (cartão de ponto) | Refeito em 28/11 como início da sprint da abertura: a rua acende, a câmera desce do céu, depois entram o logotipo e o cartão; opções reescritas. O autor ainda não viu. |
 | Lobby 3D (etiquetas discretas, sem barra embaixo) | Feito depois da recusa da primeira versão; sem resposta do autor. |
 | Treino (mesa do estagiário: mata-borrão com crachá e bilhete + ordem de treino) | Refeito do zero em 27/11 para a pasta única; o autor ainda não viu. |
 | Metas do dia (quadro de cortiça) | Aprovado. |
@@ -55,7 +55,7 @@ O autor achou o resultado das regras antigas grande demais e sem respiro. Acessi
 | Troféus (era Conquistas), em aba com Metas | Feito em 27/11; o autor ainda não viu. |
 | Decks (gaveta, editor, álbum) | Refeitos do zero em 27/11; o autor ainda não viu. |
 | Perfil (contrato social + extrato) | Refeito em 27/11; o autor ainda não viu. |
-| Reciclar (trituradora com arrastar) | Duas propostas (A, sala 3D, padrão; B, 2D). A cena 3D foi refeita em 27/11 depois da crítica do autor; ele ainda não viu essa versão. |
+| Reciclar (trituradora com arrastar) | Fica a trituradora 3D da sala (escolha do autor em 28/11, "meio travado mas vamos assim"); a versão 2D foi apagada. |
 | Salvar e carregar (disquetes) | Feito em 28/11 (o autor recusou a versão com gavetas antes de ver pronta e pediu disquetes); o autor ainda não viu. |
 
 Recusados, para não repetir: a Loja como máquina de vendas (duas tentativas; o autor não entendeu o fluxo e mandou apagar) e um guia de estilo que copiava o Dispatch.
@@ -66,6 +66,13 @@ Decisões do autor nesta rodada: o custo de sacrifício **fica** na carta reduzi
 
 Feito e conferido em captura (1280×720, 1440×900, 1920×1080):
 
+000000000000000000. **Sprint da abertura, parte 1: animação de entrada e menu** (28/11; pedido do autor: manter a casa, o céu e a fila; ao abrir o jogo, uma pequena animação antes das opções; depois o logotipo e as animações; melhorar as opções).
+   - **A rua acende** (`street.intro()` em `street.js`, 3,5 s): a tela sai do preto, a câmera começa olhando o redemoinho do céu e desce até a fachada; as luzes acendem piscando, cada uma na sua vez (`ON`/`onAt`): o poste, o corredor e a luminária da porta, as janelas uma a uma e, por último, o letreiro. A fila continua andando. O céu é um painel: a câmera não sobe mais que a borda de cima dele (senão aparece uma faixa preta).
+   - **Depois, o logotipo e o cartão** (`ui.menuStage('reveal')`, classes `mn-intro`/`mn-reveal` no `#ui`, animações em `ds-screens.css`): BUSINESS e CARD acendem piscando como o letreiro, a etiqueta "Battle" é colada, "Corp." aparece, o slogan é datilografado, o cartão de ponto sobe, o clipe cai e as linhas entram uma a uma. O desenho do logotipo não mudou (só ganhou dois `span` para animar as palavras).
+   - **Pular:** qualquer clique ou tecla durante a abertura mostra tudo no lugar e não conta como escolha (o primeiro Enter só pula; o segundo bate o ponto). Voltando da sala para a rua, só o logotipo e o cartão entram. Com "reduzir movimento" do sistema, aparece tudo de uma vez.
+   - **Opções do menu:** a batida do ponto diz quem entra (nome da empresa e reunião, em linhas próprias) e, ao confirmar, o carimbo "Entrada" leva a hora em tinta vermelha antes de entrar (`ui.punch`). As anotações explicam (abrir outra empresa, trocar de disquete, regras do duelo, todas as 19 cartas, som, imagem e tamanho); um fio duplo separa empresa de escritório; setas andam pelas linhas e 1 a 5 escolhem a linha com aquele número. O cartão não encolhe com a escala da interface (`--lb-fix`) e ficou mais largo (430 px), para nada quebrar linha. Sem empresa salva: "Iniciar expediente / Registre a sua empresa e comece a primeira reunião".
+   - **Próximo da sprint:** o Formulário 01-A (registro da empresa, com assinatura) e as janelas Como jogar, Arquivo de cartas e Configurações, que seguem no desenho escuro antigo.
+00000000000000000. **Trituradora: fica a 3D; a 2D foi apagada** (escolha do autor). Saíram `src/shredder.js`, a peça `.ds-shredder` e os caminhos `?triturador=b` do `lobbyui.js`. Ao triturar, os botões do painel também travam até o fim. O autor achou a 3D "meio travada": a primeira trituração montava os shaders da carta e das tiras na hora de soltar a carta; agora isso acontece quando a câmera vai até a máquina (dois quadros com a carta e uma tira escondidas dentro do gabinete; medido: 0 programas novos ao triturar). O tempo de quadro na sala não pôde ser medido com placa de vídeo aqui (o navegador de teste desenha por software).
 0000000000000000. **Salvar e carregar refeito, com disquetes** (28/11; o autor pediu "simples", recusou a ideia de gavetas e pediu disquete). Cada empresa salva é um disquete de 3½" (peça `.ds-floppy` em `ds.css`, no catálogo): corpo escuro com o canto chanfrado, trava de metal com a janela, furo de proteção e a etiqueta pautada com o nome a caneta azul, a reunião da campanha, o patrimônio grifado em âmbar e as vitórias. A mesma peça serve às três entradas: no lobby vira uma janela como as outras (`slots` em `TITLES`/`NEW_HEAD`, pasta única, cabeçalho com o recibo, ✕/Esc; botão "Salvar / Carregar" e tecla S), e no menu (Novo jogo, Carregar) abre numa pasta kraft no `#modal` (`.dq-modal`). Código compartilhado em `ui.js`: `slotCards(mode)` desenha, `slotAct(mode, botão, on, redraw)` age.
    - **Autossalvamento:** já existia (cada partida, compra ou mudança de deck grava o disquete em uso na hora, `save.set`). A tela agora diz isso: o disquete em uso tem o adesivo "Em uso", o carimbo "Grava sozinho" e a hora da última gravação. O botão "Salvar agora", que só trocava a hora, saiu. O que não é salvo: uma partida em andamento.
    - **Ações:** no lobby, "Carregar esta empresa" e "Gravar a empresa atual por cima" (pede assinatura); no disquete vazio, "Gravar uma cópia aqui" (você passa a jogar na cópia). No menu: "Carregar" e "Apagar este disquete" (assinatura); no Novo jogo, "Abrir empresa aqui" ou "Abrir empresa nova por cima" (assinatura). No menu, o último usado leva o adesivo "Último expediente".

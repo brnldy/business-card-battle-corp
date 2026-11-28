@@ -548,14 +548,6 @@ button.ds-pencil:focus-visible { outline: 3px solid var(--ds-amber); outline-off
 button.ds-pencil.ds-charter__pen { display: inline-grid; margin-left: 14px; vertical-align: 6px; }
 .ds-seal__edit { position: absolute !important; right: -8px; top: -8px; z-index: 2; }
 
-/* ── trituradora (Reciclar), 27/11: palco do canvas desenhado por src/shredder.js (A 3D ou B 2D) e a dica por cima ── */
-.ds-shredder { position: relative; min-height: 0; user-select: none; }
-.ds-shredder__canvas { position: absolute; inset: 0; display: block; width: 100%; height: 100%; }
-.ds-shredder__hint { position: absolute; z-index: 1; left: 50%; top: 10px; transform: translateX(-50%); padding: 6px 10px 5px; background: rgba(246, 239, 220, 0.85); border: 1.5px dashed var(--ds-ink-3); border-radius: 3px; font: 600 13px/1 var(--f-ui); color: var(--ds-ink-2); white-space: nowrap; pointer-events: none; transition: opacity 0.15s; }
-.ds-shredder.is-busy .ds-shredder__hint { opacity: 0; }
-.ds-shredder.is-hot { background: repeating-linear-gradient(-45deg, rgba(242, 185, 76, 0.22) 0 10px, rgba(242, 185, 76, 0.08) 10px 20px); border-radius: 6px; }
-.ds-shredder.is-hot .ds-shredder__hint { font-size: 0; border-style: solid; border-color: var(--ds-ink); background: var(--ds-amber); }
-.ds-shredder.is-hot .ds-shredder__hint::after { content: "Solte para triturar"; font: 700 13px/1 var(--f-ui); color: var(--ds-ink); }
 
 /* ── disquete de 3½" (28/11): um por empresa salva. Corpo de plástico escuro com o canto chanfrado, trava de metal com a janela,
    furo de proteção e a etiqueta de papel com o nome escrito a caneta azul e os números da empresa ── */

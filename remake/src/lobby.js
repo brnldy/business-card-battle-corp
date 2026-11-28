@@ -14,6 +14,17 @@ import { drawLogo } from './cosmetics.js';
 const M = (color, o = {}) => new THREE.MeshLambertMaterial({ color, ...o });
 const B = (color, o = {}) => new THREE.MeshBasicMaterial({ color, ...o });
 const CARD_W = 0.2, CARD_R = 1257 / 1079; // carta que entra na trituradora: largura (m) e proporção da imagem
+/** a carta que entra na fenda: sem luz (aparece igual à do painel), cortada pelo plano da fenda */
+const cardMat = (tex, plane) => new THREE.MeshBasicMaterial({ map: tex, side: THREE.DoubleSide, clippingPlanes: [plane] });
+/** as tiras: um pouco de brilho próprio (dentro do cesto a luz é pouca) e o verso de papel branco (de costas não vira palito escuro) */
+function stripMat(tex, plane) {
+  const mat = new THREE.MeshLambertMaterial({ map: tex, emissive: 0x262626, emissiveMap: tex, side: THREE.DoubleSide, clippingPlanes: [plane] });
+  mat.onBeforeCompile = (sh) => {
+    sh.fragmentShader = sh.fragmentShader.replace('#include <map_fragment>', '#include <map_fragment>\n  if (!gl_FrontFacing) diffuseColor.rgb = vec3(0.86, 0.84, 0.78);')
+      .replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\n  if (!gl_FrontFacing) totalEmissiveRadiance = vec3(0.16, 0.155, 0.14);');
+  };
+  return mat;
+}
 /** junta malhas irmãs com o mesmo material numa só (cada malha é um desenho por quadro): posições, normais e uv já no espaço do pai */
 function mergeMeshes(list) {
   const pos = [], nor = [], uv = [], idx = [], v = new THREE.Vector3(), nm = new THREE.Matrix3(); let base = 0;
@@ -599,7 +610,20 @@ export function buildLobby() {
       return hot.map((h) => { h.anchor.getWorldPosition(tmp); tmp.project(camera); return { id: h.id, label: h.label, sub: h.sub, x: tmp.x * 0.5 + 0.5, y: -tmp.y * 0.5 + 0.5, on: tmp.z < 1 }; });
     },
     /** câmera viaja até uma área (null volta para a sala) */
-    focus(id) { focusId = FOCUS[id] ? id : null; },
+    focus(id) {
+      focusId = FOCUS[id] ? id : null;
+      // na primeira ida até a trituradora, os materiais da carta e das tiras já ficam prontos (o navegador monta o shader
+      // agora, com a câmera andando, e não na hora em que a carta é solta: era o tranco da primeira trituração)
+      if (id === 'recycle' && shredRig && this.renderer && !shredRig.warm) {
+        const r = this.renderer, t = new THREE.DataTexture(new Uint8Array([255, 255, 255, 255]), 1, 1); t.colorSpace = THREE.SRGBColorSpace; t.needsUpdate = true;
+        r.localClippingEnabled = true;
+        // desenhados de verdade por dois quadros, dentro do gabinete e cortados pelo plano (não aparecem); depois se escondem
+        // e ficam guardados, para o programa do shader não ser descartado
+        const pl = new THREE.Plane(V(0, -1, 0), 0), warm = [new THREE.Mesh(new THREE.PlaneGeometry(0.01, 0.01), cardMat(t, pl)), new THREE.Mesh(new THREE.PlaneGeometry(0.01, 0.01), stripMat(t, pl))];
+        warm.forEach((m) => { m.position.set(0, 0.3, 0); shredRig.g.add(m); });
+        shredRig.warm = { list: warm, frames: 3 };
+      }
+    },
     focusSpots: FOCUS,
     /** onde a máquina deve ficar na tela, na horizontal (-1 a 1): o painel calcula o meio do espaço livre à direita dele */
     focusFree(x) { free = clampTo(x, -0.9, 0.9); },
@@ -623,15 +647,9 @@ export function buildLobby() {
       const R = shredRig, g = R.g, Wc = CARD_W, Hc = Wc * CARD_R, N = 9, { slotX, slotY, slotZ, outY } = R;
       const wy = (y) => { const v = V(0, y, slotZ); g.localToWorld(v); return v.y; };
       const above = new THREE.Plane(V(0, 1, 0), -wy(slotY)), below = new THREE.Plane(V(0, -1, 0), wy(outY));
-      const card = at(new THREE.Mesh(new THREE.PlaneGeometry(Wc, Hc), new THREE.MeshBasicMaterial({ map: tex, side: THREE.DoubleSide, clippingPlanes: [above] })), slotX, slotY + Hc / 2 + 0.02, slotZ);
+      const card = at(new THREE.Mesh(new THREE.PlaneGeometry(Wc, Hc), cardMat(tex, above)), slotX, slotY + Hc / 2 + 0.02, slotZ);
       g.add(card);
-      // um pouco de brilho próprio: dentro do cesto a luz é pouca, e a tira precisa aparecer pela janela
-      const mat = new THREE.MeshLambertMaterial({ map: tex, emissive: 0x262626, emissiveMap: tex, side: THREE.DoubleSide, clippingPlanes: [below] }); mat.userData.left = N; mat.userData.cut = N;
-      // o verso da tira é papel branco (como o de uma carta de verdade): de costas ela não vira um palito escuro
-      mat.onBeforeCompile = (sh) => {
-        sh.fragmentShader = sh.fragmentShader.replace('#include <map_fragment>', '#include <map_fragment>\n  if (!gl_FrontFacing) diffuseColor.rgb = vec3(0.86, 0.84, 0.78);')
-          .replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\n  if (!gl_FrontFacing) totalEmissiveRadiance = vec3(0.16, 0.155, 0.14);');
-      };
+      const mat = stripMat(tex, below); mat.userData.left = N; mat.userData.cut = N;
       const strips = [];
       for (let i = 0; i < N; i++) {
         const geo = new THREE.PlaneGeometry(Wc / N - 0.002, Hc, 1, 12), uv = geo.attributes.uv;
@@ -678,6 +696,7 @@ export function buildLobby() {
       if (intern) intern.spot.userData.f = 1 - 0.6 * f;
       if (shredRig) {
         const R = shredRig;
+        if (R.warm?.frames && --R.warm.frames === 0) R.warm.list.forEach((m) => { m.visible = false; });
         // motor ligado: a cabeça trepida; a luz pisca; a lâmpada da sala acende quando uma carta passa por cima
         R.head.position.x = shredBusy ? Math.sin(t * 90) * 0.003 : 0; R.head.position.y = R.headY + (shredBusy ? Math.sin(t * 130) * 0.002 : 0);
         if (shredBusy) R.led.material.color.setRGB(Math.sin(t * 30) > 0 ? 1 : 0.3, 0.12, 0.1);
