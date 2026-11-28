@@ -61,14 +61,14 @@ const TITLES = {
   deck: ['Arquivo morto', 'Decks'], recycle: ['Trituradora', 'Reciclar'],
   duel: ['Sala de reunião', 'Campanha'], training: ['Mesa do estagiário', 'Treino sem valer'],
   missions: ['Mural de avisos', 'Metas do dia'], shop: ['Máquina de benefícios', 'Loja'],
-  achievements: ['Prateleira de troféus', 'Troféus'], profile: ['Recepção', 'Perfil'],
+  achievements: ['Prateleira de troféus', 'Troféus'], profile: ['Recepção', 'Perfil'], slots: ['Caixa de disquetes', 'Salvar e carregar'],
 };
 // trituradora do Reciclar: duas propostas em teste. A (padrão): a câmera vai até a trituradora 3D da sala e a interface
 // vira um painel à esquerda. B (?triturador=b): a máquina em 2D dentro da ficha, com física de papel.
 const SHRED_KIND = new URLSearchParams(location.search).get('triturador') === 'b' ? '2d' : 'sala';
 const ROOM = SHRED_KIND === 'sala';
 // janelas que já usam o cabeçalho novo (papel timbrado com o recibo do patrimônio)
-const NEW_HEAD = new Set(['duel', 'training', 'missions', 'achievements', 'shop', 'deck', 'profile', 'recycle']);
+const NEW_HEAD = new Set(['duel', 'training', 'missions', 'achievements', 'shop', 'deck', 'profile', 'recycle', 'slots']);
 const sortCards = (ids) => [...ids].sort((a, b) => a.localeCompare(b));
 const group = (ids) => { const m = new Map(); for (const id of ids) m.set(id, (m.get(id) ?? 0) + 1); return [...m.entries()].sort((a, b) => a[0].localeCompare(b[0])); };
 const dateStr = (ms) => { const d = new Date(ms), p = (n) => String(n).padStart(2, '0'); return `${p(d.getDate())}/${p(d.getMonth() + 1)} ${p(d.getHours())}:${p(d.getMinutes())}`; };
@@ -238,7 +238,7 @@ export class LobbyUI {
   close() { if (!this.panel) return; this.lobby.focus?.(null); this.root.classList.remove('is-shredroom'); if (this.panel === 'deck') { this.forgetDecks(); this.resetFilters(); } this.peek(null); this.panel = null; this.win.classList.add('hidden'); this.lobby.setHover(null); sfx('navBack'); }
   render() {
     const id = this.panel, [memo, title] = TITLES[id], s = this.s;
-    const body = { deck: () => this.vDeck(s), recycle: () => this.vRecycle(s), duel: () => this.vDuel(s), training: () => this.vTraining(s), missions: () => this.vMissions(s), shop: () => this.vShop(s), achievements: () => this.vAchievements(s), profile: () => this.vProfile(s) }[id]();
+    const body = { deck: () => this.vDeck(s), recycle: () => this.vRecycle(s), duel: () => this.vDuel(s), training: () => this.vTraining(s), missions: () => this.vMissions(s), shop: () => this.vShop(s), achievements: () => this.vAchievements(s), profile: () => this.vProfile(s), slots: () => this.vSlots() }[id]();
     // guarda rolagem e foco (com a posição do cursor) para a tela não "pular" a cada clique
     const view = this.ed ? 'ed' : this.tab[id], same = this._view === `${id}:${view}`; this._view = `${id}:${view}`;
     const scroll = same ? $('.lb-scroll', this.win)?.scrollTop ?? 0 : 0, scroll2 = same ? $('.ed-list', this.win)?.scrollTop ?? 0 : 0;
@@ -276,6 +276,7 @@ export class LobbyUI {
   onClick(e) {
     if (this._rcDragged) { this._rcDragged = false; return; } // o clique que encerra um arraste não seleciona nada
     if (e.target === this.win) return this.root.classList.contains('is-shredroom') ? undefined : this.close(); // na sala, o vazio é a trituradora
+    const sl = e.target.closest('[data-sl]'); if (sl && this.panel === 'slots') return this.ui.slotAct('lobby', sl, this.slotOn(), () => this.render());
     const b = e.target.closest('[data-a]'); if (!b || b.disabled) return;
     const a = b.dataset.a, id = b.dataset.id;
     // compras e "usar": o 2º clique de um clique duplo (ou um clique logo em seguida) não compra de novo
@@ -390,17 +391,21 @@ export class LobbyUI {
       case 'train': return this.startDuel(true);
       // perfil
       case 'rename': return this.ui.nameEntry((n) => { save.rename(n); this.toast('Razão social alterada.', 'good'); }, save.company() ?? '');
-      case 'wipe': return this.ui.confirm('Recomeçar do zero?', 'Coleção, decks, PATRIMÔNIO, histórico, conquistas e a campanha desta gaveta serão apagados para sempre. As outras gavetas não mudam.', 'Apagar tudo', () => { this.forgetDecks(); this.resetFilters(); save.reset(); this.toast('Ficha cadastral apagada. Bem-vindo de novo.', 'bad'); }, 'Voltar', { tone: 'danger', kind: 'Empresa' });
+      case 'wipe': return this.ui.confirm('Recomeçar do zero?', 'Coleção, decks, PATRIMÔNIO, histórico, conquistas e a campanha deste disquete serão apagados para sempre. As outras gavetas não mudam.', 'Apagar tudo', () => { this.forgetDecks(); this.resetFilters(); save.reset(); this.toast('Ficha cadastral apagada. Bem-vindo de novo.', 'bad'); }, 'Voltar', { tone: 'danger', kind: 'Empresa' });
       default: return undefined;
     }
   }
-  /** Salvar / Carregar: as 3 gavetas. Carregar troca a empresa inteira sem sair do lobby. */
-  openSlots() {
-    sfx('nav');
-    this.ui.slots('lobby', {
-      load: (n) => { this.ui.closeModal(); this.forgetDecks(); this.resetFilters(); this.panel = null; this.win.classList.add('hidden'); save.use(n); sfx('summon'); this.toast(`<b>${esc(this.company())}</b><span>expediente carregado da gaveta ${n}</span>`, 'good'); },
-      saved: (n) => this.toast(`<b>Progresso salvo</b><span>gaveta ${n}, às ${new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span>`, 'good'),
-    });
+  /** Salvar e carregar: os 3 disquetes numa janela do lobby. Carregar troca a empresa inteira sem sair do lobby. */
+  openSlots() { this.open('slots'); }
+  vSlots() {
+    return `<section class="sc-shelf dq-shelf"><div class="sc-tools"><b>3 disquetes</b><span class="fd-tip">O disquete em uso grava sozinho depois de cada partida, compra ou mudança de deck.</span></div>
+      <div class="lb-scroll dq-grid">${this.ui.slotCards('lobby')}</div></section>`;
+  }
+  slotOn() {
+    return {
+      load: (n) => { this.forgetDecks(); this.resetFilters(); this.close(); save.use(n); sfx('summon'); this.toast(`<b>${esc(this.company())}</b><span>expediente carregado do disquete ${n}</span>`, 'good'); },
+      saved: (n) => this.toast(`<b>Cópia gravada no disquete ${n}</b><span>você está jogando nela agora</span>`, 'good'),
+    };
   }
   startDuel(training) {
     if (!Meta.activeDeckValid(this.s)) { sfx('deny'); this.toast('Deck inválido. Arrume no arquivo.', 'bad'); return; }
@@ -1140,7 +1145,7 @@ export class LobbyUI {
     const st = s.stats, c = s.campaign, fav = Meta.favoriteCard(s), d = new Date(save.founded() ?? Date.now()), n = save.slotNo() ?? 1, p2 = (x) => String(x).padStart(2, '0');
     const stage = c.cleared ? 'campanha concluída' : `reunião ${Math.min(c.stage + 1, CAMPAIGN.length)} de ${CAMPAIGN.length}`;
     const charter = `<section class="ds-charter">
-      <header class="ds-charter__head"><span>Registro Nº ${String(n).padStart(4, '0')}</span><b>Contrato social</b><span>Gaveta ${n}</span></header>
+      <header class="ds-charter__head"><span>Registro Nº ${String(n).padStart(4, '0')}</span><b>Contrato social</b><span>Disquete ${n}</span></header>
       <div class="ds-charter__id"><span class="ds-seal"><img src="${inkLogo(s.cosmetics.logo)}" alt=""><button class="ds-pencil ds-seal__edit" data-a="open" data-id="shop" data-tab="look" aria-label="Trocar o logo" title="Trocar o logo">${PENCIL}</button></span>
         <div><span class="ds-formlabel">Razão social</span><h3 class="ds-charter__name">${esc(this.company())}<button class="ds-pencil ds-charter__pen" data-a="rename" aria-label="Mudar o nome" title="Mudar o nome">${PENCIL}</button></h3>
           <p class="ds-charter__meta">Fundada em ${p2(d.getDate())}/${p2(d.getMonth() + 1)}/${d.getFullYear()} / ${stage}</p></div></div>

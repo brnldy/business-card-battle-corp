@@ -89,8 +89,8 @@
 #menu .mn-card { counter-reset: mn; } #menu .mn-card .mn-row:not(.hidden) { counter-increment: mn; } #menu .mn-card .mn-row b::before { content: counter(mn, decimal-leading-zero); }
 
 /* ══ lobby novo (docs/UI_LOBBY.md): piso de tamanho, carta reduzida, detalhe da carta, loja ══ */
-.lb-box--duel, .lb-box--training, .lb-box--missions, .lb-box--shop-packs, .lb-box--shop-cards, .lb-box--shop-decks, .lb-box--shop-look, .lb-box--achievements, .lb-box--deck, .lb-box--profile, .lb-box--recycle, .lb-pack > .pk, .lb-detail > .cd { zoom: var(--lb-fix, 1); }
-#lobby :is(.lb-box--shop-packs, .lb-box--shop-cards, .lb-box--shop-decks, .lb-box--shop-look, .lb-box--achievements, .lb-box--deck, .lb-box--profile, .lb-box--recycle, .lb-box--deck, .lb-box--profile, .lb-box--recycle, .lb-box--profile, .lb-box--recycle, .lb-box--recycle) .lb-x { width: 46px; height: 46px; font-size: 16px; }
+.lb-box--duel, .lb-box--training, .lb-box--missions, .lb-box--shop-packs, .lb-box--shop-cards, .lb-box--shop-decks, .lb-box--shop-look, .lb-box--achievements, .lb-box--deck, .lb-box--profile, .lb-box--recycle, .lb-box--slots, .lb-pack > .pk, .lb-detail > .cd { zoom: var(--lb-fix, 1); }
+#lobby :is(.lb-box--slots, .lb-box--shop-packs, .lb-box--shop-cards, .lb-box--shop-decks, .lb-box--shop-look, .lb-box--achievements, .lb-box--deck, .lb-box--profile, .lb-box--recycle, .lb-box--deck, .lb-box--profile, .lb-box--recycle, .lb-box--profile, .lb-box--recycle, .lb-box--recycle) .lb-x { width: 46px; height: 46px; font-size: 16px; }
 /* carta reduzida (R4): a mesma face da mesa do duelo */
 .ds-mini { display: block; width: 100%; aspect-ratio: 1079 / 1257; border-radius: 4.1% / 3.5%; box-shadow: 0 0 0 1.5px var(--ds-ink), 3px 4px 0 rgba(0, 0, 0, 0.35); user-select: none; }
 /* detalhe da carta (R6) */
@@ -156,8 +156,8 @@
 
 
 /* ── loja → cartas avulsas: vitrine em grade à esquerda, ficha da carta sempre à direita (27/11) ── */
-:is(.lb-box--shop-cards, .lb-box--shop-decks, .lb-box--shop-look, .lb-box--achievements, .lb-box--deck, .lb-box--profile, .lb-box--recycle, .lb-box--deck, .lb-box--profile, .lb-box--recycle, .lb-box--profile, .lb-box--recycle, .lb-box--recycle) { width: min(1180px, 96%); height: min(770px, 90%); max-height: none; display: flex; flex-direction: column; }
-:is(.lb-box--shop-cards, .lb-box--shop-decks, .lb-box--shop-look, .lb-box--achievements, .lb-box--deck, .lb-box--profile, .lb-box--recycle, .lb-box--deck, .lb-box--profile, .lb-box--recycle, .lb-box--profile, .lb-box--recycle, .lb-box--recycle) > header { padding: 14px 0 12px; }
+:is(.lb-box--shop-cards, .lb-box--shop-decks, .lb-box--shop-look, .lb-box--achievements, .lb-box--deck, .lb-box--profile, .lb-box--recycle, .lb-box--slots, .lb-box--deck, .lb-box--profile, .lb-box--recycle, .lb-box--profile, .lb-box--recycle, .lb-box--recycle) { width: min(1180px, 96%); height: min(770px, 90%); max-height: none; display: flex; flex-direction: column; }
+:is(.lb-box--shop-cards, .lb-box--shop-decks, .lb-box--shop-look, .lb-box--achievements, .lb-box--deck, .lb-box--profile, .lb-box--recycle, .lb-box--slots, .lb-box--deck, .lb-box--profile, .lb-box--recycle, .lb-box--profile, .lb-box--recycle, .lb-box--recycle) > header { padding: 14px 0 12px; }
 .sc { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) 388px; gap: var(--ds-5); }
 .sc-shelf { min-height: 0; display: grid; grid-template-rows: auto minmax(0, 1fr); background: var(--ds-tex-card); border: var(--ds-line) solid var(--ds-ink); box-shadow: var(--ds-frame-in); }
 .sc-tools { display: flex; align-items: center; justify-content: space-between; gap: var(--ds-4); margin: 0 var(--ds-5); padding: 14px 0 12px; border-bottom: 1.5px dashed var(--ds-ink-3); } .sc-tools b { font: 400 22px/1 var(--f-title); letter-spacing: 0.06em; text-transform: uppercase; color: var(--ds-ink-2); }
@@ -221,7 +221,7 @@ button.ds-check { background: none; border: none; padding: 6px 0; pointer-events
 
 /* ── tamanho único das janelas novas (27/11, pedido do autor): a pasta não muda de tamanho entre abas nem entre janelas,
    então as abas não pulam. O conteúdo de cada tela ocupa a pasta. ── */
-:is(.lb-box--duel, .lb-box--training, .lb-box--missions, .lb-box--achievements, .lb-box--deck, .lb-box--profile, .lb-box--recycle, .lb-box--shop-packs, .lb-box--shop-cards, .lb-box--shop-decks, .lb-box--shop-look) { width: min(1180px, 96%); height: min(770px, 90%); max-height: none; display: flex; flex-direction: column; }
+:is(.lb-box--duel, .lb-box--training, .lb-box--missions, .lb-box--achievements, .lb-box--deck, .lb-box--profile, .lb-box--recycle, .lb-box--slots, .lb-box--shop-packs, .lb-box--shop-cards, .lb-box--shop-decks, .lb-box--shop-look) { width: min(1180px, 96%); height: min(770px, 90%); max-height: none; display: flex; flex-direction: column; }
 /* metas: a cortiça ocupa a pasta e os memorandos ficam no meio dela */
 .ms { grid-template-rows: minmax(0, 1fr) auto; } .ms-board { align-items: center; }
 .ms, .sh { flex: 1; min-height: 0; }
@@ -407,3 +407,15 @@ body.rc-dragging, body.rc-dragging * { cursor: grabbing !important; }
 #lobby .lb-box.is-room .lb-head .ds-letterhead h2 { font-size: 34px; }
 #lobby .lb-box.is-room .ds-till__paper { min-width: 0; column-gap: 14px; padding: 12px 14px 16px; }
 #lobby .lb-box.is-room .ds-till__total { font-size: 28px; }
+
+/* ══ Salvar e carregar (28/11): os 3 disquetes, no lobby e no menu ══ */
+.dq-shelf { flex: 1; }
+.dq-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--ds-5); align-content: start; padding: 26px var(--ds-5) 10px; }
+/* no menu: a mesma pasta das janelas do lobby, sobre o cartão de ponto */
+.modal-box.dq-modal { zoom: var(--lb-fix, 1); width: min(1080px, 96%); max-height: 94%; padding: 24px 28px 8px; background: var(--ds-tex-kraft); color: var(--ds-ink); border: var(--ds-line) solid var(--ds-ink); border-radius: var(--ds-r); box-shadow: 0 5px 0 0 var(--ds-kraft-lo), 0 6px 0 1px var(--ds-ink), var(--ds-shadow); }
+.dq-modal .ds-letterhead { grid-template-columns: minmax(0, 1fr) auto; }
+.dq-modal .ds-letterhead h2 { margin: 0; font: 400 46px/1 var(--f-title); letter-spacing: 0.02em; text-transform: uppercase; color: var(--ds-ink); }
+.dq-modal .dq-x { width: 46px; height: 46px; font-size: 16px; }
+.modal-box.dq-modal p { margin-bottom: 0; color: var(--ds-ink-2); }
+.dq-intro { margin: 16px 2px 0 !important; font: 500 15px/1.45 var(--f-ui); color: var(--ds-ink-2) !important; }
+.dq-modal .dq-grid { padding: 32px 4px var(--ds-5); }
