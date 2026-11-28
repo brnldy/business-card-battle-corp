@@ -231,14 +231,15 @@ export function buildLobby() {
   scene.fog = new THREE.FogExp2(0x050806, 0.045);
   const camera = new THREE.PerspectiveCamera(42, 16 / 9, 0.1, 60);
   scene.add(camera);
-  scene.add(new THREE.HemisphereLight(0x9fbfa8, 0x1a130c, 0.62));
+  scene.add(new THREE.HemisphereLight(0x9fbfa8, 0x1a130c, 0.2)); // visual de 28/11: a sala vive das luminárias
   { const fill = new THREE.PointLight(0xbfd8c8, 16, 14, 1.4); fill.position.set(0, 2.9, 0.5); scene.add(fill); }
   const flick = [], spots = [], pulses = [];
   const add = (o) => { scene.add(o); return o; };
 
   // ───── casca da sala ─────
   const wallMap = GR.wallGrimy(), wallMat = M(0x9a9482, { map: wallMap });
-  const floor = plane(HALF * 2, FRONT - BACK + 4, M(0xc4bca8, { map: annoyingCarpet() })); floor.rotation.x = -Math.PI / 2; at(floor, 0, 0, (FRONT + BACK) / 2 + 2); floor.receiveShadow = true; add(floor);
+  // carpete mais escuro no visual de 28/11: o corte em degraus deixava o desenho agitado demais
+  const floor = plane(HALF * 2, FRONT - BACK + 4, M(0x6f6a5c, { map: annoyingCarpet() })); floor.rotation.x = -Math.PI / 2; at(floor, 0, 0, (FRONT + BACK) / 2 + 2); floor.receiveShadow = true; add(floor);
   const ceilMat = M(0x77786c, { map: GR.ceilingGrimy() });
   const ceil = plane(HALF * 2, FRONT - BACK + 4, ceilMat); ceil.rotation.x = Math.PI / 2; at(ceil, 0, CEIL, (FRONT + BACK) / 2 + 2); add(ceil);
   const back = plane(HALF * 2, CEIL, wallMat); at(back, 0, CEIL / 2, BACK); back.receiveShadow = true; add(back);

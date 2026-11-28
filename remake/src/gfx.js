@@ -152,9 +152,11 @@ export class Gfx {
       uIce: { value: 0 }, uIceTint: { value: 0 }, uCrack: { value: 0 }, tCrack: { value: new THREE.DataTexture(new Uint8Array(4), 1, 1) },
       uIceImg: { value: 0 }, uIceMix: { value: 0 }, tIceA: { value: new THREE.DataTexture(new Uint8Array(4), 1, 1) }, tIceB: { value: new THREE.DataTexture(new Uint8Array(4), 1, 1) },
       uWobble: { value: P.wobble ?? 0 },
-      // estilo da arte de referência (rua do menu): paleta curta de sépia, oliva e âmbar, do mais escuro ao mais claro
-      tDepth: { value: this.rt.depthTexture }, uNear: { value: 0.1 }, uFar: { value: 60 }, uCavity: { value: 1 },
-      uPal: { value: 0 }, uPalC: { value: ['#0b0805', '#16110a', '#211b10', '#2c2916', '#3a3520', '#4b3d25', '#5d4a2d', '#775a33', '#98733f', '#bd914d', '#deb46e', '#f5daa4'].map((h) => new THREE.Color().setHex(parseInt(h.slice(1), 16), THREE.LinearSRGBColorSpace)) }, // valores crus: o shader trabalha já em sRGB uShadow: { value: new THREE.Vector3(...P.shadow) }, uHigh: { value: new THREE.Vector3(...P.high) },
+      // visual do jogo (28/11, a partir do Buckshot Roulette): ACES, brilho, contraste e saturação baixos e, por último,
+      // cada canal cortado em poucos degraus, sem pontilhado nem grão. É o corte seco que transforma a variação pequena das
+      // superfícies em placas de cor (a "sujeira"). uLook 0 volta ao tratamento antigo.
+      tDepth: { value: this.rt.depthTexture }, uNear: { value: 0.1 }, uFar: { value: 60 }, uCavity: { value: P.cavity ?? 0.4 }, // cantos escurecidos pela profundidade
+      uLook: { value: P.look ?? 1 }, uBright: { value: P.bright ?? 1.49 }, uContrast: { value: P.contrast ?? 0.8 }, uSat2: { value: P.sat2 ?? 0.26 }, uSteps: { value: P.steps ?? 7 },
     };
     this.base = { aberr: P.aberr };
     this.quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), null); this.quad.frustumCulled = false;
@@ -171,10 +173,17 @@ export class Gfx {
     this.postMat = quadMat(this.u, `
       precision highp float;
       varying vec2 vUv; uniform sampler2D tScene, tBloom, tCrack, tIceA, tIceB, tDepth; uniform float uNear, uFar, uCavity; uniform float uIceImg, uIceMix; uniform vec2 uRes; uniform float uIce, uIceTint, uCrack; uniform vec3 uFlashCol, uShadow, uHigh;
-      uniform float uTime, uAberr, uFlash, uGrain, uLevels, uVig, uSat, uFrost, uGlitch, uFade, uTintWarm, uBloom, uScan, uWobble, uPal; uniform vec3 uPalC[12];
+      uniform float uTime, uAberr, uFlash, uGrain, uLevels, uVig, uSat, uFrost, uGlitch, uFade, uTintWarm, uBloom, uScan, uWobble, uLook, uBright, uContrast, uSat2, uSteps;
       float hash(vec2 p){ p = fract(p * vec2(123.34, 456.21)); p += dot(p, p + 45.32); return fract(p.x * p.y); }
       float bayer2(vec2 a){ a = floor(a); return fract(a.x / 2.0 + a.y * a.y * 0.75); }
       float bayer(vec2 p){ return bayer2(0.5 * p) * 0.25 + bayer2(p); }
+      // ACES como no Godot 4 (bias 1.8, branco 1.0) e a passagem para sRGB
+      vec3 acesG(vec3 c){ const float b = 1.8;
+        mat3 rrt = mat3(vec3(0.59719, 0.35458, 0.04823) * b, vec3(0.07600, 0.90834, 0.01566) * b, vec3(0.02840, 0.13383, 0.83777) * b);
+        mat3 odt = mat3(vec3(1.60475, -0.53108, -0.07367), vec3(-0.10208, 1.10813, -0.00605), vec3(-0.00327, -0.07276, 1.07602));
+        c *= rrt; vec3 t = (c * (c + 0.0245786) - 0.000090537) / (c * (0.983729 * c + 0.432951) + 0.238081); t *= odt;
+        float w = 1.8, wt = (w * (w + 0.0245786) - 0.000090537) / (w * (0.983729 * w + 0.432951) + 0.238081); return t / wt; }
+      vec3 toSrgb(vec3 c){ c = clamp(c, 0.0, 1.0); return mix(1.055 * pow(c, vec3(1.0 / 2.4)) - 0.055, 12.92 * c, vec3(lessThan(c, vec3(0.0031308)))); }
       float lDepth(vec2 q){ float z = texture2D(tDepth, q).r * 2.0 - 1.0; return (2.0 * uNear * uFar) / (uFar + uNear - z * (uFar - uNear)); }
       void main(){
         vec2 c = vUv - 0.5; float r2 = dot(c, c);
@@ -204,14 +213,20 @@ export class Gfx {
             occ += smoothstep(0.003, 0.03, dd) * (1.0 - smoothstep(0.06, 0.16, dd));
             edge = max(edge, smoothstep(0.05, 0.2, dd));
           }
-          col *= 1.0 - uCavity * clamp(occ / 8.0 * 0.75 + edge * 0.45, 0.0, 0.8);
+          col *= 1.0 - uCavity * clamp(occ / 8.0 * 0.75 + edge * 0.45 * (1.0 - uLook), 0.0, 0.8); // no visual novo, sem contorno
         }
         col = max(col, 0.0) + texture2D(tBloom, uv).rgb * uBloom;
-        col = col / (1.0 + col * 0.35);
-        col = pow(col, vec3(1.0 / 2.2));
-        float l = dot(col, vec3(0.299, 0.587, 0.114));
-        col = mix(vec3(l), col, uSat);
-        col += (1.0 - l) * uShadow + l * l * uHigh;
+        float l;
+        if (uLook > 0.5) {
+          col = toSrgb(acesG(col)); col *= uBright; col = 0.5 + (col - 0.5) * uContrast;
+          col = mix(vec3((col.r + col.g + col.b) / 3.0), col, uSat2); l = dot(col, vec3(0.299, 0.587, 0.114));
+        } else {
+          col = col / (1.0 + col * 0.35);
+          col = pow(col, vec3(1.0 / 2.2));
+          l = dot(col, vec3(0.299, 0.587, 0.114));
+          col = mix(vec3(l), col, uSat);
+          col += (1.0 - l) * uShadow + l * l * uHigh;
+        }
         col = mix(col, col * vec3(1.25, 0.8, 0.7), uTintWarm);
         col = mix(col, vec3(l) * vec3(0.72, 0.95, 1.25) + 0.05, max(uFrost, uIceTint));
         // Ar Condicionado no Talo: gelo em blocos de cristal crescendo das bordas e trincas de vidro (frost.js)
@@ -233,32 +248,17 @@ export class Gfx {
           col = mix(col, col * 0.3, ck.g * uCrack);
           col = mix(col, vec3(0.86, 0.95, 1.0), ck.r * uCrack);
         }
-        if (uPal > 0.0) {
-          // Rua do menu no estilo da arte de referência: a luminância vira uma das 12 cores da paleta (sépia, oliva, âmbar),
-          // com pontilhado entre elas, uma textura grossa de pintura e as bordas dos objetos escurecidas como contorno.
-          vec2 tx = 1.0 / uRes; vec3 LW = vec3(0.3, 0.59, 0.11);
-          float lc = dot(texture2D(tScene, uv).rgb, LW);
-          float ex = abs(dot(texture2D(tScene, uv + vec2(tx.x, 0.0)).rgb - texture2D(tScene, uv - vec2(tx.x, 0.0)).rgb, LW));
-          float ey = abs(dot(texture2D(tScene, uv + vec2(0.0, tx.y)).rgb - texture2D(tScene, uv - vec2(0.0, tx.y)).rgb, LW));
-          float edge = smoothstep(0.35, 1.2, (ex + ey) / (lc + 0.04));
-          float lp = dot(col, vec3(0.299, 0.587, 0.114));
-          float paint = (hash(floor(px / 2.0) * 1.31) - 0.5) * 0.06 + (hash(px * 0.73) - 0.5) * 0.035;
-          lp = pow(lp, 0.68) * 1.08; // o contorno escurece as bordas do que é escuro; letra e janela acesas continuam cheias
-          lp = clamp(lp * (1.0 - 0.5 * edge * (1.0 - smoothstep(0.45, 0.75, lp))) + paint, 0.0, 1.0);
-          float idx = clamp(floor(lp * 11.0 + bayer(px) * 0.8 - 0.1), 0.0, 11.0);
-          vec3 pc = uPalC[0];
-          for (int k = 1; k < 12; k++) if (float(k) == idx) pc = uPalC[k];
-          // o que era quente (luz, janela, letreiro) puxa um pouco para o âmbar; o resto fica na rampa
-          pc *= mix(vec3(1.0), vec3(1.07, 0.98, 0.84), clamp((col.r - col.b) * 3.0, 0.0, 1.0) * 0.6);
-          col = mix(col, pc, uPal);
+        if (uLook < 0.5) {
+          col += (hash(px + fract(uTime) * 91.7) - 0.5) * uGrain;
+          col = floor(col * uLevels + bayer(px)) / uLevels;
+          col *= 1.0 - uScan * mod(px.y, 2.0);
+          float vig = smoothstep(1.0, 0.28, sqrt(r2) * (1.0 + 0.3 * uVig));
+          col *= mix(1.0, vig, 0.4 + 0.45 * uVig);
         }
-        col += (hash(px + fract(uTime) * 91.7) - 0.5) * uGrain * (1.0 - uPal);
-        if (uPal < 0.5) col = floor(col * uLevels + bayer(px)) / uLevels;
-        col *= 1.0 - uScan * mod(px.y, 2.0);
-        float vig = smoothstep(1.0, 0.28, sqrt(r2) * (1.0 + 0.3 * uVig));
-        col *= mix(1.0, vig, 0.4 + 0.45 * uVig);
         col = mix(col, uFlashCol, uFlash * (0.35 + r2 * 2.6));
         col *= 1.0 - uFade;
+        // por último, o corte seco: cada canal em poucos degraus (7), sem pontilhado; é ele que deixa tudo encardido
+        if (uLook > 0.5) col = floor(clamp(col, 0.0, 1.0) * uSteps) / uSteps;
         gl_FragColor = vec4(col, 1.0);
       }`);
     this.depthOnly = new THREE.MeshBasicMaterial({ colorWrite: false });
@@ -276,7 +276,7 @@ export class Gfx {
     this.rtA.setSize(Math.max(32, iw >> 1), Math.max(32, ih >> 1)); this.rtB.setSize(Math.max(32, iw >> 1), Math.max(32, ih >> 1));
     this.u.uRes.value.set(iw, ih);
     this.u.uLevels.value = P.levels[i]; this.u.uGrain.value = P.grain[i];
-    this.crisp = scale > 1.12;     // mundo pixelado → cartas em passe separado, nítidas
+    this.crisp = scale > 1.12 || this.u.uLook.value > 0.5; // cartas em passe separado, nítidas (e fora do corte de cor do mundo)
     this.pointScale = ih * 0.9;
     this.w = w; this.h = h;
   }

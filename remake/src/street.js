@@ -112,7 +112,7 @@ function halo(size, color, opacity) {
     g.fillStyle = gr; g.fillRect(0, 0, 128, 128); haloTex = new THREE.CanvasTexture(c);
   }
   const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: haloTex, color, transparent: true, opacity, blending: THREE.AdditiveBlending, depthWrite: false, fog: false }));
-  sp.scale.setScalar(size); sp.userData.base = opacity; return sp;
+  sp.scale.setScalar(size * 0.6); sp.userData.base = opacity * 0.35; sp.material.opacity = opacity * 0.35; return sp;
 }
 // paleta do modelo do candidato recolorida: terno, camisa, gravata/calça, pele e cabelo (pessoas diferentes na fila)
 const SUITS = ['#1d232a', '#2b2b2e', '#3a2c22', '#1f2a22', '#3b1f22', '#45474c', '#25283a', '#4a3b2a'];
@@ -154,7 +154,7 @@ function skyMaterial() {
         vec3 col = mix(dark, olive, smoothstep(0.12, 0.45, cloud) * 0.8);
         col = mix(col, mid, smoothstep(0.3, 0.75, v));
         col = mix(col, hi, smoothstep(0.78, 1.35, v));
-        col *= 0.5 + 0.5 * smoothstep(-0.2, 0.6, vUv.y);
+        col *= (0.5 + 0.5 * smoothstep(-0.2, 0.6, vUv.y)) * 0.34; // mais escuro: o pós clareia (brilho 1,49)
         gl_FragColor = vec4(col, 1.0);
       }`,
   });
@@ -169,8 +169,9 @@ export function buildStreet() {
   const flick = []; // luzes que piscam: { set(k), rate, seed }
   const powered = []; // janelas acesas sem pisca: também acendem na abertura { set(p), on, seed }
 
-  scene.add(new THREE.HemisphereLight(0x8a7858, 0x0b0805, 1.3));
-  const moon = new THREE.DirectionalLight(0xc9b490, 0.9); moon.position.set(4, 20, 8); scene.add(moon);
+  // visual de 28/11: pouca luz ambiente, a cena vive das lâmpadas (como no Buckshot)
+  scene.add(new THREE.HemisphereLight(0x8a7858, 0x0b0805, 0.32));
+  const moon = new THREE.DirectionalLight(0xc9b490, 0.28); moon.position.set(4, 20, 8); scene.add(moon);
 
   // céu e números girando em volta do redemoinho
   const sky = new THREE.Mesh(new THREE.PlaneGeometry(260, 110), skyMaterial()); at(sky, 6, 34, -80); scene.add(sky);
@@ -433,7 +434,7 @@ export function buildStreet() {
       d.a += d.w * dt * (1 + 7 * boom);
       d.m.position.set(vortex.x + Math.cos(d.a) * d.r * 1.5, vortex.y + Math.sin(d.a) * d.r * 0.55, vortex.z + 4 + Math.sin(d.a) * 2);
       d.m.rotation.z = Math.sin(t * 0.3 + d.r) * 0.3 + d.spin * t;
-      d.m.material.opacity = 0.7 + 0.3 * Math.sin(t * 0.7 + d.r);
+      d.m.material.opacity = 0.42 + 0.18 * Math.sin(t * 0.7 + d.r);
     }
     for (const f of flick) {
       // quase sempre aceso; de vez em quando uma sequência de piscadas

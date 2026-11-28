@@ -66,6 +66,18 @@ Decisões do autor nesta rodada: o custo de sacrifício **fica** na carta reduzi
 
 Feito e conferido em captura (1280×720, 1440×900, 1920×1080):
 
+000000000000000000000. **Visual novo do jogo inteiro, a partir do Buckshot Roulette (28/11)** (autor: "não vi diferença; pesquise a fundo o Buckshot, a sujidão é baseada nele"). Pesquisa com fontes (entrevistas do autor do Buckshot e os arquivos do jogo descompilados pela comunidade; relatório completo no histórico da sessão). O que faz a cara de sujo dele:
+   1. as texturas são fotos com sujeira pintada à mão ("escorridos sujos em todos os cantos", disse o autor; texturas esticadas fazem parte do estilo);
+   2. um único filtro no fim: cada canal de cor cortado em **7 degraus, sem pontilhado e sem grão**; isso transforma a variação pequena das superfícies em placas duras de cor;
+   3. antes do corte: ACES, brilho 1,49, contraste 0,8 e **saturação 0,26**;
+   4. escuridão fora das poças de luz (sem luz ambiente, lâmpadas laranja);
+   5. imagem de 960×540 sem suavizar; sem bloom, aberração, linhas de TV, vinheta ou chuvisco.
+   Por que a sujeira anterior não aparecia: o nosso filtro (13 degraus com pontilhado, chuvisco animado, linhas, vinheta) alisava e cobria a variação das superfícies.
+   - **Feito** (`gfx.js`, `theme.js` `post.look = 1`): a cadeia do Buckshot no pós (ACES do Godot, brilho, contraste, saturação, `floor(c*7)/7` como última operação); 540 linhas; bloom, aberração e tremor zerados; o contorno de profundidade saiu e os cantos escurecem fraco (`uCavity` 0,4). Vale para rua, lobby e duelo; as cartas ficam num passe próprio, nítidas e com a cor original. `post.look = 0` volta ao tratamento antigo.
+   - A paleta sépia da rua (`uPal`) foi retirada: a rua usa a mesma cadeia das outras cenas.
+   - Luz: luz ambiente baixada nas três cenas (rua 0,32, lobby 0,2, duelo 0,05; ambiente PBR 0,04 e 0,03), luminária do duelo laranja (0xf5a466, 420), céu da rua e halos mais escuros, carpete do lobby mais escuro.
+   - A sujeira dos materiais (`weathering.js`) continua e agora aparece.
+   - Próximo passo possível: texturas fotográficas com sujeira pintada (o pacote CC0 WRAD, que o próprio Buckshot usa) nas paredes, mesa e chão.
 00000000000000000000. **Sujeira no jogo inteiro (28/11)** (autor: a referência é "suja" na superfície dos modelos, não só ruído; quer isso padronizado na rua, no lobby e no duelo, "não apenas sépia, um shader"; topa mudar a tecnologia se precisar). Não precisou trocar nada: é um remendo de shader nos materiais (`src/weathering.js`, `weather(scene)` no `main.js` para as três cenas) e uma etapa nova no pós (`gfx.js`).
    - **Na superfície** (todos os materiais iluminados; cartas e luzes ficam de fora): pela posição e pela normal no mundo, cada pixel recebe manchas grandes e menores, escorrido vertical nas paredes, barro subindo do chão, desgaste claro (tinta e reboco gastos), grão e poeira no que fica virado para cima. Escalas em metros, pensadas para a tela pixelada (detalhe menor que uns 25 cm some). Força única: `WEATHER.uGrime` (1).
    - **Nos cantos** (pós, `uCavity`): a profundidade da cena escurece vincos, juntas e cantos (onde o vizinho está um pouco à frente) e desenha contorno escuro nas bordas dos objetos sobre o fundo. Para isso o alvo de render ganhou `depthTexture`.
