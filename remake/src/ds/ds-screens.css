@@ -15,29 +15,15 @@
 #menu .mn-card .mn-punch .ds-key { background: var(--ds-ink); color: var(--ds-amber); box-shadow: 0 0 0 1.5px var(--ds-amber), 0 0 0 3.5px var(--ds-ink); }
 #menu .mn-card .mn-punch i { font: 700 12px/1 var(--f-ui); font-style: normal; letter-spacing: 0.16em; padding: 6px 8px 5px; border: 2px dashed rgba(27, 20, 13, 0.55); color: rgba(27, 20, 13, 0.6); transform: rotate(-6deg); }
 #menu .mn-card .mn-punch:hover, #menu .mn-card .mn-punch:focus-visible { background: var(--ds-tex-lines), linear-gradient(to bottom, #ffe2a3, #f7c466); }
-/* mouse ou foco: o carimbo fica pronto (tinta preta); vermelho só quando o ponto é batido */
-#menu .mn-card .mn-punch:hover i, #menu .mn-card .mn-punch:focus-visible i { border: 2px solid var(--ds-ink); color: var(--ds-ink); background: rgba(255, 255, 255, 0.35); }
+#menu .mn-card .mn-punch:hover i, #menu .mn-card .mn-punch:focus-visible i { border: 3px solid var(--ds-red); color: var(--ds-red); background: rgba(255, 255, 255, 0.35); }
 /* linhas do cartão: número da linha, nome, anotação */
 #menu .mn-card .mn-row { grid-template-columns: 44px 1fr auto; min-height: 48px; padding-right: 16px; border-bottom: 1.5px solid rgba(27, 20, 13, 0.45); }
 #menu .mn-card .mn-row:last-child { border-bottom: none; }
 #menu .mn-card .mn-row b { align-self: stretch; display: grid; place-items: center; border-right: 1.5px solid rgba(27, 20, 13, 0.45); font: 400 22px/1 var(--f-title); color: var(--ds-ink-2); margin-right: 14px; }
 #menu .mn-card .mn-row i { font: 500 var(--t-cap)/1 var(--f-ui); font-style: normal; letter-spacing: 0.06em; text-transform: none; color: var(--ds-ink-3); }
 #menu .mn-card .mn-row:hover, #menu .mn-card .mn-row:focus-visible { background: var(--ds-amber); } #menu .mn-card .mn-row:hover b, #menu .mn-card .mn-row:hover i { color: var(--ds-ink); }
-/* ── menu, 28/11: o cartão não encolhe com a escala da interface; a batida do ponto diz quem entra; as anotações explicam ── */
-.title-block { width: min(580px, 86vw); }
-.title-block nav.mn-card { zoom: var(--lb-fix, 1); width: min(430px, 100%); }
-/* batida do ponto: à esquerda, o que acontece e quem entra (empresa e reunião); à direita, o carimbo e a tecla */
-#menu .mn-card .mn-punch { grid-template-columns: minmax(0, 1fr) auto; gap: 14px; min-height: 84px; padding: 12px 16px 12px 18px; }
-.mn-punch__txt { display: grid; gap: 5px; min-width: 0; }
-.mn-punch__txt b { font: 700 17px/1.05 var(--f-ui); letter-spacing: 0.05em; }
-.mn-punch__txt small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 600 13px/1.2 var(--f-ui); letter-spacing: 0.02em; text-transform: none; color: rgba(27, 20, 13, 0.8); }
-.mn-punch__txt small:empty { display: none; }
-.mn-punch__in { display: grid; justify-items: center; gap: 9px; }
-#menu .mn-card .mn-row i { font-size: 13px; color: var(--ds-ink-2); }
-#menu .mn-card .mn-sep { margin: 0; height: 0; border: none; border-top: 4px double rgba(27, 20, 13, 0.55); }
-/* bater o ponto: o carimbo leva a hora em tinta vermelha */
-#menu .mn-card .mn-punch.is-punched .mn-punch__stamp { border: 3px solid var(--ds-red); color: var(--ds-red); background: rgba(255, 255, 255, 0.45); animation: mn-stamp 0.22s cubic-bezier(0.2, 1.6, 0.4, 1) both; }
-@keyframes mn-stamp { from { opacity: 0; scale: 1.9; } to { opacity: 1; scale: 1; } }
+#menu .company { display: flex; align-items: center; gap: 10px; margin-top: 26px; } #menu .company i { font-style: normal; }
+#menu .company .ds-dymo { transform: rotate(-1.5deg); }
 /* aviso de som: post-it pequeno */
 #unlock { bottom: 30px; padding: 10px 14px 8px; background: var(--ds-tex-lines), linear-gradient(160deg, #ffe680, #f4cf4a); color: var(--ds-ink); border: var(--ds-line) solid var(--ds-ink); box-shadow: 4px 5px 0 rgba(0, 0, 0, 0.45); font: 700 var(--t-sm)/1 var(--f-ui); letter-spacing: 0.06em; text-transform: uppercase; transform: translateX(-50%) rotate(-2deg); animation: none; }
 
@@ -460,5 +446,5 @@ body.theme-buckshot #menu { background: none; }
 #ui.mn-reveal .mn-card > :nth-child(7) { animation-delay: 1.58s; } #ui.mn-reveal .mn-card > :nth-child(8) { animation-delay: 1.64s; }
 #ui.mn-reveal .mn-card > :nth-child(9) { animation-delay: 1.7s; } #ui.mn-reveal .mn-card > :nth-child(10) { animation-delay: 1.76s; }
 #ui.mn-reveal .mn-card > .ds-clip { animation: mn-clip 0.3s ease-out 1.55s both; }
-#ui.mn-reveal :is(#menu .credits, #unlock) { animation: mn-in 0.4s 1.9s both; }
+#ui.mn-reveal :is(#menu .credits, #menu .company, #unlock) { animation: mn-in 0.4s 1.9s both; }
 @media (prefers-reduced-motion: reduce) { #ui.mn-reveal * , #ui.mn-reveal *::before { animation: none !important; } }

@@ -150,7 +150,9 @@ export class Gfx {
       uFrost: { value: 0 }, uGlitch: { value: 0 }, uFade: { value: 0 }, uBarrel: { value: 0 }, uTintWarm: { value: 0 }, uScan: { value: P.scan },
       uIce: { value: 0 }, uIceTint: { value: 0 }, uCrack: { value: 0 }, tCrack: { value: new THREE.DataTexture(new Uint8Array(4), 1, 1) },
       uIceImg: { value: 0 }, uIceMix: { value: 0 }, tIceA: { value: new THREE.DataTexture(new Uint8Array(4), 1, 1) }, tIceB: { value: new THREE.DataTexture(new Uint8Array(4), 1, 1) },
-      uWobble: { value: P.wobble ?? 0 }, uShadow: { value: new THREE.Vector3(...P.shadow) }, uHigh: { value: new THREE.Vector3(...P.high) },
+      uWobble: { value: P.wobble ?? 0 },
+      // estilo da arte de referência (rua do menu): paleta curta de sépia, oliva e âmbar, do mais escuro ao mais claro
+      uPal: { value: 0 }, uPalC: { value: ['#0b0805', '#16110a', '#211b10', '#2c2916', '#3a3520', '#4b3d25', '#5d4a2d', '#775a33', '#98733f', '#bd914d', '#deb46e', '#f5daa4'].map((h) => new THREE.Color().setHex(parseInt(h.slice(1), 16), THREE.LinearSRGBColorSpace)) }, // valores crus: o shader trabalha já em sRGB uShadow: { value: new THREE.Vector3(...P.shadow) }, uHigh: { value: new THREE.Vector3(...P.high) },
     };
     this.base = { aberr: P.aberr };
     this.quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), null); this.quad.frustumCulled = false;
@@ -167,7 +169,7 @@ export class Gfx {
     this.postMat = quadMat(this.u, `
       precision highp float;
       varying vec2 vUv; uniform sampler2D tScene, tBloom, tCrack, tIceA, tIceB; uniform float uIceImg, uIceMix; uniform vec2 uRes; uniform float uIce, uIceTint, uCrack; uniform vec3 uFlashCol, uShadow, uHigh;
-      uniform float uTime, uAberr, uFlash, uGrain, uLevels, uVig, uSat, uFrost, uGlitch, uFade, uTintWarm, uBloom, uScan, uWobble;
+      uniform float uTime, uAberr, uFlash, uGrain, uLevels, uVig, uSat, uFrost, uGlitch, uFade, uTintWarm, uBloom, uScan, uWobble, uPal; uniform vec3 uPalC[12];
       float hash(vec2 p){ p = fract(p * vec2(123.34, 456.21)); p += dot(p, p + 45.32); return fract(p.x * p.y); }
       float bayer2(vec2 a){ a = floor(a); return fract(a.x / 2.0 + a.y * a.y * 0.75); }
       float bayer(vec2 p){ return bayer2(0.5 * p) * 0.25 + bayer2(p); }
@@ -215,8 +217,27 @@ export class Gfx {
           col = mix(col, col * 0.3, ck.g * uCrack);
           col = mix(col, vec3(0.86, 0.95, 1.0), ck.r * uCrack);
         }
-        col += (hash(px + fract(uTime) * 91.7) - 0.5) * uGrain;
-        col = floor(col * uLevels + bayer(px)) / uLevels;
+        if (uPal > 0.0) {
+          // Rua do menu no estilo da arte de referência: a luminância vira uma das 12 cores da paleta (sépia, oliva, âmbar),
+          // com pontilhado entre elas, uma textura grossa de pintura e as bordas dos objetos escurecidas como contorno.
+          vec2 tx = 1.0 / uRes; vec3 LW = vec3(0.3, 0.59, 0.11);
+          float lc = dot(texture2D(tScene, uv).rgb, LW);
+          float ex = abs(dot(texture2D(tScene, uv + vec2(tx.x, 0.0)).rgb - texture2D(tScene, uv - vec2(tx.x, 0.0)).rgb, LW));
+          float ey = abs(dot(texture2D(tScene, uv + vec2(0.0, tx.y)).rgb - texture2D(tScene, uv - vec2(0.0, tx.y)).rgb, LW));
+          float edge = smoothstep(0.35, 1.2, (ex + ey) / (lc + 0.04));
+          float lp = dot(col, vec3(0.299, 0.587, 0.114));
+          float paint = (hash(floor(px / 2.0) * 1.31) - 0.5) * 0.06 + (hash(px * 0.73) - 0.5) * 0.035;
+          lp = pow(lp, 0.68) * 1.08; // o contorno escurece as bordas do que é escuro; letra e janela acesas continuam cheias
+          lp = clamp(lp * (1.0 - 0.5 * edge * (1.0 - smoothstep(0.45, 0.75, lp))) + paint, 0.0, 1.0);
+          float idx = clamp(floor(lp * 11.0 + bayer(px) * 0.8 - 0.1), 0.0, 11.0);
+          vec3 pc = uPalC[0];
+          for (int k = 1; k < 12; k++) if (float(k) == idx) pc = uPalC[k];
+          // o que era quente (luz, janela, letreiro) puxa um pouco para o âmbar; o resto fica na rampa
+          pc *= mix(vec3(1.0), vec3(1.07, 0.98, 0.84), clamp((col.r - col.b) * 3.0, 0.0, 1.0) * 0.6);
+          col = mix(col, pc, uPal);
+        }
+        col += (hash(px + fract(uTime) * 91.7) - 0.5) * uGrain * (1.0 - uPal);
+        if (uPal < 0.5) col = floor(col * uLevels + bayer(px)) / uLevels;
         col *= 1.0 - uScan * mod(px.y, 2.0);
         float vig = smoothstep(1.0, 0.28, sqrt(r2) * (1.0 + 0.3 * uVig));
         col *= mix(1.0, vig, 0.4 + 0.45 * uVig);

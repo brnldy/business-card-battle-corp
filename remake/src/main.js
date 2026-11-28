@@ -57,14 +57,11 @@ async function boot() {
   settings.onChange(() => { onResize(); });
   ui.on({
     // menu: Continuar (último slot), Novo jogo (escolhe a gaveta e registra a empresa) e Carregar
-    // bate o ponto (carimbo com a hora) e entra
     continue: () => {
       const n = save.lastSlot(); if (!n) return ui.h.newgame();
-      ui.punch(() => {
-        sfx('start'); save.use(n);
-        if (save.company()) return fade(toLobby);
-        return askName();
-      });
+      sfx('start'); save.use(n);
+      if (save.company()) return fade(toLobby);
+      return askName();
     },
     newgame: () => { sfx('nav'); keepMenu(); ui.slots('new', { pick: (n) => askName((name) => save.create(n, name)) }); },
     load: () => { sfx('nav'); keepMenu(); ui.slots('load', { load: (n) => { ui.closeModal(); save.use(n); sfx('start'); if (save.company()) fade(toLobby); else askName(); } }); },
@@ -74,7 +71,7 @@ async function boot() {
   // abertura do menu: qualquer clique ou tecla pula a animação e mostra tudo no lugar (e não vale como escolha)
   const skip = (e) => { if (mode === 'menu' && street.introOn) { street.skipIntro(); ui.menuStage('show'); unlock(); e.preventDefault(); e.stopImmediatePropagation(); } };
   window.addEventListener('pointerdown', skip, true); window.addEventListener('keydown', skip, true);
-  window.addEventListener('keydown', (e) => { if (mode === 'menu' && e.key === 'Enter' && !ui.menuBusy && !document.activeElement?.closest?.('#menu .mn-card') && document.getElementById('modal').classList.contains('hidden')) { unlockAudio(); if (save.lastSlot()) ui.h.continue(); else ui.h.newgame(); } });
+  window.addEventListener('keydown', (e) => { if (mode === 'menu' && e.key === 'Enter' && !ui.menuBusy && document.getElementById('modal').classList.contains('hidden')) { unlockAudio(); if (save.lastSlot()) ui.h.continue(); else ui.h.newgame(); } });
   const unlock = () => { unlockAudio(); document.getElementById('unlock').classList.add('hidden'); };
   window.addEventListener('pointerdown', unlock); window.addEventListener('keydown', unlock);
   initAudio(); applyVolumes();
@@ -109,8 +106,10 @@ function testShortcuts(q) {
   if (q.has('sobras')) CARDS.forEach((c, i) => { if (i % 2 === 0) s.collection[c.id] = Math.max(s.collection[c.id] ?? 0, 3 + (i % 3) + 1); });
   save.set(s);
 }
+// ao sair da rua, os efeitos dela não vão junto (tom sépia, paleta, clarão, brilho)
+function resetPost() { const u = gfx.u; u.uPal.value = 0; u.uTintWarm.value = 0; u.uFlash.value = 0; u.uGlitch.value = 0; u.uBloom.value = T.post.bloom; u.uAberr.value = gfx.base.aberr; }
 function toLobby() {
-  mode = 'lobby'; duel.stop(); setMusicMode('menu'); ui.mainMenu(false);
+  mode = 'lobby'; duel.stop(); setMusicMode('menu'); ui.mainMenu(false); resetPost();
   gfx.u.uFade.value = 0; duel.lampOn = 1; R.opp.face.uDead.value = 0; R.opp.face.uOn.value = 1;
   document.getElementById('unlock').classList.add('hidden');
   lobby.enter(); lobbyUi.show(true);
@@ -127,7 +126,7 @@ function toMenu(first) {
   else ui.menuStage(still ? 'show' : 'reveal');
 }
 function startDuel(training = false) {
-  mode = 'duel'; ui.mainMenu(false); lobbyUi.show(false); document.getElementById('unlock').classList.add('hidden');
+  mode = 'duel'; resetPost(); ui.mainMenu(false); lobbyUi.show(false); document.getElementById('unlock').classList.add('hidden');
   duel.started = false;
   const s = save.get();
   const pool = CARDS.filter((c) => (s.collection[c.id] ?? 0) > 0).map((c) => c.id);
@@ -153,9 +152,18 @@ function loop(nowMs) {
   duel.update(dt, t);
   particles.update(dt);
   // lobby: a recepção por dentro
+  gfx.u.uPal.value = 0;
   if (mode === 'lobby') { lobby.update(dt, t, duel.mouse); gfx.render(lobby.scene, lobby.camera); lobbyUi.frame(); return; }
   // menu: a rua com o prédio e a fila (cena própria, mesmo filtro de imagem)
-  if (mode !== 'duel') { street.update(dt, t, duel.mouse); gfx.u.uFade.value = street.fade; gfx.render(street.scene, street.camera); return; }
+  if (mode !== 'duel') {
+    // a rua do menu: estilo da arte de referência (paleta e contorno), tom sépia e os efeitos do estalo do letreiro na abertura
+    street.update(dt, t, duel.mouse);
+    const fx = street.fx, u = gfx.u;
+    u.uFade.value = street.fade; u.uPal.value = 1; u.uTintWarm.value = fx.warm; u.uGlitch.value = fx.glitch;
+    u.uFlash.value = fx.flash; if (fx.flash > 0) u.uFlashCol.value.setRGB(1, 0.72, 0.36);
+    u.uBloom.value = T.post.bloom + fx.bloom; u.uAberr.value = gfx.base.aberr + fx.aberr;
+    gfx.render(street.scene, street.camera); return;
+  }
   // câmera: pose-alvo por modo + paralaxe do mouse + respiração + tremor
   const cam = R.camera, wide = Math.max(1, 1.62 / cam.aspect);
   if (mode === 'duel') {

@@ -65,26 +65,54 @@ function glowTexture(kind) {
 // letreiro do telhado, com o título do jogo
 function signTexture() {
   const W = 1024, H = 360, { c, g } = mkCanvas(W, H);
-  paint(g, W, H, (x, y) => { const v = 0.12 + fbm(x / 60, y / 60, 31, 4) * 0.12; return [120 * v, 70 * v, 50 * v]; });
+  // placa de chapa escura, com moldura e rebites (como na arte de referência)
+  paint(g, W, H, (x, y) => { const v = 0.1 + fbm(x / 60, y / 60, 31, 4) * 0.12; return [120 * v, 78 * v, 52 * v]; });
+  g.strokeStyle = '#6b4d2c'; g.lineWidth = 10; g.strokeRect(8, 8, W - 16, H - 16);
+  g.strokeStyle = '#120c07'; g.lineWidth = 3; g.strokeRect(16, 16, W - 32, H - 32);
+  g.fillStyle = '#a07a46'; for (let x = 30; x < W; x += 82) for (const y of [24, H - 24]) { g.beginPath(); g.arc(x, y, 4, 0, 7); g.fill(); }
   g.textAlign = 'center'; g.textBaseline = 'alphabetic';
-  const glow = (txt, x, y, size, color, blur) => { g.font = `400 ${size}px ${LOGO}`; g.shadowColor = color; g.shadowBlur = blur; g.fillStyle = color; g.fillText(txt, x, y); g.shadowBlur = 0; };
-  glow('BUSINESS', W / 2, 140, 132, '#f3d39a', 26);
-  glow('CARD', W * 0.38, 300, 170, '#f6dca6', 30);
+  // letras de latão: degradê dourado, contorno escuro e um brilho quente em volta
+  const gold = (txt, x, y, size) => {
+    g.font = `400 ${size}px ${LOGO}`;
+    const gr = g.createLinearGradient(0, y - size * 0.8, 0, y); gr.addColorStop(0, '#fff0c4'); gr.addColorStop(0.45, '#f0c56e'); gr.addColorStop(0.55, '#b9822f'); gr.addColorStop(1, '#f5cf7c');
+    g.shadowColor = 'rgba(255, 190, 90, 0.85)'; g.shadowBlur = 22; g.fillStyle = gr; g.fillText(txt, x, y); g.shadowBlur = 0;
+    g.lineWidth = 3; g.strokeStyle = '#3a2410'; g.strokeText(txt, x, y);
+  };
+  gold('BUSINESS', W / 2, 142, 134);
+  gold('CARD', W * 0.38, 302, 172);
   // etiqueta "Battle" inclinada e "Corp."
   g.save(); g.translate(W * 0.72, 238); g.rotate(-0.06);
   g.fillStyle = '#1a120c'; g.strokeStyle = '#e7c486'; g.lineWidth = 5; g.beginPath(); g.roundRect(-110, -44, 220, 80, 24); g.fill(); g.stroke();
   g.font = `italic 400 58px ${LOGO}`; g.fillStyle = '#f0d49c'; g.shadowColor = '#f0d49c'; g.shadowBlur = 14; g.fillText('Battle', 0, 16); g.restore();
-  g.shadowBlur = 0; g.font = `400 62px ${LOGO}`; g.fillStyle = '#9d8160'; g.fillText('Corp.', W * 0.9, 300);
+  g.shadowBlur = 0; g.font = `400 62px ${LOGO}`; g.fillStyle = '#b89668'; g.fillText('Corp.', W * 0.9, 300);
   // lâmpadas apagadas em duas letras, como num letreiro velho
-  g.fillStyle = 'rgba(20,12,8,0.6)'; g.fillRect(W / 2 - 52, 40, 50, 104);
+  g.fillStyle = 'rgba(20,12,8,0.62)'; g.fillRect(W / 2 - 52, 40, 50, 104);
   return tex(c, { pixel: false });
 }
 // um número do céu (fonte serifada dos títulos, com brilho)
 function digitTexture(ch) {
   const S = 128, { c, g } = mkCanvas(S, S);
   g.textAlign = 'center'; g.textBaseline = 'middle'; g.font = `400 104px ${SERIF}`;
-  g.shadowColor = '#e8cf9a'; g.shadowBlur = 18; g.fillStyle = '#f2ddb0'; g.fillText(ch, S / 2, S / 2 + 6);
+  g.shadowColor = '#ffc970'; g.shadowBlur = 22; g.fillStyle = '#f6dcaa'; g.fillText(ch, S / 2, S / 2 + 6);
   return tex(c, { pixel: false });
+}
+// naipes que giram junto com os números (como na arte de referência)
+function suitTexture(ch) {
+  const S = 96, { c, g } = mkCanvas(S, S);
+  g.textAlign = 'center'; g.textBaseline = 'middle'; g.font = `400 64px ${SERIF}`;
+  g.shadowColor = '#d9b070'; g.shadowBlur = 10; g.strokeStyle = '#e8cf9a'; g.lineWidth = 3; g.strokeText(ch, S / 2, S / 2 + 4);
+  return tex(c, { pixel: false });
+}
+// halo de lâmpada: brilho redondo e macio somado à cena (na referência, as luminárias têm esse halo, sem cone duro)
+let haloTex = null;
+function halo(size, color, opacity) {
+  if (!haloTex) {
+    const { c, g } = mkCanvas(128, 128), gr = g.createRadialGradient(64, 64, 0, 64, 64, 64);
+    gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(0.18, 'rgba(255,255,255,0.55)'); gr.addColorStop(0.5, 'rgba(255,255,255,0.12)'); gr.addColorStop(1, 'rgba(255,255,255,0)');
+    g.fillStyle = gr; g.fillRect(0, 0, 128, 128); haloTex = new THREE.CanvasTexture(c);
+  }
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: haloTex, color, transparent: true, opacity, blending: THREE.AdditiveBlending, depthWrite: false, fog: false }));
+  sp.scale.setScalar(size); sp.userData.base = opacity; return sp;
 }
 // paleta do modelo do candidato recolorida: terno, camisa, gravata/calça, pele e cabelo (pessoas diferentes na fila)
 const SUITS = ['#1d232a', '#2b2b2e', '#3a2c22', '#1f2a22', '#3b1f22', '#45474c', '#25283a', '#4a3b2a'];
@@ -115,16 +143,18 @@ function skyMaterial() {
       void main(){
         vec2 p = (vUv - uC) * vec2(2.0, 1.0);
         float r = length(p), a = atan(p.y, p.x);
-        float swirl = a + log(r + 0.02) * 2.6 + uTime * 0.05;
+        float swirl = a + log(r + 0.02) * 3.1 + uTime * 0.05;
         vec2 q = vec2(cos(swirl), sin(swirl)) * (0.6 + r * 2.0);
-        float cloud = fb(q * 2.2 + vec2(0.0, uTime * 0.01));
-        float arms = 0.5 + 0.5 * sin(swirl * 3.0 + cloud * 4.0);
-        float core = exp(-r * 9.0);
-        float v = cloud * (0.45 + 0.55 * arms) * smoothstep(1.3, 0.05, r) + core * 1.4;
-        vec3 dark = vec3(0.07, 0.06, 0.04), mid = vec3(0.36, 0.3, 0.18), hi = vec3(0.95, 0.8, 0.55);
-        vec3 col = mix(dark, mid, smoothstep(0.25, 0.7, v));
-        col = mix(col, hi, smoothstep(0.75, 1.3, v));
-        col *= 0.55 + 0.45 * smoothstep(-0.2, 0.6, vUv.y);
+        float cloud = fb(q * 2.6 + vec2(0.0, uTime * 0.01));
+        float arms = pow(0.5 + 0.5 * sin(swirl * 3.0 + cloud * 4.0), 1.6);
+        float core = exp(-r * 13.0);
+        // braços claros e bem marcados perto do centro; longe dele, nuvem escura em sépia e oliva
+        float v = cloud * (0.3 + 0.9 * arms) * smoothstep(1.15, 0.04, r) + core * 1.7;
+        vec3 dark = vec3(0.045, 0.035, 0.022), olive = vec3(0.16, 0.15, 0.08), mid = vec3(0.36, 0.26, 0.14), hi = vec3(0.98, 0.82, 0.55);
+        vec3 col = mix(dark, olive, smoothstep(0.12, 0.45, cloud) * 0.8);
+        col = mix(col, mid, smoothstep(0.3, 0.75, v));
+        col = mix(col, hi, smoothstep(0.78, 1.35, v));
+        col *= 0.5 + 0.5 * smoothstep(-0.2, 0.6, vUv.y);
         gl_FragColor = vec4(col, 1.0);
       }`,
   });
@@ -146,9 +176,11 @@ export function buildStreet() {
   const sky = new THREE.Mesh(new THREE.PlaneGeometry(260, 110), skyMaterial()); at(sky, 6, 34, -80); scene.add(sky);
   const vortex = new THREE.Vector3(6 + (SKY_C.x - 0.5) * 260, 34 + (SKY_C.y - 0.5) * 110, -78);
   const digits = [];
-  for (let i = 0; i < 16; i++) {
-    const m = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ map: digitTexture(String(i % 10)), transparent: true, depthWrite: false, fog: false, opacity: 0.85 }));
-    const d = { m, r: 12 + hash(i, 1, 9) * 30, a: hash(i, 2, 9) * Math.PI * 2, w: (0.03 + hash(i, 3, 9) * 0.04) * (i % 3 ? 1 : 1.4), s: 7 + hash(i, 4, 9) * 6, spin: (hash(i, 5, 9) - 0.5) * 0.4 };
+  const SUIT = ['♦', '♠', '♣', '♥'];
+  for (let i = 0; i < 24; i++) {
+    const suit = i >= 16, map = suit ? suitTexture(SUIT[i % 4]) : digitTexture(String(i % 10));
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ map, transparent: true, depthWrite: false, fog: false, opacity: 0.85 }));
+    const d = { m, r: 12 + hash(i, 1, 9) * 30, a: hash(i, 2, 9) * Math.PI * 2, w: (0.03 + hash(i, 3, 9) * 0.04) * (i % 3 ? 1 : 1.4), s: (suit ? 4 : 8.5) + hash(i, 4, 9) * (suit ? 3 : 7), spin: (hash(i, 5, 9) - 0.5) * 0.4 };
     m.scale.setScalar(d.s); scene.add(m); digits.push(d);
   }
 
@@ -201,7 +233,8 @@ export function buildStreet() {
   const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.09, 8, 6), new THREE.MeshBasicMaterial({ color: 0xffd9a0 })); at(bulb, 0, door.h + 0.45, 0.65); hq.add(bulb);
   hq.add(at(box(0.05, 0.05, 0.7, frameM), 0, door.h + 0.68, 0.3));
   const doorLamp = new THREE.SpotLight(0xffc787, 220, 14, 1.0, 0.6, 1.2); at(doorLamp, 0, door.h + 0.45, 0.7); doorLamp.target.position.set(0, 0, 2.6); hq.add(doorLamp, doorLamp.target);
-  flick.push({ set: (k) => { doorLamp.intensity = 220 * k; bulb.material.color.setRGB(1 * k + 0.1, 0.85 * k + 0.08, 0.63 * k + 0.05); }, rate: 1.4, seed: 2 });
+  const doorCone = at(halo(1.9, 0xffb86a, 0.85), 0, door.h + 0.42, 0.75); hq.add(doorCone);
+  flick.push({ set: (k) => { doorLamp.intensity = 220 * k; bulb.material.color.setRGB(1 * k + 0.1, 0.85 * k + 0.08, 0.63 * k + 0.05); doorCone.material.opacity = doorCone.userData.base * k; }, rate: 1.4, seed: 2 });
 
   // janelas: algumas acesas (às vezes piscando), outras apagadas ou quebradas
   const winLit = new THREE.MeshBasicMaterial({ map: glowTexture('window') });
@@ -213,8 +246,8 @@ export function buildStreet() {
     if (kind === 'lit') { m = winLit.clone(); m.color.setScalar(0.3 + hash(i, 7, 3) * 0.45); }
     else m = winDark;
     const pane = new THREE.Mesh(new THREE.PlaneGeometry(w, h), m); at(pane, x, y, 0.09); hq.add(pane);
-    if (kind === 'lit' && hash(i, 9, 3) > 0.5) flick.push({ set: (k) => { m.color.setScalar((0.3 + hash(i, 7, 3) * 0.45) * (k < 0.2 ? k * 1.5 : 0.3 + 0.7 * k)); }, rate: 0.5 + hash(i, 8, 3), seed: 10 + i });
-    else if (kind === 'lit') powered.push({ set: (p) => { m.color.setScalar((0.3 + hash(i, 7, 3) * 0.45) * (0.04 + 0.96 * p)); }, seed: 10 + i });
+    if (kind === 'lit' && hash(i, 9, 3) > 0.5) flick.push({ set: (k) => { m.color.setScalar((0.3 + hash(i, 7, 3) * 0.45) * (k < 0.2 ? k * 1.5 : 0.3 + 0.7 * k)); }, rate: 0.5 + hash(i, 8, 3), seed: 10 + i, y });
+    else if (kind === 'lit') powered.push({ set: (p) => { m.color.setScalar((0.3 + hash(i, 7, 3) * 0.45) * (0.04 + 0.96 * p)); }, seed: 10 + i, y });
     if (kind === 'broken') { const s = new THREE.Mesh(new THREE.PlaneGeometry(w * 0.5, h * 0.4), M(0x2a2620)); at(s, x - w * 0.2, y + h * 0.25, 0.1); s.rotation.z = 0.5; hq.add(s); }
     if (kind === 'boarded') for (let b = 0; b < 3; b++) { const p = box(w * 1.1, 0.18, 0.06, M(0x4a3626)); at(p, x, y - h * 0.3 + b * h * 0.3, 0.14); p.rotation.z = (hash(i, b, 5) - 0.5) * 0.4; hq.add(p); }
   };
@@ -237,8 +270,11 @@ export function buildStreet() {
     const head = new THREE.Mesh(new THREE.ConeGeometry(0.28, 0.32, 10, 1, true), M(0x2a2620, { side: THREE.DoubleSide })); head.rotation.x = -0.9; at(head, x, 4.0, 0.8); sign.add(head);
     const b = new THREE.Mesh(new THREE.SphereGeometry(0.08, 8, 6), new THREE.MeshBasicMaterial({ color: 0xffe0a8 })); at(b, x, 3.9, 0.85); sign.add(b);
   }
+  // halos das três luminárias sobre a placa
+  const signCones = [];
+  for (let i = 0; i < 3; i++) { const hl = at(halo(2.4, 0xffc27a, 1), -3.4 + i * 3.4, 3.82, 0.95); sign.add(hl); signCones.push(hl); }
   const signLight = new THREE.SpotLight(0xffd59a, 260, 16, 0.75, 0.7, 1.2); at(signLight, 0, bh + 4.8, 2.4); signLight.target.position.set(0, bh + 2.2, -0.7); scene.add(signLight, signLight.target);
-  flick.push({ set: (k) => { signGlow.material.opacity = 0.55 * k; signLight.intensity = k < 0.2 ? 260 * k : 260 * (0.6 + 0.4 * k); }, rate: 0.35, seed: 3 });
+  flick.push({ set: (k) => { signGlow.material.opacity = 0.55 * k; signLight.intensity = k < 0.2 ? 260 * k : 260 * (0.6 + 0.4 * k); signCones.forEach((cn) => { cn.material.opacity = cn.userData.base * k; }); }, rate: 0.35, seed: 3 });
 
   // ── prédios em ruínas dos lados e silhuetas ao fundo ──
   const ruin = M(0x6a5c4e, { map: (() => { const t = brickTexture(5, 0.7); t.repeat.set(3, 3); return t; })() });
@@ -270,7 +306,8 @@ export function buildStreet() {
   const sh = new THREE.Mesh(new THREE.ConeGeometry(0.42, 0.3, 12, 1, true), M(0x2a2620, { side: THREE.DoubleSide })); at(sh, 1.6, 6.05, 0); lamp.add(sh);
   const lb = new THREE.Mesh(new THREE.SphereGeometry(0.11, 8, 6), new THREE.MeshBasicMaterial({ color: 0xffe2b0 })); at(lb, 1.6, 5.94, 0); lamp.add(lb);
   const streetLight = new THREE.SpotLight(0xffd8a0, 420, 18, 0.7, 0.55, 1.2); at(streetLight, -5.6, 5.9, 4.6); streetLight.target.position.set(-5.2, 0, 4.8); scene.add(streetLight, streetLight.target);
-  flick.push({ set: (k) => { streetLight.intensity = 420 * k; lb.material.color.setRGB(k + 0.05, 0.88 * k + 0.05, 0.69 * k + 0.04); }, rate: 0.9, seed: 4, hard: true });
+  const streetCone = at(halo(4.2, 0xffc888, 1), -5.6, 5.85, 4.7); scene.add(streetCone);
+  flick.push({ set: (k) => { streetLight.intensity = 420 * k; lb.material.color.setRGB(k + 0.05, 0.88 * k + 0.05, 0.69 * k + 0.04); streetCone.material.opacity = streetCone.userData.base * k; }, rate: 0.9, seed: 4, hard: true });
 
   // ── carros abandonados e entulho ──
   const rust = M(0x4a3524), dark = M(0x15110d);
@@ -340,27 +377,60 @@ export function buildStreet() {
   };
   people.forEach(place);
 
+  // ───────── faíscas do letreiro ─────────
+  const NS = 110, spark = { pos: new Float32Array(NS * 3), col: new Float32Array(NS * 3), v: [], life: new Float32Array(NS), max: new Float32Array(NS), next: 0 };
+  for (let k = 0; k < NS; k++) spark.v.push(new THREE.Vector3());
+  const sparkGeo = new THREE.BufferGeometry(); sparkGeo.setAttribute('position', new THREE.BufferAttribute(spark.pos, 3)); sparkGeo.setAttribute('color', new THREE.BufferAttribute(spark.col, 3));
+  const sparks = new THREE.Points(sparkGeo, new THREE.PointsMaterial({ size: 0.14, vertexColors: true, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, fog: false }));
+  sparks.frustumCulled = false; scene.add(sparks);
+  sign.updateMatrixWorld(true);
+  const signAt = (x, y) => sign.localToWorld(new THREE.Vector3(x, y, 0.05));
+  const burst = (n, power = 1) => {
+    for (let k = 0; k < n; k++) {
+      const i = spark.next++ % NS, p = signAt((Math.random() - 0.5) * 9.6, 0.3 + Math.random() * (Math.random() < 0.3 ? 3.4 : 0.2));
+      spark.pos.set([p.x, p.y, p.z], i * 3);
+      spark.v[i].set((Math.random() - 0.5) * 3 * power, (0.6 + Math.random() * 2.6) * power, (0.8 + Math.random() * 2.2) * power);
+      spark.max[i] = spark.life[i] = 0.5 + Math.random() * 1.1;
+    }
+  };
+  const stepSparks = (dt) => {
+    for (let i = 0; i < NS; i++) {
+      if (spark.life[i] <= 0) { spark.col[i * 3] = spark.col[i * 3 + 1] = spark.col[i * 3 + 2] = 0; continue; }
+      spark.life[i] -= dt; const v = spark.v[i]; v.y -= 9.8 * dt;
+      spark.pos[i * 3] += v.x * dt; spark.pos[i * 3 + 1] += v.y * dt; spark.pos[i * 3 + 2] += v.z * dt;
+      const k = Math.max(0, spark.life[i] / spark.max[i]); spark.col.set([1.0 * k, 0.72 * k * k, 0.32 * k * k * k], i * 3);
+    }
+    sparkGeo.attributes.position.needsUpdate = true; sparkGeo.attributes.color.needsUpdate = true;
+  };
+
   // ───────── abertura ─────────
-  // A câmera começa no céu, olhando o redemoinho, e desce até a fachada enquanto a luz volta: primeiro o poste, depois o
-  // corredor e a luminária da porta, as janelas uma a uma e por último o letreiro, que custa a pegar. Clique ou tecla pula.
-  const INTRO = { cam: 3.4, end: 3.5, fade: 1.1 }, ON = { 4: 0.8, 1: 1.35, 2: 1.5, 3: 2.35 };
-  const onAt = (seed) => ON[seed] ?? 1.75 + ((seed * 7) % 9) * 0.07;
-  for (const f of flick) f.on = onAt(f.seed);
-  for (const w of powered) w.on = onAt(w.seed);
-  // acende piscando: nos primeiros 0,5 s depois da hora dela, liga e desliga com chance crescente de ficar ligada
-  const power = (x, seed) => (x < 0 ? 0 : x > 0.5 ? 1 : hash(Math.floor(x * 24), seed, 7) < 0.25 + x * 1.5 ? 1 : 0.05);
-  // o céu é um painel: a câmera sobe só até a borda de cima dele não aparecer (senão surge uma faixa preta no alto)
-  const camStart = new THREE.Vector3(-0.8, 5.5, 30), lookStart = new THREE.Vector3(0.5, 21, -40);
+  // Começa no escuro, de frente e bem perto da placa, no eixo da casa. O letreiro tenta acender (piscadas e faíscas) e pega
+  // num estalo: clarão, faíscas, o redemoinho acelera. Aí a câmera recua de frente e desce até a vista do menu, e a luz se
+  // espalha de cima para baixo: as janelas (do último andar para o térreo), o corredor e a porta e, por último, o poste.
+  const INTRO = { fade: 0.7, ign: 1.35, hold: 1.5, cam: 4.6, end: 4.7 };
+  const ON = { 3: 0.45, 1: 2.75, 2: 2.9, 4: 3.3 }, DUR = { 3: INTRO.ign - 0.45 };
+  const onAt = (o) => ON[o.seed] ?? 2.0 + (7.2 - (o.y ?? 4)) * 0.12 + hash(o.seed, 3, 11) * 0.1;
+  for (const f of flick) f.on = onAt(f);
+  for (const w of powered) w.on = onAt(w);
+  // acende piscando: na janela de tempo dela, liga e desliga com chance crescente de ficar ligada
+  const power = (x, seed) => { const d = DUR[seed] ?? 0.5; return x < 0 ? 0 : x >= d ? 1 : hash(Math.floor(x * 24), seed, 7) < (seed === 3 ? 0.12 + (x / d) * 0.45 : 0.25 + (x / d) * 0.75) ? 1 : 0.05; };
+  // a viagem: de frente para a placa, recua e desce; no fim encosta na câmera do menu (com o balanço e o mouse dela)
+  const camPath = new THREE.CatmullRomCurve3([new THREE.Vector3(0.2, 11.1, 7.4), new THREE.Vector3(0.1, 9.4, 12.5), new THREE.Vector3(-1.0, 5.4, 18.5), new THREE.Vector3(-2.5, 1.5, 24)]);
+  const lookPath = new THREE.CatmullRomCurve3([new THREE.Vector3(0.2, 11.0, -0.7), new THREE.Vector3(0.05, 9.8, -0.6), new THREE.Vector3(-2.4, 7.6, -0.3), new THREE.Vector3(-5.2, 6.2, 0)]);
   const ease = (x) => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2);
-  let intro = null;
-  const finishIntro = () => { if (!intro) return; const cb = intro.done; intro = null; powered.forEach((w) => w.set(1)); cb?.(); };
+  const tmpA = new THREE.Vector3(), tmpB = new THREE.Vector3();
+  let intro = null, signWas = 0;
+  const finishIntro = () => { if (!intro) return; const cb = intro.done; intro = null; powered.forEach((w) => w.set(1)); Object.assign(api.fx, { flash: 0, bloom: 0, aberr: 0, glitch: 0 }); cb?.(); };
 
   // ───────── animação ─────────
   const camBase = new THREE.Vector3(-2.5, 1.5, 24), lookBase = new THREE.Vector3(-5.2, 6.2, 0), camNow = new THREE.Vector3(), lookNow = new THREE.Vector3();
   function update(dt, t, mouse = { x: 0.5, y: 0.5 }) {
-    const ti = intro ? (intro.t += dt) : Infinity;
+    const ti = intro ? (intro.t += dt) : Infinity, x = ti - INTRO.ign;
+    // o estalo do letreiro: clarão quente, brilho, aberração, um instante de interferência e o redemoinho acelerado
+    const boom = intro && x >= 0 ? Math.exp(-x * 2.2) : 0;
+    if (intro) Object.assign(api.fx, x >= 0 ? { flash: 0.5 * Math.exp(-x * 8), bloom: 1.5 * Math.exp(-x * 2.6), aberr: 0.012 * Math.exp(-x * 5), glitch: x < 0.16 ? 0.6 : 0 } : { flash: 0, bloom: 0, aberr: 0, glitch: 0 });
     for (const d of digits) {
-      d.a += d.w * dt;
+      d.a += d.w * dt * (1 + 7 * boom);
       d.m.position.set(vortex.x + Math.cos(d.a) * d.r * 1.5, vortex.y + Math.sin(d.a) * d.r * 0.55, vortex.z + 4 + Math.sin(d.a) * 2);
       d.m.rotation.z = Math.sin(t * 0.3 + d.r) * 0.3 + d.spin * t;
       d.m.material.opacity = 0.7 + 0.3 * Math.sin(t * 0.7 + d.r);
@@ -373,7 +443,13 @@ export function buildStreet() {
       else k = 0.93 + 0.07 * Math.sin(t * 23 + f.seed);
       f.set(ti < INTRO.end ? k * power(ti - f.on, f.seed) : k);
     }
-    if (ti < INTRO.end) for (const w of powered) w.set(power(ti - w.on, w.seed));
+    if (ti < INTRO.end) {
+      for (const w of powered) w.set(power(ti - w.on, w.seed));
+      const sp = ti < INTRO.ign ? power(ti - ON[3], 3) : 1;
+      if (sp > 0.5 && signWas < 0.5) burst(ti < INTRO.ign ? 5 : 90, ti < INTRO.ign ? 0.6 : 1.2); // cada vez que pega, faísca; no estalo, chuva delas
+      signWas = sp;
+    }
+    stepSparks(dt);
     // a fila: a cada ~4,5 s o primeiro entra e todos andam uma vaga
     cycle += dt;
     if (cycle > 4.6) {
@@ -399,7 +475,14 @@ export function buildStreet() {
     const mx = mouse.x - 0.5, my = mouse.y - 0.5;
     camNow.set(camBase.x + Math.sin(t * 0.07) * 0.5 + mx * 0.6, camBase.y + Math.sin(t * 0.11) * 0.08 - my * 0.25, camBase.z);
     lookNow.set(lookBase.x + mx * 0.8, lookBase.y - my * 0.4, lookBase.z);
-    if (ti < INTRO.cam) { const e = ease(ti / INTRO.cam); camNow.lerpVectors(camStart, camNow, e); lookNow.lerpVectors(lookStart, lookNow, e); }
+    if (ti < INTRO.cam) {
+      // parado de frente para a placa (chegando um pouco mais perto) até o estalo; depois recua até a vista do menu
+      const e = ti < INTRO.hold ? 0 : ease((ti - INTRO.hold) / (INTRO.cam - INTRO.hold)), push = ti < INTRO.hold ? (1 - ti / INTRO.hold) * 0.8 : 0;
+      camPath.getPoint(e, tmpA).add(tmpB.copy(camNow).sub(camBase).multiplyScalar(e)); tmpA.z += push;
+      lookPath.getPoint(e, lookNow.clone()); const lk = lookPath.getPoint(e); lk.add(tmpB.set(lookNow.x - lookBase.x, lookNow.y - lookBase.y, 0).multiplyScalar(e));
+      camNow.copy(tmpA); lookNow.copy(lk);
+      const sh = 0.07 * boom * boom; camNow.x += (Math.random() - 0.5) * sh; camNow.y += (Math.random() - 0.5) * sh;
+    }
     camera.position.copy(camNow); camera.lookAt(lookNow);
     api.fade = ti < INTRO.fade ? 1 - ease(ti / INTRO.fade) : 0;
     if (ti >= INTRO.end) finishIntro();
@@ -407,8 +490,10 @@ export function buildStreet() {
   const resize = (aspect) => { camera.aspect = aspect; camera.updateProjectionMatrix(); };
   const api = {
     scene, camera, update, resize, people, fade: 0,
-    /** a abertura: começa no escuro, no céu; done é chamado quando a câmera chega na fachada (ou quando pulam) */
-    intro(done) { intro = { t: 0, done }; api.fade = 1; },
+    /** efeitos de tela da abertura (somados aos de base pelo main.js) e o tom sépia da rua */
+    fx: { flash: 0, bloom: 0, aberr: 0, glitch: 0, warm: 0.14 },
+    /** a abertura: começa no escuro, de frente para a placa; done é chamado quando a câmera chega na vista do menu (ou quando pulam) */
+    intro(done) { intro = { t: 0, done }; api.fade = 1; signWas = 0; },
     get introOn() { return !!intro; },
     get introT() { return intro ? intro.t : null; }, // para os testes acompanharem a abertura
     skipIntro() { if (intro) { intro.t = INTRO.end; finishIntro(); api.fade = 0; } },

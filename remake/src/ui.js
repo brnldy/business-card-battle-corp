@@ -30,18 +30,18 @@ export class UI {
         <div class="title-block">
           <h1><span class="lg-w">BUSINESS</span><br><span class="lg-w">CARD</span><span class="tag-word">Battle</span><small>Corp.</small></h1>
           <p class="tagline">O mundo acabou. Os investidores, não.</p>
-          <nav class="mn-card" aria-label="Menu">
+          <nav class="mn-card">
             <i class="ds-clip"></i>
             <div class="ds-bar"><span>Cartão de ponto</span><b id="mn-clock">--:--</b></div>
-            <button data-act="continue" class="mn-punch" id="mm-continue"><span class="mn-punch__txt"><b>Continuar expediente</b><small id="mm-who"></small><small id="mm-stage"></small></span><span class="mn-punch__in"><i class="mn-punch__stamp">Entrada</i><span class="ds-key">Enter</span></span></button>
-            <button data-act="newgame" class="mn-punch" id="mm-punch-new"><span class="mn-punch__txt"><b>Iniciar expediente</b><small>Registre a sua empresa</small><small>e comece a primeira reunião</small></span><span class="mn-punch__in"><i class="mn-punch__stamp">Entrada</i><span class="ds-key">Enter</span></span></button>
-            <button data-act="newgame" class="mn-row" id="mm-new"><b></b><span>Novo jogo</span><i>abrir outra empresa</i></button>
-            <button data-act="load" class="mn-row" id="mm-load"><b></b><span>Carregar</span><i>trocar de disquete</i></button>
-            <hr class="mn-sep">
-            <button data-act="help" class="mn-row"><b></b><span>Como jogar</span><i>regras do duelo</i></button>
-            <button data-act="gallery" class="mn-row"><b></b><span>Arquivo de cartas</span><i>todas as ${CARDS.length} cartas</i></button>
-            <button data-act="settings" class="mn-row"><b></b><span>Configurações</span><i>som, imagem e tamanho</i></button>
+            <button data-act="continue" class="mn-punch" id="mm-continue"><span class="ds-key">Enter</span><span>Continuar expediente</span><i>Entrada</i></button>
+            <button data-act="newgame" class="mn-punch" id="mm-punch-new"><span class="ds-key">Enter</span><span>Iniciar expediente</span><i>Entrada</i></button>
+            <button data-act="newgame" class="mn-row" id="mm-new"><b></b><span>Novo jogo</span><i>outro disquete</i></button>
+            <button data-act="load" class="mn-row" id="mm-load"><b></b><span>Carregar</span><i>disquetes</i></button>
+            <button data-act="help" class="mn-row"><b></b><span>Como jogar</span><i>manual</i></button>
+            <button data-act="gallery" class="mn-row"><b></b><span>Arquivo de cartas</span><i>fichas</i></button>
+            <button data-act="settings" class="mn-row"><b></b><span>Configurações</span><i>quadro de luz</i></button>
           </nav>
+          <div class="company" id="menu-company"></div>
         </div>
       </div>
       <div id="hud" class="h-hud hidden">
@@ -87,7 +87,6 @@ export class UI {
     });
     root.addEventListener('pointerover', (e) => { if (e.target.closest('button')) sfx('hover'); });
     window.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !$('#modal').classList.contains('hidden')) { this.closeModal(); e.stopPropagation(); } }, true);
-    window.addEventListener('keydown', (e) => { if (!e.repeat) this.menuKey(e); });
     this.setScale(); window.addEventListener('resize', () => this.setScale());
   }
   on(handlers) { Object.assign(this.h, handlers); }
@@ -113,10 +112,7 @@ export class UI {
     $('#mm-load').classList.toggle('hidden', !any);
     // sem disquete gravado, o botão de ponto vira "Iniciar expediente" (novo jogo) e a linha "Novo jogo" some
     $('#mm-punch-new').classList.toggle('hidden', !!info); $('#mm-new').classList.toggle('hidden', !info);
-    // quem está no ponto: a empresa do último disquete e a reunião em que ela está
-    $('#mm-who').textContent = info ? (info.name && info.name !== 'SEM NOME' ? info.name : 'Empresa sem nome') : '';
-    $('#mm-stage').textContent = info ? slotStage(info) : '';
-    $('#menu .mn-punch:not(.hidden)')?.classList.remove('is-punched');
+    $('#menu-company').innerHTML = info ? `<span class="ds-dymo">${esc(info.name)}</span><i>${esc(slotStage(info))}</i>` : '';
     const d = new Date(), ck = $('#mn-clock'); if (ck) ck.textContent = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
   }
   /**
@@ -127,28 +123,8 @@ export class UI {
     const r = this.root; clearTimeout(this._mnT);
     r.classList.toggle('mn-intro', stage === 'intro'); r.classList.toggle('mn-reveal', stage === 'reveal');
     if (stage === 'reveal') this._mnT = setTimeout(() => r.classList.remove('mn-reveal'), 2200);
-    if (stage !== 'intro') setTimeout(() => $('#menu .mn-punch:not(.hidden)')?.focus({ preventScroll: true }), stage === 'reveal' ? 900 : 0);
   }
-  get menuBusy() { return this.root.classList.contains('mn-intro') || !!this._punching; }
-  /** bater o ponto: o carimbo "Entrada" leva a hora em tinta vermelha e, um instante depois, o expediente começa */
-  punch(then) {
-    const b = $('#menu .mn-punch:not(.hidden)'), d = new Date(), p2 = (n) => String(n).padStart(2, '0');
-    if (this._punching) return undefined; // o segundo Enter do mesmo toque não bate o ponto duas vezes
-    if (!b) return then();
-    this._punching = true; b.querySelector('.mn-punch__stamp').textContent = `Entrada ${p2(d.getHours())}:${p2(d.getMinutes())}`; b.classList.add('is-punched'); sfx('trapSet');
-    setTimeout(() => { this._punching = false; b.querySelector('.mn-punch__stamp').textContent = 'Entrada'; then(); }, 520);
-  }
-  /** teclado no menu: setas andam pelas linhas, 1 a 5 escolhem a linha com aquele número */
-  menuKey(e) {
-    if ($('#menu').classList.contains('hidden') || !$('#modal').classList.contains('hidden') || this.menuBusy) return false;
-    const list = [...document.querySelectorAll('#menu .mn-card button')].filter((b) => !b.classList.contains('hidden'));
-    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
-      const i = list.indexOf(document.activeElement), n = list.length;
-      list[(i < 0 ? 0 : i + (e.key === 'ArrowDown' ? 1 : n - 1)) % n].focus(); e.preventDefault(); return true;
-    }
-    if (/^[1-9]$/.test(e.key)) { const rows = list.filter((b) => b.classList.contains('mn-row')), b = rows[Number(e.key) - 1]; if (b) { b.click(); return true; } }
-    return false;
-  }
+  get menuBusy() { return this.root.classList.contains('mn-intro'); }
   /**
    * Os 3 disquetes de progresso (peça .ds-floppy), iguais no menu e no lobby. mode: 'new' (Novo jogo), 'load' (Carregar, no menu)
    * ou 'lobby' (janela Salvar e carregar). O disquete em uso grava sozinho a cada mudança (save.set): não há "Salvar agora".
