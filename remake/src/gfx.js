@@ -141,6 +141,7 @@ export class Gfx {
     this.renderer.autoClear = false;
     const rtOpt = { type: THREE.HalfFloatType, minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, depthBuffer: false };
     this.rt = new THREE.WebGLRenderTarget(4, 4, { type: THREE.HalfFloatType, minFilter: THREE.NearestFilter, magFilter: THREE.NearestFilter, depthBuffer: true });
+    this.rt.depthTexture = new THREE.DepthTexture(4, 4); // a profundidade alimenta a sujeira dos cantos e o contorno (pós)
     this.rtA = new THREE.WebGLRenderTarget(4, 4, rtOpt); this.rtB = new THREE.WebGLRenderTarget(4, 4, rtOpt);
     const P = T.post;
     this.u = {
@@ -152,6 +153,7 @@ export class Gfx {
       uIceImg: { value: 0 }, uIceMix: { value: 0 }, tIceA: { value: new THREE.DataTexture(new Uint8Array(4), 1, 1) }, tIceB: { value: new THREE.DataTexture(new Uint8Array(4), 1, 1) },
       uWobble: { value: P.wobble ?? 0 },
       // estilo da arte de referência (rua do menu): paleta curta de sépia, oliva e âmbar, do mais escuro ao mais claro
+      tDepth: { value: this.rt.depthTexture }, uNear: { value: 0.1 }, uFar: { value: 60 }, uCavity: { value: 1 },
       uPal: { value: 0 }, uPalC: { value: ['#0b0805', '#16110a', '#211b10', '#2c2916', '#3a3520', '#4b3d25', '#5d4a2d', '#775a33', '#98733f', '#bd914d', '#deb46e', '#f5daa4'].map((h) => new THREE.Color().setHex(parseInt(h.slice(1), 16), THREE.LinearSRGBColorSpace)) }, // valores crus: o shader trabalha já em sRGB uShadow: { value: new THREE.Vector3(...P.shadow) }, uHigh: { value: new THREE.Vector3(...P.high) },
     };
     this.base = { aberr: P.aberr };
@@ -168,11 +170,12 @@ export class Gfx {
         gl_FragColor = vec4(c, 1.0); }`);
     this.postMat = quadMat(this.u, `
       precision highp float;
-      varying vec2 vUv; uniform sampler2D tScene, tBloom, tCrack, tIceA, tIceB; uniform float uIceImg, uIceMix; uniform vec2 uRes; uniform float uIce, uIceTint, uCrack; uniform vec3 uFlashCol, uShadow, uHigh;
+      varying vec2 vUv; uniform sampler2D tScene, tBloom, tCrack, tIceA, tIceB, tDepth; uniform float uNear, uFar, uCavity; uniform float uIceImg, uIceMix; uniform vec2 uRes; uniform float uIce, uIceTint, uCrack; uniform vec3 uFlashCol, uShadow, uHigh;
       uniform float uTime, uAberr, uFlash, uGrain, uLevels, uVig, uSat, uFrost, uGlitch, uFade, uTintWarm, uBloom, uScan, uWobble, uPal; uniform vec3 uPalC[12];
       float hash(vec2 p){ p = fract(p * vec2(123.34, 456.21)); p += dot(p, p + 45.32); return fract(p.x * p.y); }
       float bayer2(vec2 a){ a = floor(a); return fract(a.x / 2.0 + a.y * a.y * 0.75); }
       float bayer(vec2 p){ return bayer2(0.5 * p) * 0.25 + bayer2(p); }
+      float lDepth(vec2 q){ float z = texture2D(tDepth, q).r * 2.0 - 1.0; return (2.0 * uNear * uFar) / (uFar + uNear - z * (uFar - uNear)); }
       void main(){
         vec2 c = vUv - 0.5; float r2 = dot(c, c);
         vec2 uv = vUv;
@@ -190,6 +193,19 @@ export class Gfx {
         uv = (px + 0.5) / uRes;
         float ab = uAberr * (0.5 + r2 * 5.0);
         vec3 col = vec3(texture2D(tScene, uv + c * ab).r, texture2D(tScene, uv).g, texture2D(tScene, uv - c * ab).b);
+        // sujeira acumulada: onde o vizinho está um pouco à frente (canto, vinco, junta) escurece; onde está bem à frente
+        // (borda de um objeto sobre o fundo) vira um contorno escuro, como o traço da arte de referência
+        if (uCavity > 0.0) {
+          float d0 = lDepth(uv), occ = 0.0, edge = 0.0;
+          for (int k = 0; k < 8; k++) {
+            float a = float(k) * 0.7854 + 0.39;
+            vec2 o = vec2(cos(a), sin(a)) * (float(1 + k % 2) * 1.6) / uRes;
+            float dd = (d0 - lDepth(uv + o)) / d0;
+            occ += smoothstep(0.003, 0.03, dd) * (1.0 - smoothstep(0.06, 0.16, dd));
+            edge = max(edge, smoothstep(0.05, 0.2, dd));
+          }
+          col *= 1.0 - uCavity * clamp(occ / 8.0 * 0.75 + edge * 0.45, 0.0, 0.8);
+        }
         col = max(col, 0.0) + texture2D(tBloom, uv).rgb * uBloom;
         col = col / (1.0 + col * 0.35);
         col = pow(col, vec3(1.0 / 2.2));
@@ -272,6 +288,7 @@ export class Gfx {
     if (crisp) for (const m of cardMats) { m.colorWrite = false; m.depthWrite = false; }
     camera.layers.disableAll(); camera.layers.enable(LAYER.WORLD); camera.layers.enable(LAYER.CARD); camera.layers.enable(LAYER.FX); if (!crisp) camera.layers.enable(LAYER.GLOW);
     r.shadowMap.autoUpdate = true;
+    this.u.uNear.value = camera.near; this.u.uFar.value = camera.far;
     r.setRenderTarget(this.rt); r.clear(); r.render(scene, camera);
     if (crisp) for (const m of cardMats) { m.colorWrite = true; m.depthWrite = true; }
     // bloom

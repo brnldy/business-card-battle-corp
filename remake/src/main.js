@@ -17,6 +17,7 @@ import { CARDS, RIVALS } from './cards.js';
 import { aiChoose } from './engine.js';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
 import { T } from './theme.js';
+import { weather, WEATHER } from './weathering.js';
 
 document.body.classList.add('theme-buckshot');
 {
@@ -44,6 +45,9 @@ async function boot() {
   street = buildStreet(); window.__STREET__ = street; // fundo do menu: a sede da empresa e a fila de candidatos
   lobby = buildLobby(); window.__LOBBY__ = lobby; lobby.renderer = gfx.renderer;     // o lobby: a recepção por dentro, com as áreas clicáveis
   lobby.scene.environment = R.scene.environment; lobby.scene.environmentIntensity = 0.12;
+  // a sujeira na superfície dos objetos, igual nas três cenas (rua, lobby e duelo): ver weathering.js
+  weather(street.scene); weather(lobby.scene); weather(R.scene);
+  window.__WEATHER__ = WEATHER; window.__GFX__ = gfx; // ganchos de teste: força da sujeira e do contorno
   particles = new Particles(R.scene);
   duel = new Duel({ gfx, R, particles, ui });
   lobbyUi = new LobbyUI({ ui, lobby, canvas, actions: { duel: (training) => fade(() => startDuel(training)), exit: () => fade(() => toMenu()) } });
