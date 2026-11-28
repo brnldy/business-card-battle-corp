@@ -419,7 +419,7 @@ export function buildLobby() {
   const clockHand = at(box(0.012, 0.17, 0.006, B(0xb81c14)), 0, 0, 0.06); clockHand.geometry.translate(0, 0.085, 0); clock.add(clockHand); void clockTexture;
 
   // 3) PORTA DUPLA — sala de reunião (duelo), no meio do fundo
-  let doorLeaf, doorGlow, redBulb;
+  let doorLeaf, doorLeft, doorGlow, redBulb;
   {
     const g = new THREE.Group(); at(g, 0, 0, BACK);
     const wood = M(0x5a4636, { map: woodTexture(), emissive: 0x000000 }), frame = M(0x1c1814);
@@ -433,7 +433,7 @@ export function buildLobby() {
       p.add(at(box(0.9, 0.3, 0.064, M(0x2a2622)), -sx * 0.56, 0.2, 0));
       return p;
     };
-    const left = leaf(-1); doorLeaf = leaf(1); doorLeaf.rotation.y = -0.5; g.add(left, doorLeaf);
+    doorLeft = leaf(-1); doorLeaf = leaf(1); doorLeaf.rotation.y = -0.5; g.add(doorLeft, doorLeaf);
     // luz verde vazando pela fresta + faixa no chão
     doorGlow = new THREE.PointLight(0x7dffa6, 14, 6.5, 1.6); at(doorGlow, 0.5, 1.1, -0.5); g.add(doorGlow);
     const wedge = plane(1.3, 3.2, new THREE.MeshBasicMaterial({ color: 0x3aa864, transparent: true, opacity: 0.2, blending: THREE.AdditiveBlending, depthWrite: false })); wedge.rotation.x = -Math.PI / 2; wedge.rotation.z = -0.22; at(wedge, 0.62, 0.012, 1.7); g.add(wedge);
@@ -547,6 +547,9 @@ export function buildLobby() {
   let hoverId = null, enterK = 1, aspect = 16 / 9;
   // foco da câmera (Reciclar, proposta "sala"): viaja até a trituradora e deixa a esquerda da tela para o painel 2D
   let focusId = null, focusK = 0, shredBusy = 0, shredHot = 0;
+  // caminhada até a sala de reunião (início do duelo): tempos em segundos
+  const WALK = { door: 0.45, dark: 1.9, cam: 2.6, end: 2.7 };
+  let walk = null, walkFade = 0;
   const FOCUS = { recycle: { pos: V(-1.15, 1.55, 1.0), look: V(-2.8, 0.5, -1.05) } };
   let free = 0.5; // onde a máquina fica na tela no foco (horizontal, -1 a 1)
   const curPos = V(0, 0, 0), curLook = V(0, 0, 0), falling = [], landed = [];
@@ -673,7 +676,18 @@ export function buildLobby() {
       for (const m of strips) falling.push({ m, v: V((Math.random() - 0.5) * 0.3, -0.15 - Math.random() * 0.25, (Math.random() - 0.5) * 0.3), spin: (Math.random() - 0.5) * 6, fr: 5 + Math.random() * 4, ph: Math.random() * 6, st: -1 });
     },
     /** entrada: a câmera vem da porta da rua */
-    enter() { enterK = 0; },
+    enter() { enterK = 0; walk = null; walkFade = 0; doorLeft.rotation.y = 0; },
+    /**
+     * Ir para o duelo sem corte: a câmera anda até a porta da sala de reunião, a folha da esquerda abre para dentro e a câmera
+     * entra no escuro do vão. done() é chamado quando a tela está toda escura (o duelo começa no escuro e continua dali).
+     */
+    walkIn(done, onDoor) {
+      const d = new THREE.Vector3(); camera.getWorldDirection(d);
+      walk = { t: 0, done, onDoor, p: [camera.position.clone(), V(-0.42, 1.85, BACK + 3.4), V(-0.56, 1.62, BACK + 1.05), V(-0.57, 1.52, BACK + 0.2)],
+        l: [camera.position.clone().addScaledVector(d, 6), V(-0.5, 1.5, BACK), V(-0.56, 1.46, BACK - 2), V(-0.57, 1.45, BACK - 4)] };
+      walk.cp = new THREE.CatmullRomCurve3(walk.p); walk.cl = new THREE.CatmullRomCurve3(walk.l); hoverId = null;
+    },
+    get fade() { return walkFade; },
     setCompany(info) { crt.userData.draw(info); },
     update(dt, t, mouse) {
       enterK = Math.min(1, enterK + dt * 0.7);
@@ -691,6 +705,17 @@ export function buildLobby() {
           camera.updateMatrixWorld(); tmp.set(0, 0.46, 0); shredRig.g.localToWorld(tmp); tmp.applyMatrix4(camera.matrixWorldInverse);
           camera.rotateOnWorldAxis(UP, (Math.atan(free * th) - Math.atan2(tmp.x, -tmp.z)) * f);
         }
+      }
+      if (walk) {
+        // a caminhada até a porta: começa parada e chega ao vão ainda andando (a entrada no duelo continua o movimento)
+        walk.t += dt; const x = Math.min(1, walk.t / WALK.cam), u = x * x * (1.6 - 0.6 * x);
+        walk.cp.getPoint(u, camera.position); walk.cl.getPoint(u, tmp);
+        camera.position.y += Math.sin(walk.t * 9) * 0.012 * (1 - x); camera.lookAt(tmp); // passo, de leve
+        // a folha da esquerda abre para fora (para o lado da câmera, que passa à direita dela) e mostra o escuro lá dentro
+        const o = Math.min(1, Math.max(0, (walk.t - WALK.door) / 1.05)); doorLeft.rotation.y = -1.4 * (1 - Math.pow(1 - o, 3));
+        if (walk.t >= WALK.door && !walk.creak) { walk.creak = true; walk.onDoor?.(); }
+        walkFade = Math.min(1, Math.max(0, (walk.t - WALK.dark) / (WALK.cam - WALK.dark)));
+        if (walk.t >= WALK.end && walk.done) { const cb = walk.done; walk.done = null; cb(); }
       }
       // no foco a luminária do estagiário baixa: a mesa dele, ao lado, não disputa a atenção com a trituradora
       if (intern) intern.spot.userData.f = 1 - 0.6 * f;

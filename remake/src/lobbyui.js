@@ -216,6 +216,7 @@ export class LobbyUI {
 
   // ───────── janelas ─────────
   open(id, opts = {}) {
+    if (this._walking) return;
     if (id === 'settings') { sfx('nav'); this.ui.settings(); return; }
     if (!TITLES[id]) return;
     sfx('nav'); this.panel = id; this.lobby.setHover(id); this.canvas.style.cursor = '';
@@ -403,6 +404,8 @@ export class LobbyUI {
       saved: (n) => this.toast(`<b>Cópia gravada no disquete ${n}</b><span>você está jogando nela agora</span>`, 'good'),
     };
   }
+  /** caminhando até a sala de reunião: a interface some aos poucos e ninguém abre janela no caminho */
+  walking(on) { this._walking = on; this.root.classList.toggle('is-walking', on); this.lobby.setHover(null); }
   startDuel(training) {
     if (!Meta.activeDeckValid(this.s)) { sfx('deny'); this.toast('Deck inválido. Arrume no arquivo.', 'bad'); return; }
     this.panel = null; this.win.classList.add('hidden');

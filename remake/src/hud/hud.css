@@ -215,6 +215,8 @@
 
 /* ───────── layout do HUD (1366×768 é a tela de referência; acima disso tudo escala) ───────── */
 .h-hud { position: absolute; inset: 0; pointer-events: none; font-family: var(--h-ui); }
+/* entrando na sala de reunião pela porta do lobby: a mesa aparece primeiro, a interface chega depois */
+.h-hud { transition: opacity 0.6s ease; } .h-hud.is-entering { opacity: 0; transition: none; } /* some na hora; volta devagar */
 .h-hud > * { position: absolute; }
 .h-hud :is(button, .h-menu, .h-coach, .h-log) { pointer-events: auto; }
 .h-slot--opp { left: 16px; top: 60px; } /* desce o bastante para a etiqueta de dano/cura, que sobe ~45px acima da pasta, não sair da tela */

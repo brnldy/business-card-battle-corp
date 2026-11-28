@@ -40,13 +40,13 @@ async function boot() {
   // reflexos suaves para os modelos PBR (TV, luminária, arquivos)
   const pm = new THREE.PMREMGenerator(gfx.renderer);
   R.scene.environment = pm.fromScene(new RoomEnvironment(), 0.04).texture; R.scene.environmentIntensity = 0.16; pm.dispose();
-  window.__R__ = R;
+  window.__R__ = R; window.__GFXFADE__ = () => gfx.u.uFade.value; // testes: acompanhar o escurecimento
   street = buildStreet(); window.__STREET__ = street; // fundo do menu: a sede da empresa e a fila de candidatos
   lobby = buildLobby(); window.__LOBBY__ = lobby; lobby.renderer = gfx.renderer;     // o lobby: a recepção por dentro, com as áreas clicáveis
   lobby.scene.environment = R.scene.environment; lobby.scene.environmentIntensity = 0.12;
   particles = new Particles(R.scene);
   duel = new Duel({ gfx, R, particles, ui });
-  lobbyUi = new LobbyUI({ ui, lobby, canvas, actions: { duel: (training) => fade(() => startDuel(training)), exit: () => fade(() => toMenu()) } });
+  lobbyUi = new LobbyUI({ ui, lobby, canvas, actions: { duel: (training) => walkToDuel(training), exit: () => fade(() => toMenu()) } });
   window.__LOBBYUI__ = lobbyUi;
   // fim de partida: o lobby paga a recompensa, grava histórico, avança metas e confere conquistas
   duel.onMatchEnd = (m) => { const out = applyMatch(save.get(), m, Date.now(), today(), RIVALS); if (out.save !== save.get()) save.set(out.save); if (!m.training) lastOutcome = lastOutcome ? { ...out, finished: out.finished || lastOutcome.finished, unlocked: [...lastOutcome.unlocked, ...out.unlocked], missionsDone: [...lastOutcome.missionsDone, ...out.missionsDone] } : out; return out; };
@@ -125,14 +125,28 @@ function toMenu(first) {
   if (first && !still) { ui.menuStage('intro'); street.intro(() => ui.menuStage('reveal')); }
   else ui.menuStage(still ? 'show' : 'reveal');
 }
-function startDuel(training = false) {
+/**
+ * Do lobby para o duelo sem corte: a câmera anda até a sala de reunião, a porta da esquerda abre e a câmera entra no escuro;
+ * no escuro o duelo começa, a luminária da mesa acende piscando e a câmera segue andando até o lugar de jogar.
+ * Com "reduzir movimento" do sistema, fica o escurecimento rápido de antes.
+ */
+function walkToDuel(training) {
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return fade(() => startDuel(training));
+  lobbyUi.walking(true); sfx('whoosh');
+  lobby.walkIn(() => { lobbyUi.walking(false); startDuel(training, { entry: true }); }, () => sfx('door'));
+}
+const ENTRY = { cam: 2.5, light: 0.4, fade: 0.9 }, entryPos = new THREE.Vector3(0.15, 2.7, 11.5), entryLook = new THREE.Vector3(0, 1.55, -2);
+let entry = null;
+function startDuel(training = false, { entry: walkIn = false } = {}) {
   mode = 'duel'; resetPost(); ui.mainMenu(false); lobbyUi.show(false); document.getElementById('unlock').classList.add('hidden');
   duel.started = false;
   const s = save.get();
   const pool = CARDS.filter((c) => (s.collection[c.id] ?? 0) > 0).map((c) => c.id);
   const plan = training ? null : rivalPlan(s.campaign, pool, Math.floor(Math.random() * 2 ** 31)); // a próxima batalha da campanha
-  duel.newGame({ training, deck: [...activeDeck(s).cards], pool, plan });
-  if (!settings.get().seenHelp) { settings.set({ seenHelp: true }); setTimeout(() => ui.help(), 1400); }
+  duel.newGame({ training, deck: [...activeDeck(s).cards], pool, plan, delay: walkIn ? 1900 : 350 });
+  entry = walkIn ? { t: 0, lit: false } : null;
+  document.getElementById('hud').classList.toggle('is-entering', walkIn);
+  if (!settings.get().seenHelp) { settings.set({ seenHelp: true }); setTimeout(() => ui.help(), walkIn ? 3200 : 1400); } // entrando pela porta, o manual espera a câmera chegar
 }
 function onResize() {
   if (!gfx) return;
@@ -153,7 +167,7 @@ function loop(nowMs) {
   particles.update(dt);
   // lobby: a recepção por dentro
   gfx.u.uPal.value = 0;
-  if (mode === 'lobby') { lobby.update(dt, t, duel.mouse); gfx.render(lobby.scene, lobby.camera); lobbyUi.frame(); return; }
+  if (mode === 'lobby') { lobby.update(dt, t, duel.mouse); gfx.u.uFade.value = lobby.fade; gfx.render(lobby.scene, lobby.camera); lobbyUi.frame(); return; }
   // menu: a rua com o prédio e a fila (cena própria, mesmo filtro de imagem)
   if (mode !== 'duel') {
     // a rua do menu: estilo da arte de referência (paleta e contorno), tom sépia e os efeitos do estalo do letreiro na abertura
@@ -175,7 +189,17 @@ function loop(nowMs) {
     tmpL.set(-1.1, 1.9, -3.6);
   }
   const k = 1 - Math.exp(-dt * 2.6);
-  camPos.lerp(tmpP, k); camLook.lerp(tmpL, k);
+  if (entry && mode === 'duel') {
+    // entrando pela porta: a câmera vem do fundo escuro da sala até a mesa (sai andando, como chegou) e a luz da mesa acende
+    entry.t += dt; const x = Math.min(1, entry.t / ENTRY.cam), u = 1 - Math.pow(1 - x, 3);
+    camPos.lerpVectors(entryPos, tmpP, u); camLook.lerpVectors(entryLook, tmpL, u);
+    gfx.u.uFade.value = 1 - Math.min(1, entry.t / ENTRY.fade) ** 0.7;
+    const on = entry.t - ENTRY.light; // acende piscando: estalos por meio segundo e fica
+    duel.lampOn = on < 0 ? 0 : on > 0.5 ? 1 : Math.sin(on * 70) > 0.1 - on * 2.2 ? 1 : 0.08;
+    if (on >= 0 && !entry.lit) { entry.lit = true; sfx('lampOn'); }
+    if (entry.t > 1.1) document.getElementById('hud').classList.remove('is-entering');
+    if (x >= 1) { entry = null; gfx.u.uFade.value = 0; duel.lampOn = 1; }
+  } else { camPos.lerp(tmpP, k); camLook.lerp(tmpL, k); }
   const mx = duel.mouse.x - 0.5, my = duel.mouse.y - 0.5, sh = duel.shake * duel.shake * 0.16;
   cam.position.set(camPos.x + mx * 0.3 + Math.sin(t * 0.5) * 0.02 + (Math.random() - 0.5) * sh, camPos.y - my * 0.14 + Math.sin(t * 0.8) * 0.015 + (Math.random() - 0.5) * sh, camPos.z);
   cam.lookAt(camLook.x + mx * 0.35, camLook.y - my * (mode === 'duel' ? 0.55 : 0.2), camLook.z);

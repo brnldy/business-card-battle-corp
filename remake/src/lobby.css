@@ -351,3 +351,6 @@
 #lobby.is-open:is([data-panel="deck"], [data-panel="shop"]) .lb-toasts { right: calc((100% - min(1320px, 95%)) / 2 + 14px); bottom: calc((100% - min(880px, 91%)) / 2 + 14px); }
 .lb-toast { max-width: min(380px, 40vw); }
 #lobby .lb-toast button { justify-self: start; margin-top: 4px; padding: 6px 10px; font-size: 10.5px; }
+
+/* caminhando até a sala de reunião (começo do duelo): etiquetas, barra e avisos somem e nada recebe clique */
+#lobby.is-walking { opacity: 0; transition: opacity 0.35s; } #lobby.is-walking * { pointer-events: none !important; }

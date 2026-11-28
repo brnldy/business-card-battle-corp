@@ -80,7 +80,7 @@ export class Duel {
     if (this.plan && !this.plan.free) setTimeout(() => this.active && this.ui.banner(this.plan.boss ? 'O CONSELHO' : rival, this.plan.boss ? 'batalha final / o conselho não perdoa' : `batalha ${this.plan.stage} de ${this.plan.total}`, 'foe'), 200);
     this.indexCards();
     this.refreshHud();
-    await wait(350);
+    await wait(opts.delay ?? 350); // entrando pela porta (main.js), as cartas só são distribuídas quando a câmera chega na mesa
     await this.play(events, new Map());
     this.afterAction();
   }

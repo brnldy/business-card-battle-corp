@@ -190,6 +190,10 @@ const SFX = {
     noise({ type: 'lowpass', f: 500, d: 0.5, vol: 0.35, rev: 0.5 }); tone({ f: 55, d: 0.6, vol: 0.5 });
   },
   whoosh() { noise({ f: 500, f2: 3600, q: 1.4, a: 0.12, d: 0.12, vol: 0.3 }); },
+  // porta da sala de reunião abrindo: o trinco e a dobradiça rangendo
+  door() { noise({ type: 'highpass', f: 2600, d: 0.03, vol: 0.18 }); tone({ f: 190, f2: 128, type: 'sawtooth', a: 0.12, d: 0.75, vol: 0.035, t: now() + 0.05 }); noise({ type: 'lowpass', f: 700, f2: 300, a: 0.15, d: 0.7, vol: 0.06, t: now() + 0.05 }); },
+  // a luminária da mesa acendendo: estalo e zumbido
+  lampOn() { noise({ f: 4200, q: 2, d: 0.025, vol: 0.16 }); tone({ f: 118, type: 'square', a: 0.02, d: 0.35, vol: 0.025, t: now() + 0.02 }); },
   attack() { SFX.whoosh(); }, // investida do ataque (o autor tem arquivo próprio: ATTACK_BASIC)
   impact() {
     tone({ f: 150, f2: 32, d: 0.3, vol: 0.9, rev: 0.3 }); noise({ type: 'lowpass', f: 3500, f2: 300, d: 0.22, vol: 0.55, rev: 0.4 });
