@@ -1,11 +1,11 @@
 /* estilos só do laboratório */
 * { box-sizing: border-box; }
-body { margin: 0; background: #0b1311; color: #dfe9e3; font: 14px/1.5 Helvena, system-ui, sans-serif; }
+body { margin: 0; background: #0b1311; color: #dfe9e3; font: 14px/1.5 var(--f-ui); }
 #app { padding: 0 32px 80px; }
 .lab-nav { position: sticky; top: 0; z-index: 9; display: flex; gap: 4px; padding: 10px 0; background: #0b1311ee; border-bottom: 1px solid #ffffff14; margin-bottom: 8px; }
 .lab-nav a { color: #9fb3aa; text-decoration: none; padding: 4px 10px; border-radius: 6px; font-size: 13px; } .lab-nav a:hover { background: #ffffff10; color: #fff; }
 .lab-sec { padding: 28px 0 8px; border-bottom: 1px solid #ffffff10; }
-.lab-sec > header h2 { margin: 0 0 4px; font: 400 28px/1.1 "Apple Garamond", Georgia, serif; }
+.lab-sec > header h2 { margin: 0 0 4px; font: 400 28px/1.1 var(--f-title); }
 .lab-sec > header p { margin: 0 0 18px; max-width: 760px; color: #9fb3aa; }
 .lab-grid { display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-start; }
 .lab-frame { margin: 0; }

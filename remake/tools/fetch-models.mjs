@@ -9,7 +9,7 @@ import { fileURLToPath } from 'node:url';
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'models_src');
 const UA = { 'User-Agent': 'asset-fetch-script' };
 const POLYHAVEN = ['Television_01', 'hanging_industrial_lamp', 'modern_arm_chair_01', 'vintage_stapler', 'wall_clock',
-  'mounted_fluorescent_lights', 'drawer_cabinet', 'metal_trash_can', 'binder_notebook', 'metal_office_desk'];
+  'mounted_fluorescent_lights', 'drawer_cabinet', 'binder_notebook', 'metal_office_desk'];
 const DIRECT = { 'business_man.glb': 'https://static.poly.pizza/e599abbe-7d73-488c-9d7e-3ead281e705c.glb' };
 
 async function save(url, file) {

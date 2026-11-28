@@ -50,6 +50,8 @@ export interface Save {
 }
 
 const expand = (cards: Record<string, number>): string[] => Object.entries(cards).flatMap(([id, n]) => Array<string>(n).fill(id));
+/** a mesma lista de cartas, em qualquer ordem, dá a mesma chave */
+const listKey = (cards: string[]): string => [...cards].sort().join();
 const clone = <T>(x: T): T => JSON.parse(JSON.stringify(x)) as T;
 const freeCosmetics = () => META.cosmetics.filter((c) => c.price === 0).map((c) => c.id);
 const emptyStats = (): Stats => ({ games: 0, wins: 0, losses: 0, draws: 0, streak: 0, bestStreak: 0, biggestHit: 0, totalDamage: 0, earned: 0, packs: 0, recycled: 0, plays: {}, rivals: {} });
@@ -127,7 +129,10 @@ export function saveDeck(save: Save, index: number, deck: Deck, now = 0): Result
   if (index < 0) { if (s.decks.length >= META.maxDecks) return fail(`Você já tem ${META.maxDecks} decks. Apague um para criar outro.`); s.decks.push({ name, cards }); index = s.decks.length - 1; }
   else if (!s.decks[index]) return fail('Deck não encontrado.');
   else s.decks[index] = { name, cards };
-  if ([...cards].sort().join() !== expand(META.starterDeck.cards).sort().join()) (s as Save & { _built?: boolean })._built = true;
+  // "montar o próprio deck" (conquista) = salvar um deck de 40 válido, diferente do kit e dos decks prontos da loja;
+  // deck em branco, rascunho ou só renomear um deck pronto não conta
+  const key = listKey(cards), bought = [META.starterDeck, ...META.readyDecks].some((x) => listKey(expand(x.cards)) === key);
+  if (cards.length === DECK_RULES.size && deckErrors(s, cards).length === 0 && !bought) (s as Save & { _built?: boolean })._built = true;
   return done(s, now, { index });
 }
 export function deleteDeck(save: Save, index: number): Result {
@@ -141,6 +146,52 @@ export function setActiveDeck(save: Save, index: number): Result {
   if (!save.decks[index]) return fail('Deck não encontrado.');
   return { ok: true, save: { ...clone(save), activeDeck: index }, unlocked: [] };
 }
+/** Copia um deck para uma gaveta nova, no fim da lista, com "(cópia)" no nome. */
+export function duplicateDeck(save: Save, index: number, now = 0): Result<{ index: number }> {
+  const d = save.decks[index];
+  if (!d) return fail('Deck não encontrado.');
+  if (save.decks.length >= META.maxDecks) return fail(`Você já tem ${META.maxDecks} decks. Apague um para copiar este.`);
+  const tag = ' (cópia)';
+  return saveDeck(save, -1, { name: d.name.slice(0, 24 - tag.length).trim() + tag, cards: [...d.cards] }, now);
+}
+
+/** Quanto cada tipo de carta pesa na montagem automática. */
+const AUTO = { effectShare: 0.2, maxSacrifice: 6 };
+const autoScore = (id: string): number => {
+  const c = CARDS_BY_ID.get(id)!, r = rarityOf(id), bonus = r === 'legendary' ? 0.6 : r === 'rare' ? 0.3 : 0;
+  if (c.kind === 'effect_instant' || c.kind === 'effect_trap') return 1 + bonus;
+  return ((c.atk ?? 0) + (c.def ?? 0)) / 1000 + bonus - (c.cost ?? 0) * 0.9;
+};
+/**
+ * Completa um deck até o tamanho oficial só com cartas da coleção, sem tirar nada do que já está nele.
+ * Critério: as criaturas mais fortes (ATQ + DEF, raridade, menos sacrifício), cerca de 1 efeito a cada 5 cartas
+ * e no máximo 6 cartas que pedem sacrifício. Se a coleção não fecha o deck, devolve o máximo possível.
+ * Cópias que o jogador não tem (ou acima do limite) saem antes, e as vagas são preenchidas com cartas livres.
+ */
+export function autoFill(s: Save, cards: string[] = []): string[] {
+  const seen = new Map<string, number>();
+  const out = cards.filter((id) => {
+    if (!CARDS_BY_ID.has(id)) return false;
+    const n = (seen.get(id) ?? 0) + 1; seen.set(id, n);
+    return n <= Math.min(owned(s, id), DECK_RULES.maxCopies);
+  }).slice(0, DECK_RULES.size);
+  const inDeck = (id: string) => out.filter((x) => x === id).length;
+  const free = (id: string) => Math.max(0, Math.min(owned(s, id), DECK_RULES.maxCopies) - inDeck(id));
+  const isEffect = (id: string) => { const k = CARDS_BY_ID.get(id)!.kind; return k === 'effect_instant' || k === 'effect_trap'; };
+  const needsSac = (id: string) => (CARDS_BY_ID.get(id)!.cost ?? 0) > 0;
+  const ranked = CARDS.map((c) => c.id).filter((id) => free(id) > 0).sort((a, b) => autoScore(b) - autoScore(a) || a.localeCompare(b));
+  const effectGoal = Math.round(DECK_RULES.size * AUTO.effectShare);
+  const add = (pick: (id: string) => boolean) => {
+    for (const id of ranked) {
+      while (out.length < DECK_RULES.size && free(id) > 0 && pick(id)) out.push(id);
+    }
+  };
+  // 1) efeitos até a cota, 2) criaturas, 3) o que sobrar (se faltar criatura ou efeito para fechar)
+  add((id) => isEffect(id) && out.filter(isEffect).length < effectGoal);
+  add((id) => !isEffect(id) && (!needsSac(id) || out.filter(needsSac).length < AUTO.maxSacrifice) && out.filter((x) => !isEffect(x)).length < DECK_RULES.size - effectGoal);
+  add(() => true);
+  return out.sort((a, b) => a.localeCompare(b));
+}
 
 // ───────── loja ─────────
 export function buySingle(save: Save, cardId: string, now = 0): Result {
@@ -153,7 +204,8 @@ export function buySingle(save: Save, cardId: string, now = 0): Result {
   return done(s, now, {});
 }
 
-export interface PackCard { cardId: string; rarity: Rarity; isNew: boolean; extra: boolean }
+/** count = quantas cópias você tem depois desta carta (conta certo mesmo se a mesma carta vier 2 vezes no pacote) */
+export interface PackCard { cardId: string; rarity: Rarity; isNew: boolean; extra: boolean; count: number }
 /**
  * Abre um pacote. Cada carta sorteia a raridade pelas chances de data/meta.json e depois uma carta daquela raridade.
  * Proteção contra repetida: enquanto existir carta que você ainda não completou, o pacote não entrega cópia sobrando.
@@ -175,8 +227,8 @@ export function buyBooster(save: Save, now = 0): Result<{ cards: PackCard[] }> {
     const extra = pool.length === 0;
     if (extra) pool = CARDS.filter((c) => rarityOf(c.id) === rarity);
     const card = pool[Math.floor(random(rng) * pool.length)];
-    cards.push({ cardId: card.id, rarity: rarityOf(card.id), isNew: owned(s, card.id) === 0, extra });
     s.collection[card.id] = owned(s, card.id) + 1;
+    cards.push({ cardId: card.id, rarity: rarityOf(card.id), isNew: owned(s, card.id) === 1, extra, count: owned(s, card.id) });
   }
   s.rng = rng.rng; s.stats.packs += 1;
   return done(s, now, { cards });
@@ -189,20 +241,46 @@ export function readyDeckMissing(s: Save, deckId: string): Record<string, number
   if (d) for (const [id, n] of Object.entries(d.cards)) if (n > owned(s, id)) out[id] = n - owned(s, id);
   return out;
 }
-/** Compra um deck pronto: entrega as cartas que faltam e guarda a lista como um deck seu (já escolhido para duelar). */
-export function buyReadyDeck(save: Save, deckId: string, now = 0): Result<{ gained: Record<string, number>; index: number }> {
+/** Preço de um deck pronto para este jogador: o preço cheio quando entrega carta, zero quando só guardaria a lista. */
+export function readyDeckPrice(s: Save, deckId: string): number {
+  const d = META.readyDecks.find((x) => x.id === deckId);
+  if (!d) return 0;
+  return Object.keys(readyDeckMissing(s, deckId)).length ? d.price : 0;
+}
+/** Quanto as cópias que faltam custariam compradas avulsas (referência de valor para a loja mostrar). */
+export function readyDeckValue(s: Save, deckId: string): number {
+  return Object.entries(readyDeckMissing(s, deckId)).reduce((n, [id, k]) => n + priceOf(id) * k, 0);
+}
+/** Índice do deck seu que já tem exatamente a lista deste deck pronto (-1 se nenhum). */
+export function readyDeckOwnedIndex(s: Save, deckId: string): number {
+  const d = META.readyDecks.find((x) => x.id === deckId);
+  if (!d) return -1;
+  const key = listKey(expand(d.cards));
+  return s.decks.findIndex((x) => listKey(x.cards) === key);
+}
+/**
+ * Compra um deck pronto: entrega as cartas que faltam e guarda a lista como um deck seu (já escolhido para duelar).
+ * Nunca sobrescreve um deck seu: se já existe um com o mesmo nome e outra lista, o novo ganha "(2)".
+ * Se você já tem todas as cartas, é grátis (só guarda a lista). Se a lista já está no arquivo, não faz nada.
+ */
+export function buyReadyDeck(save: Save, deckId: string, now = 0): Result<{ gained: Record<string, number>; index: number; price: number }> {
   const d = META.readyDecks.find((x) => x.id === deckId);
   if (!d) return fail('Deck não encontrado.');
-  if (save.patrimonio < d.price) return fail('PATRIMÔNIO insuficiente.');
-  if (save.decks.length >= META.maxDecks && !save.decks.some((x) => x.name === d.name)) return fail(`Você já tem ${META.maxDecks} decks. Apague um para abrir espaço.`);
+  const gained = readyDeckMissing(save, deckId), price = readyDeckPrice(save, deckId), twin = readyDeckOwnedIndex(save, deckId);
+  if (twin >= 0 && !Object.keys(gained).length) return fail(`Este deck já está no seu arquivo ("${save.decks[twin].name}").`);
+  if (save.patrimonio < price) return fail('PATRIMÔNIO insuficiente.');
+  if (twin < 0 && save.decks.length >= META.maxDecks) return fail(`Você já tem ${META.maxDecks} decks. Apague um para abrir espaço.`);
   const s = clone(save);
-  const gained = readyDeckMissing(s, deckId);
-  s.patrimonio -= d.price;
+  s.patrimonio -= price;
   for (const [id, n] of Object.entries(gained)) s.collection[id] = owned(s, id) + n;
-  let index = s.decks.findIndex((x) => x.name === d.name);
-  if (index < 0) { s.decks.push({ name: d.name, cards: expand(d.cards) }); index = s.decks.length - 1; } else s.decks[index].cards = expand(d.cards);
+  let index = twin;
+  if (index < 0) {
+    let name = d.name;
+    for (let k = 2; s.decks.some((x) => x.name === name); k++) name = `${d.name.slice(0, 24 - ` (${k})`.length).trim()} (${k})`; // nome de deck tem até 24 letras
+    s.decks.push({ name, cards: expand(d.cards) }); index = s.decks.length - 1;
+  }
   s.activeDeck = index;
-  return done(s, now, { gained, index });
+  return done(s, now, { gained, index, price });
 }
 
 export function buyCosmetic(save: Save, id: string, now = 0): Result {

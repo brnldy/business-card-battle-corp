@@ -1,21 +1,19 @@
 /* ════════════════════════════════════════════════════════════════════════
    Lobby — telas por cima da sala 3D (src/lobbyui.js). Mesmos tokens de style.css (tema Buckshot):
-   terminal escuro, âmbar, Courier em caixa alta, cantos retos. Papel velho para memorandos e fichas.
+   terminal escuro, âmbar, caixa alta, cantos retos. Papel velho para memorandos e fichas.
    ════════════════════════════════════════════════════════════════════════ */
 #fade { position: absolute; inset: 0; background: #000; opacity: 0; pointer-events: none; transition: opacity 0.3s; z-index: 60; }
 #fade.on { opacity: 1; pointer-events: auto; }
-#over .reward { margin-top: 12px; font: 700 15px var(--sans); letter-spacing: 0.06em; text-transform: uppercase; color: var(--mute); }
-#over .reward.good { color: var(--green); }
 
 #lobby { position: absolute; inset: 0; pointer-events: none; }
-#lobby button { font: 700 12px var(--sans); letter-spacing: 0.07em; text-transform: uppercase; color: var(--paper); background: rgba(228, 220, 192, 0.06); border: 1px solid rgba(228, 220, 192, 0.3); border-radius: 2px; padding: 9px 14px; cursor: pointer; pointer-events: auto; transition: background 0.14s, color 0.14s, border-color 0.14s; }
-#lobby button:hover:not(:disabled) { background: var(--paper); color: var(--ink); border-color: var(--paper); }
-#lobby button:disabled { opacity: 0.38; cursor: default; }
-#lobby button.primary { background: var(--paper); color: var(--ink); border-color: var(--paper); }
-#lobby button.primary:hover:not(:disabled) { background: #fff; }
-#lobby button.ghost { border-color: transparent; background: none; color: var(--mute); }
-#lobby button.big { padding: 14px 22px; font-size: 13.5px; }
-#lobby .fine { font-size: 11.5px; color: var(--mute); text-transform: uppercase; letter-spacing: 0.08em; }
+#lobby button:not([class*="ds-"]) { font: 700 var(--t-sm) var(--sans); letter-spacing: 0.07em; text-transform: uppercase; color: var(--paper); background: rgba(228, 220, 192, 0.06); border: 1px solid rgba(228, 220, 192, 0.3); border-radius: 2px; padding: 9px 14px; cursor: pointer; pointer-events: auto; transition: background 0.14s, color 0.14s, border-color 0.14s; }
+#lobby button:not([class*="ds-"]):hover:not(:disabled) { background: var(--paper); color: var(--ink); border-color: var(--paper); }
+#lobby button:not([class*="ds-"]):disabled { opacity: 0.38; cursor: default; }
+#lobby button:not([class*="ds-"]).primary { background: var(--paper); color: var(--ink); border-color: var(--paper); }
+#lobby button:not([class*="ds-"]).primary:hover:not(:disabled) { background: #fff; }
+#lobby button:not([class*="ds-"]).ghost { border-color: transparent; background: none; color: var(--mute); }
+#lobby button:not([class*="ds-"]).big { padding: 14px 22px; font-size: var(--t-md); }
+#lobby .fine { font-size: var(--t-cap); color: var(--mute); text-transform: uppercase; letter-spacing: 0.08em; }
 #lobby kbd { margin-left: 8px; }
 
 /* crachá, sair, etiquetas, barra */
@@ -23,14 +21,14 @@
 .lb-badge:hover { border-color: var(--cream); }
 .lb-badge img { width: 46px; height: 46px; background: #0b0f0c; border: 1px solid var(--line); padding: 3px; }
 .lb-badge b { display: block; font: 400 21px/1.05 var(--serif); color: var(--paper); text-shadow: 1.5px 0 rgba(255, 60, 40, 0.35), -1.5px 0 rgba(60, 220, 255, 0.3); }
-.lb-badge span { font: 700 10.5px var(--sans); letter-spacing: 0.1em; text-transform: uppercase; color: var(--mute); }
+.lb-badge span { font: 700 var(--t-cap) var(--sans); letter-spacing: 0.1em; text-transform: uppercase; color: var(--mute); }
 .lb-badge em { font: 400 16px var(--serif); font-style: normal; color: var(--cream); letter-spacing: 0; margin-left: 4px; }
 .lb-top { position: absolute; right: 18px; top: 16px; }
 .lb-exit { background: var(--panel) !important; }
 .lb-exit:hover { background: var(--paper) !important; }
 .lb-labels { position: absolute; inset: 0; }
 #lobby .lb-label { position: absolute; left: 0; top: 0; display: grid; gap: 1px; justify-items: center; padding: 5px 10px 6px; background: rgba(7, 11, 9, 0.78); border: 1px solid rgba(242, 185, 76, 0.22); white-space: nowrap; transition: border-color 0.15s, background 0.15s, opacity 0.2s; text-transform: none; letter-spacing: 0; }
-.lb-label b { font: 700 10px var(--sans); letter-spacing: 0.12em; text-transform: uppercase; color: var(--mute); }
+.lb-label b { font: 700 var(--t-cap) var(--sans); letter-spacing: 0.12em; text-transform: uppercase; color: var(--mute); }
 .lb-label span { font: 400 15px/1 var(--serif); color: var(--paper); }
 .lb-label::after { content: ""; position: absolute; left: 50%; bottom: -9px; width: 1px; height: 8px; background: rgba(242, 185, 76, 0.5); }
 #lobby .lb-label.is-hot, #lobby .lb-label:hover { background: var(--cream); border-color: var(--cream); }
@@ -38,16 +36,16 @@
 .lb-dot { position: absolute; right: -5px; top: -5px; width: 10px; height: 10px; border-radius: 50%; background: var(--red); box-shadow: 0 0 8px var(--red); animation: lb-pulse 1.2s infinite; }
 @keyframes lb-pulse { 50% { transform: scale(1.5); opacity: 0.6; } }
 .lb-nav { position: absolute; left: 50%; bottom: 16px; transform: translateX(-50%); display: flex; gap: 4px; padding: 5px; background: var(--panel); border: 1px solid var(--line); pointer-events: auto; }
-#lobby .lb-nav button { position: relative; display: flex; align-items: center; gap: 7px; padding: 8px 11px; border-color: transparent; background: none; font-size: 11.5px; }
+#lobby .lb-nav button { position: relative; display: flex; align-items: center; gap: 7px; padding: 8px 11px; border-color: transparent; background: none; font-size: var(--t-cap); }
 #lobby .lb-nav button:hover { background: var(--paper); color: var(--ink); }
-#lobby .lb-nav kbd { margin: 0; font-size: 10px; padding: 1px 5px; border-radius: 2px; }
-.lb-hint { position: absolute; left: 50%; bottom: 66px; transform: translateX(-50%); font: 700 10.5px var(--sans); letter-spacing: 0.12em; text-transform: uppercase; color: var(--mute); opacity: 0.75; white-space: nowrap; }
+#lobby .lb-nav kbd { margin: 0; font-size: var(--t-cap); padding: 1px 5px; border-radius: 2px; }
+.lb-hint { position: absolute; left: 50%; bottom: 66px; transform: translateX(-50%); font: 700 var(--t-cap) var(--sans); letter-spacing: 0.12em; text-transform: uppercase; color: var(--mute); opacity: 0.75; white-space: nowrap; }
 #lobby.is-open :is(.lb-labels, .lb-nav, .lb-hint, .lb-top) { opacity: 0; pointer-events: none; }
 #lobby.is-open :is(.lb-labels, .lb-nav) button { pointer-events: none; }
 #lobby.is-open .lb-badge { opacity: 0; pointer-events: none; }
 
 /* janela */
-.lb-win { position: absolute; inset: 0; display: grid; place-items: center; background: rgba(4, 7, 5, 0.72); backdrop-filter: blur(2px); pointer-events: auto; animation: fadein 0.18s; }
+.lb-win { position: absolute; inset: 0; display: grid; place-items: center; grid-template: minmax(0, 1fr) / minmax(0, 1fr); background: rgba(4, 7, 5, 0.72); backdrop-filter: blur(2px); pointer-events: auto; animation: fadein 0.18s; }
 .lb-box { width: min(1180px, 95%); height: min(720px, 91%); display: flex; flex-direction: column; background: var(--bg); border: 1px solid var(--line); box-shadow: 0 30px 80px rgba(0, 0, 0, 0.7), inset 0 0 120px rgba(0, 0, 0, 0.35); }
 .lb-box--training, .lb-box--recycle { width: min(760px, 95%); height: auto; max-height: 91%; }
 .lb-box--duel, .lb-box--missions { width: min(980px, 95%); height: auto; max-height: 91%; }
@@ -55,7 +53,7 @@
 .lb-box > header > div:first-child { flex: 1; min-width: 0; }
 .lb-box h2 { font: 400 34px/1 var(--serif); color: var(--paper); text-shadow: 1.5px 0 rgba(255, 60, 40, 0.35), -1.5px 0 rgba(60, 220, 255, 0.3); }
 .lb-box .memo { margin-bottom: 5px; }
-.lb-pat { font: 700 11px var(--sans); letter-spacing: 0.1em; text-transform: uppercase; color: var(--mute); padding: 8px 12px; border: 1px solid var(--line); background: rgba(242, 185, 76, 0.06); white-space: nowrap; }
+.lb-pat { font: 700 var(--t-cap) var(--sans); letter-spacing: 0.1em; text-transform: uppercase; color: var(--mute); padding: 8px 12px; border: 1px solid var(--line); background: rgba(242, 185, 76, 0.06); white-space: nowrap; }
 .lb-pat b { font: 400 21px var(--serif); color: var(--cream); letter-spacing: 0; margin-left: 6px; vertical-align: -2px; }
 #lobby .lb-x { width: 36px; height: 36px; padding: 0; font-size: 15px; }
 .lb-pad { padding: 20px 22px 22px; display: flex; flex-direction: column; gap: 16px; min-height: 0; }
@@ -63,7 +61,7 @@
 .lb-scroll { overflow-y: auto; min-height: 0; flex: 1; padding-right: 6px; scrollbar-width: thin; scrollbar-color: rgba(242, 185, 76, 0.4) transparent; }
 .lb-lead { font: 400 17px/1.4 var(--serif); color: var(--paper); max-width: 760px; }
 .lb-lead b { color: var(--cream); font-weight: 400; }
-.lb-empty { color: var(--mute); font-size: 12.5px; text-transform: uppercase; letter-spacing: 0.08em; padding: 14px 0; line-height: 1.7; }
+.lb-empty { color: var(--mute); font-size: var(--t-sm); text-transform: uppercase; letter-spacing: 0.08em; padding: 14px 0; line-height: 1.7; }
 .lb-empty.big { text-align: center; padding: 50px 0; }
 .lb-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
 .lb-two { display: grid; grid-template-columns: 1.25fr 1fr; gap: 28px; flex-direction: unset; }
@@ -75,49 +73,137 @@
 .lb-rar--rare { background: #6fb7ff; box-shadow: 0 0 6px #6fb7ff; } .lb-rar--legendary { background: var(--cream); box-shadow: 0 0 8px var(--cream); }
 
 /* arquivo: decks e coleção */
-.lb-deck { flex: 1; min-height: 0; display: grid; grid-template-columns: 236px 1fr 290px; }
-.lb-preview { padding: 16px 14px; border-right: 1px solid var(--line); overflow-y: auto; scrollbar-width: none; }
-.lb-preview img { width: 100%; display: block; margin-bottom: 10px; box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5); }
-.lb-preview .h-sheet { width: 100%; box-shadow: none; } .lb-preview .h-sheet__art { display: none; }
-.lb-col { display: flex; flex-direction: column; min-width: 0; min-height: 0; padding: 14px 16px; gap: 12px; }
-.lb-bar { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
 .lb-chips { display: flex; gap: 4px; }
-#lobby .lb-chips button { padding: 6px 10px; font-size: 11px; } #lobby .lb-chips button.on { background: var(--cream); color: var(--ink); border-color: var(--cream); }
-.lb-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 12px; align-content: start; }
+#lobby .lb-chips button, #lobby .lb-toggle { padding: 6px 10px; font-size: 11px; } #lobby :is(.lb-chips button, .lb-toggle).on { background: var(--cream); color: var(--ink); border-color: var(--cream); }
+.lb-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 14px 12px; align-content: start; padding-top: 4px; }
+.lb-grid--big { grid-template-columns: repeat(auto-fill, minmax(132px, 1fr)); }
 .lb-card { position: relative; cursor: pointer; transition: transform 0.12s; }
 .lb-card:hover { transform: translateY(-3px); }
 .lb-card img { width: 100%; display: block; box-shadow: 0 5px 14px rgba(0, 0, 0, 0.5); }
-.lb-card figcaption { display: flex; align-items: center; font: 700 10px var(--sans); letter-spacing: 0.06em; text-transform: uppercase; color: var(--mute); margin-top: 5px; }
-.lb-card figcaption b { margin-left: auto; color: var(--green); }
-.lb-card.is-missing img { filter: grayscale(1) brightness(0.32) contrast(1.2); } .lb-card.is-missing { cursor: help; }
-.lb-card.is-used img { opacity: 0.45; }
-.lb-grid--shop .lb-card { cursor: default; } .lb-grid--shop .lb-card:hover { transform: none; }
-#lobby .lb-grid--shop .lb-card button { width: 100%; margin-top: 6px; padding: 7px 4px; font-size: 11.5px; }
-.lb-side { display: flex; flex-direction: column; gap: 10px; padding: 14px 16px; border-left: 1px solid var(--line); min-height: 0; background: rgba(0, 0, 0, 0.22); }
-.lb-slots { display: flex; flex-wrap: wrap; gap: 4px; }
-#lobby .lb-slots button { padding: 5px 8px; font-size: 10.5px; max-width: 128px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-#lobby .lb-slots button.on { background: var(--cream); color: var(--ink); border-color: var(--cream); }
-#lb-deck-name { width: 100%; font: 400 23px var(--serif); background: var(--folder); color: var(--paper); border: none; border-radius: 2px; padding: 7px 10px; outline: none; pointer-events: auto; user-select: text; -webkit-user-select: text; }
+.lb-card figcaption { display: flex; align-items: center; gap: 2px; font: 700 10px var(--sans); letter-spacing: 0.06em; text-transform: uppercase; color: var(--mute); margin-top: 6px; }
+.lb-card figcaption b { margin-left: auto; color: var(--green); } .lb-card figcaption b.no { color: var(--mute); }
+.lb-card.is-missing img { filter: grayscale(1) brightness(0.32) contrast(1.2); }
+/* fora do deck e sem como entrar (deck cheio): só um pouco mais apagada, para não parecer carta que falta */
+.lb-card.is-used img { opacity: 0.62; filter: grayscale(0.35); }
+.lb-card.is-in img { outline: 2px solid var(--green); outline-offset: 2px; }
+.lb-grid--shop .lb-card, .lb-grid--big .lb-card { cursor: default; } .lb-grid--shop .lb-card:hover, .lb-grid--big .lb-card:hover { transform: none; }
+.lb-grid--big .lb-card:focus-visible { outline: 2px solid var(--cream); outline-offset: 3px; }
+#lobby .lb-grid--shop .lb-card button, #lobby .lb-card__buy { width: 100%; margin-top: 6px; padding: 7px 2px; font-size: 11px; letter-spacing: 0.03em; white-space: nowrap; }
+#lobby .lb-card__buy:not(:disabled) { border-color: var(--cream); color: var(--cream); background: rgba(7, 11, 9, 0.85); }
+#lobby .lb-card__buy:hover:not(:disabled) { background: var(--cream); color: var(--ink); }
+/* sem PATRIMÔNIO: preço em cima, quanto falta embaixo (o motivo fica escrito, não só no title) */
+#lobby .lb-card__buy.is-short { line-height: 1.25; padding: 5px 2px; }
+.lb-card__buy small { display: block; font-size: 9.5px; letter-spacing: 0.03em; color: #ffb0a8; text-transform: none; }
+/* no editor, o botão de compra fica por cima da arte (a linha da grade não muda de altura) */
+#lobby .lb-deck .lb-card__buy { position: absolute; left: 6px; right: 6px; bottom: 64px; width: auto; margin: 0; z-index: 2; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6); }
+#lobby .lb-deck .lb-card__buy.is-short { background: rgba(7, 11, 9, 0.9); opacity: 1; color: var(--paper); }
+/* bolinhas de cópia: cheia = no deck, contorno = tenho e está livre, tracejada = não tenho */
+.lb-pips { display: inline-flex; gap: 3px; margin-left: 2px; }
+.lb-pips i { width: 8px; height: 8px; border-radius: 50%; border: 1px dashed rgba(147, 160, 141, 0.45); }
+.lb-pips i.own { border: 1px solid var(--paper); } .lb-pips i.on { border: 1px solid var(--green); background: var(--green); box-shadow: 0 0 5px rgba(134, 217, 143, 0.6); }
+.lb-pips i.over { border: 1px solid #ff8a80; background: #ff8a80; }
+/* + e − por cima da carta (aparecem no hover e no foco do teclado) */
+.lb-card__ctl { position: absolute; left: 0; right: 0; top: 0; aspect-ratio: 788 / 1100; display: flex; align-items: flex-end; justify-content: center; gap: 6px; padding-bottom: 8px; opacity: 0; transition: opacity 0.12s; background: linear-gradient(transparent 55%, rgba(0, 0, 0, 0.75)); pointer-events: none; }
+.lb-card:hover .lb-card__ctl, .lb-card:focus-within .lb-card__ctl { opacity: 1; }
+#lobby .lb-card__ctl button { pointer-events: auto; width: 34px; height: 30px; padding: 0; font: 700 18px/1 var(--sans); background: rgba(7, 11, 9, 0.92); border-color: var(--cream); color: var(--cream); }
+#lobby .lb-card__ctl button:hover:not(.is-off) { background: var(--cream); color: var(--ink); }
+/* "desligado" só no visual: o clique ainda chega e o jogo explica por que não dá */
+#lobby :is(.lb-card__ctl, .lb-drow__ctl) button.is-off { opacity: 0.3; cursor: not-allowed; }
+#lobby button:focus-visible, #lobby select:focus-visible { outline: 2px solid var(--cream); outline-offset: 2px; }
+
+/* ferramentas: busca, tipo, só as minhas, ordem */
+.lb-tools { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.lb-search { flex: 1 1 150px; min-width: 120px; font: 700 12px var(--sans); letter-spacing: 0.04em; color: var(--paper); background: rgba(0, 0, 0, 0.35); border: 1px solid var(--line); border-radius: 2px; padding: 8px 10px; outline: none; pointer-events: auto; user-select: text; -webkit-user-select: text; }
+.lb-search::placeholder { color: var(--mute); opacity: 0.8; } .lb-search:focus { border-color: var(--cream); }
+.lb-sort { display: flex; align-items: center; gap: 6px; font: 700 10px var(--sans); letter-spacing: 0.1em; text-transform: uppercase; color: var(--mute); }
+.lb-sort select { font: 700 11px var(--sans); letter-spacing: 0.05em; text-transform: uppercase; color: var(--paper); background: #0b100d; border: 1px solid var(--line); border-radius: 2px; padding: 6px 8px; pointer-events: auto; cursor: pointer; }
+/* "Só as que tenho" é liga/desliga, não mais um tipo: caixinha de marcar, sem fundo cheio */
+#lobby .lb-toggle { background: none; border-color: var(--line); color: var(--mute); }
+#lobby .lb-toggle::before { content: ""; display: inline-block; width: 9px; height: 9px; border: 1px solid currentColor; margin-right: 7px; vertical-align: -1px; }
+#lobby .lb-toggle.on { background: none; color: var(--cream); border-color: var(--cream); } #lobby .lb-toggle.on::before { background: var(--cream); box-shadow: inset 0 0 0 2px var(--bg); }
+#lobby .lb-toggle:hover { background: rgba(242, 185, 76, 0.1); color: var(--cream); }
+.lb-shown { display: flex; align-items: center; gap: 6px; font: 700 10px var(--sans); letter-spacing: 0.08em; text-transform: uppercase; color: var(--cream); white-space: nowrap; }
+#lobby .lb-shown button { padding: 4px 6px; font-size: 10px; color: var(--paper); text-decoration: underline; }
+
+/* gaveta: todos os decks lado a lado, como pastas */
+.lb-folders { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 26px 18px; align-content: start; padding-top: 14px; }
+.lb-folder { position: relative; display: flex; flex-direction: column; background: var(--folder); border: 1px solid rgba(0, 0, 0, 0.5); box-shadow: 0 10px 24px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.08); }
+.lb-folder__tab { position: absolute; left: 14px; top: -19px; padding: 4px 12px 3px; background: var(--folder); border: 1px solid rgba(0, 0, 0, 0.5); border-bottom: none; font: 700 10px var(--sans); letter-spacing: 0.1em; text-transform: uppercase; color: var(--paper); }
+.lb-folder.is-active { box-shadow: 0 0 0 2px var(--cream), 0 10px 28px rgba(0, 0, 0, 0.6); }
+.lb-folder.is-active .lb-folder__tab { background: var(--cream); color: var(--ink); border-color: var(--cream); }
+/* capa ao lado do texto: a pasta fica baixa e 2 fileiras cabem sem rolar */
+#lobby .lb-folder__open { display: grid; grid-template-columns: auto minmax(0, 1fr); grid-template-areas: "fan h3" "fan count" "fan mix" "fan st"; column-gap: 14px; row-gap: 3px; align-content: start; text-align: left; padding: 14px 16px 12px; background: none; border: none; text-transform: none; letter-spacing: 0; }
+#lobby .lb-folder__open:hover:not(:disabled) { background: rgba(255, 255, 255, 0.06); color: var(--paper); }
+.lb-folder .lb-fan { grid-area: fan; height: auto; margin: 0; padding-left: 22px; align-self: center; } .lb-folder .lb-fan img { width: 54px; margin-left: -22px; }
+.lb-folder__open h3 { grid-area: h3; }
+.lb-folder h3 { font: 400 23px/1.05 var(--serif); color: var(--paper); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lb-folder__count { grid-area: count; font: 400 15px var(--serif); color: var(--mute); } .lb-folder__count b { font: 400 21px var(--serif); color: var(--paper); }
+.lb-folder .lb-mix { grid-area: mix; gap: 8px; font-size: 9.5px; }
+.lb-folder__st { grid-area: st; font: 700 10.5px/1.35 var(--sans); letter-spacing: 0.05em; text-transform: uppercase; color: var(--green); }
+.lb-folder.is-bad .lb-folder__st { color: #ffb0a8; }
+.lb-folder footer { display: flex; gap: 6px; align-items: center; min-height: 52px; padding: 8px 12px 10px; border-top: 1px solid rgba(0, 0, 0, 0.35); margin-top: auto; }
+#lobby .lb-folder footer button { padding: 7px 10px; font-size: 10.5px; white-space: nowrap; } #lobby .lb-folder footer .ghost { color: var(--paper); opacity: 0.75; } #lobby .lb-folder footer .ghost:hover:not(:disabled) { opacity: 1; }
+#lobby .lb-folder footer button:disabled { opacity: 0.55; }
+#lobby .lb-folder footer button:last-child { margin-left: auto; }
+.lb-folder__on { font: 700 10.5px var(--sans); letter-spacing: 0.08em; text-transform: uppercase; color: var(--cream); padding: 0 6px; white-space: nowrap; }
+.lb-folder--new { background: none; border: 1px dashed rgba(242, 185, 76, 0.45); box-shadow: none; }
+.lb-folder--new .lb-folder__tab { background: var(--bg); border: 1px dashed rgba(242, 185, 76, 0.45); border-bottom: none; color: var(--mute); }
+.lb-folder--new > div { padding: 22px 16px 8px; display: grid; gap: 8px; } .lb-folder--new p:not(.lb-folder__tab) { font: 400 15px/1.35 var(--serif); color: var(--mute); }
+.lb-folder--new footer { border-top: none; } #lobby .lb-folder--new footer button:last-child { margin-left: 0; }
+
+/* editor de um deck */
+.lb-edbar { display: flex; align-items: center; gap: 12px; padding: 10px 22px; border-bottom: 1px solid var(--line); background: rgba(0, 0, 0, 0.2); }
+#lb-deck-name { flex: 1; min-width: 0; font: 400 23px var(--serif); background: var(--folder); color: var(--paper); border: none; border-radius: 2px; padding: 6px 10px; outline: none; pointer-events: auto; user-select: text; -webkit-user-select: text; }
 #lb-deck-name:focus { box-shadow: 0 0 0 2px var(--cream); }
+.lb-saved { font: 700 10px var(--sans); letter-spacing: 0.1em; text-transform: uppercase; color: var(--mute); white-space: nowrap; } .lb-saved::before { content: "✓ "; color: var(--green); }
+.lb-deck { flex: 1; min-height: 0; display: grid; grid-template-columns: 1fr 320px; }
+.lb-col { display: flex; flex-direction: column; min-width: 0; min-height: 0; padding: 14px 16px 10px 22px; gap: 12px; }
+.lb-box--deck { width: min(1320px, 95%); height: min(880px, 91%); }
+.lb-side { display: flex; flex-direction: column; gap: 8px; padding: 14px 16px; border-left: 1px solid var(--line); min-height: 0; background: rgba(0, 0, 0, 0.22); }
 .lb-count { display: flex; align-items: baseline; gap: 4px; font: 400 18px var(--serif); color: var(--mute); }
-.lb-count b { font: 400 34px/1 var(--serif); color: #ff8a80; } .lb-count.ok b { color: var(--green); }
-.lb-count span { margin-left: auto; font: 700 10px var(--sans); letter-spacing: 0.08em; text-transform: uppercase; }
+/* contador: verde = pronto, âmbar = em construção (só faltam cartas), vermelho = tem erro de verdade */
+.lb-count b { font: 400 38px/1 var(--serif); color: var(--cream); } .lb-count.ok b { color: var(--green); } .lb-count.is-bad b { color: #ff8a80; }
+.lb-count span { margin-left: auto; font: 700 10.5px var(--sans); letter-spacing: 0.08em; text-transform: uppercase; color: var(--cream); } .lb-count.ok span { color: var(--green); } .lb-count.is-bad span { color: #ff8a80; }
+.lb-meter { display: flex; gap: 2px; height: 8px; }
+/* cores de tipo, diferentes das de raridade (azul) e de erro (vermelho): criatura verde, efeito papel, armadilha azul-claro */
+.lb-meter i, .lb-mix i { display: block; background: var(--paper); } .lb-meter .c, .lb-mix .c { background: var(--green); } .lb-meter .e, .lb-mix .e { background: var(--paper); } .lb-meter .t, .lb-mix .t { background: var(--blue); }
+.lb-meter .gap { background: repeating-linear-gradient(45deg, transparent 0 3px, rgba(242, 185, 76, 0.35) 3px 5px); }
+.lb-mix { display: flex; gap: 10px; flex-wrap: wrap; font: 700 10px var(--sans); letter-spacing: 0.02em; text-transform: uppercase; color: var(--paper); }
+.lb-mix span { display: flex; align-items: center; gap: 5px; } .lb-mix i { width: 8px; height: 8px; }
+.lb-mix--sub { color: var(--mute); font-size: 10px; margin-top: -2px; }
 .lb-decklist { flex: 1; min-height: 0; overflow-y: auto; list-style: none; scrollbar-width: thin; scrollbar-color: rgba(242, 185, 76, 0.4) transparent; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
-.lb-decklist li { display: flex; gap: 8px; align-items: baseline; padding: 5px 4px; font: 400 15px var(--serif); color: var(--paper); cursor: pointer; border-bottom: 1px dashed rgba(242, 185, 76, 0.12); }
-.lb-decklist li:hover { background: rgba(238, 58, 48, 0.2); }
-.lb-decklist li i { font: 700 11px var(--sans); color: var(--cream); font-style: normal; width: 22px; }
-.lb-decklist li span { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.lb-decklist li em { font: 700 10px var(--sans); color: var(--mute); font-style: normal; }
-.lb-decklist li.lb-empty { cursor: default; background: none; }
-.lb-err { color: #ff8a80; font: 700 11px/1.4 var(--sans); letter-spacing: 0.04em; text-transform: uppercase; }
-.lb-okline { color: var(--green); font: 700 11px var(--sans); letter-spacing: 0.06em; text-transform: uppercase; }
+.lb-decklist .lb-group { display: flex; justify-content: space-between; padding: 10px 4px 4px; font: 700 10px var(--sans); letter-spacing: 0.12em; text-transform: uppercase; color: var(--mute); }
+.lb-decklist .lb-group em { font-style: normal; color: var(--cream); }
+.lb-drow { position: relative; display: flex; gap: 8px; align-items: center; padding: 3px 4px; font: 400 15px var(--serif); color: var(--paper); border-bottom: 1px dashed rgba(242, 185, 76, 0.12); }
+.lb-drow:hover, .lb-drow:focus-within { background: rgba(242, 185, 76, 0.08); }
+.lb-drow.is-short { background: rgba(238, 58, 48, 0.16); box-shadow: inset 2px 0 0 var(--red); } .lb-drow.is-short > i { color: #ff8a80; }
+/* o que o "Completar automático" acabou de pôr */
+.lb-drow.is-new { box-shadow: inset 3px 0 0 var(--green); } .lb-drow.is-new .lb-drow__name::after { content: " novo"; font: 700 9px var(--sans); letter-spacing: 0.08em; text-transform: uppercase; color: var(--green); }
+.lb-drow__art { flex: none; width: 34px; height: 24px; background: #111 no-repeat center 32% / 150% auto; border: 1px solid rgba(0, 0, 0, 0.6); }
+.lb-drow > i { font: 700 11px var(--sans); color: var(--cream); font-style: normal; width: 20px; flex: none; }
+.lb-drow__name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lb-drow em { font: 700 10px var(--sans); color: var(--mute); font-style: normal; white-space: nowrap; }
+/* custo em sacrifícios: as mesmas bolinhas da ficha da carta (não é erro, então não é texto vermelho) */
+.lb-drow .lb-sac { display: inline-flex; gap: 1px; margin-right: 5px; vertical-align: 1px; }
+.lb-drow .lb-sac i { display: inline-grid; place-items: center; width: 12px; height: 12px; border-radius: 50%; background: #8b1d14; color: #fff; font: 700 8px/1 var(--sans); font-style: normal; }
+/* − e + por cima do fim da linha, só no hover ou no foco: o nome ganha o espaço todo */
+.lb-drow__ctl { position: absolute; right: 4px; top: 50%; transform: translateY(-50%); display: flex; gap: 3px; padding-left: 10px; background: linear-gradient(90deg, transparent, #10160f 10px); opacity: 0; pointer-events: none; transition: opacity 0.12s; }
+.lb-drow:hover .lb-drow__ctl, .lb-drow:focus-within .lb-drow__ctl { opacity: 1; pointer-events: auto; }
+#lobby .lb-drow__ctl button { width: 26px; height: 24px; padding: 0; font: 700 15px/1 var(--sans); background: #10160f; }
+.lb-decklist li.lb-empty { cursor: default; background: none; padding: 18px 4px; }
+.lb-errs { list-style: none; display: grid; gap: 3px; color: #ff8a80; font: 700 10.5px/1.4 var(--sans); letter-spacing: 0.04em; text-transform: uppercase; }
+.lb-errs li::before { content: "! "; }
 #lobby .lb-side .lb-actions button { flex: 1; padding: 9px 4px; font-size: 10.5px; letter-spacing: 0.04em; white-space: nowrap; }
+
+/* ficha flutuante da carta (hover) */
+.lb-peek { position: absolute; left: 0; top: 0; z-index: 30; pointer-events: none; }
+.lb-peek .h-sheet { width: 268px; box-shadow: 0 18px 44px rgba(0, 0, 0, 0.75); }
 
 /* linhas (reciclar, decks prontos) */
 .lb-rows { display: flex; flex-direction: column; gap: 8px; }
 .lb-row { display: flex; align-items: center; gap: 14px; padding: 10px 12px; border: 1px solid var(--line); background: rgba(0, 0, 0, 0.25); }
 .lb-row > img { width: 44px; } .lb-row > div:not(.lb-fan) { flex: 1; display: grid; gap: 3px; min-width: 0; }
-.lb-row b { font: 400 20px var(--serif); color: var(--paper); } .lb-row span { font-size: 12.5px; color: var(--mute); }
+.lb-row b { font: 400 20px var(--serif); color: var(--paper); } .lb-row span { font-size: var(--t-sm); color: var(--mute); }
 .lb-row em { font: 400 19px var(--serif); font-style: normal; color: var(--green); white-space: nowrap; }
 .lb-fan { display: flex; padding-left: 26px; } .lb-fan img { width: 62px; margin-left: -26px; box-shadow: -4px 4px 10px rgba(0, 0, 0, 0.6); transform: rotate(-4deg); } .lb-fan img:nth-child(even) { transform: rotate(3deg) translateY(3px); }
 .lb-row--deck span:not(.fine) { font: 400 15px/1.35 var(--serif); color: var(--paper); }
@@ -125,12 +211,12 @@
 /* sala de reunião */
 .lb-deckline { display: grid; grid-template-columns: 1fr auto; gap: 2px 14px; align-items: center; padding: 12px 14px; border: 1px solid var(--line); background: rgba(134, 217, 143, 0.06); }
 .lb-deckline .memo { grid-column: 1 / -1; margin: 0; } .lb-deckline b { font: 400 24px var(--serif); color: var(--paper); }
-.lb-deckline span:not(.memo) { grid-column: 1; font-size: 12px; color: var(--green); text-transform: uppercase; letter-spacing: 0.06em; }
+.lb-deckline span:not(.memo) { grid-column: 1; font-size: var(--t-sm); color: var(--green); text-transform: uppercase; letter-spacing: 0.06em; }
 .lb-deckline button { grid-column: 2; grid-row: 2 / span 2; }
 .lb-deckline.bad { background: rgba(238, 58, 48, 0.1); border-color: rgba(238, 58, 48, 0.5); } .lb-deckline.bad span:not(.memo) { color: #ff8a80; }
 .lb-rivals { list-style: none; display: grid; gap: 2px; }
 .lb-rivals li { display: flex; justify-content: space-between; padding: 6px 10px; font: 400 16px var(--serif); color: var(--mute); background: rgba(0, 0, 0, 0.25); border-left: 2px solid transparent; }
-.lb-rivals li.won { color: var(--paper); border-left-color: var(--green); } .lb-rivals em { font: 700 10.5px var(--sans); font-style: normal; letter-spacing: 0.08em; }
+.lb-rivals li.won { color: var(--paper); border-left-color: var(--green); } .lb-rivals em { font: 700 var(--t-cap) var(--sans); font-style: normal; letter-spacing: 0.08em; }
 
 /* mural: memorandos em papel velho */
 .lb-memos { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; padding: 8px 4px 4px; }
@@ -139,8 +225,8 @@
 .lb-memo .memo { color: #5c5138; } .lb-memo h3 { font: 400 24px/1.1 var(--serif); margin: 2px 0 14px; min-height: 54px; }
 .lb-pin { position: absolute; left: 50%; top: -7px; width: 14px; height: 14px; border-radius: 50%; background: var(--red); box-shadow: 0 3px 5px rgba(0, 0, 0, 0.5); }
 .lb-prog { height: 8px; background: rgba(23, 17, 12, 0.18); } .lb-prog b { display: block; height: 100%; background: #17110c; }
-.lb-progtxt { font: 700 11px var(--sans); letter-spacing: 0.06em; margin: 5px 0 12px; }
-.lb-memo footer { display: flex; align-items: center; justify-content: space-between; gap: 8px; font: 700 11px var(--sans); text-transform: uppercase; letter-spacing: 0.06em; }
+.lb-progtxt { font: 700 var(--t-cap) var(--sans); letter-spacing: 0.06em; margin: 5px 0 12px; }
+.lb-memo footer { display: flex; align-items: center; justify-content: space-between; gap: 8px; font: 700 var(--t-cap) var(--sans); text-transform: uppercase; letter-spacing: 0.06em; }
 #lobby .lb-memo button { color: #17110c; border-color: rgba(23, 17, 12, 0.4); background: none; padding: 7px 10px; }
 #lobby .lb-memo button.primary { background: #17110c; color: #e4dcc0; border-color: #17110c; }
 .lb-memo.is-done { box-shadow: 0 0 0 2px var(--green), 0 10px 22px rgba(0, 0, 0, 0.55); }
@@ -152,13 +238,13 @@
 .lb-packshop h3 { font: 400 32px var(--serif); color: var(--paper); }
 .lb-packart { position: relative; height: 330px; } .lb-packart img { position: absolute; left: 50%; top: 50%; width: 190px; box-shadow: 0 14px 30px rgba(0, 0, 0, 0.7); transform: translate(-50%, -50%) rotate(-9deg) translateX(-34px); }
 .lb-packart img:nth-child(2) { transform: translate(-50%, -50%) rotate(7deg) translateX(34px); } .lb-packart img:nth-child(3) { transform: translate(-50%, -50%) rotate(-1deg); }
-.lb-odds { list-style: none; display: flex; gap: 18px; font: 700 11.5px var(--sans); letter-spacing: 0.08em; text-transform: uppercase; color: var(--mute); } .lb-odds b { color: var(--paper); margin-left: 4px; }
+.lb-odds { list-style: none; display: flex; gap: 18px; font: 700 var(--t-cap) var(--sans); letter-spacing: 0.08em; text-transform: uppercase; color: var(--mute); } .lb-odds b { color: var(--paper); margin-left: 4px; }
 .lb-cosgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(132px, 1fr)); gap: 14px; margin: 8px 0 22px; }
 .lb-cos { display: grid; gap: 7px; padding: 10px; border: 1px solid var(--line); background: rgba(0, 0, 0, 0.25); justify-items: center; }
 .lb-cos.on { border-color: var(--cream); background: rgba(242, 185, 76, 0.1); }
 .lb-cos img { width: 92px; height: 92px; object-fit: contain; } .lb-cos--back img { width: 92px; height: 107px; object-fit: cover; box-shadow: 0 6px 14px rgba(0, 0, 0, 0.6); }
 .lb-cos figcaption { font: 400 15px var(--serif); color: var(--paper); text-align: center; min-height: 34px; } .lb-cos.is-locked img { filter: brightness(0.45) grayscale(0.6); }
-#lobby .lb-cos button { width: 100%; padding: 7px 4px; font-size: 11px; }
+#lobby .lb-cos button { width: 100%; padding: 7px 4px; font-size: var(--t-cap); }
 
 /* abertura de pacote */
 .lb-pack { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 26px; background: rgba(2, 4, 3, 0.9); pointer-events: auto; z-index: 5; animation: fadein 0.25s; }
@@ -170,7 +256,7 @@
 .lb-flip__back, .lb-flip__front { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; }
 .lb-flip__back { width: 100%; height: 100%; object-fit: cover; box-shadow: 0 16px 34px rgba(0, 0, 0, 0.7); }
 .lb-flip__front { transform: rotateY(180deg); } .lb-flip__front img { width: 100%; height: 100%; display: block; }
-.lb-flip__front span { position: absolute; left: 0; right: 0; bottom: -30px; text-align: center; font: 700 11.5px var(--sans); letter-spacing: 0.1em; text-transform: uppercase; color: var(--mute); }
+.lb-flip__front span { position: absolute; left: 0; right: 0; bottom: -30px; text-align: center; font: 700 var(--t-cap) var(--sans); letter-spacing: 0.1em; text-transform: uppercase; color: var(--mute); }
 .lb-flip__front b { color: var(--ink); background: var(--green); padding: 2px 7px; margin-right: 7px; } .lb-flip__front i { font-style: normal; color: #ff8a80; margin-right: 7px; }
 .lb-flip.on.lb-flip--rare .lb-flip__front { box-shadow: 0 0 34px rgba(111, 183, 255, 0.75); } .lb-flip.on.lb-flip--rare span { color: #6fb7ff; }
 .lb-flip.on.lb-flip--legendary .lb-flip__front { box-shadow: 0 0 50px rgba(242, 185, 76, 0.95); animation: lb-shine 1.4s infinite; } .lb-flip.on.lb-flip--legendary span { color: var(--cream); }
@@ -182,8 +268,8 @@
 .lb-trophies article { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border: 1px solid var(--line); background: rgba(0, 0, 0, 0.25); opacity: 0.6; }
 .lb-trophies article.on { opacity: 1; border-color: rgba(242, 185, 76, 0.6); background: rgba(242, 185, 76, 0.09); }
 .lb-trophies i { font: 400 24px var(--serif); font-style: normal; width: 34px; height: 34px; display: grid; place-items: center; border: 1px solid var(--line); color: var(--mute); } .lb-trophies .on i { color: var(--ink); background: var(--cream); border-color: var(--cream); }
-.lb-trophies div { flex: 1; display: grid; gap: 2px; min-width: 0; } .lb-trophies b { font: 400 19px var(--serif); color: var(--paper); } .lb-trophies span { font-size: 12px; color: var(--mute); }
-.lb-trophies em { font: 700 11px var(--sans); font-style: normal; letter-spacing: 0.06em; text-transform: uppercase; color: var(--cream); white-space: nowrap; } .lb-trophies .on em { color: var(--green); }
+.lb-trophies div { flex: 1; display: grid; gap: 2px; min-width: 0; } .lb-trophies b { font: 400 19px var(--serif); color: var(--paper); } .lb-trophies span { font-size: var(--t-sm); color: var(--mute); }
+.lb-trophies em { font: 700 var(--t-cap) var(--sans); font-style: normal; letter-spacing: 0.06em; text-transform: uppercase; color: var(--cream); white-space: nowrap; } .lb-trophies .on em { color: var(--green); }
 
 /* recepção: ficha e histórico */
 .lb-id { display: grid; grid-template-columns: 250px 1fr; gap: 26px; align-items: start; }
@@ -191,20 +277,20 @@
 .lb-idcard img { width: 120px; height: 120px; background: #0e1411; padding: 8px; } .lb-idcard .memo { color: #5c5138; margin: 8px 0 0; } .lb-idcard h3 { font: 400 25px/1.05 var(--serif); text-align: center; word-break: break-word; }
 #lobby .lb-idcard button { color: #17110c; border-color: rgba(23, 17, 12, 0.4); background: none; margin-top: 8px; }
 .lb-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; } .lb-stats div { padding: 12px; border: 1px solid var(--line); background: rgba(0, 0, 0, 0.25); } .lb-stats .wide { grid-column: span 2; }
-.lb-stats dt { font: 700 10px var(--sans); letter-spacing: 0.1em; text-transform: uppercase; color: var(--mute); margin-bottom: 4px; } .lb-stats dd { font: 400 26px/1.1 var(--serif); color: var(--paper); } .lb-stats .wide dd { font-size: 19px; }
+.lb-stats dt { font: 700 var(--t-cap) var(--sans); letter-spacing: 0.1em; text-transform: uppercase; color: var(--mute); margin-bottom: 4px; } .lb-stats dd { font: 400 26px/1.1 var(--serif); color: var(--paper); } .lb-stats .wide dd { font-size: 19px; }
 .lb-wipe { margin-top: auto; text-align: right; }
-.lb-hist { width: 100%; border-collapse: collapse; } .lb-hist th { position: sticky; top: 0; background: var(--bg); text-align: left; font: 700 10px var(--sans); letter-spacing: 0.1em; text-transform: uppercase; color: var(--mute); padding: 8px 10px; border-bottom: 1px solid var(--line); }
+.lb-hist { width: 100%; border-collapse: collapse; } .lb-hist th { position: sticky; top: 0; background: var(--bg); text-align: left; font: 700 var(--t-cap) var(--sans); letter-spacing: 0.1em; text-transform: uppercase; color: var(--mute); padding: 8px 10px; border-bottom: 1px solid var(--line); }
 .lb-hist td { padding: 8px 10px; font: 400 16px var(--serif); color: var(--paper); border-bottom: 1px dashed rgba(242, 185, 76, 0.12); }
 .lb-hist tr.win b { color: var(--green); } .lb-hist tr.loss b { color: #ff8a80; } .lb-hist b { font-weight: 400; } .lb-hist tr.win td:last-child { color: var(--green); }
 
 /* avisos */
 .lb-toasts { position: absolute; right: 18px; bottom: 76px; display: flex; flex-direction: column; gap: 8px; align-items: flex-end; z-index: 40; }
-.lb-toast { display: grid; gap: 3px; max-width: 380px; padding: 11px 15px; background: var(--panel); border: 1px solid var(--line); border-left: 4px solid var(--mute); font: 700 11.5px var(--sans); letter-spacing: 0.05em; text-transform: uppercase; color: var(--paper); box-shadow: 0 10px 26px rgba(0, 0, 0, 0.6); animation: lb-in 0.3s; transition: opacity 0.5s, transform 0.5s; }
+.lb-toast { display: grid; gap: 3px; max-width: 380px; padding: 11px 15px; background: var(--panel); border: 1px solid var(--line); border-left: 4px solid var(--mute); font: 700 var(--t-cap) var(--sans); letter-spacing: 0.05em; text-transform: uppercase; color: var(--paper); box-shadow: 0 10px 26px rgba(0, 0, 0, 0.6); animation: lb-in 0.3s; transition: opacity 0.5s, transform 0.5s; }
 .lb-toast b { font: 400 18px var(--serif); text-transform: none; letter-spacing: 0; } .lb-toast span { color: var(--mute); }
 .lb-toast.good { border-left-color: var(--green); } .lb-toast.bad { border-left-color: var(--red); } .lb-toast.gold { border-left-color: var(--cream); background: rgba(40, 30, 8, 0.96); } .lb-toast.gold b { color: var(--cream); }
 .lb-toast.out { opacity: 0; transform: translateX(20px); }
 @keyframes lb-in { from { opacity: 0; transform: translateX(30px); } }
-@media (max-width: 1100px) { .lb-deck { grid-template-columns: 0 1fr 270px; } .lb-preview { display: none; } .lb-nav span { display: none; } }
+@media (max-width: 1100px) { .lb-saved { display: none; } .lb-nav span { display: none; } }
 
 /* campanha: a próxima reunião e a escada das 30 */
 .lb-next { margin: 4px 0 14px; padding: 12px 14px; background: rgba(0, 0, 0, 0.3); border: 1px solid var(--line); border-left: 3px solid var(--cream); }
@@ -215,3 +301,54 @@
 .lb-ladder li.cur { color: var(--cream); border-left-color: var(--cream); background: rgba(242, 185, 76, 0.1); }
 .lb-ladder li.boss span { color: #ff8a80; }
 .lb-ladder li.lb-tier { background: none; padding: 10px 2px 2px; font: 700 10.5px var(--sans); letter-spacing: 0.1em; text-transform: uppercase; color: var(--mute); border: none; }
+
+/* ════════ loja · rodada 2 (análise da tela da Loja) ════════ */
+/* janela maior, como a do Arquivo: as 19 cartas avulsas cabem em 2 fileiras de 10, sem rolar */
+.lb-box--shop { width: min(1320px, 95%); height: min(880px, 91%); }
+.lb-grid--shop { grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 14px 10px; }
+.lb-grid--shop .lb-card figcaption { font-size: 10.5px; letter-spacing: 0.03em; }
+/* contagem pelo estado: "nova" em âmbar (você não tem), parcial em papel, completa em verde; +N = sobrando */
+.lb-card figcaption b.new { color: var(--cream); } .lb-card figcaption b.part { color: var(--paper); } .lb-card figcaption b.full { color: var(--green); }
+.lb-card figcaption b em { font-style: normal; color: var(--cream); }
+.lb-grid--shop .lb-card.is-new img { outline: 1px dashed var(--cream); outline-offset: 3px; }
+.lb-grid--shop .lb-card.is-full img { opacity: 0.62; filter: grayscale(0.35); }
+#lobby .lb-card__extra { line-height: 1.25; padding: 5px 2px; }
+.lb-card__extra small { color: var(--green); }
+/* sem verba para nada da aba: diz como ganhar e leva até lá */
+.lb-broke { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border: 1px solid rgba(242, 185, 76, 0.35); border-left: 3px solid var(--cream); background: rgba(242, 185, 76, 0.07); font: 400 15px/1.35 var(--serif); color: var(--paper); }
+.lb-broke span { flex: 1; } .lb-broke b { font-weight: 400; color: var(--cream); }
+#lobby .lb-broke button { padding: 7px 10px; font-size: 10.5px; white-space: nowrap; }
+.lb-short { font: 700 11px var(--sans); letter-spacing: 0.06em; text-transform: uppercase; color: #ffb0a8; }
+#lobby .lb-linkish { align-self: flex-start; background: none; border: none; padding: 0; text-align: left; font: 400 16px var(--serif); text-transform: none; letter-spacing: 0; color: var(--paper); text-decoration: underline; text-decoration-color: rgba(242, 185, 76, 0.5); text-underline-offset: 3px; }
+#lobby .lb-linkish:hover { background: none; color: var(--cream); } .lb-linkish b { font-weight: 400; color: var(--cream); }
+/* pacotes: o bloco fica no meio da aba, não preso no topo */
+.lb-packshop { margin-block: auto; }
+.lb-odds { font-size: 12px; }
+/* decks prontos: o leque mostra o que vai chegar, com ×N; texto do ganho em papel; botão com a linha de "faltam" embaixo */
+.lb-row--deck .lb-fan { padding-left: 34px; min-width: 250px; }
+.lb-fanc { position: relative; display: block; margin-left: -34px; transform: rotate(-4deg); } .lb-fanc:nth-child(even) { transform: rotate(3deg) translateY(3px); }
+.lb-row--deck .lb-fanc img { width: 76px; margin: 0; transform: none; display: block; box-shadow: -4px 4px 10px rgba(0, 0, 0, 0.6); }
+.lb-fanc b { position: absolute; right: 2px; bottom: 4px; font: 700 11px var(--sans); color: var(--ink); background: var(--cream); padding: 1px 5px; }
+.lb-fanc.is-used img { opacity: 0.55; }
+.lb-row--deck .lb-deckgain { font: 400 15px/1.35 var(--serif); color: var(--paper); } .lb-deckgain b { font-weight: 400; color: var(--cream); }
+.lb-row__buy { display: grid; gap: 6px; justify-items: end; } #lobby .lb-row__buy button { white-space: nowrap; }
+/* abertura de pacote: a loja some por trás (o ✕ falso também), cartas maiores, nome e contagem na etiqueta */
+#lobby.is-pack .lb-win > * { visibility: hidden; }
+.lb-pack { background: rgba(2, 4, 3, 0.95); backdrop-filter: blur(4px); }
+.lb-flip { width: clamp(208px, 17vw, 250px); }
+.lb-flip.on { cursor: default; }
+.lb-flip__front span { bottom: -46px; display: grid; gap: 3px; justify-items: center; font-size: 12px; }
+.lb-flip__front span em { font: 400 17px/1.1 var(--serif); font-style: normal; text-transform: none; letter-spacing: 0; color: var(--paper); }
+.lb-flip__front span b, .lb-flip__front span i { margin: 0; }
+.lb-flip__front b.done { background: var(--cream); }
+.lb-flip__front i { color: var(--cream); }
+.lb-packsum { margin-top: 34px; min-height: 20px; font: 400 19px var(--serif); color: var(--cream); }
+.lb-pack .lb-actions { justify-content: center; } .lb-pack .primary { margin-top: 0; }
+/* avisos: com uma janela aberta, ficam dentro do canto de baixo da caixa, perto da ação */
+#lobby.is-open .lb-toasts { right: calc((100% - min(1180px, 95%)) / 2 + 14px); bottom: calc((100% - min(720px, 91%)) / 2 + 14px); }
+#lobby.is-open:is([data-panel="deck"], [data-panel="shop"]) .lb-toasts { right: calc((100% - min(1320px, 95%)) / 2 + 14px); bottom: calc((100% - min(880px, 91%)) / 2 + 14px); }
+.lb-toast { max-width: min(380px, 40vw); }
+#lobby .lb-toast button { justify-self: start; margin-top: 4px; padding: 6px 10px; font-size: 10.5px; }
+
+/* caminhando até a sala de reunião (começo do duelo): etiquetas, barra e avisos somem e nada recebe clique */
+#lobby.is-walking { opacity: 0; transition: opacity 0.35s; } #lobby.is-walking * { pointer-events: none !important; }

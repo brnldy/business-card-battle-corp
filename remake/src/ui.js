@@ -1,5 +1,6 @@
 // Interface em DOM por cima do canvas. O HUD do duelo é montado só com os componentes do design system
 // (src/hud/components.js + hud.css); as telas (menu, janelas, fim de jogo) usam style.css.
+import * as glass from './ds/glass.js';
 import { CARDS } from './cards.js';
 import { asset } from './assets.js';
 import { settings, cleanName, MAX_NAME } from './settings.js';
@@ -13,7 +14,9 @@ const esc = C.esc;
 const { ICON } = C;
 const stamp = (ms) => { const d = new Date(ms), p = (n) => String(n).padStart(2, '0'); return `${p(d.getDate())}/${p(d.getMonth() + 1)}/${d.getFullYear()} às ${p(d.getHours())}:${p(d.getMinutes())}`; };
 /** Em que ponto da campanha um slot está, em uma linha. */
-export const slotStage = (x) => (x.done ? 'Campanha concluída' : `Batalha ${Math.min(30, (x.stage ?? 0) + 1)} de 30`);
+export const slotStage = (x) => (x.done ? 'Campanha concluída' : `Reunião ${Math.min(30, (x.stage ?? 0) + 1)} de 30`);
+/** "hoje às 14:32", "ontem às 09:10" ou "27/11 às 22:10" */
+const when = (ms) => { const d = new Date(ms), p = (n) => String(n).padStart(2, '0'), t = `${p(d.getHours())}:${p(d.getMinutes())}`, k = (x) => x.toDateString(), y = new Date(); y.setDate(y.getDate() - 1); return k(d) === k(new Date()) ? `hoje às ${t}` : k(d) === k(y) ? `ontem às ${t}` : `${p(d.getDate())}/${p(d.getMonth() + 1)} às ${t}`; };
 // jogadas que aparecem na faixa do topo (o resto fica só no relatório)
 const TICKER = new Set(['summon', 'effectPlayed', 'trapSet', 'trapTriggered', 'attack', 'attackNegated', 'attackRedirected', 'destroy', 'sacrifice', 'toHand', 'toDeck', 'controlChange', 'modeChange', 'coin', 'effectExpired', 'discard', 'mill']);
 
@@ -25,15 +28,18 @@ export class UI {
       <div id="menu" class="screen hidden">
         <div class="credits">Modelos 3D: Poly Haven e Quaternius (CC0)</div>
         <div class="title-block">
-          <h1>BUSINESS<br>CARD<span class="tag-word">Battle</span><small>Corp.</small></h1>
+          <h1><span class="lg-w">BUSINESS</span><br><span class="lg-w">CARD</span><span class="tag-word">Battle</span><small>Corp.</small></h1>
           <p class="tagline">O mundo acabou. Os investidores, não.</p>
-          <nav>
-            <button data-act="continue" class="primary" id="mm-continue">Continuar expediente <kbd>Enter</kbd></button>
-            <button data-act="newgame" id="mm-new">Novo jogo</button>
-            <button data-act="load" id="mm-load">Carregar</button>
-            <button data-act="help">Como jogar</button>
-            <button data-act="gallery">Arquivo de cartas</button>
-            <button data-act="settings">Configurações</button>
+          <nav class="mn-card">
+            <i class="ds-clip"></i>
+            <div class="ds-bar"><span>Cartão de ponto</span><b id="mn-clock">--:--</b></div>
+            <button data-act="continue" class="mn-punch" id="mm-continue"><span class="ds-key">Enter</span><span>Continuar expediente</span><i>Entrada</i></button>
+            <button data-act="newgame" class="mn-punch" id="mm-punch-new"><span class="ds-key">Enter</span><span>Iniciar expediente</span><i>Entrada</i></button>
+            <button data-act="newgame" class="mn-row" id="mm-new"><b></b><span>Novo jogo</span><i>outro disquete</i></button>
+            <button data-act="load" class="mn-row" id="mm-load"><b></b><span>Carregar</span><i>disquetes</i></button>
+            <button data-act="help" class="mn-row"><b></b><span>Como jogar</span><i>manual</i></button>
+            <button data-act="gallery" class="mn-row"><b></b><span>Arquivo de cartas</span><i>fichas</i></button>
+            <button data-act="settings" class="mn-row"><b></b><span>Configurações</span><i>quadro de luz</i></button>
           </nav>
           <div class="company" id="menu-company"></div>
         </div>
@@ -56,10 +62,13 @@ export class UI {
         <div class="h-follow hidden" id="preview"></div>
         <div class="h-follow hidden" id="tip"></div>
       </div>
-      <div id="over" class="screen hidden"><div class="over-box"><div class="memo" id="over-memo"></div><h2 id="over-title"></h2><p id="over-sub"></p><p class="stats" id="over-stats"></p><p class="reward" id="over-reward"></p><nav><button data-act="quit2">Voltar ao lobby</button><button data-act="again" class="primary">Nova partida</button></nav></div></div>
+      <div id="over" class="screen hidden"></div>
       <div id="modal" class="screen hidden"></div>
       <div id="unlock" class="hidden">clique para ligar o som</div>
       <div id="fade"></div>`;
+    // interface curva (src/ds/glass.js): estas camadas podem ser desenhadas em WebGL, com a curva do tubo
+    for (const id of ['chips', 'floats', 'slot-opp', 'slot-me', 'slot-turn', 'slot-bar', 'slot-sheet', 'slot-log', 'slot-center', 'slot-banner', 'slot-toast', 'slot-coach', 'over']) glass.attach(root.querySelector('#' + id));
+    glass.setEnabled(glass.curveOn()); settings.onChange(() => glass.setEnabled(glass.curveOn()));
     this.folders = { me: $('#slot-me .h-folder'), opp: $('#slot-opp .h-folder') };
     this.renderBar();
     root.addEventListener('click', (e) => {
@@ -87,6 +96,8 @@ export class UI {
   setScale() {
     const base = Math.max(0.8, Math.min(1.25, Math.min(window.innerHeight / 960, window.innerWidth / 1600)));
     this.scale = base * (Number(settings.get().uiSize) || 1); this.root.style.zoom = this.scale;
+    // piso de tamanho do lobby (docs/UI_LOBBY.md, R3): as telas novas não encolhem abaixo de 100%; se não couber, rolam
+    document.documentElement.style.setProperty('--lb-fix', String(Math.max(1, 1 / this.scale)));
   }
   renderBar() { $('#slot-bar').innerHTML = C.topbar({ logOn: !$('#slot-log')?.classList.contains('hidden'), muted: settings.get().muted }); }
 
@@ -99,49 +110,75 @@ export class UI {
     const last = save.lastSlot(), info = last ? save.slots()[last - 1] : null, any = save.hasAny();
     $('#mm-continue').classList.toggle('hidden', !info);
     $('#mm-load').classList.toggle('hidden', !any);
-    const nb = $('#mm-new'); nb.classList.toggle('primary', !info); nb.innerHTML = info ? 'Novo jogo' : 'Novo jogo <kbd>Enter</kbd>';
-    $('#menu-company').innerHTML = info ? `Último expediente: <b>${esc(info.name)}</b> · ${esc(slotStage(info))}` : '';
+    // sem disquete gravado, o botão de ponto vira "Iniciar expediente" (novo jogo) e a linha "Novo jogo" some
+    $('#mm-punch-new').classList.toggle('hidden', !!info); $('#mm-new').classList.toggle('hidden', !info);
+    $('#menu-company').innerHTML = info ? `<span class="ds-dymo">${esc(info.name)}</span><i>${esc(slotStage(info))}</i>` : '';
+    const d = new Date(), ck = $('#mn-clock'); if (ck) ck.textContent = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
   }
   /**
-   * As 3 gavetas de progresso. mode: 'new' (Novo jogo), 'load' (Carregar, no menu) ou 'lobby' (Salvar/Carregar no lobby).
-   * on: { pick(n) → começar empresa nova no slot n, load(n) → passar a jogar no slot n, saved(n) → depois de salvar }
+   * Abertura do menu. 'intro': a rua ainda está acendendo e nada da interface aparece; 'reveal': o logotipo acende como o
+   * letreiro, o cartão de ponto sobe e as linhas entram uma a uma; 'show': tudo no lugar, sem animação (pulou ou movimento reduzido).
    */
-  slots(mode, on = {}) {
-    const T = { new: ['Novo jogo · escolha uma gaveta', 'Onde abrir a empresa?'], load: ['Arquivo de empresas', 'Carregar expediente'], lobby: ['Arquivo de empresas · o slot em uso salva sozinho', 'Salvar ou carregar'] }[mode];
-    const card = (x) => {
-      const head = `<p class="memo">Gaveta ${x.n}${x.current ? ' · em uso' : ''}</p>`;
+  menuStage(stage) {
+    const r = this.root; clearTimeout(this._mnT);
+    r.classList.toggle('mn-intro', stage === 'intro'); r.classList.toggle('mn-reveal', stage === 'reveal');
+    if (stage === 'reveal') this._mnT = setTimeout(() => r.classList.remove('mn-reveal'), 2200);
+  }
+  get menuBusy() { return this.root.classList.contains('mn-intro'); }
+  /**
+   * Os 3 disquetes de progresso (peça .ds-floppy), iguais no menu e no lobby. mode: 'new' (Novo jogo), 'load' (Carregar, no menu)
+   * ou 'lobby' (janela Salvar e carregar). O disquete em uso grava sozinho a cada mudança (save.set): não há "Salvar agora".
+   */
+  slotCards(mode) {
+    const last = save.lastSlot();
+    return save.slots().map((x) => {
+      const inUse = mode === 'lobby' ? x.current : x.n === last;
+      const tag = inUse ? `<b class="ds-floppy__tag">${mode === 'lobby' ? 'Em uso' : 'Último expediente'}</b>` : '';
+      const label = x.empty ? `<span class="ds-floppy__no">Disquete ${x.n}</span><b class="ds-floppy__name is-blank">vazio</b>`
+        : `<span class="ds-floppy__no">Disquete ${x.n}</span><b class="ds-floppy__name">${esc(x.name)}</b>
+          <span class="ds-floppy__line">${esc(slotStage(x))}</span><span class="ds-floppy__line"><mark title="Patrimônio">$ ${Math.round(x.patrimonio).toLocaleString('pt-BR')}</mark></span><span class="ds-floppy__line">${x.wins} ${x.wins === 1 ? 'vitória' : 'vitórias'}</span>`;
+      const disk = `<div class="ds-floppy__disk">${tag}<div class="ds-floppy__body"><span class="ds-floppy__shutter"><i></i></span><span class="ds-floppy__notch"></span><div class="ds-floppy__label">${label}</div></div></div>`;
+      let meta = '', acts = '';
       if (x.empty) {
-        const btn = mode === 'new' ? `<button class="primary" data-sl="pick" data-n="${x.n}">Abrir empresa aqui</button>` : mode === 'lobby' ? `<button data-sl="copy" data-n="${x.n}">Salvar aqui</button>` : '';
-        return `<article class="sl-card is-empty">${head}<h3>Gaveta vazia</h3><p class="fine">Só poeira e um clipe enferrujado.</p><footer>${btn}</footer></article>`;
+        meta = '<p class="ds-floppy__meta">Formatado, sem nada gravado.</p>';
+        if (mode === 'new') acts = `<button class="ds-btn ds-btn--primary" data-sl="pick" data-n="${x.n}">Abrir empresa aqui</button>`;
+        if (mode === 'lobby') acts = `<button class="ds-btn" data-sl="copy" data-n="${x.n}">Gravar uma cópia aqui</button><p class="ds-floppy__meta">Você passa a jogar na cópia.</p>`;
+      } else {
+        meta = inUse && mode === 'lobby'
+          ? `<p class="ds-floppy__meta"><span class="ds-stamp ds-stamp--ok">Grava sozinho</span><span>Última gravação ${esc(when(x.savedAt))}</span></p>`
+          : `<p class="ds-floppy__meta">Gravado ${esc(when(x.savedAt))}</p>`;
+        if (mode === 'new') acts = `<button class="ds-btn ds-btn--link ds-floppy__danger" data-sl="over" data-n="${x.n}">Abrir empresa nova por cima</button>`;
+        else if (mode === 'load') acts = `<button class="ds-btn ds-btn--primary" data-sl="load" data-n="${x.n}">Carregar</button><button class="ds-btn ds-btn--link ds-floppy__danger" data-sl="del" data-n="${x.n}">Apagar este disquete</button>`;
+        else if (!x.current) acts = `<button class="ds-btn ds-btn--primary" data-sl="load" data-n="${x.n}">Carregar esta empresa</button><button class="ds-btn ds-btn--link ds-floppy__danger" data-sl="copy" data-n="${x.n}">Gravar a empresa atual por cima</button>`;
       }
-      let btns = '';
-      if (mode === 'new') btns = `<button data-sl="over" data-n="${x.n}">Sobrescrever</button>`;
-      else if (mode === 'load') btns = `<button class="primary" data-sl="load" data-n="${x.n}">Carregar</button><button class="ghost" data-sl="del" data-n="${x.n}">Apagar</button>`;
-      else if (x.current) btns = `<button class="primary" data-sl="save" data-n="${x.n}">Salvar agora</button>`;
-      else btns = `<button class="primary" data-sl="load" data-n="${x.n}">Carregar</button><button data-sl="copy" data-n="${x.n}">Salvar aqui</button>`;
-      return `<article class="sl-card ${x.current ? 'is-current' : ''}">${head}<h3>${esc(x.name)}</h3>
-        <dl><div><dt>Campanha</dt><dd>${esc(slotStage(x))}</dd></div><div><dt>Patrimônio</dt><dd>$ ${Math.round(x.patrimonio).toLocaleString('pt-BR')}</dd></div><div><dt>Vitórias</dt><dd>${x.wins}</dd></div></dl>
-        <p class="fine">Salvo em ${esc(stamp(x.savedAt))}</p><footer>${btns}</footer></article>`;
-    };
+      return `<article class="ds-floppy ${x.empty ? 'is-empty' : ''} ${inUse ? 'is-current' : ''}" aria-label="Disquete ${x.n}${x.empty ? ', vazio' : `: ${esc(x.name)}`}">${disk}${meta}<footer class="ds-floppy__acts">${acts}</footer></article>`;
+    }).join('');
+  }
+  /** clique num botão de disquete (data-sl). redraw: redesenha a tela onde os disquetes estão */
+  slotAct(mode, b, on, redraw) {
+    const n = Number(b.dataset.n), x = save.slots()[n - 1];
+    sfx('nav');
+    switch (b.dataset.sl) {
+      case 'pick': return on.pick?.(n);
+      case 'over': return this.confirm(`Sobrescrever o disquete ${n}?`, `${x.name} e todo o progresso dela vão para a trituradora.`, 'Sobrescrever', () => on.pick?.(n), 'Voltar', { tone: 'danger', kind: 'Disquete ' + n });
+      case 'load': return on.load?.(n);
+      case 'del': return this.confirm(`Apagar o disquete ${n}?`, `${x.name} e todo o progresso dela serão apagados para sempre.`, 'Apagar', () => { save.remove(n); this.mainMenu(!$('#menu').classList.contains('hidden')); redraw(); }, 'Voltar', { tone: 'danger', kind: 'Disquete ' + n });
+      case 'copy': {
+        const go = () => { const t = save.copyTo(n); sfx('trapSet'); redraw(); on.saved?.(n, t); };
+        return x.empty ? go() : this.confirm(`Gravar por cima do disquete ${n}?`, `${x.name} será substituída pela empresa atual, e você passa a jogar nesse disquete.`, 'Gravar por cima', go, 'Voltar', { tone: 'danger', kind: 'Disquete ' + n });
+      }
+      default: return undefined;
+    }
+  }
+  /** os disquetes no menu (Novo jogo, Carregar): a mesma peça, numa pasta sobre o cartão de ponto */
+  slots(mode, on = {}) {
+    const T = { new: ['Novo jogo', 'Em qual disquete?'], load: ['Caixa de disquetes', 'Carregar'], lobby: ['Caixa de disquetes', 'Salvar e carregar'] }[mode];
     const render = () => {
-      const box = this.modal(`<div class="memo">${esc(T[0])}</div><h2>${esc(T[1])}</h2><div class="sl-grid">${save.slots().map(card).join('')}</div><nav><button data-close>Voltar</button></nav>`, 'wide slots');
-      box.onclick = (e) => {
-        const b = e.target.closest('[data-sl]'); if (!b) return;
-        const n = Number(b.dataset.n), x = save.slots()[n - 1], back = () => { this.slots(mode, on); };
-        sfx('nav');
-        switch (b.dataset.sl) {
-          case 'pick': return on.pick?.(n);
-          case 'over': return this.confirm(`Sobrescrever a gaveta ${n}?`, `${x.name} e todo o progresso dela vão para a trituradora. Não tem volta.`, 'SOBRESCREVER', () => on.pick?.(n), 'Voltar');
-          case 'load': return on.load?.(n);
-          case 'del': return this.confirm(`Apagar a gaveta ${n}?`, `${x.name} e todo o progresso dela serão apagados para sempre.`, 'APAGAR', () => { save.remove(n); this.mainMenu(!$('#menu').classList.contains('hidden')); back(); }, 'Voltar');
-          case 'save': { const t = save.commit(); sfx('trapSet'); render(); on.saved?.(n, t); return undefined; }
-          case 'copy': {
-            const go = () => { const t = save.copyTo(n); sfx('trapSet'); back(); on.saved?.(n, t); };
-            return x.empty ? go() : this.confirm(`Salvar por cima da gaveta ${n}?`, `${x.name} será substituída pelo progresso atual, e você passa a jogar nessa gaveta.`, 'SALVAR POR CIMA', go, 'Voltar');
-          }
-          default: return undefined;
-        }
-      };
+      const box = this.modal(`<header class="ds-letterhead"><div class="ds-letterhead__title"><span class="ds-formlabel">${esc(T[0])}</span><h2>${esc(T[1])}</h2></div><button class="ds-btn ds-btn--sq dq-x" data-close title="Voltar (Esc)" aria-label="Voltar">✕</button></header>
+        <p class="dq-intro">Cada disquete guarda uma empresa inteira. O que está em uso grava sozinho depois de cada partida, compra ou mudança de deck.</p>
+        <div class="dq-grid">${this.slotCards(mode)}</div>`, 'dq-modal');
+      box.onclick = (e) => { const b = e.target.closest('[data-sl]'); if (b) this.slotAct(mode, b, on, render); };
+      box.querySelector('[data-sl]:not(.ds-btn--link)')?.focus({ preventScroll: true });
     };
     render();
   }
@@ -155,17 +192,58 @@ export class UI {
     m.onclick = (e) => { if (e.target === m || e.target.closest('[data-close]')) this.closeModal(); };
     return m.firstElementChild;
   }
-  confirm(title, body, yes, onYes, no = 'Cancelar') {
-    const box = this.modal(`<h2>${esc(title)}</h2><p>${esc(body)}</p><nav><button data-close>${esc(no)}</button><button id="cf-yes" class="primary">${esc(yes)}</button></nav>`);
-    $('#cf-yes', box).onclick = () => { $('#modal').classList.add('hidden'); $('#modal').innerHTML = ''; onYes(); };
+  /** pedido de autorização (peça .ds-confirm): uma pergunta, uma frase, a assinatura e dois botões. O botão de autorizar
+   *  só liga depois de assinar com o mouse (qualquer rabisco serve). Decisão do autor: não há outro jeito de autorizar.
+   *  tone: 'danger' (sem volta: carimbo e botão vermelhos, foco começa em "Voltar"), 'money' (mostra a conta) ou nada.
+   *  kind: o que vai na faixa de cima; sum: linhas da conta [[rótulo, valor], …] */
+  confirm(title, body, yes, onYes, no = 'Cancelar', { tone = '', kind = '', sum = null } = {}) {
+    const m = $('#modal'), danger = tone === 'danger';
+    m.innerHTML = `<div class="ds-confirm ${tone ? `is-${tone}` : ''}" role="alertdialog" aria-modal="true" aria-labelledby="cf-t" aria-describedby="cf-b">
+      <i class="ds-staple" aria-hidden="true"></i>
+      <header class="ds-confirm__head"><span>Pedido de autorização</span><b>${esc(kind || (danger ? 'Exclusão' : tone === 'money' ? 'Compra' : 'Confirmação'))}</b></header>
+      <div class="ds-confirm__body">
+        <h2 id="cf-t">${esc(title)}</h2><p id="cf-b">${esc(body)}</p>
+        ${sum ? `<dl class="ds-confirm__sum">${sum.map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join('')}</dl>` : ''}
+        ${danger ? '<i class="ds-stamp ds-stamp--no ds-confirm__stamp" aria-hidden="true">Sem volta</i>' : ''}
+        <div class="ds-sign">
+          <div class="ds-sign__top"><span class="ds-formlabel" id="cf-sl">Assinatura</span><button class="ds-sign__clear" type="button" hidden>Limpar</button></div>
+          <div class="ds-sign__pad"><canvas role="img" aria-labelledby="cf-sl" aria-describedby="cf-sh"></canvas><span class="ds-sign__x" aria-hidden="true">✕</span><span class="ds-sign__hint" id="cf-sh">Assine aqui com o mouse</span></div>
+        </div>
+      </div>
+      <footer class="ds-confirm__foot"><button class="ds-btn" data-close>${esc(no)}</button><button id="cf-yes" class="ds-btn ${danger ? 'ds-btn--danger' : 'ds-btn--primary'}" disabled title="Assine para autorizar">${esc(yes)}</button></footer>
+    </div>`;
+    m.classList.remove('hidden');
+    m.onclick = (e) => { if (e.target === m || e.target.closest('[data-close]')) this.closeModal(); };
+    const yesBtn = $('#cf-yes', m);
+    yesBtn.onclick = () => { if (yesBtn.disabled) return; m.classList.add('hidden'); m.innerHTML = ''; onYes(); };
+    this.signPad($('.ds-sign', m), (ok) => { yesBtn.disabled = !ok; yesBtn.title = ok ? '' : 'Assine para autorizar'; });
+    setTimeout(() => $('[data-close]', m)?.focus({ preventScroll: true }), 30);
+  }
+  /** linha de assinatura (peça .ds-sign): desenho livre a caneta azul. onChange(true) quando já tem traço suficiente */
+  signPad(root, onChange) {
+    const cv = $('canvas', root), clear = $('.ds-sign__clear', root), g = cv.getContext('2d');
+    const fit = () => { const r = cv.getBoundingClientRect(), d = window.devicePixelRatio || 1; cv.width = Math.max(1, Math.round(r.width * d)); cv.height = Math.max(1, Math.round(r.height * d)); };
+    let ink = 0, last = null, signed = false;
+    const pt = (e) => { const r = cv.getBoundingClientRect(); return { x: (e.clientX - r.left) * (cv.width / r.width), y: (e.clientY - r.top) * (cv.height / r.height), cx: e.clientX, cy: e.clientY }; };
+    const pen = () => { const d = cv.width / Math.max(1, cv.getBoundingClientRect().width); g.strokeStyle = '#1f3fa8'; g.lineCap = 'round'; g.lineJoin = 'round'; g.lineWidth = 2.6 * d; };
+    const set = (v) => { if (v === signed) return; signed = v; root.classList.toggle('is-signed', v); clear.hidden = !v; if (v) sfx('trapSet'); onChange(v); };
+    cv.addEventListener('pointerdown', (e) => { if (!cv.width || cv.width < 4) fit(); cv.setPointerCapture(e.pointerId); last = pt(e); pen(); sfx('type'); e.preventDefault(); });
+    cv.addEventListener('pointermove', (e) => {
+      if (!last) return; const p = pt(e);
+      g.beginPath(); g.moveTo(last.x, last.y); g.lineTo(p.x, p.y); g.stroke();
+      ink += Math.hypot(p.cx - last.cx, p.cy - last.cy); last = p;
+      if (ink > 60) set(true);
+    });
+    const up = () => { last = null; }; cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up);
+    clear.addEventListener('click', () => { g.clearRect(0, 0, cv.width, cv.height); ink = 0; set(false); });
+    requestAnimationFrame(fit);
   }
   nameEntry(onDone, cur = '') {
     const box = this.modal(`
-      <div class="memo">Formulário 01-A · registro de empresa</div>
+      <div class="memo">Formulário 01-A / registro de empresa</div>
       <h2>Como se chama a sua empresa?</h2>
-      <p>É esse nome que vai na sua pasta de CAIXA e disputa os investidores.</p>
       <input id="name-in" maxlength="${MAX_NAME}" value="${esc(cur)}" placeholder="Nome da empresa" autocomplete="off" spellcheck="false">
-      <p class="fine">Até ${MAX_NAME} caracteres · Enter confirma</p>
+      <p class="fine">Até ${MAX_NAME} letras. Enter confirma.</p>
       <nav><button data-close>Voltar</button><button id="name-ok" class="primary">Assinar e entrar</button></nav>`, 'form');
     const inp = $('#name-in', box), ok = $('#name-ok', box);
     const sync = () => { ok.disabled = !cleanName(inp.value); };
@@ -178,16 +256,16 @@ export class UI {
     this.onModalClose = onClose ?? null;
     this.modal(`
       <div class="memo">Manual do colaborador</div><h2>Como jogar</h2>
-      <div class="help-grid">
-        <section><h3>1 · O objetivo</h3><p>Cada empresa começa com <b>$ 8.000 de CAIXA</b> — é a sua vida, na pasta com o seu nome. Zere o CAIXA do rival antes que ele zere o seu.</p></section>
-        <section><h3>2 · O seu turno</h3><p>Você compra 1 carta. Depois <b>joga cartas</b> (as de contorno verde), <b>vai para a batalha</b> e <b>encerra o turno</b>. É <b>1 invocação por turno</b>.</p></section>
-        <section><h3>3 · Criaturas</h3><p>Têm <span class="ic">${ICON.atk}</span> <b>ATQ</b> e <span class="ic">${ICON.def}</span> <b>DEF</b>. Em <b>ataque</b> (em pé) podem atacar; em <b>defesa</b> (deitadas) só protegem.</p></section>
-        <section><h3>4 · Custo</h3><p>Cada <span class="pip">✕</span> no nome da carta é uma criatura sua que você <b>sacrifica</b> para invocá-la. Sem ✕, entra de graça.</p></section>
-        <section><h3>5 · Combate</h3><p>O número maior vence e destrói a outra carta. Contra criatura em <b>ataque</b>, quem perde paga a diferença em CAIXA. Contra <b>defesa</b>, só você paga — se atacar com menos. Sem criaturas na frente, o ataque vai <b>direto no CAIXA</b>.</p></section>
-        <section><h3>6 · Efeitos e armadilhas</h3><p><b>Efeitos</b> valem na hora. <b>Armadilhas</b> ficam viradas para baixo e disparam quando o rival ataca. O <b>Morto</b> é a pilha de descarte.</p></section>
+      <div class="help-grid help-grid--ico">
+        <section><span class="hg-ico">${ICON.coin}</span><h3>Zere o CAIXA do rival</h3><p>Cada empresa começa com <b>$ 8.000</b>.</p></section>
+        <section><span class="hg-ico">${ICON.card}</span><h3>Seu turno</h3><p class="hg-steps"><b>Compra</b><i>›</i><b>Joga</b><i>›</i><b>Batalha</b><i>›</i><b>Encerra</b></p><p>1 invocação por turno.</p></section>
+        <section><span class="hg-ico">${ICON.atk}</span><h3>Em pé ataca, deitada defende</h3><p><span class="ic">${ICON.atk}</span> <b>ATQ</b> / <span class="ic">${ICON.def}</span> <b>DEF</b></p></section>
+        <section><span class="hg-ico"><span class="pip">✕</span></span><h3>Cada ✕ = 1 sacrifício</h3><p>Sem ✕, entra de graça.</p></section>
+        <section><span class="hg-ico">${ICON.swap}</span><h3>O maior número vence</h3><ul class="hg-rows"><li><span class="ic">${ICON.atk}</span> vs em pé: quem perde paga a diferença</li><li><span class="ic">${ICON.def}</span> vs deitada: só o atacante paga, se perder</li><li><span class="ic">${ICON.coin}</span> mesa vazia: direto no CAIXA</li></ul></section>
+        <section><span class="hg-ico">${ICON.trap}</span><h3>Efeitos e armadilhas</h3><ul class="hg-rows"><li><span class="ic">${ICON.fx}</span> efeito: vale na hora</li><li><span class="ic">${ICON.trap}</span> armadilha: dispara no ataque do rival</li><li><span class="ic">${ICON.dead}</span> Morto: o descarte</li></ul></section>
       </div>
-      <p class="fine">Atalhos: <kbd>B</kbd> batalha · <kbd>Espaço</kbd> encerrar turno · <kbd>L</kbd> relatório · <kbd>Esc</kbd> ou botão direito cancela. Passe o mouse em qualquer carta para ler o que ela faz.</p>
-      <nav><button data-close class="primary">Entendido</button></nav>`, 'wide');
+      <p class="fine hg-keys"><kbd>B</kbd> batalha <kbd>Espaço</kbd> encerrar <kbd>L</kbd> relatório <kbd>Esc</kbd> cancelar <span class="ic">${ICON.card}</span> mouse na carta: ficha</p>
+      <nav><button data-close class="primary">Entendido</button></nav>`, 'full');
   }
   settings() {
     const s = settings.get();
@@ -197,14 +275,15 @@ export class UI {
         <label>Música e ambiente <input type="range" min="0" max="1" step="0.05" value="${s.music}" data-k2="music"></label>
         <label>Efeitos sonoros <input type="range" min="0" max="1" step="0.05" value="${s.sfx}" data-k2="sfx"></label>
         <label>Imagem <span class="seg" data-s="pixel"><button data-v="1">Nítida</button><button data-v="2">Retrô</button><button data-v="3">Pixelada</button></span></label>
-        <label>Tamanho da interface <span class="seg" data-s="uiSize"><button data-v="0.85">Pequena</button><button data-v="1">Média</button><button data-v="1.15">Grande</button></span></label>
-        <label>Velocidade das animações <span class="seg" data-s="speed"><button data-v="1">Normal</button><button data-v="1.6">Rápida</button><button data-v="2.5">Turbo</button></span></label>
+        <label>Tamanho <span class="seg" data-s="uiSize"><button data-v="0.85">Pequena</button><button data-v="1">Média</button><button data-v="1.15">Grande</button></span></label>
+        <label>Animações <span class="seg" data-s="speed"><button data-v="1">Normal</button><button data-v="1.6">Rápida</button><button data-v="2.5">Turbo</button></span></label>
+        <label><span>Interface curva <small class="fine">${glass.isUhd() ? '(tela 4K: ligada por padrão)' : '(ligada por padrão só em 4K)'}</small></span> <span class="seg" data-s="hudCurve"><button data-v="true">Ligada</button><button data-v="false">Desligada</button></span></label>
         <label>Tremor e clarões <span class="seg" data-s="shake"><button data-v="true">Ligado</button><button data-v="false">Reduzido</button></span></label>
-        <label>Dicas para iniciantes <span class="seg" data-s="tipsOff"><button data-v="false">Ligadas</button><button data-v="true">Desligadas</button></span></label>
+        <label>Dicas <span class="seg" data-s="tipsOff"><button data-v="false">Ligadas</button><button data-v="true">Desligadas</button></span></label>
         <label>Som <span class="seg" data-s="muted"><button data-v="false">Ligado</button><button data-v="true">Mudo</button></span></label>
       </div>
       <nav><button data-close class="primary">Voltar</button></nav>`);
-    const syncSeg = () => box.querySelectorAll('.seg').forEach((sg) => sg.querySelectorAll('button').forEach((b) => b.classList.toggle('on', String(settings.get()[sg.dataset.s]) === b.dataset.v)));
+    const syncSeg = () => box.querySelectorAll('.seg').forEach((sg) => sg.querySelectorAll('button').forEach((b) => b.classList.toggle('on', String(sg.dataset.s === 'hudCurve' ? glass.curveOn() : settings.get()[sg.dataset.s]) === b.dataset.v)));
     syncSeg();
     box.addEventListener('input', (e) => { const k = e.target.dataset?.k2; if (!k) return; settings.set({ [k]: Number(e.target.value) }); applyVolumes(); if (k === 'sfx') sfx('nav'); });
     box.addEventListener('click', (e) => {
@@ -215,7 +294,7 @@ export class UI {
   }
   gallery() {
     const box = this.modal(`
-      <div class="memo">Arquivo · ${CARDS.length} fichas</div><h2>Arquivo de cartas</h2>
+      <div class="memo">Arquivo / ${CARDS.length} fichas</div><h2>Arquivo de cartas</h2>
       <div class="gal">${CARDS.map((c) => `<figure data-id="${c.id}"><img loading="lazy" src="${asset(c.art)}" alt="${esc(c.name)}"><figcaption>${esc(c.name)}</figcaption></figure>`).join('')}</div>
       <div class="gal-zoom hidden" id="gal-zoom"><img alt=""><div class="gal-text"></div></div>
       <nav><button data-close class="primary">Fechar arquivo</button></nav>`, 'full');
@@ -346,17 +425,48 @@ export class UI {
   ending(onClose) {
     this.onModalClose = onClose ?? null;
     this.modal(`
-      <div class="memo">Ata final · reservado ao Conselho</div><h2>O Conselho caiu.</h2>
-      <p>[CUTSCENE FINAL · EM PRODUÇÃO]</p>
+      <div class="memo">Ata final / reservado ao Conselho</div><h2>O Conselho caiu.</h2>
+      <p>[CUTSCENE FINAL / EM PRODUÇÃO]</p>
       <p class="fine">Espaço reservado para a cena de encerramento. Depois dela, a sala de reunião continua aberta para reuniões livres.</p>
       <nav><button data-close class="primary">Voltar ao expediente</button></nav>`, 'ending');
     sfx('win');
   }
+  /**
+   * Fim de partida (peça .ov): um documento com carimbo. Vitória: comunicado aos acionistas, carimbo verde, o que entra no
+   * patrimônio. Derrota: aviso de falência, carimbo vermelho. Empate: ata de reunião. Embaixo, o caixa final dos dois, a
+   * campanha e duas ações; a principal diz o que vem (próxima reunião, revanche, treinar de novo) e já vem com o foco (Enter).
+   */
   gameOver(o) {
     this.show('over', !!o); if (!o) return;
-    $('#over').className = `screen ${o.win ? 'win' : o.draw ? 'draw' : 'lose'}`;
-    $('#over-memo').textContent = o.win ? 'Comunicado aos acionistas · aprovado' : o.draw ? 'Ata de reunião · sem deliberação' : 'Aviso de falência · 2ª via';
-    $('#over-title').textContent = o.title; $('#over-sub').textContent = o.sub; $('#over-stats').textContent = o.stats; $('#over-reward').textContent = o.reward ?? ''; $('#over-reward').className = `reward ${o.win ? 'good' : ''}`;
+    const kind = o.win ? 'win' : o.draw ? 'draw' : 'lose', m = (v) => `$ ${Math.round(v).toLocaleString('pt-BR')}`;
+    const doc = { win: 'Comunicado aos acionistas', draw: 'Ata de reunião', lose: 'Aviso de falência / 2ª via' }[kind];
+    const where = o.training ? 'Treino' : o.camp ? `Reunião ${o.camp.stage} de ${o.camp.total}` : o.free ? 'Reunião livre' : '';
+    const sub = o.limit && o.draw ? 'Acabaram os turnos com o mesmo CAIXA dos dois lados.' : o.limit ? 'Acabaram os turnos: vence quem tem mais CAIXA.' : o.win ? `${o.rival} ficou sem CAIXA.` : o.draw ? 'Ninguém levou o investimento.' : `${o.rival} leva o investimento.`;
+    const [cm, cr] = o.caixa ?? [0, 0];
+    const row = (who, v, tone) => `<div class="ov-row ${tone}"><dt><span>${esc(who)}</span></dt><dd>${m(v)}</dd></div>`;
+    let result = '';
+    if (o.training) result = '<p class="ov-note">Treino: não vale PATRIMÔNIO nem entra no histórico.</p>';
+    else if (o.gain > 0) result = `<p class="ov-gain"><span>Entra no patrimônio</span><b>+ ${m(o.gain)}</b></p>`;
+    else if (o.draw) result = '<p class="ov-note">Empate não rende investimento. As metas do mural pagam.</p>';
+    else if (!o.win) result = '<p class="ov-note">Os investidores não pagam derrota. As metas do mural pagam.</p>';
+    let camp = '';
+    if (o.camp) camp = `<p class="ov-camp"><span class="ds-formlabel">Campanha</span><span>${o.camp.finished ? 'Campanha concluída. O Conselho caiu.' : o.camp.advanced ? `Reunião ${o.camp.stage} de ${o.camp.total} vencida. A próxima porta está aberta.` : `Você continua na reunião ${o.camp.stage} de ${o.camp.total}.`}</span></p>`;
+    const again = o.training ? 'Treinar de novo' : o.camp?.finished ? 'Reunião livre' : o.camp?.advanced ? 'Próxima reunião' : o.win || o.draw ? 'Nova reunião' : 'Revanche';
+    const box = $('#over'); box.classList.remove('is-win', 'is-lose', 'is-draw'); box.classList.add('ov-screen', `is-${kind}`); // sem apagar a classe do vidro curvo
+    box.innerHTML = `<article class="ov" role="dialog" aria-modal="true" aria-labelledby="ov-t">
+      <i class="ov-staple"></i>
+      <header class="ov-bar"><span>${esc(doc)}</span>${where ? `<b>${esc(where)}</b>` : ''}</header>
+      <div class="ov-body">
+        <h2 class="ov-stamp" id="ov-t"><span>${esc(o.title)}</span></h2>
+        <p class="ov-sub">${esc(sub)}</p>
+        <dl class="ov-score"><div class="ov-row ov-row--head"><dt>Caixa final</dt><dd>${o.turns ?? 0} turnos</dd></div>
+          ${row(o.me ?? 'Sua empresa', cm, o.win ? 'is-up' : o.draw ? '' : 'is-down')}${row(o.rival ?? 'Rival', cr, '')}</dl>
+        ${result}${camp}
+      </div>
+      <nav class="ov-acts"><button class="ds-btn" data-act="quit2">Voltar ao lobby</button><button class="ds-btn ds-btn--primary" data-act="again"><span class="ds-key">Enter</span>${esc(again)}</button></nav>
+    </article>`;
+    setTimeout(() => { if ($('#modal').classList.contains('hidden')) box.querySelector('[data-act="again"]')?.focus({ preventScroll: true }); }, 50);
   }
+
 }
 export { ICON };

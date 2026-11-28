@@ -6,7 +6,7 @@
 // Quem chama é a linha do tempo de eventos do duelo (duel.js → play), que espera cada animação terminar.
 import * as THREE from 'three';
 import { tween, wait, ease, LAYER } from './gfx.js';
-import { mkCanvas, SERIF, MONO } from './textures.js';
+import { mkCanvas, SERIF, UI as MONO } from './textures.js';
 import { sfx } from './audio.js';
 import { settings } from './settings.js';
 

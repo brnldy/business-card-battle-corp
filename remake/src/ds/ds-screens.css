@@ -1,0 +1,450 @@
+/* ════════════════════════════════════════════════════════════════════════
+   Menu inicial e lobby com o design system.
+   Menu: um cartão de ponto preso com clipe (começar o jogo = bater o ponto de entrada).
+   Lobby: crachá da empresa, objetos da sala etiquetados com rotuladora, régua de atalhos como teclas.
+   O logo "BUSINESS CARD Battle Corp." e o slogan não são tocados aqui.
+   ════════════════════════════════════════════════════════════════════════ */
+
+/* ───────── menu inicial ───────── */
+.title-block nav.mn-card { position: relative; display: grid; gap: 0; width: min(360px, 100%); margin: 5px 5px 11px; background: var(--ds-tex-card); border: var(--ds-line) solid var(--ds-ink); box-shadow: var(--ds-frame); transform: rotate(-1deg); }
+.mn-card .ds-bar { min-height: 32px; } .mn-card .ds-bar b { font: 400 22px/1 var(--f-title); letter-spacing: 0.04em; }
+.mn-card .ds-clip { right: auto; left: 214px; }
+#menu .mn-card button { all: unset; box-sizing: border-box; display: grid; align-items: center; cursor: pointer; pointer-events: auto; color: var(--ds-ink); font: 700 var(--t-md)/1 var(--f-ui); letter-spacing: 0.08em; text-transform: uppercase; }
+/* a batida do ponto: a ação principal, em âmbar, com o carimbo "ENTRADA" esperando */
+#menu .mn-card .mn-punch { grid-template-columns: auto 1fr auto; gap: 14px; min-height: 72px; padding: 0 16px; font-size: 18px; background: var(--ds-tex-lines), linear-gradient(to bottom, #f9cf7c, var(--ds-amber) 60%, #dc9a2f); border-bottom: var(--ds-line) solid var(--ds-ink); }
+#menu .mn-card .mn-punch .ds-key { background: var(--ds-ink); color: var(--ds-amber); box-shadow: 0 0 0 1.5px var(--ds-amber), 0 0 0 3.5px var(--ds-ink); }
+#menu .mn-card .mn-punch i { font: 700 12px/1 var(--f-ui); font-style: normal; letter-spacing: 0.16em; padding: 6px 8px 5px; border: 2px dashed rgba(27, 20, 13, 0.55); color: rgba(27, 20, 13, 0.6); transform: rotate(-6deg); }
+#menu .mn-card .mn-punch:hover, #menu .mn-card .mn-punch:focus-visible { background: var(--ds-tex-lines), linear-gradient(to bottom, #ffe2a3, #f7c466); }
+#menu .mn-card .mn-punch:hover i, #menu .mn-card .mn-punch:focus-visible i { border: 3px solid var(--ds-red); color: var(--ds-red); background: rgba(255, 255, 255, 0.35); }
+/* linhas do cartão: número da linha, nome, anotação */
+#menu .mn-card .mn-row { grid-template-columns: 44px 1fr auto; min-height: 48px; padding-right: 16px; border-bottom: 1.5px solid rgba(27, 20, 13, 0.45); }
+#menu .mn-card .mn-row:last-child { border-bottom: none; }
+#menu .mn-card .mn-row b { align-self: stretch; display: grid; place-items: center; border-right: 1.5px solid rgba(27, 20, 13, 0.45); font: 400 22px/1 var(--f-title); color: var(--ds-ink-2); margin-right: 14px; }
+#menu .mn-card .mn-row i { font: 500 var(--t-cap)/1 var(--f-ui); font-style: normal; letter-spacing: 0.06em; text-transform: none; color: var(--ds-ink-3); }
+#menu .mn-card .mn-row:hover, #menu .mn-card .mn-row:focus-visible { background: var(--ds-amber); } #menu .mn-card .mn-row:hover b, #menu .mn-card .mn-row:hover i { color: var(--ds-ink); }
+#menu .company { display: flex; align-items: center; gap: 10px; margin-top: 26px; } #menu .company i { font-style: normal; }
+#menu .company .ds-dymo { transform: rotate(-1.5deg); }
+/* aviso de som: post-it pequeno */
+#unlock { bottom: 30px; padding: 10px 14px 8px; background: var(--ds-tex-lines), linear-gradient(160deg, #ffe680, #f4cf4a); color: var(--ds-ink); border: var(--ds-line) solid var(--ds-ink); box-shadow: 4px 5px 0 rgba(0, 0, 0, 0.45); font: 700 var(--t-sm)/1 var(--f-ui); letter-spacing: 0.06em; text-transform: uppercase; transform: translateX(-50%) rotate(-2deg); animation: none; }
+
+/* ───────── lobby ─────────
+   Discreto: a sala é a interface. Só um crachá pequeno, etiquetas finas nos objetos e o botão de sair.
+   A régua de atalhos saiu da tela (os números 1 a 9 continuam funcionando no teclado). */
+.lb-nav { display: none; }
+.lb-hint { bottom: 26px; font: 500 var(--t-cap)/1 var(--f-ui); letter-spacing: 0.14em; color: var(--ds-paper); opacity: 0.55; }
+/* crachá */
+.lb-badge { left: 30px; top: 26px; gap: 10px; padding: 8px 12px 8px 8px; background: var(--ds-tex-card); border: 1.5px solid var(--ds-ink); box-shadow: 3px 4px 0 rgba(0, 0, 0, 0.45); }
+.lb-badge:hover { border-color: var(--ds-ink); background: #fff6dc; }
+.lb-badge img { width: 34px; height: 34px; background: var(--ds-ink); border: none; padding: 3px; }
+.lb-badge b { font: 400 20px/1 var(--f-title); color: var(--ds-ink); text-shadow: none; text-transform: uppercase; word-spacing: -0.28em; }
+.lb-badge span { color: var(--ds-ink-2); font: 500 11px/1 var(--f-ui); letter-spacing: 0.1em; display: block; margin-top: 4px; }
+.lb-badge em { font: 400 18px/1 var(--f-title); color: var(--ds-ink); margin-left: 4px; }
+/* sair */
+.lb-top { right: 30px; top: 26px; }
+#lobby .lb-exit { padding: 9px 12px 8px; background: var(--ds-tex-card) !important; color: var(--ds-ink) !important; border: 1.5px solid var(--ds-ink) !important; border-radius: 0; box-shadow: 3px 4px 0 rgba(0, 0, 0, 0.45); font: 700 11px/1 var(--f-ui); letter-spacing: 0.1em; }
+#lobby .lb-exit:hover { background: var(--ds-amber) !important; }
+/* etiquetas dos objetos: uma tirinha de rotuladora; o que o objeto faz só aparece ao apontar */
+#lobby .lb-label { gap: 3px; padding: 0; background: none !important; border: none !important; justify-items: center; }
+#lobby .lb-label b { padding: 4px 8px 2px; background: #23201c; color: #efe8d6; font: 400 16px/1 var(--f-title); letter-spacing: 0.12em; border-radius: 1px; box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.45); opacity: 0.88; }
+#lobby .lb-label span { display: none; padding: 3px 7px 2px; background: var(--ds-card); color: var(--ds-ink); border: 1px solid var(--ds-ink); font: 700 10px/1 var(--f-ui); letter-spacing: 0.08em; text-transform: uppercase; }
+#lobby .lb-label::after { display: none; }
+#lobby .lb-label.is-hot b, #lobby .lb-label:hover b { background: var(--ds-amber); color: var(--ds-ink); opacity: 1; }
+#lobby .lb-label.is-hot span, #lobby .lb-label:hover span { display: block; }
+#lobby .lb-label .lb-dot { right: -6px; top: -6px; width: 10px; height: 10px; background: var(--ds-red); border: 1.5px solid var(--ds-ink); box-shadow: none; }
+/* avisos */
+.lb-toasts { bottom: 30px; right: 30px; }
+.lb-toast { padding: 9px 13px 8px; background: var(--ds-tex-card); color: var(--ds-ink); border: 1.5px solid var(--ds-ink); border-left: 8px solid var(--ds-ink-3); border-radius: 0; box-shadow: 3px 4px 0 rgba(0, 0, 0, 0.45); font-weight: 700; }
+.lb-toast b { font: 400 22px/1 var(--f-title); text-transform: uppercase; word-spacing: -0.28em; } .lb-toast span { color: var(--ds-ink-2); }
+.lb-toast.good { border-left-color: var(--ds-green); } .lb-toast.bad { border-left-color: var(--ds-red); } .lb-toast.gold { border-left-color: var(--ds-amber); background: var(--ds-tex-card); } .lb-toast.gold b { color: var(--ds-ink); }
+
+
+
+/* ───────── metas do dia: quadro de cortiça com memorandos presos por alfinete ───────── */
+.lb-box--missions { width: min(1040px, 95%); }
+.ms { display: grid; gap: var(--ds-4); }
+/* cortiça: fundo marrom pontilhado, com moldura de madeira */
+.ms-board { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 26px; padding: 34px 26px 30px; border: 10px solid #5b3d22; outline: var(--ds-line) solid var(--ds-ink); box-shadow: inset 0 0 0 var(--ds-line) var(--ds-ink), inset 0 8px 0 rgba(0, 0, 0, 0.18);
+  background: radial-gradient(circle at 20% 30%, rgba(60, 35, 12, 0.5) 0 1.5px, transparent 2px) 0 0 / 13px 11px, radial-gradient(circle at 70% 60%, rgba(255, 225, 170, 0.28) 0 1.5px, transparent 2px) 0 0 / 17px 15px, linear-gradient(to bottom, #b98652, #a47443); }
+.ms-memo { position: relative; display: grid; grid-template-rows: auto auto 1fr auto auto; gap: 10px; min-height: 250px; padding: 24px 16px 16px; background: var(--ds-tex-card); color: var(--ds-ink); border: var(--ds-line) solid var(--ds-ink); box-shadow: 5px 7px 0 rgba(40, 20, 0, 0.45); transform: rotate(-1.4deg); }
+.ms-memo:nth-child(2) { transform: rotate(1deg) translateY(8px); } .ms-memo:nth-child(3) { transform: rotate(-0.5deg) translateY(-3px); }
+.ms-memo header { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding-bottom: 8px; border-bottom: 3px solid var(--ds-ink); }
+.ms-pay { font: 400 24px/1 var(--f-title); padding: 3px 8px 1px; background: var(--ds-amber); border: 1.5px solid var(--ds-ink); }
+.ms-memo h3 { align-self: start; }
+.ms-tally { display: flex; flex-wrap: wrap; gap: 5px 6px; align-self: end; }
+.ms-tally i { width: 5px; height: 26px; background: rgba(27, 20, 13, 0.16); border-radius: 2px; transform: rotate(4deg); }
+.ms-tally i.on { background: #1f3fa8; } .ms-tally i:nth-child(5n) { margin-right: 10px; }
+.ms-count { margin: 0; font: 500 var(--t-sm)/1 var(--f-ui); color: var(--ds-ink-2); } .ms-count b { font: 400 22px/1 var(--f-title); color: var(--ds-ink); }
+.ms-memo footer { display: flex; align-items: center; min-height: 50px; padding-top: 10px; border-top: 1.5px dotted rgba(27, 20, 13, 0.5); }
+#lobby .ms-memo footer .ds-btn { width: 100%; }
+.ms-memo.is-done { box-shadow: 0 0 0 4px var(--ds-amber), 0 0 0 6px var(--ds-ink), 7px 11px 0 4px rgba(40, 20, 0, 0.45); }
+.ms-memo.is-claimed { background: var(--ds-tex-lines), #d8cdaf; } .ms-memo.is-claimed h3, .ms-memo.is-claimed .ms-count { color: var(--ds-ink-3); text-decoration: line-through; text-decoration-color: #1f3fa8; }
+.ms-memo.is-claimed .ds-stamp { color: var(--ds-green); margin: 0; }
+/* regras: uma tira, sem parágrafo */
+.ms-rules { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px; font: 700 var(--t-sm)/1 var(--f-ui); color: var(--ds-ink); }
+.ms-rules > span:not(.ds-dymo) { padding-left: 18px; position: relative; } .ms-rules > span:not(.ds-dymo)::before { content: ""; position: absolute; left: 0; top: 50%; width: 8px; height: 8px; margin-top: -4px; background: var(--ds-ink); }
+.ms-rules > b { margin-left: auto; font: 400 24px/1 var(--f-title); text-transform: uppercase; }
+.ms-rules { flex-wrap: nowrap; gap: 8px 14px; white-space: nowrap; } .ms-rules .ds-dymo { font-size: 18px; }
+
+/* menu: a numeração das linhas conta só as que estão à vista */
+#menu .mn-card { counter-reset: mn; } #menu .mn-card .mn-row:not(.hidden) { counter-increment: mn; } #menu .mn-card .mn-row b::before { content: counter(mn, decimal-leading-zero); }
+
+/* ══ lobby novo (docs/UI_LOBBY.md): piso de tamanho, carta reduzida, detalhe da carta, loja ══ */
+.lb-box--duel, .lb-box--training, .lb-box--missions, .lb-box--shop-packs, .lb-box--shop-cards, .lb-box--shop-decks, .lb-box--shop-look, .lb-box--achievements, .lb-box--deck, .lb-box--profile, .lb-box--recycle, .lb-box--slots, .lb-pack > .pk, .lb-detail > .cd { zoom: var(--lb-fix, 1); }
+#lobby :is(.lb-box--slots, .lb-box--shop-packs, .lb-box--shop-cards, .lb-box--shop-decks, .lb-box--shop-look, .lb-box--achievements, .lb-box--deck, .lb-box--profile, .lb-box--recycle, .lb-box--deck, .lb-box--profile, .lb-box--recycle, .lb-box--profile, .lb-box--recycle, .lb-box--recycle) .lb-x { width: 46px; height: 46px; font-size: 16px; }
+/* carta reduzida (R4): a mesma face da mesa do duelo */
+.ds-mini { display: block; width: 100%; aspect-ratio: 1079 / 1257; border-radius: 4.1% / 3.5%; box-shadow: 0 0 0 1.5px var(--ds-ink), 3px 4px 0 rgba(0, 0, 0, 0.35); user-select: none; }
+/* detalhe da carta (R6) */
+.lb-detail { position: absolute; inset: 0; z-index: 30; display: grid; place-items: center; background: rgba(4, 7, 5, 0.95); backdrop-filter: blur(6px); pointer-events: auto; animation: fadein 0.15s; }
+.cd { display: grid; grid-template-columns: auto minmax(0, 470px); gap: 26px; align-items: center; max-width: 94vw; }
+.cd-art { height: min(600px, 80vh); border-radius: 12px; box-shadow: 0 0 0 2px var(--ds-ink), 10px 14px 0 rgba(0, 0, 0, 0.5); transform: rotate(-1.2deg); }
+.cd-sheet { max-height: min(600px, 80vh); display: flex; flex-direction: column; } .cd-sheet .ds-body { display: grid; gap: 14px; align-content: start; overflow-y: auto; min-height: 0; }
+.cd-sheet .ds-title { font-size: 40px; line-height: 0.95; margin: 0; } .cd-kind { margin: 6px 0 0; font: 500 16px/1.3 var(--f-ui); color: var(--ds-ink-2); }
+.cd-stats { margin: 0; display: grid; grid-template-columns: repeat(3, 1fr); border: var(--ds-line) solid var(--ds-ink); background: rgba(255, 252, 240, 0.6); } .cd-stats div { padding: 9px 12px 6px; } .cd-stats div + div { border-left: var(--ds-line) solid var(--ds-ink); }
+.cd-stats dt { font: 700 13px/1 var(--f-ui); letter-spacing: 0.1em; text-transform: uppercase; color: var(--ds-ink-2); } .cd-stats dd { margin: 6px 0 0; font: 400 34px/0.9 var(--f-title); white-space: nowrap; } .cd-stats dd small { font: 700 15px/1 var(--f-ui); }
+.cd-fx { margin: 0; padding: 10px 12px; border: var(--ds-line) solid var(--ds-ink); background: rgba(255, 252, 240, 0.6); font: 700 16px/1.35 var(--f-ui); }
+.cd-rules { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; } .cd-rules li { font: 500 16px/1.45 var(--f-ui); } .cd-rules b { display: block; margin-bottom: 3px; font: 400 23px/1 var(--f-title); text-transform: uppercase; letter-spacing: 0.03em; }
+.cd-foot { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 12px; } .cd-own { margin: 0; padding-top: 14px; border-top: var(--ds-line) dashed var(--ds-ink-3); display: flex; align-items: center; gap: 10px; font: 500 16px/1 var(--f-ui); } .cd-own b { font-weight: 700; }
+.cd-pips { display: inline-flex; gap: 4px; } .cd-pips i { width: 14px; height: 20px; border: 1.5px dashed var(--ds-ink-3); } .cd-pips i.on { background: var(--ds-ink); border: 1.5px solid var(--ds-ink); }
+.cd-foot .ds-btn { height: 52px; font-size: 16px; } .cd-foot .cd-full { justify-self: center; align-self: center; }
+/* loja: o envelope em palco e as três prateleiras */
+.lb-box--shop-packs { width: min(1080px, 95%); }
+.sh { display: grid; grid-template-columns: minmax(0, 1fr) 390px; gap: var(--ds-5); align-items: stretch; }
+.sh-stage { position: relative; display: grid; justify-items: center; align-content: center; gap: 30px; min-height: 430px; padding: 34px 20px 30px; background: var(--ds-tex-card); border: var(--ds-line) solid var(--ds-ink); box-shadow: var(--ds-frame-in), 6px 9px 0 rgba(40, 24, 6, 0.3); }
+.sh-env { position: relative; } .sh-env > i { position: absolute; left: -46px; top: 14px; bottom: 0; width: 340px; background: var(--ds-tex-kraft); border: var(--ds-line) solid var(--ds-ink); filter: brightness(0.74); transform: scale(0.88); transform-origin: left bottom; } .sh-env > i:nth-child(2) { left: -24px; filter: brightness(0.86); transform: scale(0.94); }
+.sh-buy { display: flex; gap: 12px; } .sh-buy .ds-btn { min-width: 220px; font-size: 18px; }
+#lobby .sh-q { position: absolute; right: 16px; top: 16px; height: 44px; border-radius: 50%; font: 400 26px/1 var(--f-title); } #lobby .sh-q.on { background: var(--ds-ink); color: var(--ds-paper); }
+.sh-odds { position: absolute; right: 16px; top: 72px; z-index: 2; width: 230px; display: grid; gap: 6px; padding: 16px 16px 14px; transform: rotate(1.5deg); }
+.sh-odds b { font: 400 22px/1 var(--f-title); text-transform: uppercase; } .sh-odds p { margin: 0; display: flex; justify-content: space-between; font: 500 16px/1.2 var(--f-ui); border-bottom: 1px dashed rgba(27, 20, 13, 0.4); padding-bottom: 4px; } .sh-odds em { font: 400 22px/0.9 var(--f-title); font-style: normal; } .sh-odds small { font: 500 14px/1.3 var(--f-ui); }
+.sh-shelves { display: grid; grid-auto-rows: 1fr; gap: var(--ds-3); }
+#lobby button.sh-shelf { all: unset; box-sizing: border-box; cursor: pointer; pointer-events: auto; position: relative; display: grid; grid-template-columns: 116px minmax(0, 1fr) auto; align-items: center; gap: 12px; padding: 10px 12px 10px 12px; min-height: 126px; background: var(--ds-tex-card); color: var(--ds-ink); border: var(--ds-line) solid var(--ds-ink); box-shadow: 4px 6px 0 rgba(40, 24, 6, 0.3); transition: transform 0.1s; }
+#lobby button.sh-shelf:hover, #lobby button.sh-shelf:focus-visible { transform: translate(-2px, -2px); box-shadow: 6px 8px 0 rgba(40, 24, 6, 0.4); background: var(--ds-tex-card), var(--ds-amber); background-blend-mode: multiply; }
+.sh-shelf .ds-dymo { justify-self: start; font-size: 20px; letter-spacing: 0.08em; padding: 6px 10px 3px; white-space: nowrap; } .sh-shelf > i { font: 400 34px/1 var(--f-title); font-style: normal; color: var(--ds-ink-2); }
+.sh-pic { display: grid; place-items: center; height: 104px; }
+.sh-fan { position: relative; width: 112px; height: 100px; } .sh-fan img { position: absolute; left: 22px; top: 6px; width: 68px; transform: rotate(-12deg) translateX(-22px); } .sh-fan img:nth-child(2) { transform: translateY(-4px); } .sh-fan img:nth-child(3) { transform: rotate(12deg) translateX(22px); }
+.sh-box { position: relative; width: 112px; height: 100px; } .sh-box img { position: absolute; left: 30px; top: 0; width: 52px; transform: rotate(-9deg) translateX(-18px); } .sh-box img:nth-child(2) { transform: none; } .sh-box img:nth-child(3) { transform: rotate(9deg) translateX(18px); }
+.sh-box u { position: absolute; left: 6px; right: 6px; bottom: 0; height: 56px; display: grid; place-items: center; background: var(--ds-tex-kraft); border: var(--ds-line) solid var(--ds-ink); text-decoration: none; font: 400 20px/1 var(--f-title); letter-spacing: 0.16em; text-transform: uppercase; }
+.sh-look { position: relative; width: 112px; height: 100px; } .sh-look img { position: absolute; border: var(--ds-line) solid var(--ds-ink); } .sh-look img:first-child { left: 0; top: 14px; width: 66px; height: 66px; background: var(--ds-card); padding: 6px; transform: rotate(-5deg); } .sh-look img:last-child { right: 0; top: 4px; width: 62px; height: 88px; object-fit: cover; transform: rotate(6deg); }
+/* voltar das prateleiras antigas */
+.lb-tabs__here { align-self: center; margin-left: 12px; font: 700 var(--t-sm) var(--f-ui); letter-spacing: 0.08em; text-transform: uppercase; color: var(--cream); }
+/* abertura do envelope */
+.pk { display: grid; justify-items: center; gap: 44px; }
+.pk-env { position: absolute; left: 50%; top: 50%; margin: -115px 0 0 -170px; pointer-events: none; animation: pk-rip 0.7s cubic-bezier(0.5, 0, 0.8, 0.3) both; } 
+@keyframes pk-rip { 0% { transform: scale(0.9); opacity: 1; } 35% { transform: scale(1.04) rotate(-3deg); } 55% { transform: scale(1.04) rotate(3deg); opacity: 1; } 100% { transform: translateY(70vh) rotate(18deg); opacity: 0; } }
+.pk-row { display: flex; gap: 34px; padding-bottom: 64px; }
+#lobby button.pk-card { all: unset; box-sizing: border-box; pointer-events: auto; cursor: pointer; position: relative; width: clamp(200px, 17vw, 250px); aspect-ratio: 1079 / 1257; perspective: 900px; animation: pk-drop 0.45s 0.5s both; } #lobby button.pk-card:nth-child(2) { animation-delay: 0.6s; } #lobby button.pk-card:nth-child(3) { animation-delay: 0.7s; }
+@keyframes pk-drop { from { transform: translateY(-50px); opacity: 0; } }
+.pk-in { position: absolute; inset: 0; transform-style: preserve-3d; transition: transform 0.55s cubic-bezier(0.2, 0.8, 0.2, 1); } .pk-card.on .pk-in { transform: rotateY(180deg); } .pk-card:not(.on):hover .pk-in { transform: translateY(-8px); }
+.pk-back, .pk-front { position: absolute; inset: 0; width: 100%; height: 100%; backface-visibility: hidden; -webkit-backface-visibility: hidden; } .pk-back { object-fit: cover; border-radius: 4.1% / 3.5%; box-shadow: 0 0 0 2px var(--ds-ink), 8px 12px 0 rgba(0, 0, 0, 0.5); } .pk-front { transform: rotateY(180deg); }
+.pk-card.on.pk-card--rare .pk-front { filter: drop-shadow(0 0 22px rgba(111, 183, 255, 0.85)); } .pk-card.on.pk-card--legendary .pk-front { filter: drop-shadow(0 0 30px rgba(242, 185, 76, 1)); animation: pk-shine 1.4s infinite; }
+@keyframes pk-shine { 50% { filter: drop-shadow(0 0 46px rgba(255, 214, 120, 1)); } }
+.pk-tag { position: absolute; right: -18px; top: -20px; z-index: 2; } .pk-tag .ds-stamp { background: var(--ds-card); opacity: 1; font-size: 17px; animation: pk-stamp 0.25s 0.45s both; } @keyframes pk-stamp { from { transform: scale(2.2) rotate(-7deg); opacity: 0; } }
+.pk-name { position: absolute; left: -10px; right: -10px; top: calc(100% + 16px); text-align: center; font: 400 26px/1 var(--f-title); font-style: normal; text-transform: uppercase; letter-spacing: 0.03em; color: var(--ds-paper); }
+.pk .ds-btn--lg { min-width: 260px; font-size: 18px; }
+:is(.lb-box--shop-packs, .lb-box--shop-cards) .lb-pat { font-size: 13px; letter-spacing: 0.14em; }
+
+/* envelope pardo (peça nova): aba em V clara com contorno e sombra, dobras do fundo, fecho de botão e barbante */
+.ds-env { position: relative; width: 340px; height: 230px; background: var(--ds-tex-kraft); border: var(--ds-line) solid var(--ds-ink); box-shadow: 7px 9px 0 rgba(27, 20, 13, 0.32); }
+.ds-env svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.ds-env__fold { fill: none; stroke: rgba(27, 20, 13, 0.42); stroke-width: 1.5; }
+.ds-env__shade { fill: rgba(27, 20, 13, 0.3); }
+.ds-env__flap { fill: #e2c896; stroke: var(--ds-ink); stroke-width: 2.5; stroke-linejoin: round; }
+.ds-env__edge { fill: none; stroke: rgba(255, 248, 225, 0.75); stroke-width: 2; }
+.ds-env__label { position: absolute; left: 18px; bottom: 14px; padding: 7px 12px 5px; background: var(--ds-tex-card); border: 1.5px solid var(--ds-ink); font: 700 14px/1 var(--f-ui); letter-spacing: 0.1em; text-transform: uppercase; color: var(--ds-ink); transform: rotate(-2deg); box-shadow: 2px 2px 0 rgba(27, 20, 13, 0.25); }
+.sh-env > i { height: auto; }
+/* loja → cartas avulsas: vitrine de cartas reduzidas */
+.cd-full { margin: 0 6px; }
+
+
+/* ── loja → cartas avulsas: vitrine em grade à esquerda, ficha da carta sempre à direita (27/11) ── */
+:is(.lb-box--shop-cards, .lb-box--shop-decks, .lb-box--shop-look, .lb-box--achievements, .lb-box--deck, .lb-box--profile, .lb-box--recycle, .lb-box--slots, .lb-box--deck, .lb-box--profile, .lb-box--recycle, .lb-box--profile, .lb-box--recycle, .lb-box--recycle) { width: min(1180px, 96%); height: min(770px, 90%); max-height: none; display: flex; flex-direction: column; }
+:is(.lb-box--shop-cards, .lb-box--shop-decks, .lb-box--shop-look, .lb-box--achievements, .lb-box--deck, .lb-box--profile, .lb-box--recycle, .lb-box--slots, .lb-box--deck, .lb-box--profile, .lb-box--recycle, .lb-box--profile, .lb-box--recycle, .lb-box--recycle) > header { padding: 14px 0 12px; }
+.sc { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) 388px; gap: var(--ds-5); }
+.sc-shelf { min-height: 0; display: grid; grid-template-rows: auto minmax(0, 1fr); background: var(--ds-tex-card); border: var(--ds-line) solid var(--ds-ink); box-shadow: var(--ds-frame-in); }
+.sc-tools { display: flex; align-items: center; justify-content: space-between; gap: var(--ds-4); margin: 0 var(--ds-5); padding: 14px 0 12px; border-bottom: 1.5px dashed var(--ds-ink-3); } .sc-tools b { font: 400 22px/1 var(--f-title); letter-spacing: 0.06em; text-transform: uppercase; color: var(--ds-ink-2); }
+.sc-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px 6px; align-content: start; padding: 14px 14px var(--ds-5); overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--ds-ink) rgba(27, 20, 13, 0.12); }
+.sc-item { display: grid; gap: 10px; align-content: start; padding: 12px 12px 10px; border-radius: 3px; border: var(--ds-line) solid transparent; }
+.is-view:is(.sc-item, .rd-item, .lk-item, .tf-item, .fd-item, .al-item, .rc-item) { border: var(--ds-line) dashed var(--ds-ink-3); }
+.sc-item.is-sel { background: var(--ds-tex-lines), var(--ds-amber); border: var(--ds-line) solid var(--ds-ink); box-shadow: 3px 4px 0 rgba(27, 20, 13, 0.3); }
+#lobby button.sc-card { all: unset; box-sizing: border-box; pointer-events: auto; cursor: pointer; position: relative; display: block; transition: transform 0.1s; } #lobby button.sc-card:hover, #lobby button.sc-card:focus-visible { transform: translateY(-4px) rotate(-0.6deg); }
+.sc-item--rare .ds-mini { box-shadow: 0 0 0 1.5px var(--ds-ink), 0 0 0 4px #5aa2e6, 0 0 0 5.5px var(--ds-ink), 4px 6px 0 rgba(0, 0, 0, 0.3); } .sc-item--legendary .ds-mini { box-shadow: 0 0 0 1.5px var(--ds-ink), 0 0 0 4px var(--ds-amber), 0 0 0 5.5px var(--ds-ink), 4px 6px 0 rgba(0, 0, 0, 0.3); }
+.sc-item.is-sel.sc-item--legendary .ds-mini { box-shadow: 0 0 0 1.5px var(--ds-ink), 0 0 0 4px var(--ds-card), 0 0 0 5.5px var(--ds-ink), 4px 6px 0 rgba(0, 0, 0, 0.3); }
+.sc-item.is-full .ds-mini { filter: grayscale(1) opacity(0.5); }
+.sc-meta { display: flex; align-items: center; justify-content: space-between; gap: 6px; min-height: 34px; }
+.sc-done { font: 700 12px/1 var(--f-ui); font-style: normal; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ds-ink-2); }
+.sc-none { grid-column: 1 / -1; margin: 60px 0; text-align: center; font: 500 16px/1.4 var(--f-ui); color: var(--ds-ink-2); }
+.sc-view { min-height: 0; display: flex; } .sc-view > .ds-file { flex: 1; margin: 0 5px 8px 0; }
+button.ds-check { background: none; border: none; padding: 6px 0; pointer-events: auto; font-size: 14px; color: var(--ds-ink); } button.ds-check:hover::before { background: var(--ds-amber); }
+
+/* ── abas no topo das janelas (peça .ds-tabs no lugar da etiqueta com o nome do lugar) ── */
+.lb-htabs { position: absolute; left: 22px; bottom: 100%; z-index: 1; padding: 0; gap: 5px; align-items: flex-end; border-bottom: none; }
+#lobby .lb-htabs .ds-tab { height: 34px; margin: 0; padding: 2px 18px 0; background: linear-gradient(rgba(27, 20, 13, 0.2), rgba(27, 20, 13, 0.34)), var(--ds-tex-kraft); color: var(--ds-ink); border: var(--ds-line) solid var(--ds-ink); border-radius: 7px 11px 0 0; font: 700 13px/1 var(--f-ui); letter-spacing: 0.12em; text-transform: uppercase; white-space: nowrap; }
+#lobby .lb-htabs .ds-tab:hover:not(.is-on) { background: linear-gradient(rgba(242, 185, 76, 0.5), rgba(242, 185, 76, 0.5)), var(--ds-tex-kraft); }
+#lobby .lb-htabs .ds-tab.is-on { height: 42px; padding-bottom: 2px; background: var(--ds-tex-kraft); border-bottom-color: transparent; cursor: default; }
+
+/* ── loja → decks prontos: caixas-arquivo no topo, cartas por tipo, guia de remessa ao lado ── */
+.rd-shelf { grid-template-rows: auto minmax(0, 1fr); }
+.rd-boxes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--ds-3); margin: 0 var(--ds-5); padding: var(--ds-4) 0 var(--ds-4); border-bottom: 1.5px dashed var(--ds-ink-3); }
+.rd-list { overflow-y: auto; padding: 4px 14px var(--ds-5); scrollbar-width: thin; scrollbar-color: var(--ds-ink) rgba(27, 20, 13, 0.12); }
+.sv-h { display: flex; align-items: baseline; gap: 10px; margin: var(--ds-4) 12px 0; font: 400 20px/1 var(--f-title); letter-spacing: 0.06em; text-transform: uppercase; color: var(--ds-ink-2); }
+.sv-h em { font: 700 12px/1 var(--f-ui); font-style: normal; letter-spacing: 0.08em; color: var(--ds-ink-3); }
+.rd-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px 6px; }
+.rd-item { padding: 12px; border: var(--ds-line) solid transparent; border-radius: 3px; cursor: default; outline: none; } .rd-item:focus-visible { border-color: var(--ds-ink); }
+.rd-card { position: relative; display: block; }
+.rd-card .ds-qty { position: absolute; right: -8px; bottom: -15px; }
+.rd-new { position: absolute; right: -12px; top: 24%; transform: rotate(8deg); margin: 0; background: var(--ds-card); opacity: 1; font-size: 12px; padding: 5px 7px 4px; }
+.rd-item.sc-item--rare .ds-mini { box-shadow: 0 0 0 1.5px var(--ds-ink), 0 0 0 4px #5aa2e6, 0 0 0 5.5px var(--ds-ink), 4px 6px 0 rgba(0, 0, 0, 0.3); } .rd-item.sc-item--legendary .ds-mini { box-shadow: 0 0 0 1.5px var(--ds-ink), 0 0 0 4px var(--ds-amber), 0 0 0 5.5px var(--ds-ink), 4px 6px 0 rgba(0, 0, 0, 0.3); }
+
+/* ── loja → visual: logos e versos em grade, prova de gráfica ao lado ── */
+.lk-list { overflow-y: auto; padding: 4px 14px var(--ds-5); scrollbar-width: thin; scrollbar-color: var(--ds-ink) rgba(27, 20, 13, 0.12); }
+.lk-grid { display: grid; gap: 6px; } .lk-grid--logo { grid-template-columns: repeat(5, minmax(0, 1fr)); } .lk-grid--back { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.lk-item { display: grid; gap: 10px; align-content: start; padding: 12px 10px 10px; border: var(--ds-line) solid transparent; border-radius: 3px; }
+.lk-item.is-sel { background: var(--ds-tex-lines), var(--ds-amber); border: var(--ds-line) solid var(--ds-ink); box-shadow: 3px 4px 0 rgba(27, 20, 13, 0.3); }
+#lobby button.lk-pick { all: unset; box-sizing: border-box; pointer-events: auto; cursor: pointer; display: block; transition: transform 0.1s; } #lobby button.lk-pick:hover, #lobby button.lk-pick:focus-visible { transform: translateY(-3px) rotate(-0.8deg); }
+.lk-logo { display: grid; place-items: center; aspect-ratio: 1; background: var(--ds-card); border: var(--ds-line) solid var(--ds-ink); border-radius: 50%; box-shadow: 3px 4px 0 rgba(27, 20, 13, 0.3); } .lk-logo img { width: 74%; }
+.lk-back { display: block; width: 100%; aspect-ratio: 270 / 314; object-fit: cover; border-radius: 6px; box-shadow: 0 0 0 1.5px var(--ds-ink), 3px 4px 0 rgba(0, 0, 0, 0.3); }
+.lk-item .sc-meta { justify-content: center; min-height: 30px; }
+.lk-on, .lk-own { font: 700 12px/1 var(--f-ui); font-style: normal; letter-spacing: 0.1em; text-transform: uppercase; } .lk-on { padding: 6px 8px 5px; background: var(--ds-ink); color: var(--ds-card); border-radius: 2px; } .lk-own { color: var(--ds-ink-2); }
+
+/* ── troféus: placas de mérito ── */
+.tf-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; align-content: start; padding: 14px 14px var(--ds-5); overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--ds-ink) rgba(27, 20, 13, 0.12); }
+.tf-item { padding: 10px; border: var(--ds-line) solid transparent; border-radius: 3px; }
+.tf-item.is-sel { background: var(--ds-tex-lines), var(--ds-amber); border: var(--ds-line) solid var(--ds-ink); box-shadow: 3px 4px 0 rgba(27, 20, 13, 0.3); }
+.ds-trfile > .ds-body { grid-template-rows: auto auto auto minmax(0, 1fr); } .ds-trfile .ds-file__foot { align-self: end; }
+.ds-trfile__plaque { display: grid; place-items: center; padding: 8px 0 4px; }
+
+/* ── cabeçalho das janelas: topo de formulário dentro da pasta ── */
+#lobby .lb-box > header.lb-head { display: block; padding: 22px 0 var(--ds-5); border: none; }
+#lobby .lb-box > header.lb-head--slip { padding: 20px 0 22px; }
+#lobby .lb-head .lb-x { width: 46px; height: 46px; font-size: 16px; }
+/* o ✕ do cabeçalho: a regra genérica de botão do lobby.css (mais forte) apagava a borda no hover */
+#lobby .lb-head button.lb-x:hover:not(:disabled), #lobby .lb-head button.lb-x:focus-visible { background: var(--ds-ink); color: var(--ds-paper); border-color: var(--ds-ink); }
+
+/* ── tamanho único das janelas novas (27/11, pedido do autor): a pasta não muda de tamanho entre abas nem entre janelas,
+   então as abas não pulam. O conteúdo de cada tela ocupa a pasta. ── */
+:is(.lb-box--duel, .lb-box--training, .lb-box--missions, .lb-box--achievements, .lb-box--deck, .lb-box--profile, .lb-box--recycle, .lb-box--slots, .lb-box--shop-packs, .lb-box--shop-cards, .lb-box--shop-decks, .lb-box--shop-look) { width: min(1180px, 96%); height: min(770px, 90%); max-height: none; display: flex; flex-direction: column; }
+/* metas: a cortiça ocupa a pasta e os memorandos ficam no meio dela */
+.ms { grid-template-rows: minmax(0, 1fr) auto; } .ms-board { align-items: center; }
+.ms, .sh { flex: 1; min-height: 0; }
+
+/* ── Campanha e Treino (27/11, refeitas para a pasta única): objeto à esquerda, convocação à direita (a mesma coluna
+   da ficha da Loja, então o botão principal fica sempre no mesmo lugar) ── */
+.cg { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) 388px; gap: var(--ds-5); padding-top: 12px; }
+.cg > .ds-invite { min-height: 0; margin: 0 5px 8px 0; }
+#lobby .cg-swap { height: 34px; padding: 0 14px; margin-bottom: 4px; font-size: 13px; }
+/* treino: o crachá e o bilhete soltos no mata-borrão */
+.tw-desk { display: grid; grid-template-columns: auto auto; justify-content: center; align-content: center; align-items: center; gap: 56px; }
+.tw-note { width: 230px; min-height: 190px; transform: rotate(4deg); font: 700 16px/1.35 var(--f-ui); }
+.tw-note em { margin-top: 8px; font: 500 13px/1 var(--f-ui); font-style: normal; color: var(--ds-ink-2); }
+.tw-no { display: grid; gap: 10px; align-content: start; }
+.tw-no ul { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 10px 16px; }
+.tw-no li { display: flex; align-items: center; gap: 8px; font: 700 14px/1 var(--f-ui); color: var(--ds-ink-2); }
+.tw-no li span { position: relative; } .tw-no li span::after { content: ""; position: absolute; left: -3px; right: -3px; top: 48%; height: 2px; background: var(--ds-red); transform: rotate(-3deg); }
+.tw-x { width: 18px; height: 18px; flex: none; background: linear-gradient(45deg, transparent 43%, var(--ds-red) 43% 57%, transparent 57%), linear-gradient(-45deg, transparent 43%, var(--ds-red) 43% 57%, transparent 57%), var(--ds-card); border: var(--ds-line) solid var(--ds-ink); }
+
+
+/* ══ Decks (27/11): gaveta de pastas, editor e álbum. Mesmo idioma da Loja: objeto à esquerda, ficha de ação à direita ══ */
+/* ferramentas da grade (editor e álbum) */
+.ed-tools { display: flex; align-items: center; gap: 10px; margin: 0 var(--ds-5); padding: 12px 0; border-bottom: 1.5px dashed var(--ds-ink-3); }
+.ed-tools .ds-search { flex: 1; min-width: 110px; }
+.ed-seg { flex: none; } .ed-tools .ds-more { margin-left: auto; } .ed-tools .ds-seg + .ds-more { margin-left: 0; }
+.al-count { margin-left: auto; font: 400 20px/1 var(--f-title); letter-spacing: 0.04em; color: var(--ds-ink-2); white-space: nowrap; }
+/* gaveta */
+.fd-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; align-content: start; padding: 18px 14px var(--ds-5); overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--ds-ink) rgba(27, 20, 13, 0.12); }
+.fd-item { padding: 10px 12px 12px; border: var(--ds-line) solid transparent; border-radius: 3px; }
+.fd-item.is-sel { background: var(--ds-tex-lines), var(--ds-amber); border-color: var(--ds-ink); box-shadow: 3px 4px 0 rgba(27, 20, 13, 0.3); }
+.fd-tip { font: 500 13px/1 var(--f-ui); color: var(--ds-ink-2); }
+.fd-file > .ds-body { grid-template-rows: auto auto minmax(0, 1fr) auto; }
+.fd-warn { color: var(--ds-red) !important; font-weight: 700; }
+.fd-faces { display: flex; justify-content: center; align-items: center; min-height: 0; padding: 4px 0; }
+.fd-faces .ds-mini { width: 92px; margin: 0 -10px; transform-origin: 50% 100%; } .fd-faces .ds-mini:nth-child(1) { transform: rotate(-8deg); } .fd-faces .ds-mini:nth-child(2) { z-index: 1; transform: translateY(-6px); } .fd-faces .ds-mini:nth-child(3) { transform: rotate(8deg); }
+.fd-foot { gap: var(--ds-3); }
+.fd-minor { display: flex; flex-wrap: wrap; gap: 4px 18px; } #lobby .fd-minor .ds-btn--link { min-height: 32px; padding: 0; font-size: 13px; color: var(--ds-ink-2); border-bottom-color: transparent; } #lobby .fd-minor .ds-btn--link:hover:not(:disabled) { color: var(--ds-ink); border-bottom-color: currentColor; } #lobby .fd-minor .ds-btn--link:disabled { opacity: 0.4; }
+.fd-main { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 10px; align-items: center; } .fd-main .ds-stamp { justify-self: center; margin: 0; }
+/* álbum */
+.al-item { display: grid; gap: 10px; align-content: start; padding: 12px 12px 10px; border-radius: 3px; border: var(--ds-line) solid transparent; }
+.al-item.is-sel { background: var(--ds-tex-lines), var(--ds-amber); border: var(--ds-line) solid var(--ds-ink); box-shadow: 3px 4px 0 rgba(27, 20, 13, 0.3); }
+.al-meta { justify-content: flex-start; gap: 10px; min-height: 22px; } .al-miss { font: 700 12px/1 var(--f-ui); font-style: normal; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ds-ink-2); }
+/* editor */
+.ed-shelf { position: relative; grid-template-rows: auto minmax(0, 1fr) auto; }
+.ed-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px 6px; align-content: start; padding: 14px 14px 18px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--ds-ink) rgba(27, 20, 13, 0.12); }
+.ed-item { display: grid; gap: 8px; align-content: start; padding: 10px 10px 8px; border: var(--ds-line) solid transparent; border-radius: 3px; }
+.ed-item.is-in { background: var(--ds-tex-lines), rgba(242, 185, 76, 0.3); border-color: rgba(27, 20, 13, 0.3); }
+.ed-item.is-missing .ds-mini { filter: grayscale(1) opacity(0.5); }
+#lobby button.ed-card { all: unset; box-sizing: border-box; pointer-events: auto; cursor: pointer; position: relative; display: block; transition: transform 0.1s; } #lobby button.ed-card:hover, #lobby button.ed-card:focus-visible { transform: translateY(-4px) rotate(-0.6deg); }
+.ed-item.sc-item--rare .ds-mini { box-shadow: 0 0 0 1.5px var(--ds-ink), 0 0 0 4px #5aa2e6, 0 0 0 5.5px var(--ds-ink), 4px 6px 0 rgba(0, 0, 0, 0.3); } .ed-item.sc-item--legendary .ds-mini { box-shadow: 0 0 0 1.5px var(--ds-ink), 0 0 0 4px var(--ds-amber), 0 0 0 5.5px var(--ds-ink), 4px 6px 0 rgba(0, 0, 0, 0.3); }
+.ed-hint { margin: 0 var(--ds-5); padding: 9px 0 11px; border-top: 1.5px dashed var(--ds-ink-3); font: 500 13px/1 var(--f-ui); color: var(--ds-ink-2); }
+/* destaque da carta (R6): ficha de papel por cima da prateleira, do lado oposto ao do mouse */
+.ed-side { min-height: 0; margin: 0 5px 8px 0; } .ed-side > .ds-body { grid-template-rows: auto minmax(0, 1fr) auto; }
+.ed-top { display: grid; gap: 8px; }
+.ed-name { width: 100%; box-sizing: border-box; padding: 2px 0 4px; background: none; border: none; border-bottom: 2px dashed var(--ds-ink-3); font: 400 28px/1 var(--f-title); letter-spacing: 0.02em; text-transform: uppercase; color: var(--ds-ink); outline: none; pointer-events: auto; }
+.ed-name:hover { border-bottom-color: var(--ds-ink); } .ed-name:focus { border-bottom: 2px solid var(--ds-amber); background: rgba(242, 185, 76, 0.15); }
+.ed-count { display: flex; align-items: baseline; gap: 4px; }
+.ed-count b { font: 400 54px/0.9 var(--f-title); color: var(--ds-ink); } .ed-count span { font: 400 26px/1 var(--f-title); color: var(--ds-ink-2); }
+.ed-count small { margin-left: auto; padding: 5px 8px 4px; border: var(--ds-line) solid currentColor; border-radius: 2px; font: 700 12px/1 var(--f-ui); letter-spacing: 0.12em; text-transform: uppercase; }
+.ed-count.is-ok small { color: var(--ds-green); } .ed-count.is-short small { color: var(--ds-ink-2); } .ed-count.is-bad small, .ed-count.is-bad b { color: var(--ds-red); }
+.ed-err { margin: 0; font: 700 13px/1.35 var(--f-ui); color: var(--ds-red); }
+.ed-list { list-style: none; margin: 0 -6px; padding: 0 4px 0 0; min-height: 0; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--ds-ink) transparent; }
+.ed-group { display: flex; justify-content: space-between; align-items: baseline; margin-top: 10px; padding: 0 6px 4px; border-bottom: var(--ds-line) solid var(--ds-ink); font: 700 12px/1 var(--f-ui); letter-spacing: 0.12em; text-transform: uppercase; color: var(--ds-ink-2); } .ed-group:first-child { margin-top: 0; } .ed-group em { font: 400 18px/1 var(--f-title); font-style: normal; color: var(--ds-ink); }
+.ed-new, .ed-warn { flex: none; padding: 3px 6px 2px; border-radius: 2px; font: 700 12px/1 var(--f-ui); font-style: normal; letter-spacing: 0.06em; text-transform: uppercase; } .ed-new { background: var(--ds-amber); color: var(--ds-ink); } .ed-warn { background: var(--ds-red); color: #fff; }
+.ed-empty { padding: 14px 6px; font: 500 14px/1.4 var(--f-ui); color: var(--ds-ink-2); }
+.ed-foot { gap: var(--ds-3); }
+/* correções da primeira rodada: a prateleira não cresce além da coluna; links do rodapé não viram botões grandes */
+.sc > .sc-shelf, .sc > .sc-view, .sc > .ed-side { min-width: 0; }
+#lobby .ds-file__foot .fd-minor .ds-btn--link { width: auto; height: auto; min-height: 32px; margin: 0; padding: 0; background: none; box-shadow: none; font-size: 13px; }
+#lobby .ds-btn[hidden] { display: none; }
+#lobby input.ed-name { height: auto; background: none; color: var(--ds-ink); border: none; border-bottom: 2px dashed var(--ds-ink-3); border-radius: 0; box-shadow: none; }
+#lobby input.ed-name:hover { border-bottom-color: var(--ds-ink); } #lobby input.ed-name:focus { border-bottom: 2px solid var(--ds-amber); background: rgba(242, 185, 76, 0.15); }
+#lobby input.ds-search { color: var(--ds-ink); }
+.fd-file > .ds-body { grid-template-rows: auto auto 1fr auto; } .fd-file .fd-faces { align-self: center; }
+.fd-faces .ds-mini { width: 74px; margin: 0 -8px; }
+.sc-shelf { grid-template-columns: minmax(0, 1fr); }
+/* rodapé do editor: os links numa linha só em cima, a ação principal larga embaixo */
+.ed-foot { gap: 8px; grid-template-columns: minmax(0, 1fr); } .ed-foot .fd-minor { flex-wrap: wrap; gap: 0 18px; } .ed-foot > .ds-stamp { justify-self: center; margin: 0; font-size: 13px; }
+/* avisos com uma janela aberta: no centro do topo, acima da pasta (o canto de baixo à direita é a coluna da ficha, onde fica o botão principal) */
+#lobby.is-open .lb-toasts, #lobby.is-open[data-panel] .lb-toasts { gap: 10px; top: 10px; bottom: auto; left: 50%; right: auto; transform: translateX(-50%); align-items: center; }
+
+
+/* ── Decks, 2ª rodada (27/11): + e − explícitos, ficha enxuta, destaque compacto, barra de cima chapada ── */
+/* barra de cima: controles da mesma altura (36 px), chapados; a volta é um link de navegação separado por um fio */
+#lobby .ed-tools .ed-back { box-sizing: border-box; height: 36px; padding: 0 12px 0 6px; margin: 0; background: none; border: var(--ds-line) solid transparent; border-radius: var(--ds-r); box-shadow: none; font: 700 13px/1 var(--f-ui); letter-spacing: 0.08em; text-transform: uppercase; color: var(--ds-ink); white-space: nowrap; }
+#lobby .ed-tools .ed-back:hover { background: var(--ds-amber); border-color: var(--ds-ink); color: var(--ds-ink); }
+.ed-sep { flex: none; width: 2px; height: 24px; background: var(--ds-ink-3); }
+.ed-tools .ds-search { height: 36px; }
+.ed-tools .ds-seg .ds-seg__btn { height: 32px; }
+#lobby .ed-tools .ds-more__btn { height: 36px; width: 40px; margin: 0; border-width: var(--ds-line); box-shadow: none; }
+/* grade do editor: casas de cópia à esquerda, − e + à direita */
+.ed-item .sc-meta { gap: 6px; }
+.ed-hint { font-size: 13px; }
+/* lista do deck: quantidade, nome e − + em cada linha */
+.ed-row { display: flex; align-items: center; gap: 8px; min-height: 36px; padding: 2px 6px; border-bottom: 1px dashed rgba(27, 20, 13, 0.25); font: 600 14px/1.2 var(--f-ui); color: var(--ds-ink); }
+.ed-row > b { flex: none; width: 26px; font: 400 18px/1 var(--f-title); } .ed-row__name { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ed-row.is-short { color: var(--ds-red); } .ed-row .ds-stepper { margin-left: auto; box-shadow: none; }
+/* deck em montagem: topo mais baixo, para a lista ganhar linhas */
+#lobby input.ed-name { font-size: 24px; } .ed-count b { font-size: 44px; } .ed-count span { font-size: 22px; } .ed-top { gap: 6px; }
+/* destaque compacto: ficha pequena colada na carta apontada (posição calculada no peek) */
+.ed-peek { position: absolute; z-index: 5; width: 300px; max-height: calc(100% - 20px); display: none; flex-direction: column; pointer-events: none; }
+.ed-peek.is-on { display: flex; } .ed-peek > .ds-file { flex: 0 1 auto; min-height: 0; margin: 0; box-shadow: var(--ds-frame-in), 7px 10px 0 rgba(27, 20, 13, 0.35); }
+/* pé do deck em montagem: links e o carimbo "No duelo" na mesma linha; um botão de ação ocupa a largura toda */
+.ed-foot { display: flex !important; flex-wrap: wrap; align-items: center; justify-content: space-between; } .ed-foot > .ds-btn { flex: 1 1 100%; } .ed-foot > .ds-stamp { flex: none; }
+/* dica do rodapé do editor: três pedaços separados por espaço (sem ponto do meio) */
+.ed-hint { display: flex; gap: 22px; }
+
+
+/* ══ Perfil (27/11): contrato social e extrato impresso ══ */
+.pf-file > .ds-body { grid-template-rows: auto auto 1fr auto; }
+.pf-list { margin: 0; display: grid; }
+.pf-list div { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 6px 2px 5px; border-bottom: 1px dashed rgba(27, 20, 13, 0.3); }
+.pf-list dt { font: 600 14px/1.2 var(--f-ui); color: var(--ds-ink-2); } .pf-list dd { margin: 0; font: 400 22px/1 var(--f-title); white-space: nowrap; }
+.pf-fav { display: flex; gap: 14px; align-items: center; } .pf-fav .ds-mini { width: 56px; flex: none; }
+.pf-fav > span { display: grid; gap: 4px; min-width: 0; } .pf-fav b { font: 400 20px/1 var(--f-title); text-transform: uppercase; } .pf-fav small { font: 500 13px/1.2 var(--f-ui); color: var(--ds-ink-2); }
+.pf-foot { align-self: end; }
+#lobby .fd-minor .pf-wipe { color: var(--ds-red); } #lobby .fd-minor .pf-wipe:hover:not(:disabled) { color: var(--ds-red); }
+/* extrato: o papel rola dentro da pasta (os furos andam junto com o papel) */
+.pf-paper { min-height: 0; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--ds-ink) rgba(27, 20, 13, 0.12); box-shadow: 6px 8px 0 rgba(0, 0, 0, 0.35); }
+.pf-ledger { min-height: 100%; box-sizing: border-box; box-shadow: none; font-size: 19px; text-transform: uppercase; }
+.pf-ledger > .pf-top { padding-top: 0; }
+.pf-ledger > .pf-row { display: grid; grid-template-columns: 56px minmax(0, 1fr) 84px 62px 132px 108px; gap: 10px; }
+.pf-ledger > .pf-feed { height: 22px; }
+.pf-row > span { overflow: hidden; text-overflow: ellipsis; } .pf-row > span:nth-child(4), .pf-row > span:nth-child(5), .pf-row > span:nth-child(6) { text-align: right; }
+.pf-cols { color: rgba(42, 42, 38, 0.7); font-size: 16px; letter-spacing: 0.08em; border-bottom: 1.5px dashed rgba(27, 20, 13, 0.45); }
+.pf-row.is-win > span:nth-child(3) { color: var(--ds-green); } .pf-row.is-loss > span:nth-child(3) { color: var(--ds-red); }
+.pf-ledger .pos { color: var(--ds-green); }
+.pf-total { border-top: 1.5px dashed rgba(27, 20, 13, 0.45); }
+.pf-none { justify-content: center !important; color: rgba(42, 42, 38, 0.75); }
+/* placar por empresa */
+.pf-file .ds-body:has(.pf-scores) { grid-template-rows: auto minmax(0, 1fr); }
+.pf-scores { min-height: 0; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--ds-ink) transparent; }
+.pf-score { display: grid; grid-template-columns: minmax(0, 1fr) 40px 40px; gap: 8px; align-items: baseline; margin: 0; padding: 6px 2px 5px; border-bottom: 1px dashed rgba(27, 20, 13, 0.3); }
+.pf-score > span { font: 400 19px/1 var(--f-title); text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pf-score > b { font: 400 22px/1 var(--f-title); text-align: right; } .pf-score > b:nth-child(2) { color: var(--ds-green); } .pf-score > b:nth-child(3) { color: var(--ds-red); }
+.pf-score--h { border-bottom: var(--ds-line) solid var(--ds-ink); } .pf-score--h > span { font: 700 12px/1 var(--f-ui); letter-spacing: 0.12em; color: var(--ds-ink-2); text-align: right; } .pf-score--h > span:first-child { text-align: left; }
+.pf-score.is-ahead > span { color: var(--ds-ink); } .pf-score.is-behind > span { color: var(--ds-ink-2); }
+
+
+/* ══ Reciclar (27/11): cartas com cópia sobrando e a ordem de trituração ══ */
+.rc-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.rc-item { display: grid; gap: 10px; align-content: start; padding: 12px 12px 10px; border: var(--ds-line) solid transparent; border-radius: 3px; }
+.rc-item.is-sel { background: var(--ds-tex-lines), var(--ds-amber); border-color: var(--ds-ink); box-shadow: 3px 4px 0 rgba(27, 20, 13, 0.3); }
+#lobby button.rc-card { all: unset; box-sizing: border-box; pointer-events: auto; cursor: pointer; position: relative; display: block; transition: transform 0.1s; } #lobby button.rc-card:hover, #lobby button.rc-card:focus-visible { transform: translateY(-4px) rotate(-0.6deg); }
+/* a fita "+2" fica na borda direita, na altura da foto: no pé ela tampava o segundo atributo da carta */
+.rc-qty { position: absolute; right: -10px; top: 34%; }
+.rc-item.sc-item--rare .ds-mini { box-shadow: 0 0 0 1.5px var(--ds-ink), 0 0 0 4px #5aa2e6, 0 0 0 5.5px var(--ds-ink), 4px 6px 0 rgba(0, 0, 0, 0.3); } .rc-item.sc-item--legendary .ds-mini { box-shadow: 0 0 0 1.5px var(--ds-ink), 0 0 0 4px var(--ds-amber), 0 0 0 5.5px var(--ds-ink), 4px 6px 0 rgba(0, 0, 0, 0.3); }
+.rc-val { margin: 0; font: 400 20px/1 var(--f-title); color: var(--ds-green); }
+.rc-empty { display: grid; place-content: center; justify-items: center; gap: 10px; padding: 30px; text-align: center; } .rc-empty b { font: 400 30px/1 var(--f-title); text-transform: uppercase; color: var(--ds-ink-2); } .rc-empty p { margin: 0; max-width: 380px; font: 500 15px/1.45 var(--f-ui); color: var(--ds-ink-2); }
+.rc-file > .ds-body { grid-template-rows: minmax(0, 1fr) auto auto; gap: 12px; }
+.rc-total { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin: 0; padding-top: 8px; border-top: 1.5px solid var(--ds-ink); }
+.rc-total span { font: 700 12px/1 var(--f-ui); letter-spacing: 0.12em; text-transform: uppercase; color: var(--ds-ink-2); }
+.rc-total b { font: 400 28px/1 var(--f-title); padding: 0 4px; border-bottom: 4px double var(--ds-ink); background: linear-gradient(to bottom, transparent 18%, var(--ds-amber) 18% 90%, transparent 90%); }
+.rc-foot { display: flex !important; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; } .rc-foot .ds-btn--primary { flex: 1 1 100%; }
+#lobby .rc-foot .ds-btn--link { width: auto; height: auto; min-height: 32px; margin: 0; padding: 0; background: none; box-shadow: none; font-size: 13px; color: var(--ds-ink-2); border-bottom-color: transparent; } #lobby .rc-foot .ds-btn--link:hover { color: var(--ds-ink); border-bottom-color: currentColor; }
+
+.rc-item:has(.rc-card.is-lifted) .ds-mini { opacity: 0.25; filter: grayscale(1); }
+body.rc-dragging, body.rc-dragging * { cursor: grabbing !important; }
+/* a carta arrastada: fica por cima de tudo, fora do zoom da interface */
+.rc-ghost { position: fixed; z-index: 100; pointer-events: none; border-radius: 4.1% / 3.5%; box-shadow: 0 0 0 1.5px #1b140d, 10px 14px 0 rgba(0, 0, 0, 0.35); transform-origin: 0 0; }
+
+/* ── Reciclar, proposta A (sala): a câmera foi até a trituradora 3D; a janela vira um painel à esquerda e a sala aparece ── */
+#lobby.is-shredroom .lb-win { justify-items: start; padding-left: 3vw; background: linear-gradient(to right, rgba(4, 7, 5, 0.82) 0, rgba(4, 7, 5, 0.68) var(--rc-free, 48%), rgba(4, 7, 5, 0) var(--rc-clear, 66%)); backdrop-filter: none; }
+#lobby .lb-box--recycle.is-room { width: min(600px, 47%); }
+@media (max-width: 1150px) { #lobby .lb-box--recycle.is-room { width: min(600px, 56%); } }
+/* na sala, os avisos saem em cima da máquina, no espaço livre (no centro do topo, batiam no clipe do recibo) */
+#lobby.is-shredroom.is-open .lb-toasts, #lobby.is-shredroom.is-open[data-panel] .lb-toasts { left: var(--rc-toast, 75%); }
+/* a grade rola: a última fileira some num esmaecido em vez de ser cortada no meio do texto */
+.rc-room .rc-grid { padding-bottom: 26px; -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 26px), transparent); mask-image: linear-gradient(to bottom, #000 calc(100% - 26px), transparent); }
+.rc-room { flex: 1; min-height: 0; grid-template-rows: auto minmax(0, 1fr) auto !important; }
+.rc-room .rc-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.rc-room__foot { display: grid; gap: 10px; margin: 0 var(--ds-5); padding: 12px 0 16px; border-top: 1.5px dashed var(--ds-ink-3); }
+/* o alvo na tela: onde fica a fenda da trituradora 3D, enquanto se arrasta uma carta */
+.rc-aim { position: fixed; z-index: 99; width: 150px; height: 150px; margin: -75px 0 0 -75px; display: grid; place-items: center; pointer-events: none; opacity: 0; transition: opacity 0.15s, transform 0.15s; }
+.rc-aim.is-on { opacity: 1; }
+.rc-aim i { position: absolute; inset: 0; border: 3px dashed rgba(242, 185, 76, 0.85); border-radius: 50%; animation: rc-aim-spin 6s linear infinite; }
+.rc-aim span { position: absolute; top: calc(100% + 6px); padding: 6px 10px 5px; background: #23201c; color: #f4efe2; border: 2px solid #1b140d; border-radius: 3px; font: 700 13px/1 var(--f-ui); white-space: nowrap; opacity: 0.85; }
+.rc-aim.is-hot { transform: scale(1.1); } .rc-aim.is-hot i { border-style: solid; background: rgba(242, 185, 76, 0.18); } .rc-aim.is-hot span { background: var(--ds-amber); color: #1b140d; opacity: 1; }
+@keyframes rc-aim-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .rc-aim i { animation: none; } }
+/* painel estreito da sala: o título e o recibo dividem a largura sem se sobrepor */
+#lobby .lb-box.is-room .lb-head .ds-letterhead { gap: 16px; }
+#lobby .lb-box.is-room .lb-head .ds-letterhead h2 { font-size: 34px; }
+#lobby .lb-box.is-room .ds-till__paper { min-width: 0; column-gap: 14px; padding: 12px 14px 16px; }
+#lobby .lb-box.is-room .ds-till__total { font-size: 28px; }
+
+/* ══ Salvar e carregar (28/11): os 3 disquetes, no lobby e no menu ══ */
+.dq-shelf { flex: 1; }
+.dq-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--ds-5); align-content: start; padding: 26px var(--ds-5) 10px; }
+/* no menu: a mesma pasta das janelas do lobby, sobre o cartão de ponto */
+.modal-box.dq-modal { zoom: var(--lb-fix, 1); width: min(1080px, 96%); max-height: 94%; padding: 24px 28px 8px; background: var(--ds-tex-kraft); color: var(--ds-ink); border: var(--ds-line) solid var(--ds-ink); border-radius: var(--ds-r); box-shadow: 0 5px 0 0 var(--ds-kraft-lo), 0 6px 0 1px var(--ds-ink), var(--ds-shadow); }
+.dq-modal .ds-letterhead { grid-template-columns: minmax(0, 1fr) auto; }
+.dq-modal .ds-letterhead h2 { margin: 0; font: 400 46px/1 var(--f-title); letter-spacing: 0.02em; text-transform: uppercase; color: var(--ds-ink); }
+.dq-modal .dq-x { width: 46px; height: 46px; font-size: 16px; }
+.modal-box.dq-modal p { margin-bottom: 0; color: var(--ds-ink-2); }
+.dq-intro { margin: 16px 2px 0 !important; font: 500 15px/1.45 var(--f-ui); color: var(--ds-ink-2) !important; }
+.dq-modal .dq-grid { padding: 32px 4px var(--ds-5); }
+
+/* ══ abertura do menu (28/11): a rua acende primeiro; depois o logotipo, o slogan e o cartão de ponto entram ══ */
+body.theme-buckshot #menu { background: none; }
+#menu::before { content: ""; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(90deg, rgba(4, 8, 6, 0.95) 0%, rgba(4, 8, 6, 0.78) 32%, rgba(4, 8, 6, 0) 62%); transition: opacity 0.7s; }
+#ui.mn-intro #menu::before { opacity: 0; }
+#ui.mn-intro :is(#menu .title-block, #menu .credits, #unlock) { visibility: hidden; }
+/* o logotipo acende como o letreiro do prédio (piscando), a etiqueta "Battle" é colada, "Corp." aparece, o slogan é datilografado */
+@keyframes mn-neon { 0% { opacity: 0; } 14% { opacity: 0.9; } 20% { opacity: 0.08; } 32% { opacity: 1; } 40% { opacity: 0.3; } 54%, 100% { opacity: 1; } }
+@keyframes mn-slap { from { opacity: 0; scale: 1.9; rotate: -16deg; } 70% { opacity: 1; scale: 0.94; rotate: 2deg; } to { opacity: 1; scale: 1; rotate: 0deg; } }
+@keyframes mn-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes mn-type { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+@keyframes mn-rise { from { opacity: 0; translate: 0 56px; rotate: 2.5deg; } to { opacity: 1; translate: 0 0; rotate: 0deg; } }
+@keyframes mn-row { from { opacity: 0; translate: -14px 0; } to { opacity: 1; translate: 0 0; } }
+@keyframes mn-clip { from { opacity: 0; translate: 0 -26px; } 70% { opacity: 1; translate: 0 3px; } to { opacity: 1; translate: 0 0; } }
+#ui.mn-reveal #menu::before { animation: mn-in 0.6s both; }
+#ui.mn-reveal .title-block h1 .lg-w { animation: mn-neon 0.62s steps(1, end) both; }
+#ui.mn-reveal .title-block h1 .lg-w ~ .lg-w { animation-delay: 0.16s; }
+#ui.mn-reveal .title-block h1 .tag-word { animation: mn-slap 0.36s cubic-bezier(0.2, 1.4, 0.4, 1) 0.62s both; }
+#ui.mn-reveal .title-block h1 small { animation: mn-in 0.3s 0.8s both; }
+#ui.mn-reveal .title-block .tagline { animation: mn-type 0.6s steps(30, end) 0.9s both; }
+#ui.mn-reveal .title-block nav.mn-card { animation: mn-rise 0.42s cubic-bezier(0.2, 0.9, 0.3, 1) 1.15s both; }
+#ui.mn-reveal .mn-card > :is(button, hr) { animation: mn-row 0.24s ease-out both; }
+#ui.mn-reveal .mn-card > :nth-child(3) { animation-delay: 1.4s; } #ui.mn-reveal .mn-card > :nth-child(4) { animation-delay: 1.4s; }
+#ui.mn-reveal .mn-card > :nth-child(5) { animation-delay: 1.46s; } #ui.mn-reveal .mn-card > :nth-child(6) { animation-delay: 1.52s; }
+#ui.mn-reveal .mn-card > :nth-child(7) { animation-delay: 1.58s; } #ui.mn-reveal .mn-card > :nth-child(8) { animation-delay: 1.64s; }
+#ui.mn-reveal .mn-card > :nth-child(9) { animation-delay: 1.7s; } #ui.mn-reveal .mn-card > :nth-child(10) { animation-delay: 1.76s; }
+#ui.mn-reveal .mn-card > .ds-clip { animation: mn-clip 0.3s ease-out 1.55s both; }
+#ui.mn-reveal :is(#menu .credits, #menu .company, #unlock) { animation: mn-in 0.4s 1.9s both; }
+@media (prefers-reduced-motion: reduce) { #ui.mn-reveal * , #ui.mn-reveal *::before { animation: none !important; } }

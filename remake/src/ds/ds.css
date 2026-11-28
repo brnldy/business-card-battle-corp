@@ -1,0 +1,580 @@
+/* ════════════════════════════════════════════════════════════════════════
+   DESIGN SYSTEM · Business Card Battle Corp.
+   Papelaria de escritório, chapada: papel creme, tinta preta, contorno grosso,
+   sombra dura (sem desfoque) e faixa de cabeçalho escura. Sem textura realista.
+   Referências: Dispatch (fichas e painéis) e Papers, Please (documentos na mesa).
+   Catálogo vivo: dist/ds.html (build de desenvolvimento). Docs: docs/design-system/06-componentes.md
+   Depende de tokens.css (--f-display, --f-ui, --t-*).
+   ════════════════════════════════════════════════════════════════════════ */
+:root {
+  /* tinta e papel */
+  --ds-ink: #1b140d; --ds-ink-2: #5a4c36; --ds-ink-3: #8f7f62;
+  --ds-paper: #eadfc3; --ds-paper-2: #d9cba6; --ds-card: #f6efdc;
+  --ds-kraft: #b8975f; --ds-kraft-2: #a08049;
+  /* cor com significado (nunca decorativa) */
+  --ds-amber: #f2b94c;   /* destaque, dinheiro, sua vez */
+  --ds-green: #2f7a43;   /* pode, pronto, ganho */
+  --ds-red: #b8291c;     /* não pode, perda, perigo */
+  /* traço, sombra, raio */
+  --ds-line: 2px; --ds-r: 2px;
+  --ds-shadow: 6px 7px 0 rgba(0, 0, 0, 0.55);          /* peça sobre a cena */
+  --ds-shadow-in: 3px 3px 0 var(--ds-ink);              /* botão sobre papel */
+  /* espaço */
+  --ds-1: 4px; --ds-2: 8px; --ds-3: 12px; --ds-4: 18px; --ds-5: 26px;
+  /* ── acabamento (ver docs/design-system/06-acabamento.md) ── */
+  --ds-band: #cdbb95; --ds-band-lo: #a8946c;      /* faixa da moldura e espessura do cartão */
+  --ds-kraft-lo: #8a6d3f;
+  --ds-tex-speck: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='s'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.6' numOctaves='1' seed='11'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 3 -1.7'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23s)' opacity='.6'/%3E%3C/svg%3E");
+  --ds-tex-lines: repeating-linear-gradient(to bottom, rgba(70, 45, 15, 0.05) 0 1px, transparent 1px 3px);
+  /* papel = salpico + linhas finas + cunha diagonal + canto escurecido + degradê vertical */
+  --ds-tex-paper: var(--ds-tex-speck), var(--ds-tex-lines), linear-gradient(118deg, rgba(150, 118, 78, 0.14) 0 32%, rgba(150, 118, 78, 0) 32.2%), radial-gradient(70% 60% at 100% 100%, rgba(120, 90, 50, 0.14), transparent 70%), linear-gradient(to bottom, #f4ead2, var(--ds-paper) 45%, #e2d2b0);
+  --ds-tex-card: var(--ds-tex-speck), var(--ds-tex-lines), linear-gradient(to bottom, #fbf5e4, var(--ds-card) 50%, #efe4c8);
+  --ds-tex-kraft: var(--ds-tex-speck), var(--ds-tex-lines), linear-gradient(118deg, rgba(255, 235, 190, 0.12) 0 28%, rgba(255, 235, 190, 0) 28.2%), radial-gradient(80% 70% at 100% 100%, rgba(70, 45, 15, 0.22), transparent 70%), linear-gradient(to bottom, #c2a26b, var(--ds-kraft) 45%, #a88750);
+  --ds-tex-ink: var(--ds-tex-lines), linear-gradient(90deg, var(--ds-ink), #3a2b1c);
+  /* moldura em camadas: traço 2 px (border) + faixa 4 px + fio 1 px + espessura 5 px embaixo + sombra dura */
+  --ds-frame: 0 0 0 4px var(--ds-band), 0 0 0 5px var(--ds-ink), 0 5px 0 5px var(--ds-band-lo), 0 6px 0 5px var(--ds-ink), 7px 13px 0 4px rgba(0, 0, 0, 0.5);
+  --ds-frame-in: 0 0 0 3px var(--ds-band), 0 0 0 4px var(--ds-ink), 0 4px 0 4px var(--ds-band-lo), 0 5px 0 4px var(--ds-ink);   /* folha dentro de pasta: sem sombra longa */
+}
+
+/* ── texto ── */
+.ds-title { font: 400 34px/1 var(--f-title); color: var(--ds-ink); margin: 0; text-transform: uppercase; word-spacing: -0.28em; }
+.ds-title--xl { font-size: 52px; } .ds-title--sm { font-size: 24px; }
+.ds-label { font: 700 var(--t-cap)/1.2 var(--f-ui); letter-spacing: 0.14em; text-transform: uppercase; color: var(--ds-ink-2); margin: 0; }
+.ds-text { font: 400 var(--t-md)/1.45 var(--f-ui); color: var(--ds-ink); margin: 0; }
+.ds-num { font: 400 30px/1 var(--f-title); font-variant-numeric: tabular-nums; }
+
+/* ── folha: a superfície padrão ── */
+.ds-sheet { position: relative; display: flex; flex-direction: column; min-width: 0; margin: 5px 5px 11px; background: var(--ds-tex-paper); color: var(--ds-ink); border: var(--ds-line) solid var(--ds-ink); border-radius: 0; box-shadow: var(--ds-frame); }
+.ds-sheet::after { content: ""; position: absolute; right: 0; bottom: 0; width: 44%; height: 30%; pointer-events: none; opacity: 0.55; background: conic-gradient(rgba(150, 118, 78, 0.32) 25%, transparent 0 50%, rgba(150, 118, 78, 0.32) 0 75%, transparent 0) 0 0 / 8px 8px; -webkit-mask: radial-gradient(100% 100% at 100% 100%, #000, transparent 72%); mask: radial-gradient(100% 100% at 100% 100%, #000, transparent 72%); }   /* retícula que some para o centro */
+.ds-sheet > * { position: relative; z-index: 1; }
+.ds-sheet--card { background: var(--ds-tex-card); }
+.ds-sheet--flat { box-shadow: var(--ds-frame-in); margin: 4px 4px 9px; }
+.ds-bar { display: flex; align-items: center; justify-content: space-between; gap: var(--ds-3); min-height: 30px; padding: 0 var(--ds-3); background: var(--ds-tex-ink); color: var(--ds-paper); border-bottom: var(--ds-line) solid var(--ds-ink); font: 700 var(--t-cap)/1 var(--f-ui); letter-spacing: 0.14em; text-transform: uppercase; }
+.ds-bar b { color: var(--ds-amber); font-weight: 700; }
+.ds-bar--amber { background: var(--ds-tex-lines), linear-gradient(90deg, #dc9a2f, var(--ds-amber)); color: var(--ds-ink); border-bottom: var(--ds-line) solid var(--ds-ink); } .ds-bar--amber b { color: var(--ds-ink); }
+.ds-bar--red { background: var(--ds-tex-lines), linear-gradient(90deg, #8f2218, var(--ds-red)); color: #fff; }
+.ds-body { display: grid; gap: var(--ds-4); padding: var(--ds-4); min-width: 0; }
+
+/* ── pasta: janela que guarda folhas ── */
+.ds-folder { position: relative; background: var(--ds-tex-kraft); color: var(--ds-ink); border: var(--ds-line) solid var(--ds-ink); border-radius: var(--ds-r); box-shadow: 0 5px 0 0 var(--ds-kraft-lo), 0 6px 0 1px var(--ds-ink), 8px 14px 0 0 rgba(0, 0, 0, 0.5); }
+.ds-folder__tab { position: absolute; left: 22px; bottom: 100%; margin-bottom: calc(-1 * var(--ds-line)); padding: 8px 16px 6px; background: var(--ds-tex-lines), #c2a26b; border: var(--ds-line) solid var(--ds-ink); border-bottom: none; border-radius: 6px 10px 0 0; font: 700 var(--t-cap)/1 var(--f-ui); letter-spacing: 0.14em; text-transform: uppercase; }
+
+/* ── botão ──
+   Tira de cartão com contorno grosso: traço de 3 px, fio claro por dentro, espessura escura embaixo.
+   A tecla vai à ESQUERDA do texto, numa cápsula âmbar. Sem sombra solta: o botão "afunda" ao clicar. */
+.ds-btn { position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 12px; height: 44px; padding: 0 18px; margin-bottom: 5px; font: 700 var(--t-sm)/1 var(--f-ui); letter-spacing: 0.1em; text-transform: uppercase; white-space: nowrap; color: var(--ds-ink);
+  background: var(--ds-tex-card); border: 3px solid var(--ds-ink); border-radius: 0; box-shadow: inset 0 0 0 1.5px rgba(255, 252, 240, 0.9), 0 4px 0 0 var(--ds-band-lo), 0 4px 0 3px var(--ds-ink); cursor: pointer; pointer-events: auto; transition: transform 0.05s, box-shadow 0.05s; }
+.ds-btn:hover:not(:disabled) { background: var(--ds-tex-lines), linear-gradient(to bottom, #ffd98c, var(--ds-amber)); }
+.ds-btn:active:not(:disabled) { transform: translateY(4px); box-shadow: inset 0 0 0 1.5px rgba(255, 252, 240, 0.9), 0 0 0 0 var(--ds-band-lo), 0 0 0 3px var(--ds-ink); }
+.ds-btn:focus-visible { outline: 3px solid var(--ds-amber); outline-offset: 5px; }
+.ds-btn .ds-key { order: -1; margin: 0 2px 0 -6px; }
+.ds-btn--primary { background: var(--ds-tex-lines), linear-gradient(to bottom, #f9cf7c, var(--ds-amber) 60%, #dc9a2f); box-shadow: inset 0 0 0 1.5px rgba(255, 244, 214, 0.9), 0 4px 0 0 #a8701a, 0 4px 0 3px var(--ds-ink); }
+.ds-btn--primary:hover:not(:disabled) { background: var(--ds-tex-lines), linear-gradient(to bottom, #ffe2a3, #f7c466); }
+.ds-btn--primary .ds-key { background: var(--ds-ink); color: var(--ds-amber); box-shadow: 0 0 0 1.5px var(--ds-amber), 0 0 0 3px var(--ds-ink); }
+.ds-btn--accent { background: var(--ds-tex-lines), var(--ds-amber); }
+.ds-btn--danger { background: var(--ds-tex-lines), linear-gradient(to bottom, #d2412f, var(--ds-red)); color: #fff; box-shadow: inset 0 0 0 1.5px rgba(255, 220, 210, 0.6), 0 4px 0 0 #6f160e, 0 4px 0 3px var(--ds-ink); }
+.ds-btn--link { height: auto; padding: 3px 0; margin: 0; background: none; border: none; border-bottom: var(--ds-line) solid currentColor; box-shadow: none; }
+.ds-btn--link:hover:not(:disabled) { background: none; color: var(--ds-red); } .ds-btn--link:active:not(:disabled) { transform: none; box-shadow: none; }
+.ds-btn--lg { height: 58px; padding: 0 26px; font-size: 17px; }
+.ds-btn--sq { width: 44px; padding: 0; }
+.ds-btn:disabled { cursor: default; color: var(--ds-ink-3); background: var(--ds-tex-lines), #cdbb95; border-color: #8f7f62; box-shadow: inset 0 0 0 1.5px rgba(255, 252, 240, 0.35), 0 4px 0 0 #a8946c, 0 4px 0 3px #8f7f62; }
+.ds-btn:disabled .ds-key { background: #8f7f62; color: #e2d6b8; box-shadow: 0 0 0 1.5px #cdbb95, 0 0 0 3.5px #8f7f62; }
+.ds-key { font: 700 12px/1 var(--f-ui); letter-spacing: 0.06em; padding: 6px 8px 5px; background: var(--ds-amber); color: var(--ds-ink); border-radius: 5px; box-shadow: 0 0 0 1.5px var(--ds-card), 0 0 0 3.5px var(--ds-ink); text-transform: uppercase; }   /* tecla: cápsula âmbar, anel claro, contorno escuro */
+
+/* ── etiqueta de valor, carimbo, estado ── */
+.ds-tag { display: inline-flex; align-items: baseline; gap: 8px; padding: 7px 12px 6px 24px; background: var(--ds-card); color: var(--ds-ink-2); font: 700 var(--t-cap)/1 var(--f-ui); letter-spacing: 0.12em; text-transform: uppercase; clip-path: polygon(13px 0, 100% 0, 100% 100%, 13px 100%, 0 50%); filter: drop-shadow(3px 3px 0 rgba(0, 0, 0, 0.4)); position: relative; white-space: nowrap; }
+.ds-tag::before { content: ""; position: absolute; left: 10px; top: 50%; width: 6px; height: 6px; margin-top: -3px; border-radius: 50%; background: var(--ds-ink); }
+.ds-tag b { font: 400 24px/1 var(--f-title); color: var(--ds-ink); letter-spacing: 0; }
+.ds-stamp { display: inline-block; font: 700 14px/1 var(--f-ui); font-style: normal; letter-spacing: 0.16em; text-transform: uppercase; padding: 6px 9px 5px; border: 3px solid currentColor; border-radius: 3px; transform: rotate(-6deg); color: var(--ds-ink); }
+.ds-stamp--ok { color: var(--ds-green); } .ds-stamp--no { color: var(--ds-red); }
+.ds-chip { display: inline-flex; align-items: center; gap: 7px; height: 26px; padding: 0 9px; background: var(--ds-card); color: var(--ds-ink); border: var(--ds-line) solid var(--ds-ink); border-radius: var(--ds-r); font: 700 var(--t-cap)/1 var(--f-ui); letter-spacing: 0.1em; text-transform: uppercase; white-space: nowrap; }
+.ds-chip::before { content: ""; width: 9px; height: 9px; border-radius: 50%; background: var(--ds-ink-3); }
+.ds-chip--ok::before { background: var(--ds-green); } .ds-chip--no::before { background: var(--ds-red); } .ds-chip--now::before { background: var(--ds-amber); box-shadow: 0 0 0 2px var(--ds-ink); }
+.ds-chip--plain::before { display: none; }
+
+/* ── abas, campo, seletor ── */
+.ds-tabs { display: flex; gap: 4px; padding: 0 var(--ds-3); border-bottom: var(--ds-line) solid var(--ds-ink); }
+.ds-tabs button { padding: 9px 14px 7px; margin-bottom: calc(-1 * var(--ds-line)); background: var(--ds-paper-2); color: var(--ds-ink-2); border: var(--ds-line) solid var(--ds-ink); border-radius: 5px 8px 0 0; font: 700 var(--t-cap)/1 var(--f-ui); letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer; pointer-events: auto; }
+.ds-tabs button.is-on { background: var(--ds-paper); color: var(--ds-ink); border-bottom-color: var(--ds-paper); padding-top: 12px; margin-top: -3px; }
+.ds-field { display: grid; gap: 6px; }
+.ds-field input { font: 400 28px/1.1 var(--f-title); color: var(--ds-ink); background: var(--ds-card); border: var(--ds-line) solid var(--ds-ink); border-radius: var(--ds-r); padding: 9px 12px 7px; outline: none; box-shadow: inset 3px 3px 0 rgba(27, 20, 13, 0.1); pointer-events: auto; }
+.ds-field input:focus { box-shadow: inset 3px 3px 0 rgba(27, 20, 13, 0.1), 0 0 0 3px var(--ds-amber); }
+.ds-seg { display: inline-flex; border: var(--ds-line) solid var(--ds-ink); border-radius: var(--ds-r); background: var(--ds-card); }
+.ds-seg button { padding: 8px 12px 7px; background: none; color: var(--ds-ink-2); border: none; border-right: var(--ds-line) solid var(--ds-ink); font: 700 var(--t-cap)/1 var(--f-ui); letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; pointer-events: auto; }
+.ds-seg button:last-child { border-right: none; } .ds-seg button.is-on { background: var(--ds-ink); color: var(--ds-paper); }
+
+/* ── linhas, números, medidor ── */
+.ds-rows { list-style: none; margin: 0; padding: 0; display: grid; }
+.ds-rows > * { display: flex; align-items: baseline; justify-content: space-between; gap: var(--ds-3); padding: 8px 0 7px; border-bottom: 1.5px dotted rgba(27, 20, 13, 0.5); font: 400 19px/1.1 var(--f-title); color: var(--ds-ink); }
+.ds-rows > *:last-child { border-bottom: none; }
+.ds-rows > .is-off { color: var(--ds-ink-3); }
+.ds-rows > .is-on > :first-child::after { content: "✓"; margin-left: 8px; font: 700 14px var(--f-ui); color: var(--ds-green); }
+.ds-rows em { font: 700 var(--t-cap)/1 var(--f-ui); font-style: normal; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ds-ink-2); white-space: nowrap; }
+.ds-rows em b { font: 400 19px/1 var(--f-title); color: inherit; letter-spacing: 0; margin: 0 1px 0 8px; }
+.ds-rows--form > * { border-bottom: 1.5px solid var(--ds-ink); padding: 12px 0 10px; } .ds-rows--form > *:first-child { border-top: 3px solid var(--ds-ink); }
+.ds-inset { background: rgba(150, 118, 78, 0.18); padding: 10px 14px; }   /* caixa rebaixada: um tom abaixo do papel, sem borda */
+.ds-rows--form dt { font: 700 var(--t-cap)/1 var(--f-ui); letter-spacing: 0.14em; text-transform: uppercase; color: var(--ds-ink-2); flex: 0 0 100px; } .ds-rows--form dd { margin: 0; flex: 1; font: 400 26px/1.1 var(--f-title); }
+.ds-stat { display: grid; gap: 3px; padding-top: 6px; border-top: 3px solid var(--ds-ink); min-width: 0; }
+.ds-stat b { font: 400 30px/1 var(--f-title); font-variant-numeric: tabular-nums; }
+.ds-meter { height: 12px; background: #2a2118; border: var(--ds-line) solid var(--ds-ink); box-shadow: 0 0 0 2px var(--ds-card); margin: 2px; } .ds-meter i { display: block; height: 100%; background: var(--ds-amber); }
+.ds-meter--amber i { background: var(--ds-amber); } .ds-meter--red i { background: var(--ds-red); }
+
+/* ── aviso, placa ── */
+.ds-slip { display: grid; gap: 3px; padding: 10px 14px 9px 12px; background: var(--ds-card); color: var(--ds-ink); border: var(--ds-line) solid var(--ds-ink); border-left-width: 10px; border-radius: var(--ds-r); box-shadow: var(--ds-shadow); font: 700 var(--t-sm)/1.3 var(--f-ui); }
+.ds-slip b { font: 400 20px/1.1 var(--f-title); } .ds-slip--ok { border-left-color: var(--ds-green); } .ds-slip--no { border-left-color: var(--ds-red); } .ds-slip--gold { border-left-color: var(--ds-amber); }
+.ds-plate { display: inline-block; padding: 8px 16px 7px; background: var(--ds-ink); color: var(--ds-amber); border: var(--ds-line) solid var(--ds-ink); outline: 1.5px solid var(--ds-amber); outline-offset: -6px; font: 700 var(--t-md)/1 var(--f-ui); letter-spacing: 0.16em; text-transform: uppercase; box-shadow: var(--ds-shadow); }
+
+/* ── ficha de deck ── */
+.ds-deckcard { position: relative; display: grid; grid-template-columns: 86px 1fr auto; align-items: center; gap: var(--ds-4); padding: var(--ds-3) var(--ds-4); background: var(--ds-tex-card); border: var(--ds-line) solid var(--ds-ink); border-radius: 0; box-shadow: 0 0 0 2px var(--ds-card), 0 0 0 3px var(--ds-ink-3); margin: 3px; }
+.ds-deckcard__fan { position: relative; height: 80px; } .ds-deckcard__fan img { position: absolute; left: 14px; top: 0; height: 80px; border: 1.5px solid var(--ds-ink); transform: rotate(-9deg) translateX(-12px); }
+.ds-deckcard__fan img:nth-child(2) { transform: rotate(-2deg); } .ds-deckcard__fan img:nth-child(3) { transform: rotate(6deg) translateX(12px); }
+.ds-deckcard__txt { display: grid; gap: 3px; min-width: 0; } .ds-deckcard__txt b { font: 400 28px/1.05 var(--f-title); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ds-deckcard__side { display: grid; gap: 10px; justify-items: end; }
+.ds-deckcard.is-bad { border-color: var(--ds-red); }
+
+/* ── margem da tela: peças a 40 px das bordas, sem curvatura (legibilidade primeiro) ── */
+.ds-actions { display: flex; align-items: center; gap: var(--ds-5); flex-wrap: wrap; }
+
+/* ════════════════════════════════════════════════════════════════════════
+   MATERIAIS DE ESCRITÓRIO (sub-sprint 6.1)
+   Desenho chapado, com contorno de tinta e uma luz: nada de foto nem de volume realista.
+   Cada material tem um papel: prender (fita, clipe, grampo, alfinete), anotar (post-it, caneta),
+   registrar (formulário contínuo) e decidir (carimbo).
+   ════════════════════════════════════════════════════════════════════════ */
+/* fita adesiva: prende um papel sobre outro. Fica atravessada num canto ou no topo. */
+.ds-tape { position: absolute; width: 92px; height: 26px; background: linear-gradient(to bottom, rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0) 40%), rgba(236, 214, 150, 0.72); border-left: 1.5px solid rgba(27, 20, 13, 0.35); border-right: 1.5px solid rgba(27, 20, 13, 0.35); transform: rotate(-4deg); z-index: 3; pointer-events: none;
+  clip-path: polygon(0 0, 4% 12%, 0 25%, 4% 38%, 0 50%, 4% 62%, 0 75%, 4% 88%, 0 100%, 100% 100%, 96% 88%, 100% 75%, 96% 62%, 100% 50%, 96% 38%, 100% 25%, 96% 12%, 100% 0); }
+.ds-tape--top { left: 50%; top: -13px; margin-left: -46px; } .ds-tape--tl { left: -24px; top: 6px; transform: rotate(-38deg); } .ds-tape--tr { right: -24px; top: 6px; transform: rotate(38deg); }
+/* clipe: junta folhas. Sempre na borda de cima, meio para fora. */
+.ds-clip { position: absolute; top: -30px; right: 30px; width: 24px; height: 62px; z-index: 3; pointer-events: none; transform: rotate(4deg);
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 22 58'%3E%3Cpath d='M6 18v26a5 5 0 0 0 10 0V10a8 8 0 0 0-14 0v36' fill='none' stroke='%231b140d' stroke-width='5' stroke-linecap='round'/%3E%3Cpath d='M6 18v26a5 5 0 0 0 10 0V10a8 8 0 0 0-14 0v36' fill='none' stroke='%23b9bcc0' stroke-width='2.4' stroke-linecap='round'/%3E%3C/svg%3E") center / contain no-repeat; }
+.ds-clip--l { right: auto; left: 30px; transform: rotate(-5deg); }
+/* grampo: duas folhas presas de vez. Canto de cima, inclinado. */
+.ds-staple { position: absolute; left: 14px; top: 12px; width: 26px; height: 7px; background: linear-gradient(to bottom, #d7dade 0 35%, #8e9399 35%); border: 1.5px solid var(--ds-ink); border-radius: 2px; transform: rotate(-32deg); z-index: 3; pointer-events: none; }
+.ds-staple--r { left: auto; right: 14px; transform: rotate(32deg); }
+/* alfinete de mural */
+.ds-pin { position: absolute; left: 50%; top: -9px; width: 18px; height: 18px; margin-left: -9px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #ff8a78 0 18%, var(--ds-red) 20%); border: 2px solid var(--ds-ink); box-shadow: 3px 4px 0 rgba(0, 0, 0, 0.35); z-index: 3; pointer-events: none; }
+/* post-it: lembrete, dica, aviso que não é do sistema. Sem moldura: só o quadrado, torto, com a ponta levantada. */
+.ds-postit { position: relative; display: grid; align-content: start; gap: 6px; width: 190px; min-height: 150px; padding: 26px 16px 18px; background: linear-gradient(to bottom, rgba(0, 0, 0, 0.1) 0 18px, transparent 18px), var(--ds-tex-lines), linear-gradient(160deg, #ffe680, #f4cf4a); color: var(--ds-ink); border: var(--ds-line) solid var(--ds-ink); transform: rotate(-2.5deg); box-shadow: 5px 7px 0 rgba(0, 0, 0, 0.4); font: 700 var(--t-md)/1.3 var(--f-ui);
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 22px), calc(100% - 22px) 100%, 0 100%); }
+.ds-postit::after { content: ""; position: absolute; right: -2px; bottom: -2px; width: 24px; height: 24px; background: linear-gradient(135deg, #c9a52f 0 50%, transparent 50%); border-top: var(--ds-line) solid var(--ds-ink); border-left: var(--ds-line) solid var(--ds-ink); }
+.ds-postit b { font: 400 26px/1 var(--f-title); text-transform: uppercase; }
+.ds-postit--pink { background: linear-gradient(to bottom, rgba(0, 0, 0, 0.1) 0 18px, transparent 18px), var(--ds-tex-lines), linear-gradient(160deg, #ffb3a6, #f08a78); } .ds-postit--pink::after { background: linear-gradient(135deg, #c7604f 0 50%, transparent 50%); }
+/* caneta: o que o jogador (ou o chefe) marcou à mão. Risco, círculo, visto e sublinhado. */
+.ds-pen-strike { position: relative; color: var(--ds-ink-3); } .ds-pen-strike::after { content: ""; position: absolute; left: -4%; right: -4%; top: 46%; height: 3px; background: #1f3fa8; border-radius: 2px; transform: rotate(-2deg); }
+.ds-pen-under { background: linear-gradient(#1f3fa8, #1f3fa8) 0 100% / 100% 3px no-repeat; padding-bottom: 3px; }
+.ds-pen-circle { position: relative; padding: 2px 8px; } .ds-pen-circle::after { content: ""; position: absolute; inset: -5px -8px; border: 3px solid var(--ds-red); border-radius: 50% 46% 52% 48% / 55% 48% 52% 45%; transform: rotate(-3deg); }
+.ds-pen-check::before { content: ""; display: inline-block; width: 18px; height: 10px; margin-right: 8px; border-left: 4px solid #1f3fa8; border-bottom: 4px solid #1f3fa8; transform: rotate(-48deg) translate(2px, -3px); }
+/* formulário contínuo (impressora matricial): tudo que a máquina imprime sozinha. Relatório, extrato, histórico. */
+.ds-printout { position: relative; padding: 0 34px; background: repeating-linear-gradient(to bottom, #f7f1df 0 44px, #dfeedd 44px 88px); color: #2a2a26; border: var(--ds-line) solid var(--ds-ink); box-shadow: 6px 8px 0 rgba(0, 0, 0, 0.45); font: 400 21px/22px var(--f-title); letter-spacing: 0.02em; }
+.ds-printout::before, .ds-printout::after { content: ""; position: absolute; top: 0; bottom: 0; width: 26px; background: radial-gradient(circle at 50% 11px, #141a16 0 4.5px, transparent 5px) 0 0 / 26px 22px, #efe8d2; }
+.ds-printout::before { left: 0; border-right: 1.5px dashed rgba(27, 20, 13, 0.4); } .ds-printout::after { right: 0; border-left: 1.5px dashed rgba(27, 20, 13, 0.4); }
+.ds-printout > * { display: flex; justify-content: space-between; gap: 16px; margin: 0; padding: 0 12px; white-space: nowrap; }
+.ds-printout > .cut { height: 0; padding: 0; border-top: 1.5px dashed rgba(27, 20, 13, 0.45); margin: 0 -8px; }
+.ds-printout b { font-weight: 400; background: #2a2a26; color: #f7f1df; padding: 0 6px; }
+.ds-printout .neg { color: var(--ds-red); } .ds-printout .pos { color: var(--ds-green); }
+/* carimbo: decisão tomada. Contorno duplo, tinta falhada, sempre torto. */
+.ds-stamp { position: relative; display: inline-block; font: 700 15px/1 var(--f-ui); font-style: normal; letter-spacing: 0.18em; text-transform: uppercase; padding: 8px 12px 7px; border: 3px solid currentColor; outline: 1.5px solid currentColor; outline-offset: 3px; border-radius: 4px; transform: rotate(-7deg); color: var(--ds-ink); margin: 6px; opacity: 0.88; }
+.ds-stamp--round { border-radius: 50%; padding: 22px 12px; }
+
+/* ════════════════════════════════════════════════════════════════════════
+   MAIS COMPONENTES DE ESCRITÓRIO (6.1b) — variações para montar telas novas
+   ════════════════════════════════════════════════════════════════════════ */
+/* rotuladora (fita em relevo): rótulo curto e fixo. Nome de seção, navegação, etiqueta de objeto. */
+.ds-dymo { display: inline-block; padding: 5px 12px 3px; background: linear-gradient(to bottom, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0) 30%, rgba(0, 0, 0, 0.2)), #23201c; color: #f4efe2; font: 400 22px/1 var(--f-title); letter-spacing: 0.16em; text-transform: uppercase; text-shadow: 0 1px 0 rgba(0, 0, 0, 0.6), 0 -1px 0 rgba(255, 255, 255, 0.25); border-radius: 2px; box-shadow: 2px 3px 0 rgba(0, 0, 0, 0.45); white-space: nowrap; }
+.ds-dymo--red { background-color: #a3261b; } .ds-dymo--blue { background-color: #1d3f8a; } .ds-dymo--green { background-color: #23603a; }
+/* ficha pautada: um registro por ficha. Carta na coleção, rival, conquista. */
+.ds-index { position: relative; display: grid; gap: 0; align-content: start; width: 280px; min-height: 168px; padding: 34px 16px 14px; color: var(--ds-ink); border: var(--ds-line) solid var(--ds-ink); box-shadow: 4px 5px 0 rgba(0, 0, 0, 0.4);
+  background: linear-gradient(to bottom, transparent 30px, var(--ds-red) 30px 32px, transparent 32px), repeating-linear-gradient(to bottom, transparent 0 25px, rgba(31, 63, 168, 0.3) 25px 26px) 0 34px, var(--ds-card); }
+.ds-index > b { position: absolute; left: 16px; top: 5px; font: 400 24px/1 var(--f-title); text-transform: uppercase; } .ds-index > i { position: absolute; right: 12px; top: 8px; font: 700 var(--t-cap)/1 var(--f-ui); font-style: normal; letter-spacing: 0.1em; color: var(--ds-ink-2); }
+.ds-index p { margin: 0; font: 500 var(--t-md)/26px var(--f-ui); display: flex; justify-content: space-between; }
+.ds-index::after { content: ""; position: absolute; left: 50%; bottom: 8px; width: 12px; height: 12px; margin-left: -6px; border-radius: 50%; background: #141a16; box-shadow: inset 0 0 0 2px var(--ds-ink); }
+/* envelope pardo: guarda algo fechado. Pacote, recompensa, deck pronto. */
+.ds-envelope { position: relative; width: 250px; height: 170px; background: var(--ds-tex-kraft); border: var(--ds-line) solid var(--ds-ink); box-shadow: 5px 6px 0 rgba(0, 0, 0, 0.45); display: grid; place-items: end center; padding-bottom: 16px; font: 700 var(--t-cap)/1.3 var(--f-ui); letter-spacing: 0.12em; text-transform: uppercase; color: var(--ds-ink); text-align: center; }
+.ds-envelope::before { content: ""; position: absolute; inset: 0 0 auto; height: 84px; background: linear-gradient(to bottom, #c9aa74, #b08e58); clip-path: polygon(0 0, 100% 0, 50% 100%); filter: drop-shadow(0 2px 0 var(--ds-ink)); }
+/* recibo: comprovante de uma troca. Compra na loja, recompensa da partida. */
+.ds-receipt { position: relative; width: 250px; padding: 16px 16px 26px; background: #fbf8ee; color: #2a2a26; font: 400 20px/22px var(--f-title); text-transform: uppercase; box-shadow: 4px 5px 0 rgba(0, 0, 0, 0.4); border: var(--ds-line) solid var(--ds-ink); border-bottom: none;
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 9px), 95% 100%, 90% calc(100% - 9px), 85% 100%, 80% calc(100% - 9px), 75% 100%, 70% calc(100% - 9px), 65% 100%, 60% calc(100% - 9px), 55% 100%, 50% calc(100% - 9px), 45% 100%, 40% calc(100% - 9px), 35% 100%, 30% calc(100% - 9px), 25% 100%, 20% calc(100% - 9px), 15% 100%, 10% calc(100% - 9px), 5% 100%, 0 calc(100% - 9px)); }
+.ds-receipt p { margin: 0; display: flex; justify-content: space-between; gap: 12px; } .ds-receipt hr { border: none; border-top: 2px dashed #2a2a26; margin: 6px 0; } .ds-receipt .tot { font-size: 30px; line-height: 32px; }
+/* senha: um número que importa agora. Turno, posição na fila, contagem. */
+.ds-ticket { position: relative; display: grid; justify-items: center; gap: 0; width: 132px; padding: 10px 10px 8px; background: var(--ds-tex-card); border: var(--ds-line) solid var(--ds-ink); box-shadow: 4px 5px 0 rgba(0, 0, 0, 0.4); font: 700 var(--t-cap)/1 var(--f-ui); letter-spacing: 0.14em; text-transform: uppercase; color: var(--ds-ink-2);
+  -webkit-mask: radial-gradient(circle 8px at 0 50%, transparent 98%, #000) 0 0 / 51% 100% no-repeat, radial-gradient(circle 8px at 100% 50%, transparent 98%, #000) 100% 0 / 51% 100% no-repeat; mask: radial-gradient(circle 8px at 0 50%, transparent 98%, #000) 0 0 / 51% 100% no-repeat, radial-gradient(circle 8px at 100% 50%, transparent 98%, #000) 100% 0 / 51% 100% no-repeat; }
+.ds-ticket b { font: 400 64px/0.9 var(--f-title); color: var(--ds-ink); letter-spacing: 0; }
+/* bloco de calendário: contador que avança arrancando folha. Turno, dia. */
+.ds-calendar { width: 104px; background: var(--ds-card); border: var(--ds-line) solid var(--ds-ink); box-shadow: 0 4px 0 -1px #e2d6b8, 0 4px 0 1px var(--ds-ink), 0 8px 0 -2px #d6c9a8, 0 8px 0 0 var(--ds-ink), 5px 11px 0 0 rgba(0, 0, 0, 0.4); text-align: center; }
+.ds-calendar i { display: block; padding: 6px 0 5px; background: var(--ds-red); color: #fff; border-bottom: var(--ds-line) solid var(--ds-ink); font: 700 var(--t-cap)/1 var(--f-ui); font-style: normal; letter-spacing: 0.16em; text-transform: uppercase; }
+.ds-calendar b { display: block; font: 400 62px/1 var(--f-title); color: var(--ds-ink); padding: 4px 0 0; }
+/* marcadores adesivos: sinalizam um item entre muitos. Novo, favorito, pendente. */
+.ds-flag { display: inline-block; padding: 4px 16px 3px 8px; font: 700 var(--t-cap)/1.2 var(--f-ui); letter-spacing: 0.1em; text-transform: uppercase; color: var(--ds-ink); background: #ffd24a; clip-path: polygon(0 0, 100% 0, calc(100% - 9px) 50%, 100% 100%, 0 100%); }
+.ds-flag--pink { background: #ff9b8a; } .ds-flag--blue { background: #8fc4ff; } .ds-flag--green { background: #9ad9a0; }
+/* marca-texto: destaca uma palavra dentro da frase */
+.ds-hl { background: linear-gradient(to bottom, transparent 18%, #fff06a 18% 88%, transparent 88%); padding: 0 3px; } .ds-hl--pink { background: linear-gradient(to bottom, transparent 18%, #ffb0a2 18% 88%, transparent 88%); }
+/* caixinha de formulário: liga/desliga, escolha única */
+.ds-check { display: inline-flex; align-items: center; gap: 10px; font: 700 var(--t-md)/1 var(--f-ui); color: inherit; cursor: pointer; }
+.ds-check::before { content: ""; width: 20px; height: 20px; flex: none; background: var(--ds-card); border: var(--ds-line) solid var(--ds-ink); }
+.ds-check.is-on::before { background: linear-gradient(45deg, transparent 44%, #1f3fa8 44% 56%, transparent 56%), linear-gradient(-45deg, transparent 44%, #1f3fa8 44% 56%, transparent 56%), var(--ds-card); }
+/* prendedor de papel (binder): junta um maço. Pilha de fichas, pacote de documentos. */
+.ds-binder { position: absolute; left: 50%; top: -16px; width: 58px; height: 30px; margin-left: -29px; background: linear-gradient(to bottom, #3a3632, #171513); border: var(--ds-line) solid var(--ds-ink); border-radius: 3px 3px 0 0; z-index: 3; pointer-events: none; }
+.ds-binder::before { content: ""; position: absolute; left: 50%; top: -15px; width: 30px; height: 16px; margin-left: -17px; border: 3px solid #b9bcc0; border-bottom: none; border-radius: 12px 12px 0 0; outline: 1.5px solid var(--ds-ink); outline-offset: 0; }
+/* via carbonada: formulário em duas vias, a de trás colorida. Contrato, pedido, comprovante oficial. */
+.ds-carbon { position: relative; background: var(--ds-card); border: var(--ds-line) solid var(--ds-ink); padding: 14px 16px; box-shadow: 7px 7px 0 -2px #f3b8ae, 7px 7px 0 0 var(--ds-ink), 14px 14px 0 -2px #f6e58a, 14px 14px 0 0 var(--ds-ink); margin: 0 16px 16px 0; }
+.ds-carbon dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 0; } .ds-carbon dt, .ds-carbon dd { margin: 0; padding: 7px 8px 5px; border-bottom: 1.5px solid var(--ds-ink); font: 700 var(--t-cap)/1.2 var(--f-ui); letter-spacing: 0.1em; text-transform: uppercase; color: var(--ds-ink-2); }
+.ds-carbon dd { border-left: 1.5px solid var(--ds-ink); font: 400 22px/1 var(--f-title); color: #1f3fa8; letter-spacing: 0; }
+/* cartão de ponto: histórico em colunas, uma batida por linha */
+.ds-timecard { width: 300px; background: #e9efe2; border: var(--ds-line) solid var(--ds-ink); box-shadow: 4px 5px 0 rgba(0, 0, 0, 0.4); font: 400 20px/1 var(--f-title); text-transform: uppercase; color: #2a2a26; clip-path: polygon(0 0, calc(100% - 22px) 0, 100% 22px, 100% 100%, 0 100%); }
+.ds-timecard header { padding: 8px 12px 6px; border-bottom: var(--ds-line) solid var(--ds-ink); font: 700 var(--t-cap)/1 var(--f-ui); letter-spacing: 0.14em; color: var(--ds-ink); }
+.ds-timecard p { margin: 0; display: grid; grid-template-columns: 54px 1fr auto; } .ds-timecard p > * { padding: 6px 10px 4px; border-bottom: 1.5px solid rgba(27, 20, 13, 0.45); } .ds-timecard p > * + * { border-left: 1.5px solid rgba(27, 20, 13, 0.45); }
+.ds-timecard .in { color: #6a2a8a; } .ds-timecard .out { color: var(--ds-red); }
+/* carimbos: datador e redondo */
+.ds-stamp--date { font: 400 26px/1 var(--f-title); letter-spacing: 0.08em; border-radius: 0; border-width: 2px 0; outline: none; padding: 6px 4px 3px; color: #6a2a8a; }
+.ds-stamp--seal { width: 96px; height: 96px; padding: 0; border-radius: 50%; display: inline-grid; place-items: center; text-align: center; font-size: 12px; letter-spacing: 0.12em; line-height: 1.25; }
+/* botões de material: tecla de máquina e etiqueta de rotuladora clicável */
+.ds-btn--key { height: 46px; min-width: 46px; padding: 0 14px; border-radius: 8px; background: linear-gradient(to bottom, #4a443d, #26221e); color: #f4efe2; border: 3px solid var(--ds-ink); box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.22), inset 0 0 0 3px #2f2a25, 0 5px 0 0 #0f0d0b, 0 5px 0 3px var(--ds-ink); font: 400 24px/1 var(--f-title); letter-spacing: 0.06em; }
+.ds-btn--key:hover:not(:disabled) { background: linear-gradient(to bottom, #5c544b, #2f2a25); color: var(--ds-amber); } .ds-btn--key:active:not(:disabled) { transform: translateY(5px); box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.22), inset 0 0 0 3px #2f2a25, 0 0 0 3px var(--ds-ink); }
+.ds-btn--tab { height: 40px; border-radius: 8px 12px 0 0; border-bottom: none; margin-bottom: 0; box-shadow: inset 0 0 0 1.5px rgba(255, 252, 240, 0.9); background: var(--ds-tex-kraft); } .ds-btn--tab.is-on { background: var(--ds-tex-card); height: 46px; }
+/* cores do carimbo (depois da definição base, para valerem) */
+.ds-stamp.ds-stamp--ok { color: var(--ds-green); } .ds-stamp.ds-stamp--no { color: var(--ds-red); }
+
+/* ── peças de 27/11: cópias, etiqueta de preço, foto presa e ficha da carta ── */
+/* cópias: uma casa por cópia que cabe num deck; cheia = o jogador tem */
+.ds-copies { display: inline-flex; gap: 3px; vertical-align: middle; } .ds-copies i { width: 9px; height: 13px; border: 1.5px dashed var(--ds-ink-3); border-radius: 1.5px; } .ds-copies i.is-on { background: var(--ds-ink); border-style: solid; border-color: var(--ds-ink); } .ds-copies i.is-own { border-style: solid; border-color: var(--ds-ink); } .ds-copies i.is-lack { background: var(--ds-red); border-style: solid; border-color: var(--ds-red); }
+/* foto presa por clipe (ilustração da carta, retrato de ficha) */
+.ds-photo { position: relative; margin: 0; padding: 5px; background: #fffdf5; border: var(--ds-line) solid var(--ds-ink); box-shadow: 3px 4px 0 rgba(27, 20, 13, 0.3); transform: rotate(-2deg); } .ds-photo img { display: block; width: 100%; }
+.ds-photo .ds-clip { top: -16px; right: auto; left: 12px; width: 14px; height: 38px; }
+/* ficha da carta: o único lugar onde o texto completo aparece (R6) */
+.ds-file { min-height: 0; } .ds-file > .ds-body { flex: 1; min-height: 0; display: grid; grid-template-rows: auto auto minmax(0, 1fr) auto; gap: var(--ds-4); padding: var(--ds-4) var(--ds-4) var(--ds-4); }
+.ds-file__top { display: grid; grid-template-columns: 116px minmax(0, 1fr); gap: var(--ds-4); align-items: start; padding-top: 6px; }
+.ds-file .ds-title { margin: 0; font-size: 30px; line-height: 0.95; }
+.ds-file__kind { display: flex; flex-wrap: wrap; gap: 5px; margin: 10px 0 0; } .ds-file__kind span { padding: 4px 7px 3px; background: var(--ds-card); border: 1.5px solid var(--ds-ink); border-radius: 2px; font: 700 12px/1 var(--f-ui); letter-spacing: 0.06em; text-transform: uppercase; }
+.ds-file__stats { margin: 0; display: grid; grid-template-columns: repeat(3, 1fr); border: var(--ds-line) solid var(--ds-ink); background: rgba(255, 252, 240, 0.6); } .ds-file__stats div { padding: 8px 10px 5px; min-width: 0; } .ds-file__stats div + div { border-left: var(--ds-line) solid var(--ds-ink); }
+.ds-file__stats dt { font: 700 12px/1 var(--f-ui); letter-spacing: 0.1em; text-transform: uppercase; color: var(--ds-ink-2); } .ds-file__stats dd { margin: 5px 0 0; font: 400 28px/0.9 var(--f-title); white-space: nowrap; } .ds-file__stats dd small { font: 700 13px/1 var(--f-ui); }
+.ds-file__fx { margin: 0; padding: 10px 12px; border: var(--ds-line) solid var(--ds-ink); background: rgba(255, 252, 240, 0.6); font: 700 15px/1.35 var(--f-ui); }
+.ds-file__rules { list-style: none; margin: 0; padding: 0 4px 16px 0; -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 20px), transparent); mask-image: linear-gradient(to bottom, #000 calc(100% - 20px), transparent); display: grid; gap: 12px; align-content: start; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--ds-ink) transparent; } .ds-file__rules li { font: 500 15px/1.45 var(--f-ui); } .ds-file__rules b { display: block; margin-bottom: 2px; font: 400 21px/1 var(--f-title); text-transform: uppercase; letter-spacing: 0.03em; }
+.ds-file__foot { display: grid; gap: var(--ds-3); padding-top: var(--ds-3); border-top: 1.5px dashed var(--ds-ink-3); } .ds-file__foot p { margin: 0; display: flex; align-items: center; gap: 10px; font: 500 15px/1 var(--f-ui); } .ds-file__foot b { font-weight: 700; }
+.ds-file__foot .ds-btn { width: 100%; height: 44px; font-size: 15px; } .ds-file__foot .ds-stamp { justify-self: center; }
+/* etiqueta de preço: etiqueta de loja (ponta + furo do barbante); é o botão de comprar da vitrine.
+   A ponta é um desenho próprio (::before), sem clip-path, para a borda e a sombra saírem inteiras. */
+button.ds-price { position: relative; isolation: isolate; display: inline-flex; align-items: center; height: 30px; margin-left: 15px; padding: 2px 9px 0 6px; background: var(--ds-card); color: var(--ds-ink); border: var(--ds-line) solid var(--ds-ink); border-left: none; border-radius: 0 3px 3px 0; filter: drop-shadow(2px 2px 0 var(--ds-ink)); font: 400 19px/1 var(--f-title); letter-spacing: 0.02em; white-space: nowrap; cursor: pointer; pointer-events: auto; transition: transform 0.08s; }
+button.ds-price::before { content: ""; position: absolute; z-index: -1; left: -15px; top: calc(-1 * var(--ds-line)); width: 16px; height: 30px; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='30'%3E%3Cpath d='M16 0 L1 15 L16 30 Z' fill='%23f6efdc'/%3E%3Cpath d='M16 1 L1.4 15 L16 29' fill='none' stroke='%231b140d' stroke-width='2' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat; }
+button.ds-price::after { content: ""; position: absolute; left: -6px; top: 50%; width: 5px; height: 5px; margin-top: -2.5px; border-radius: 50%; background: var(--ds-ink); }
+button.ds-price:hover:not(:disabled), button.ds-price:focus-visible { background-color: var(--ds-amber); transform: translate(-1px, -1px); }
+button.ds-price:hover:not(:disabled)::before, button.ds-price:focus-visible::before { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='30'%3E%3Cpath d='M16 0 L1 15 L16 30 Z' fill='%23f2b94c'/%3E%3Cpath d='M16 1 L1.4 15 L16 29' fill='none' stroke='%231b140d' stroke-width='2' stroke-linejoin='round'/%3E%3C/svg%3E"); }
+button.ds-price:active:not(:disabled) { transform: translate(2px, 2px); filter: none; }
+button.ds-price:disabled { color: var(--ds-red); background: none; border-color: var(--ds-ink-3); filter: none; cursor: not-allowed; }
+button.ds-price:disabled::before { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='30'%3E%3Cpath d='M16 0 L1 15 L16 30 Z' fill='none'/%3E%3Cpath d='M16 1 L1.4 15 L16 29' fill='none' stroke='%238f7f62' stroke-width='2' stroke-linejoin='round'/%3E%3C/svg%3E"); } button.ds-price:disabled::after { background: var(--ds-ink-3); }
+
+/* quantidade: fita preta de rotuladora com "×3", presa no canto da carta */
+.ds-qty { display: inline-block; padding: 4px 7px 2px; background: #23201c; color: #f4efe2; font: 400 18px/1 var(--f-title); font-style: normal; letter-spacing: 0.04em; border-radius: 2px; box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.35); transform: rotate(-4deg); }
+/* caixa-arquivo de papelão: porta-etiqueta com o nome e o furo de puxar; escolhida = puxada para fora */
+button.ds-boxfile { position: relative; display: flex; align-items: center; gap: 10px; min-height: 78px; padding: 10px 12px; background: linear-gradient(to bottom, rgba(255, 255, 255, 0.12), rgba(0, 0, 0, 0.08)), var(--ds-tex-kraft); color: var(--ds-ink); border: var(--ds-line) solid var(--ds-ink); border-radius: 3px; box-shadow: 0 4px 0 var(--ds-kraft-lo), 0 5px 0 1px var(--ds-ink); text-align: left; cursor: pointer; pointer-events: auto; transition: transform 0.1s; }
+button.ds-boxfile:hover:not(.is-on), button.ds-boxfile:focus-visible { transform: translateY(-2px); }
+button.ds-boxfile.is-on { transform: translateY(-5px); box-shadow: 0 4px 0 var(--ds-kraft-lo), 0 5px 0 1px var(--ds-ink), 4px 10px 0 1px rgba(27, 20, 13, 0.3); cursor: default; }
+.ds-boxfile__label { flex: 1; min-width: 0; display: grid; gap: 4px; padding: 7px 9px 6px; background: var(--ds-card); border: 3px solid #8d8a83; border-radius: 3px; box-shadow: inset 0 0 0 1px var(--ds-ink), 0 0 0 1px var(--ds-ink); }
+.ds-boxfile.is-on .ds-boxfile__label { background: var(--ds-amber); }
+.ds-boxfile__label b { font: 400 18px/0.95 var(--f-title); letter-spacing: 0.03em; text-transform: uppercase; } .ds-boxfile__label small { font: 700 12px/1 var(--f-ui); letter-spacing: 0.08em; text-transform: uppercase; color: var(--ds-ink-2); }
+.ds-boxfile.is-on .ds-boxfile__label small { color: var(--ds-ink); }
+.ds-boxfile__hole { flex: none; width: 12px; height: 30px; border-radius: 6px; background: #2a2017; box-shadow: inset 2px 2px 0 rgba(0, 0, 0, 0.6), 0 0 0 1.5px var(--ds-ink); }
+/* guia de remessa (deck), prova de gráfica (visual), placa (troféu): variações da ficha */
+.ds-manifest > .ds-body { grid-template-rows: auto auto minmax(0, 1fr) auto; }
+.ds-manifest__line { margin: 8px 0 0; font: 500 15px/1.4 var(--f-ui); color: var(--ds-ink-2); }
+.ds-manifest__gain { align-self: start; display: grid; gap: 6px; padding: 12px 14px; background: rgba(255, 252, 240, 0.6); border: 1.5px dashed var(--ds-ink-3); } .ds-manifest__gain p { margin: 0; font: 500 15px/1.4 var(--f-ui); } .ds-manifest__gain b { font-weight: 700; } .ds-manifest__gain small { font: 500 13px/1.3 var(--f-ui); color: var(--ds-ink-2); }
+.ds-manifest__foot { justify-items: center; } .ds-manifest__foot .ds-stamp { margin: 0 0 4px; }
+.ds-file__stats dd.is-small { font: 700 14px/1.6 var(--f-ui); } .ds-file__stats--2 { grid-template-columns: repeat(2, 1fr); }
+.ds-proof > .ds-body { grid-template-rows: minmax(0, 1fr) auto auto; }
+.ds-proof__sheet { position: relative; min-height: 0; margin: 0; display: grid; place-items: center; padding: 22px 22px 34px; background: #fffdf6;
+  background-image: linear-gradient(var(--ds-ink), var(--ds-ink)), linear-gradient(var(--ds-ink), var(--ds-ink)), linear-gradient(var(--ds-ink), var(--ds-ink)), linear-gradient(var(--ds-ink), var(--ds-ink)), linear-gradient(var(--ds-ink), var(--ds-ink)), linear-gradient(var(--ds-ink), var(--ds-ink)), linear-gradient(var(--ds-ink), var(--ds-ink)), linear-gradient(var(--ds-ink), var(--ds-ink));
+  background-size: 14px 1.5px, 1.5px 14px, 14px 1.5px, 1.5px 14px, 14px 1.5px, 1.5px 14px, 14px 1.5px, 1.5px 14px;
+  background-position: 0 14px, 14px 0, 100% 14px, calc(100% - 14px) 0, 0 calc(100% - 26px), 14px 100%, 100% calc(100% - 26px), calc(100% - 14px) 100%; background-repeat: no-repeat;
+  border: 1px solid rgba(27, 20, 13, 0.25); box-shadow: 3px 4px 0 rgba(27, 20, 13, 0.2); }
+.ds-proof__back { height: 100%; max-height: 230px; aspect-ratio: 270 / 314; object-fit: cover; border-radius: 8px; box-shadow: 0 0 0 1.5px var(--ds-ink); }
+.ds-proof__logo { width: 150px; max-height: 100%; }
+.ds-proof__reg { position: absolute; top: 50%; width: 14px; height: 14px; margin-top: -7px; border: 1.5px solid var(--ds-ink); border-radius: 50%; background: linear-gradient(var(--ds-ink), var(--ds-ink)) center / 1.5px 22px no-repeat, linear-gradient(var(--ds-ink), var(--ds-ink)) center / 22px 1.5px no-repeat; } .ds-proof__reg:first-of-type { left: 4px; } .ds-proof__reg:last-of-type { right: 4px; }
+.ds-proof__bar { position: absolute; left: 50%; bottom: 9px; display: flex; transform: translateX(-50%); border: 1px solid var(--ds-ink); } .ds-proof__bar i { width: 16px; height: 9px; } .ds-proof__bar i:nth-child(1) { background: var(--ds-ink); } .ds-proof__bar i:nth-child(2) { background: var(--ds-amber); } .ds-proof__bar i:nth-child(3) { background: var(--ds-red); } .ds-proof__bar i:nth-child(4) { background: #1f3fa8; }
+/* placa de mérito: moldura de madeira, chapa de latão gravada e quatro parafusos; sem conquistar = chapa vazia tracejada */
+.ds-plaque { position: relative; display: grid; place-items: center; width: 100%; min-height: 76px; padding: 13px 18px; background: radial-gradient(circle at 7px 7px, #d9b65c 0 2.2px, transparent 2.8px), radial-gradient(circle at calc(100% - 7px) 7px, #d9b65c 0 2.2px, transparent 2.8px), radial-gradient(circle at 7px calc(100% - 7px), #d9b65c 0 2.2px, transparent 2.8px), radial-gradient(circle at calc(100% - 7px) calc(100% - 7px), #d9b65c 0 2.2px, transparent 2.8px), #4a2f1b; border: var(--ds-line) solid var(--ds-ink); border-radius: 3px; box-shadow: 3px 4px 0 rgba(27, 20, 13, 0.35); cursor: pointer; pointer-events: auto; }
+.ds-plaque > span { display: grid; place-items: center; width: 100%; min-height: 48px; padding: 6px 8px 4px; background: linear-gradient(160deg, #f2d98a, #c9a24a 55%, #e6c977); border: 1.5px solid var(--ds-ink); color: #3a2a10; font: 400 17px/1 var(--f-title); letter-spacing: 0.05em; text-align: center; text-transform: uppercase; text-shadow: 0 1px 0 rgba(255, 245, 210, 0.7); }
+/* ainda não conquistada: só o contorno da placa na parede, com o nome escrito a lápis */
+.ds-plaque:not(.is-on) { background: rgba(27, 20, 13, 0.05); border: var(--ds-line) dashed var(--ds-ink-2); box-shadow: none; }
+.ds-plaque:not(.is-on) > span { background: none; border: none; color: var(--ds-ink-2); text-shadow: none; }
+button.ds-plaque { transition: transform 0.1s; } button.ds-plaque:hover, button.ds-plaque:focus-visible { transform: translateY(-3px); }
+.ds-plaque--lg { width: 240px; min-height: 120px; cursor: default; } .ds-plaque--lg > span { min-height: 86px; font-size: 24px; }
+
+/* ── cabeçalho das janelas (27/11): topo de formulário ── */
+/* rótulo de formulário: o mesmo do Formulário 01-A */
+.ds-formlabel { font: 700 12px/1 var(--f-ui); letter-spacing: 0.14em; text-transform: uppercase; color: var(--ds-ink-2); }
+/* papel timbrado (cabeçalho das janelas): título direto no papel, sobre linha dupla de tinta; o recibo e o ✕ à direita */
+.ds-letterhead { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: 28px; padding: 0 0 12px; border-bottom: 5px double var(--ds-ink); }
+.ds-letterhead__title { display: grid; gap: 8px; min-width: 0; } .ds-letterhead__title .ds-formlabel { color: var(--ds-ink); }
+#lobby .lb-head .ds-letterhead h2 { margin: 0; font: 400 46px/1 var(--f-title); letter-spacing: 0.02em; text-transform: uppercase; color: var(--ds-ink); text-shadow: none; }
+/* recibo de caixa: papel térmico, texto de impressora, saldo grifado a marca-texto âmbar, borda de baixo rasgada */
+.ds-till { position: relative; z-index: 2; margin: -4px 0 -20px; transform: rotate(-1.5deg); filter: drop-shadow(3px 4px 0 rgba(27, 20, 13, 0.3)); }
+.ds-till__paper { display: grid; grid-template-columns: auto auto; align-items: baseline; column-gap: 22px; row-gap: 7px; min-width: 250px; padding: 13px 18px 17px; background: var(--ds-tex-lines), #fbf8ee; color: var(--ds-ink); border: var(--ds-line) solid var(--ds-ink); border-bottom: none;
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 7px), 93.75% 100%, 87.5% calc(100% - 7px), 81.25% 100%, 75% calc(100% - 7px), 68.75% 100%, 62.5% calc(100% - 7px), 56.25% 100%, 50% calc(100% - 7px), 43.75% 100%, 37.5% calc(100% - 7px), 31.25% 100%, 25% calc(100% - 7px), 18.75% 100%, 12.5% calc(100% - 7px), 6.25% 100%, 0 calc(100% - 7px)); }
+/* o clipe fica fora do papel recortado, para sair inteiro por cima da borda */
+.ds-till > .ds-clip { top: -31px; right: 30px; width: 24px; height: 62px; }
+.ds-till__head { grid-column: 1 / -1; justify-self: stretch; padding: 0 34px 5px 0; margin-bottom: 1px; border-bottom: 2px dashed var(--ds-ink-2); font: 400 16px/1 var(--f-title); letter-spacing: 0.08em; text-transform: uppercase; color: var(--ds-ink-2); }
+.ds-till__label { font: 700 12px/1 var(--f-ui); letter-spacing: 0.14em; text-transform: uppercase; color: var(--ds-ink); }
+.ds-till__total { justify-self: end; font: 400 36px/1 var(--f-title); letter-spacing: 0.02em; white-space: nowrap; }
+.ds-till__total span { padding: 0 4px; margin-left: -4px; background: linear-gradient(to bottom, transparent 22%, var(--ds-amber) 22% 86%, transparent 86%); }
+
+/* ── peças de 27/11 (Campanha e Treino) ── */
+/* agenda de reuniões: folha de planejamento presa por espiral. Na margem, cada faixa (nome e quanto paga); um dia por
+   reunião. Fechada = nome a caneta azul e riscada com X; a próxima = circulada a caneta vermelha; o chefe em vermelho. */
+.ds-agenda { position: relative; display: grid; grid-template-rows: auto minmax(0, 1fr); min-height: 0; background: var(--ds-tex-lines), var(--ds-card); color: var(--ds-ink); border: var(--ds-line) solid var(--ds-ink); box-shadow: 0 3px 0 -1px #e2d6b8, 0 3px 0 1px var(--ds-ink), 6px 10px 0 1px rgba(40, 24, 6, 0.3); }
+.ds-agenda__rings { position: absolute; left: 30px; right: 30px; top: -13px; display: flex; justify-content: space-between; pointer-events: none; }
+.ds-agenda__rings i { position: relative; width: 11px; height: 27px; }
+.ds-agenda__rings i::before { content: ""; position: absolute; left: 0; bottom: 0; width: 11px; height: 7px; border-radius: 50%; background: #2a2017; }
+.ds-agenda__rings i::after { content: ""; position: absolute; left: 2px; top: 0; bottom: 3px; width: 7px; box-sizing: border-box; border-radius: 4px; background: linear-gradient(to right, #6d6a64, #ece8de 45%, #8a867e); border: 1.5px solid var(--ds-ink); }
+.ds-agenda__head { display: flex; justify-content: space-between; align-items: baseline; gap: var(--ds-4); padding: 26px 22px 12px; border-bottom: 3px double var(--ds-ink); }
+.ds-agenda__head > b { font: 400 26px/1 var(--f-title); letter-spacing: 0.04em; text-transform: uppercase; }
+.ds-agenda__head > span { font: 700 12px/1 var(--f-ui); letter-spacing: 0.12em; text-transform: uppercase; color: var(--ds-ink-2); } .ds-agenda__head > span b { margin: 0 2px 0 4px; font: 400 20px/1 var(--f-title); color: var(--ds-ink); }
+.ds-agenda__grid { list-style: none; margin: 0; padding: 0 22px 16px 0; min-height: 0; overflow: hidden; display: grid; grid-template-columns: 150px repeat(5, minmax(0, 1fr)); grid-template-rows: repeat(6, minmax(0, 1fr)); }
+.ds-agenda__tier { position: relative; grid-column: 1; display: grid; align-content: center; justify-items: start; gap: 6px; padding: 8px 12px 8px 20px; }
+.ds-agenda__tier::before { content: ""; position: absolute; left: 0; top: -1px; width: 2000px; border-top: var(--ds-line) solid var(--ds-ink); }
+.ds-agenda__tier:first-child::before { display: none; }
+.ds-agenda__tier span { font: 700 12px/1.25 var(--f-ui); letter-spacing: 0.05em; text-transform: uppercase; color: var(--ds-ink-2); }
+.ds-agenda__tier b { font: 400 30px/1 var(--f-title); color: var(--ds-ink); }
+.ds-agenda__tier.is-on span { background: linear-gradient(to bottom, transparent 8%, #fff06a 8% 92%, transparent 92%); padding: 0 3px; margin-left: -3px; color: var(--ds-ink); }
+.ds-agenda__day { position: relative; display: grid; align-content: center; justify-items: center; text-align: center; gap: 6px; min-width: 0; padding: 7px 9px 8px; border-left: 1px solid rgba(27, 20, 13, 0.2); border-top: 1px solid rgba(27, 20, 13, 0.2); }
+.ds-agenda__day > i { font: 400 15px/1 var(--f-title); font-style: normal; color: var(--ds-ink-3); }
+.ds-agenda__day > b { font: 400 17px/0.95 var(--f-title); letter-spacing: 0.02em; text-transform: uppercase; color: var(--ds-ink-3); overflow-wrap: anywhere; }
+.ds-agenda__day.is-done > b { color: #1f3fa8; } .ds-agenda__day.is-done > i { color: var(--ds-ink-2); }
+.ds-agenda__day > s { position: absolute; left: 12px; right: 12px; top: 50%; height: min(calc(100% - 16px), 52px); transform: translateY(-50%); pointer-events: none; background: linear-gradient(to top right, transparent calc(50% - 1.3px), rgba(31, 63, 168, 0.55) calc(50% - 1.3px) calc(50% + 1.3px), transparent calc(50% + 1.3px)), linear-gradient(to bottom right, transparent calc(50% - 1.3px), rgba(31, 63, 168, 0.55) calc(50% - 1.3px) calc(50% + 1.3px), transparent calc(50% + 1.3px)); }
+.ds-agenda__day.is-cur > b { color: var(--ds-ink); } .ds-agenda__day.is-cur > i { color: var(--ds-ink); }
+.ds-agenda__day.is-cur::after { content: ""; position: absolute; left: 50%; top: 50%; width: calc(100% - 2px); height: min(calc(100% - 4px), 64px); border: 2.5px solid var(--ds-red); border-radius: 50%; transform: translate(-50%, -50%) rotate(-4deg); pointer-events: none; }
+.ds-agenda__day.is-boss { background: repeating-linear-gradient(45deg, transparent 0 7px, rgba(184, 41, 28, 0.08) 7px 9px); } .ds-agenda__day.is-boss > b, .ds-agenda__day.is-boss > i { color: var(--ds-red); }
+.ds-agenda__stamp { position: absolute; left: 50%; top: 58%; margin: 0; background: var(--ds-card); font-size: 24px; transform: translate(-50%, -50%) rotate(-8deg); }
+
+/* convocação: a ficha de ação de Campanha e Treino. Quem, quanto vale, o deck e o botão principal sempre no pé */
+.ds-invite > .ds-body { grid-template-rows: auto auto 1fr auto; }
+.ds-invite .ds-title { margin-top: 8px; font-size: 36px; } .ds-invite.is-boss .ds-title { color: var(--ds-red); } .ds-invite.is-boss .ds-bar b { color: #ff8a7a; }
+.ds-invite .ds-deckline { align-self: end; }
+.ds-invite__foot .ds-btn { gap: 14px; }
+
+/* o deck que vai para a mesa: três cartas reduzidas em leque, nome, estado e um "Trocar" pequeno */
+.ds-deckline { display: grid; grid-template-columns: 88px minmax(0, 1fr); align-items: center; gap: 14px; padding: 10px 12px 10px 8px; background: var(--ds-tex-lines), var(--ds-card); color: var(--ds-ink); border: 1.5px dashed var(--ds-ink-3); }
+.ds-deckline.is-bad { border: var(--ds-line) solid var(--ds-red); } .ds-deckline.is-bad small { color: var(--ds-red); font-weight: 700; }
+.ds-deckline__fan { position: relative; height: 70px; }
+.ds-deckline__fan .ds-mini { position: absolute; left: 20px; top: 4px; width: 50px; transform-origin: 50% 100%; }
+.ds-deckline__fan .ds-mini:nth-child(1) { transform: rotate(-12deg) translateX(-15px); } .ds-deckline__fan .ds-mini:nth-child(2) { z-index: 1; transform: rotate(-1deg); } .ds-deckline__fan .ds-mini:nth-child(3) { z-index: 2; transform: rotate(10deg) translateX(15px); }
+.ds-deckline__txt { display: grid; gap: 5px; min-width: 0; }
+.ds-deckline__top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.ds-deckline__txt b { font: 400 24px/1 var(--f-title); text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ds-deckline__txt small { font: 500 13px/1.2 var(--f-ui); color: var(--ds-ink-2); }
+
+/* mata-borrão: base de mesa de feltro verde com cantoneiras de couro, onde ficam objetos soltos (crachá, bilhete) */
+.ds-deskpad { position: relative; overflow: hidden; min-height: 0; background: var(--ds-tex-speck), #2f4a3a; border: var(--ds-line) solid var(--ds-ink); border-radius: 4px; box-shadow: inset 0 0 0 7px #294133, inset 0 0 70px rgba(0, 0, 0, 0.35), 6px 10px 0 1px rgba(40, 24, 6, 0.3); }
+.ds-deskpad::before { content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(135deg, #5a3720 0 44px, #24160c 44px 46px, transparent 46.5px) top left / 72px 72px no-repeat, linear-gradient(225deg, #5a3720 0 44px, #24160c 44px 46px, transparent 46.5px) top right / 72px 72px no-repeat,
+    linear-gradient(45deg, #5a3720 0 44px, #24160c 44px 46px, transparent 46.5px) bottom left / 72px 72px no-repeat, linear-gradient(315deg, #5a3720 0 44px, #24160c 44px 46px, transparent 46.5px) bottom right / 72px 72px no-repeat; }
+
+/* crachá: cartão plástico com faixa da empresa, foto, nome e código de barras, preso por jacaré numa fita de tecido */
+.ds-badge { position: relative; margin: 0; padding-top: 52px; transform: rotate(-3deg); }
+.ds-badge__strap { position: absolute; left: 50%; top: -320px; height: 352px; width: 30px; margin-left: -15px; background: repeating-linear-gradient(to bottom, rgba(255, 255, 255, 0.1) 0 2px, transparent 2px 6px), #1d3f8a; border-left: var(--ds-line) solid var(--ds-ink); border-right: var(--ds-line) solid var(--ds-ink); box-shadow: inset 4px 0 0 rgba(255, 255, 255, 0.12), inset -4px 0 0 rgba(0, 0, 0, 0.18); }
+.ds-badge__clip { position: absolute; left: 50%; top: 24px; z-index: 2; width: 40px; height: 36px; margin-left: -20px; background: linear-gradient(to bottom, #e6e2d8, #9a968e); border: var(--ds-line) solid var(--ds-ink); border-radius: 5px 5px 3px 3px; box-shadow: inset 0 -8px 0 rgba(0, 0, 0, 0.12); }
+.ds-badge__card { position: relative; display: grid; justify-items: center; gap: 8px; width: 232px; padding: 32px 18px 16px; background: #fbf8f0; color: var(--ds-ink); border: var(--ds-line) solid var(--ds-ink); border-radius: 12px; box-shadow: inset 0 0 0 5px rgba(255, 255, 255, 0.75), 7px 10px 0 rgba(0, 0, 0, 0.35); }
+.ds-badge__card::before { content: ""; position: absolute; top: 11px; left: 50%; width: 46px; height: 10px; margin-left: -23px; border-radius: 5px; background: #2f4a3a; border: 1.5px solid var(--ds-ink); }
+.ds-badge__band { justify-self: stretch; margin: 0 -18px 2px; padding: 6px 0 5px; background: var(--ds-amber); border-top: var(--ds-line) solid var(--ds-ink); border-bottom: var(--ds-line) solid var(--ds-ink); font: 700 12px/1 var(--f-ui); letter-spacing: 0.16em; text-transform: uppercase; text-align: center; }
+.ds-badge__card img { width: 132px; height: 160px; object-fit: cover; background: #8d9a90; border: var(--ds-line) solid var(--ds-ink); }
+.ds-badge__card b { margin-top: 2px; font: 400 30px/1 var(--f-title); letter-spacing: 0.04em; text-transform: uppercase; }
+.ds-badge__card small { font: 700 12px/1 var(--f-ui); letter-spacing: 0.14em; text-transform: uppercase; color: var(--ds-ink-2); }
+.ds-badge__code { width: 150px; height: 24px; margin-top: 4px; background: repeating-linear-gradient(to right, var(--ds-ink) 0 2px, transparent 2px 4px, var(--ds-ink) 4px 5px, transparent 5px 8px, var(--ds-ink) 8px 11px, transparent 11px 12px, var(--ds-ink) 12px 13px, transparent 13px 16px); }
+
+/* ── peças de 27/11 (Decks) ── */
+/* campo de busca: tira de papel com lupa desenhada */
+.ds-search { height: 36px; box-sizing: border-box; padding: 0 12px 0 34px; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%231b140d' stroke-width='2'%3E%3Ccircle cx='6.5' cy='6.5' r='5'/%3E%3Cpath d='M10.5 10.5l4 4'/%3E%3C/svg%3E") 11px 50% no-repeat, var(--ds-card); color: var(--ds-ink); border: var(--ds-line) solid var(--ds-ink); border-radius: var(--ds-r); font: 500 14px/1 var(--f-ui); outline: none; pointer-events: auto; }
+.ds-search::placeholder { color: var(--ds-ink-3); } .ds-search:focus { box-shadow: 0 0 0 3px var(--ds-amber); }
+/* botões do seletor: com classe própria, para a regra genérica de botão do lobby não pegar */
+.ds-seg .ds-seg__btn { height: 32px; padding: 2px 11px 0; font-size: 12px; letter-spacing: 0.08em; } .ds-seg .ds-seg__btn:hover:not(.is-on) { background: var(--ds-amber); color: var(--ds-ink); }
+/* "⋯": botão que abre um menu curto de papel (ordem, filtros) */
+.ds-more { position: relative; }
+#lobby .ds-more__btn { height: 36px; width: 40px; margin-bottom: 4px; font: 700 20px/1 var(--f-ui); }
+#lobby .ds-more__btn.has-dot::after { content: ""; position: absolute; right: -4px; top: -4px; width: 10px; height: 10px; border-radius: 50%; background: var(--ds-amber); box-shadow: 0 0 0 1.5px var(--ds-ink); }
+.ds-menu { position: absolute; right: 0; top: calc(100% + 4px); z-index: 20; display: grid; gap: 2px; min-width: 200px; padding: 12px 8px 8px; background: var(--ds-tex-lines), var(--ds-card); border: var(--ds-line) solid var(--ds-ink); box-shadow: 5px 7px 0 rgba(27, 20, 13, 0.35); }
+.ds-menu .ds-formlabel { padding: 0 8px 4px; } .ds-menu hr { width: 100%; margin: 6px 0; border: none; border-top: 1.5px dashed var(--ds-ink-3); }
+.ds-menu .ds-menu__item { all: unset; box-sizing: border-box; pointer-events: auto; cursor: pointer; display: flex; align-items: center; gap: 10px; min-height: 32px; padding: 0 8px; font: 600 14px/1 var(--f-ui); color: var(--ds-ink); border-radius: 2px; }
+.ds-menu .ds-menu__item::before { content: ""; width: 14px; flex: none; text-align: center; font: 700 14px/1 var(--f-ui); }
+.ds-menu .ds-menu__item.is-on::before { content: "✓"; } .ds-menu .ds-menu__check::before { content: ""; width: 14px; height: 14px; box-sizing: border-box; border: var(--ds-line) solid var(--ds-ink); background: var(--ds-card); }
+.ds-menu .ds-menu__check.is-on::before { content: "✓"; display: grid; place-items: center; font-size: 11px; } .ds-menu .ds-menu__item:hover, .ds-menu .ds-menu__item:focus-visible { background: var(--ds-amber); }
+/* pasta suspensa: um deck. Fundo de papelão com aba (nome curto), cartas-chave saindo pela boca e a frente com a etiqueta */
+button.ds-hangfile { position: relative; display: block; width: 100%; height: 182px; padding: 0; background: none; border: none; color: var(--ds-ink); text-align: left; cursor: pointer; pointer-events: auto; }
+button.ds-hangfile::before { content: ""; position: absolute; left: 0; right: 0; top: 24px; bottom: 0; background: linear-gradient(to bottom, #a98650, #8f6e3c); border: var(--ds-line) solid var(--ds-ink); border-radius: 2px 3px 4px 4px; }
+.ds-hangfile__tab { position: absolute; z-index: 1; left: 12px; top: 0; height: 26px; padding: 6px 12px 0; box-sizing: border-box; background: #a98650; border: var(--ds-line) solid var(--ds-ink); border-bottom: none; border-radius: 6px 9px 0 0; font: 700 12px/1 var(--f-ui); letter-spacing: 0.1em; text-transform: uppercase; white-space: nowrap; }
+.ds-hangfile__tab::after { content: ""; position: absolute; left: 0; right: 0; bottom: -3px; height: 4px; background: #a98650; }
+.ds-hangfile.is-on .ds-hangfile__tab, .ds-hangfile.is-on .ds-hangfile__tab::after { background: var(--ds-amber); }
+.ds-hangfile__cards { position: absolute; left: 0; right: 0; top: 36px; display: flex; justify-content: center; transition: transform 0.15s; }
+.ds-hangfile__cards .ds-mini { width: 66px; margin: 0 -8px; transform-origin: 50% 100%; } .ds-hangfile__cards .ds-mini:nth-child(1) { transform: rotate(-9deg); } .ds-hangfile__cards .ds-mini:nth-child(2) { z-index: 1; transform: translateY(-4px); } .ds-hangfile__cards .ds-mini:nth-child(3) { transform: rotate(9deg); }
+.ds-hangfile:hover .ds-hangfile__cards, .ds-hangfile:focus-visible .ds-hangfile__cards { transform: translateY(-10px); }
+.ds-hangfile__front { position: absolute; z-index: 2; left: -2px; right: -2px; bottom: 0; height: 92px; box-sizing: border-box; display: grid; align-content: center; gap: 5px; padding: 0 14px; background: var(--ds-tex-kraft); border: var(--ds-line) solid var(--ds-ink); border-radius: 2px 2px 4px 4px; box-shadow: 0 -3px 0 rgba(27, 20, 13, 0.25); }
+.ds-hangfile__front b { padding: 6px 9px 4px; background: #fbf8ee; border: 1.5px solid var(--ds-ink); font: 400 20px/1 var(--f-title); letter-spacing: 0.02em; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; box-shadow: 1px 2px 0 rgba(27, 20, 13, 0.25); }
+.ds-hangfile__front small { font: 700 12px/1 var(--f-ui); letter-spacing: 0.1em; text-transform: uppercase; color: var(--ds-ink); }
+.ds-hangfile.is-bad .ds-hangfile__front small { color: #7d1a10; }
+.ds-hangfile.is-empty::before, .ds-hangfile.is-empty .ds-hangfile__tab, .ds-hangfile.is-empty .ds-hangfile__front { background: rgba(27, 20, 13, 0.06); border-style: dashed; border-color: var(--ds-ink-2); box-shadow: none; } .ds-hangfile.is-empty .ds-hangfile__tab::after { background: none; }
+.ds-hangfile.is-empty .ds-hangfile__front b { background: none; border: none; box-shadow: none; padding: 0; font-size: 24px; }
+/* espaço de álbum: a carta presa por quatro cantoneiras; vazio = contorno tracejado com o número e o nome */
+button.ds-slot { position: relative; display: grid; place-items: center; align-content: center; gap: 8px; width: 100%; aspect-ratio: 1079 / 1257; padding: 0; background: none; border: none; color: var(--ds-ink); cursor: pointer; pointer-events: auto; transition: transform 0.1s; }
+button.ds-slot:not(.is-filled) { background: rgba(27, 20, 13, 0.05); border: var(--ds-line) dashed var(--ds-ink-3); border-radius: 4px; }
+button.ds-slot.is-filled:hover, button.ds-slot.is-filled:focus-visible { transform: translateY(-4px) rotate(-0.6deg); }
+.ds-slot__corners { position: absolute; inset: -5px; z-index: 1; pointer-events: none; --c: #23201c;
+  background: linear-gradient(135deg, var(--c) 0 13px, transparent 13.5px) top left / 24px 24px no-repeat, linear-gradient(225deg, var(--c) 0 13px, transparent 13.5px) top right / 24px 24px no-repeat, linear-gradient(45deg, var(--c) 0 13px, transparent 13.5px) bottom left / 24px 24px no-repeat, linear-gradient(315deg, var(--c) 0 13px, transparent 13.5px) bottom right / 24px 24px no-repeat; }
+.ds-slot__no { font: 400 30px/1 var(--f-title); color: var(--ds-ink-3); } .ds-slot__name { padding: 0 10px; font: 700 12px/1.25 var(--f-ui); letter-spacing: 0.06em; text-align: center; text-transform: uppercase; color: var(--ds-ink-2); }
+/* o corpo da ficha nunca fica mais largo que a ficha (nomes longos cortam com reticências em vez de empurrar a borda) */
+.ds-file > .ds-body { grid-template-columns: minmax(0, 1fr); }
+
+/* ── peças de 27/11, 2ª rodada (Decks) ── */
+/* − e +: dois botões colados. O + vira compra (fundo âmbar, com o preço) quando a próxima cópia ainda não é sua */
+.ds-stepper { display: inline-flex; flex: none; background: var(--ds-card); border: var(--ds-line) solid var(--ds-ink); border-radius: var(--ds-r); box-shadow: 2px 2px 0 rgba(27, 20, 13, 0.3); }
+.ds-stepper__btn { position: relative; box-sizing: border-box; display: grid; place-items: center; min-width: 26px; height: 26px; padding: 0 5px; margin: 0; background: none; border: none; border-radius: 0; color: var(--ds-ink); font: 400 20px/1 var(--f-title); cursor: pointer; pointer-events: auto; }
+.ds-stepper__btn::after { content: ""; position: absolute; inset: -3px -3px; }
+.ds-stepper__btn + .ds-stepper__btn { border-left: var(--ds-line) solid var(--ds-ink); }
+.ds-stepper__btn:hover:not(:disabled), .ds-stepper__btn:focus-visible { background: var(--ds-amber); }
+.ds-stepper__btn:disabled { color: var(--ds-ink-3); cursor: not-allowed; opacity: 0.55; }
+.ds-stepper__btn.is-buy { padding: 1px 6px 0; background: var(--ds-tex-lines), var(--ds-amber); font-size: 16px; letter-spacing: 0; white-space: nowrap; }
+.ds-stepper__btn.is-buy:hover:not(:disabled) { background: var(--ds-tex-lines), #ffd98c; } .ds-stepper__btn.is-buy:disabled { background: none; color: var(--ds-red); opacity: 1; }
+/* ficha da carta: topo calmo (foto pequena e reta, nome, uma linha de categorias), atributos numa faixa, regras, cópias e ação no pé */
+.ds-cardfile > .ds-body { grid-template-rows: auto auto minmax(0, 1fr) auto; gap: 12px; padding: 14px 16px 14px; }
+.ds-cardfile__head { display: grid; grid-template-columns: 78px minmax(0, 1fr); gap: 14px; align-items: center; }
+.ds-cardfile.is-compact .ds-cardfile__head { grid-template-columns: minmax(0, 1fr); }
+.ds-cardfile__pic { display: block; width: 78px; aspect-ratio: 1006 / 794; object-fit: cover; border: var(--ds-line) solid var(--ds-ink); box-shadow: 0 0 0 3px #fffdf5, 0 0 0 4.5px var(--ds-ink-3); }
+.ds-cardfile .ds-title { margin: 0; font-size: 24px; line-height: 1; }
+.ds-cardfile__kind { margin: 6px 0 0; font: 600 13px/1.3 var(--f-ui); color: var(--ds-ink-2); }
+.ds-cardfile__stats { margin: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-top: var(--ds-line) solid var(--ds-ink); border-bottom: var(--ds-line) solid var(--ds-ink); }
+.ds-cardfile__stats div { padding: 6px 8px 5px 0; min-width: 0; } .ds-cardfile__stats div + div { padding-left: 10px; border-left: 1.5px dashed var(--ds-ink-3); }
+.ds-cardfile__stats dt { font: 700 12px/1 var(--f-ui); letter-spacing: 0.1em; text-transform: uppercase; color: var(--ds-ink-2); }
+.ds-cardfile__stats dd { margin: 4px 0 0; font: 400 22px/1 var(--f-title); white-space: nowrap; } .ds-cardfile__stats dd small { font: 700 12px/1 var(--f-ui); }
+.ds-cardfile__fx { margin: 0; padding: 8px 0; border-top: var(--ds-line) solid var(--ds-ink); border-bottom: var(--ds-line) solid var(--ds-ink); font: 700 14px/1.35 var(--f-ui); }
+.ds-cardfile .ds-file__rules { gap: 10px; } .ds-cardfile .ds-file__rules li { font: 500 14px/1.4 var(--f-ui); } .ds-cardfile .ds-file__rules b { font-size: 18px; }
+.ds-cardfile__foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; padding-top: 10px; border-top: 1.5px dashed var(--ds-ink-3); }
+.ds-cardfile__own { display: flex; align-items: center; gap: 8px; font: 500 14px/1.2 var(--f-ui); } .ds-cardfile__own b { font-weight: 700; }
+.ds-cardfile__foot .ds-btn { height: 40px; padding: 0 14px; margin-bottom: 4px; font-size: 13px; } .ds-cardfile__foot .ds-stamp { margin: 0 4px 0 0; font-size: 13px; }
+.ds-cardfile.is-compact > .ds-body { gap: 10px; padding: 12px 14px; } .ds-cardfile.is-compact .ds-file__rules { -webkit-mask-image: none; mask-image: none; padding-bottom: 0; }
+
+/* ficha grande com a foto presa por clipe (de volta a pedido do autor): mais compacta para a regra caber sem rolar */
+.ds-cardfile .ds-file__top { grid-template-columns: 104px minmax(0, 1fr); gap: 16px; padding-top: 8px; }
+.ds-cardfile .ds-file__top .ds-title { font-size: 26px; line-height: 0.95; }
+.ds-cardfile .ds-file__kind { margin-top: 8px; }
+.ds-cardfile .ds-file__stats dd { margin-top: 4px; font-size: 24px; } .ds-cardfile .ds-file__stats div { padding: 7px 10px 5px; }
+.ds-cardfile .ds-file__fx { padding: 8px 10px; font-size: 14px; }
+
+/* ── pedido de autorização (caixa de confirmação), 27/11 ── */
+/* folha grampeada: faixa escura com o tipo do pedido, a pergunta, uma frase, a conta (compra) e dois botões do mesmo tamanho.
+   Sem volta = carimbo e botão vermelhos. Não encolhe com o zoom da interface (mesmo piso das janelas do lobby). */
+.ds-confirm { zoom: var(--lb-fix, 1); position: relative; width: min(470px, 92vw); background: var(--ds-tex-paper); color: var(--ds-ink); border: var(--ds-line) solid var(--ds-ink); box-shadow: var(--ds-frame-in, none), 8px 12px 0 rgba(0, 0, 0, 0.45); transform: rotate(-0.6deg); animation: ds-confirm-in 0.16s ease-out; }
+@keyframes ds-confirm-in { from { transform: rotate(-0.6deg) translateY(10px); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .ds-confirm { animation: none; } }
+.ds-confirm > .ds-staple { left: 18px; top: -5px; z-index: 2; }
+.ds-confirm__head { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 9px 18px 8px 52px; background: var(--ds-tex-ink, #23201c); background-color: #23201c; color: #f4efe2; font: 700 12px/1 var(--f-ui); letter-spacing: 0.14em; text-transform: uppercase; }
+.ds-confirm__head b { color: var(--ds-amber); } .ds-confirm.is-danger .ds-confirm__head b { color: #ff8a7a; }
+.ds-confirm__body { position: relative; display: grid; gap: 12px; padding: 22px 24px 6px; }
+.ds-confirm h2 { margin: 0; padding-right: 96px; font: 400 32px/1 var(--f-title); letter-spacing: 0.02em; text-transform: uppercase; word-spacing: 0; color: var(--ds-ink); text-shadow: none; }
+.ds-confirm:not(.is-danger) h2 { padding-right: 0; }
+.ds-confirm p { margin: 0; font: 500 15px/1.45 var(--f-ui); color: var(--ds-ink-2); }
+.ds-confirm__stamp { position: absolute; right: 18px; top: 16px; margin: 0; font-size: 14px; transform: rotate(8deg); background: rgba(246, 239, 220, 0.6); }
+/* a conta, como num recibo: linhas pontilhadas e o total com sublinhado duplo */
+.ds-confirm__sum { margin: 4px 0 0; padding: 10px 14px; display: grid; gap: 6px; background: var(--ds-tex-lines), #fbf8ee; border: 1.5px dashed var(--ds-ink-3); }
+.ds-confirm__sum div { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+.ds-confirm__sum dt { font: 700 12px/1 var(--f-ui); letter-spacing: 0.12em; text-transform: uppercase; color: var(--ds-ink-2); }
+.ds-confirm__sum dd { margin: 0; font: 400 22px/1 var(--f-title); white-space: nowrap; }
+.ds-confirm__sum div:last-child { padding-top: 6px; border-top: 1.5px solid var(--ds-ink); } .ds-confirm__sum div:last-child dd { font-size: 26px; padding: 0 4px; background: linear-gradient(to bottom, transparent 20%, var(--ds-amber) 20% 88%, transparent 88%); }
+.ds-confirm__foot { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 18px 24px 20px; }
+.ds-confirm__foot .ds-btn { width: 100%; }
+/* linha de assinatura: papel com uma linha e o ✕ de "assine aqui"; a caneta é azul. Assinada = a dica some e aparece "Limpar" */
+.ds-sign { display: grid; gap: 6px; margin-top: 4px; }
+.ds-sign__top { display: flex; justify-content: space-between; align-items: center; min-height: 20px; }
+.ds-sign__clear { padding: 2px 0; background: none; border: none; border-bottom: 1.5px solid currentColor; color: var(--ds-ink-2); font: 700 12px/1 var(--f-ui); letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; pointer-events: auto; } .ds-sign__clear:hover { color: var(--ds-ink); }
+.ds-sign__clear[hidden] { display: none; }
+.ds-sign__pad { position: relative; height: 140px; background: #fffdf6; border: 1.5px dashed var(--ds-ink-3); border-radius: 2px; }
+.ds-sign__pad::after { content: ""; position: absolute; left: 34px; right: 18px; bottom: 30px; border-bottom: 1.5px solid var(--ds-ink); pointer-events: none; }
+.ds-sign__pad canvas { position: absolute; inset: 0; z-index: 1; width: 100%; height: 100%; cursor: crosshair; touch-action: none; outline: none; pointer-events: auto; }
+.ds-sign__x { position: absolute; left: 12px; bottom: 28px; font: 700 18px/1 var(--f-ui); color: var(--ds-ink); pointer-events: none; }
+.ds-sign__hint { position: absolute; left: 34px; right: 18px; bottom: 40px; font: 500 13px/1.2 var(--f-ui); color: var(--ds-ink-3); text-align: center; pointer-events: none; }
+.ds-sign.is-signed .ds-sign__hint { visibility: hidden; }
+.ds-confirm__foot .ds-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* ── aviso impresso (toast), 27/11: tira de formulário contínuo, como a do topo do duelo e o relatório ──
+   Três faixas de 18 px no mínimo: cabeçalho miúdo (tipo, hora, número), título e detalhe; o valor em dinheiro fica na
+   ponta direita da última faixa. Cresce para os lados antes de quebrar linha. Topo e fim retos. Recusado = fita vermelha. */
+.ds-feed { --ink: #2a2a26; --band: 18px; zoom: var(--lb-fix, 1); position: relative; width: max-content; min-width: 340px; max-width: 920px; padding: 0 36px; background: repeating-linear-gradient(to bottom, #f7f1df 0 var(--band), #dfeedd var(--band) calc(var(--band) * 2)); color: var(--ink); border: var(--ds-line) solid var(--ds-ink); box-shadow: 4px 6px 0 rgba(0, 0, 0, 0.45); font: 400 17px/var(--band) var(--f-title); letter-spacing: 0.02em; overflow: hidden; pointer-events: auto; transition: opacity 0.4s, transform 0.4s; animation: ds-feed-print 0.24s steps(3, end) both; }
+@keyframes ds-feed-print { from { max-height: 0; } to { max-height: 200px; } }
+.ds-feed.out { opacity: 0; transform: translateY(-12px); }
+@media (prefers-reduced-motion: reduce) { .ds-feed { animation: none; transition: none; } }
+/* furos redondos de arraste, um por faixa, com a mesma medida da peça de referência (.ds-printout) */
+.ds-feed::before, .ds-feed::after { content: ""; position: absolute; top: 0; bottom: 0; width: 24px; background: radial-gradient(circle at 50% calc(var(--band) / 2), #141a16 0 4.5px, transparent 5px) 0 0 / 24px var(--band), #efe8d2; }
+.ds-feed::before { left: 0; border-right: 1.5px dashed rgba(27, 20, 13, 0.4); } .ds-feed::after { right: 0; border-left: 1.5px dashed rgba(27, 20, 13, 0.4); }
+.ds-feed > p { display: flex; justify-content: space-between; align-items: baseline; gap: 24px; min-height: var(--band); margin: 0; padding: 0 2px; }
+.ds-feed__head { font-size: 13px; letter-spacing: 0.12em; text-transform: uppercase; white-space: nowrap; opacity: 0.8; }
+.ds-feed__line { justify-content: flex-start !important; } .ds-feed__line:last-child { justify-content: space-between !important; }
+.ds-feed__title { text-transform: uppercase; }
+/* confirmado: a marca "OK" impressa em negativo */
+.ds-feed__ok { flex: none; margin-right: 8px; padding: 0 4px; background: var(--ink); color: #f7f1df; font-style: normal; }
+.ds-feed__amt { flex: none; font-weight: 400; white-space: nowrap; } .ds-feed__amt.pos { color: var(--ds-green); } .ds-feed__amt.neg { color: var(--ds-red); }
+.ds-feed.is-bad { --ink: #b8291c; }
+.ds-feed__line:not(:last-child) { gap: 0; }
+/* a etiqueta da pasta: contagem e estado separados por espaço (sem ponto do meio) */
+.ds-hangfile__front small { display: flex; gap: 12px; }
+
+/* ── contrato social (Perfil), 27/11: certificado da empresa ──
+   Papel com moldura dupla gravada, selo com o logo, razão social, três números grandes, assinatura da diretoria e carimbo. */
+.ds-charter { position: relative; min-height: 0; display: grid; grid-template-rows: auto auto 1fr auto; gap: 18px; padding: 30px 40px 26px; background: var(--ds-tex-paper); color: var(--ds-ink); border: var(--ds-line) solid var(--ds-ink); box-shadow: 6px 9px 0 rgba(40, 24, 6, 0.35); }
+.ds-charter::before { content: ""; position: absolute; inset: 9px; border: 5px double var(--ds-ink-2); pointer-events: none; }
+.ds-charter::after { content: ""; position: absolute; inset: 19px; border: 1px solid rgba(27, 20, 13, 0.3); pointer-events: none; }
+.ds-charter__head { display: grid; grid-template-columns: 1fr auto 1fr; align-items: baseline; gap: 12px; padding-bottom: 10px; border-bottom: 1.5px solid var(--ds-ink); }
+.ds-charter__head b { font: 400 26px/1 var(--f-title); letter-spacing: 0.32em; text-transform: uppercase; }
+.ds-charter__head span { font: 700 12px/1 var(--f-ui); letter-spacing: 0.12em; text-transform: uppercase; color: var(--ds-ink-2); } .ds-charter__head span:last-child { text-align: right; }
+.ds-charter__id { display: grid; grid-template-columns: 116px minmax(0, 1fr); gap: 26px; align-items: center; }
+.ds-charter__id > div { display: grid; gap: 6px; min-width: 0; }
+.ds-charter__name { margin: 0; font: 400 46px/0.95 var(--f-title); letter-spacing: 0.02em; text-transform: uppercase; overflow-wrap: anywhere; }
+.ds-charter__meta { margin: 0; font: 500 14px/1.3 var(--f-ui); color: var(--ds-ink-2); }
+/* selo: anel duplo com o logo da empresa impresso em tinta */
+.ds-seal { position: relative; display: grid; place-items: center; width: 116px; height: 116px; border-radius: 50%; background: var(--ds-card); border: 3px solid var(--ds-ink); box-shadow: 0 0 0 5px var(--ds-card), 0 0 0 7px var(--ds-ink), 3px 5px 0 7px rgba(27, 20, 13, 0.25); }
+.ds-seal::before { content: ""; position: absolute; inset: 8px; border-radius: 50%; border: 1.5px dashed var(--ds-ink-3); }
+.ds-seal img { width: 66px; height: 66px; }
+.ds-charter__nums { margin: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-self: center; }
+.ds-charter__nums div { padding: 10px 14px 0; border-top: 3px solid var(--ds-ink); } .ds-charter__nums div + div { border-left: 1.5px dashed var(--ds-ink-3); }
+.ds-charter__nums dt { font: 700 12px/1 var(--f-ui); letter-spacing: 0.12em; text-transform: uppercase; color: var(--ds-ink-2); }
+.ds-charter__nums dd { margin: 8px 0 0; font: 400 56px/0.9 var(--f-title); } .ds-charter__nums small { font-size: 24px; color: var(--ds-ink-2); }
+.ds-charter__foot { display: flex; justify-content: space-between; align-items: flex-end; }
+.ds-charter__sign { display: grid; justify-items: center; width: 230px; }
+.ds-charter__sig { width: 210px; height: 52px; margin-bottom: -10px; fill: none; stroke: #1f3fa8; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+.ds-charter__sign span { justify-self: stretch; padding-top: 5px; border-top: 1.5px solid var(--ds-ink); text-align: center; font: 700 12px/1 var(--f-ui); letter-spacing: 0.14em; text-transform: uppercase; color: var(--ds-ink-2); }
+.ds-charter__foot .ds-stamp { margin: 0 6px 6px 0; font-size: 16px; transform: rotate(-9deg); }
+/* lápis de editar: botão redondo de papel com um lápis de escritório; fica junto do que ele edita (nome, logo) */
+button.ds-pencil { position: relative; display: grid; place-items: center; flex: none; width: 34px; height: 34px; padding: 0; background: var(--ds-card); border: var(--ds-line) solid var(--ds-ink); border-radius: 50%; box-shadow: 2px 3px 0 rgba(27, 20, 13, 0.3); cursor: pointer; pointer-events: auto; transition: transform 0.1s; }
+button.ds-pencil svg { width: 22px; height: 22px; }
+button.ds-pencil:hover, button.ds-pencil:focus-visible { background: #fffdf5; box-shadow: 0 0 0 3px var(--ds-amber), 0 0 0 4.5px var(--ds-ink), 2px 3px 0 4px rgba(27, 20, 13, 0.3); }
+button.ds-pencil:hover svg, button.ds-pencil:focus-visible svg { transform: rotate(-14deg) translate(-1px, -1px); transition: transform 0.1s; }
+button.ds-pencil:focus-visible { outline: 3px solid var(--ds-amber); outline-offset: 3px; }
+/* o lápis do nome vai colado na última palavra, mesmo quando o nome quebra linha */
+button.ds-pencil.ds-charter__pen { display: inline-grid; margin-left: 14px; vertical-align: 6px; }
+.ds-seal__edit { position: absolute !important; right: -8px; top: -8px; z-index: 2; }
+
+
+/* ── disquete de 3½" (28/11): um por empresa salva. Corpo de plástico escuro com o canto chanfrado, trava de metal com a janela,
+   furo de proteção e a etiqueta de papel com o nome escrito a caneta azul e os números da empresa ── */
+.ds-floppy { display: grid; grid-template-rows: auto auto minmax(0, 1fr); justify-items: center; gap: 12px; min-width: 0; }
+.ds-floppy__disk { position: relative; width: min(100%, 256px); filter: drop-shadow(5px 7px 0 rgba(27, 20, 13, 0.35)); }
+.ds-floppy__body { position: relative; aspect-ratio: 90 / 94; background: var(--ds-tex-lines), linear-gradient(160deg, #4a4f57, #2d3137 45%, #24272c); border: var(--ds-line) solid var(--ds-ink); border-radius: 5px;
+  clip-path: polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 0 100%); }
+.ds-floppy__body::before { content: ""; position: absolute; top: 7px; right: -6px; width: 30px; height: var(--ds-line); background: var(--ds-ink); transform: rotate(45deg); }
+.ds-floppy__shutter { position: absolute; top: -2px; left: 22%; width: 54%; height: 33%; background: linear-gradient(to right, #c9cdd1, #eef0f1 40%, #a9afb5); border: var(--ds-line) solid var(--ds-ink); border-top: none; }
+.ds-floppy__shutter i { position: absolute; top: 16%; right: 14%; width: 24%; height: 62%; background: #17191c; border: 1.5px solid var(--ds-ink); }
+.ds-floppy__notch { position: absolute; left: 3%; bottom: 3.5%; width: 6%; aspect-ratio: 1; background: #101113; border: 1.5px solid #6b7078; }
+.ds-floppy__label { position: absolute; left: 11%; right: 8%; bottom: -2px; height: 60%; display: grid; align-content: start; gap: 4px; padding: 8px 10px 0; overflow: hidden;
+  background: repeating-linear-gradient(to bottom, transparent 0 21px, rgba(64, 110, 170, 0.28) 21px 22px), var(--ds-tex-lines), #f7f1e0; border: var(--ds-line) solid var(--ds-ink); border-bottom: none; border-radius: 3px 3px 0 0; }
+.ds-floppy__no { font: 700 12px/1 var(--f-ui); letter-spacing: 0.14em; text-transform: uppercase; color: var(--ds-ink-2); }
+/* o nome escrito a caneta azul, como na agenda da Campanha */
+.ds-floppy__name { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; margin-bottom: 2px; font: 400 20px/0.95 var(--f-title); letter-spacing: 0.02em; text-transform: uppercase; color: #1f3f8f; }
+.ds-floppy__name.is-blank { color: var(--ds-ink-3); }
+/* as anotações da etiqueta: campanha, patrimônio (grifado em âmbar, a cor do dinheiro) e vitórias */
+.ds-floppy__line { font: 600 14px/1.25 var(--f-ui); color: var(--ds-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ds-floppy__line mark { padding: 0 3px; color: var(--ds-ink); background: linear-gradient(to bottom, transparent 12%, var(--ds-amber) 12% 92%, transparent 92%); }
+/* adesivo "Em uso": o disquete que está no drive */
+.ds-floppy__tag { position: absolute; z-index: 2; top: -12px; left: -10px; padding: 5px 8px 4px; background: var(--ds-amber); color: var(--ds-ink); border: 1.5px solid var(--ds-ink); font: 700 12px/1 var(--f-ui); letter-spacing: 0.1em; text-transform: uppercase; transform: rotate(-5deg); }
+.ds-floppy__meta { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 8px 12px; margin: 0; font: 500 14px/1.35 var(--f-ui); color: var(--ds-ink-2); text-align: center; }
+.ds-floppy__meta .ds-stamp { transform: rotate(-3deg); font-size: 13px; }
+.ds-floppy__acts { display: grid; gap: 6px; align-content: end; justify-items: center; width: 100%; }
+.ds-floppy__acts .ds-btn:not(.ds-btn--link) { width: 100%; height: 40px; }
+.ds-floppy__acts .ds-btn--link { min-height: 32px; font-size: 14px; }
+.ds-floppy__danger { color: var(--ds-red); }
+/* vazio: o mesmo disquete com a etiqueta em branco, um pouco apagado */
+.ds-floppy.is-empty .ds-floppy__disk { opacity: 0.82; }

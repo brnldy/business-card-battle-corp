@@ -28,7 +28,7 @@ function loadImage(key) {
   });
 }
 // Modelos de terceiros, todos CC0: Poly Haven (cenário) e Quaternius (corpos do rival: Business Man e Formal Woman).
-export const MODEL_LIST = ['business_man', 'business_woman', 'Television_01', 'hanging_industrial_lamp', 'mounted_fluorescent_lights', 'drawer_cabinet', 'wall_clock', 'vintage_stapler', 'binder_notebook', 'metal_office_desk', 'metal_trash_can', 'modern_arm_chair_01'];
+export const MODEL_LIST = ['business_man', 'business_woman', 'Television_01', 'hanging_industrial_lamp', 'mounted_fluorescent_lights', 'drawer_cabinet', 'wall_clock', 'vintage_stapler', 'binder_notebook', 'metal_office_desk', 'modern_arm_chair_01'];
 
 export async function loadAll(onProgress) {
   const keys = [
@@ -37,7 +37,7 @@ export async function loadAll(onProgress) {
   ];
   let done = 0;
   const total = keys.length + MODEL_LIST.length, tick = () => onProgress?.(++done / total);
-  const fonts = ['400 1em "Apple Garamond"', '700 1em "Apple Garamond"', 'italic 400 1em "Apple Garamond"', '400 1em Helvena'];
+  const fonts = ['400 1em "Apple Garamond"', '700 1em "Apple Garamond"', 'italic 400 1em "Apple Garamond"', '400 1em Helvena', '400 1em VT323', '400 1em "Basis Grotesque Pro"', '700 1em "Basis Grotesque Pro"'];
   const fontWait = Promise.race([
     Promise.all(fonts.map((f) => document.fonts.load(f))).catch(() => {}),
     new Promise((r) => setTimeout(r, 3000)),

@@ -4,9 +4,14 @@ import { CARDS } from './cards.js';
 import { img } from './assets.js';
 import { isEffect } from './engine.js';
 
-export const SERIF = '"Apple Garamond", Georgia, "Times New Roman", serif';
-export const MONO = '"Courier New", Consolas, monospace';
-export const SANS = 'Helvena, "Segoe UI", system-ui, sans-serif';
+// Fontes do canvas lidas dos tokens CSS (src/tokens.css): trocar a fonte lá troca aqui também.
+const token = (name, fallback) => {
+  try { return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback; } catch { return fallback; }
+};
+export const SERIF = token('--f-display', '"Apple Garamond", Georgia, "Times New Roman", serif');   // títulos, números, cartas
+export const UI = token('--f-ui', '"Courier New", Consolas, monospace');                            // texto de interface
+// Logo: intocável e fixo aqui de propósito, sem depender dos tokens da interface.
+export const LOGO = '"Apple Garamond", Georgia, "Times New Roman", serif';
 
 // ───────── ruído ─────────
 function hash(x, y, s) {
@@ -126,7 +131,7 @@ export function portraitTexture() {
     return [v ? 196 : 22, v ? 208 : 28, v ? 190 : 26];
   });
   g.fillStyle = '#16201a'; g.fillRect(0, H - 20, W, 20);
-  g.fillStyle = '#c4d0be'; g.font = `700 9px ${MONO}`; g.textAlign = 'center'; g.fillText('O FUNDADOR', 64, H - 7);
+  g.fillStyle = '#c4d0be'; g.font = `700 9px ${UI}`; g.textAlign = 'center'; g.fillText('O FUNDADOR', 64, H - 7);
   return tex(c);
 }
 export function posterTexture(lines, color = '#c9d6c3') {
@@ -135,7 +140,7 @@ export function posterTexture(lines, color = '#c9d6c3') {
   g.strokeStyle = '#17231d'; g.lineWidth = 3; g.strokeRect(6, 6, W - 12, H - 12);
   g.fillStyle = '#17231d'; g.textAlign = 'center';
   let y = 48;
-  for (const [txt, size, f] of lines) { g.font = `${f ?? 400} ${size}px ${f === 700 ? MONO : SERIF}`; g.fillText(txt, W / 2, y); y += size + 8; }
+  for (const [txt, size, f] of lines) { g.font = `${f ?? 400} ${size}px ${f === 700 ? UI : SERIF}`; g.fillText(txt, W / 2, y); y += size + 8; }
   const im = g.getImageData(0, 0, W, H), d = im.data;
   for (let i = 0; i < d.length; i += 4) { const n = (fbm((i / 4 % W) / 30, (i / 4 / W) / 30, 4, 3) - 0.5) * 60; d[i] += n; d[i + 1] += n; d[i + 2] += n; }
   g.putImageData(im, 0, 0);
@@ -204,8 +209,8 @@ export function cardFaceCanvas(cardId) {
     stat(T.ATK, def.atk ?? 0); stat(T.DEF, def.def ?? 0);
   } else {
     g.fillStyle = 'rgba(17,17,17,0.82)'; g.fillRect(art.x, art.y + art.h - 96, art.w, 96);
-    g.fillStyle = '#f3f8f0'; g.font = `700 54px ${MONO}`; g.textAlign = 'center';
-    g.fillText(def.kind === 'effect_trap' ? '▼ ARMADILHA ▼' : def.durationTurns ? `EFEITO · ${def.durationTurns} TURNOS` : 'EFEITO IMEDIATO', T.W / 2, art.y + art.h - 46);
+    g.fillStyle = '#f3f8f0'; g.font = `700 54px ${UI}`; g.textAlign = 'center';
+    g.fillText(def.kind === 'effect_trap' ? '▼ ARMADILHA ▼' : def.durationTurns ? `EFEITO DE ${def.durationTurns} TURNOS` : 'EFEITO IMEDIATO', T.W / 2, art.y + art.h - 46);
   }
   g.restore();
   return c;
@@ -254,7 +259,7 @@ export function drawCaixa(g, W, H, value, name, { hot = 0, heal = 0, delta = 0 }
   g.moveTo(fx, top - tabH + r); g.arcTo(fx, top - tabH, fx + r, top - tabH, r); g.lineTo(fx + tabW - r, top - tabH); g.arcTo(fx + tabW, top - tabH, fx + tabW + 10, top - tabH + r, r);
   g.lineTo(fx + tabW + 18, top - 10); g.arcTo(fx + tabW + 22, top, fx + tabW + 40, top, 12); g.lineTo(fx + fw - r, top); g.arcTo(fx + fw, top, fx + fw, top + r, r);
   g.lineTo(fx + fw, top + fh - r); g.arcTo(fx + fw, top + fh, fx + fw - r, top + fh, r); g.lineTo(fx + r, top + fh); g.arcTo(fx, top + fh, fx, top + fh - r, r); g.closePath(); g.fill();
-  g.fillStyle = '#c9d2c2'; g.font = `400 27px ${SANS}`; g.textAlign = 'left'; g.textBaseline = 'middle';
+  g.fillStyle = '#c9d2c2'; g.font = `400 27px ${UI}`; g.textAlign = 'left'; g.textBaseline = 'middle';
   let nm = name.toLowerCase(); while (g.measureText(nm).width > tabW - 36 && nm.length > 3) nm = nm.slice(0, -1);
   g.fillText(nm, fx + 22, top - tabH / 2 + 3);
   g.fillStyle = value <= 2000 ? '#ffb4a6' : '#cfcab2'; g.font = `400 104px ${SERIF}`; g.textAlign = 'center';
@@ -268,7 +273,7 @@ export function coinTexture(label, sub) {
   g.strokeStyle = '#5a4210'; g.lineWidth = 5; g.beginPath(); g.arc(64, 64, 52, 0, 7); g.stroke();
   g.fillStyle = '#3d2c08'; g.textAlign = 'center'; g.textBaseline = 'middle';
   g.font = `700 54px ${SERIF}`; g.fillText(label, 64, 58);
-  g.font = `700 13px ${MONO}`; g.fillText(sub, 64, 96);
+  g.font = `700 13px ${UI}`; g.fillText(sub, 64, 96);
   return tex(c, { pixel: false });
 }
 

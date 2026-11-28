@@ -1,3 +1,4 @@
+import * as glass from './ds/glass.js';
 import * as THREE from 'three';
 import { loadAll } from './assets.js';
 import { Gfx, Particles, timeUniform, updateTweens } from './gfx.js';
@@ -39,13 +40,13 @@ async function boot() {
   // reflexos suaves para os modelos PBR (TV, luminária, arquivos)
   const pm = new THREE.PMREMGenerator(gfx.renderer);
   R.scene.environment = pm.fromScene(new RoomEnvironment(), 0.04).texture; R.scene.environmentIntensity = 0.16; pm.dispose();
-  window.__R__ = R;
+  window.__R__ = R; window.__GFXFADE__ = () => gfx.u.uFade.value; // testes: acompanhar o escurecimento
   street = buildStreet(); window.__STREET__ = street; // fundo do menu: a sede da empresa e a fila de candidatos
-  lobby = buildLobby(); window.__LOBBY__ = lobby;     // o lobby: a recepção por dentro, com as áreas clicáveis
+  lobby = buildLobby(); window.__LOBBY__ = lobby; lobby.renderer = gfx.renderer;     // o lobby: a recepção por dentro, com as áreas clicáveis
   lobby.scene.environment = R.scene.environment; lobby.scene.environmentIntensity = 0.12;
   particles = new Particles(R.scene);
   duel = new Duel({ gfx, R, particles, ui });
-  lobbyUi = new LobbyUI({ ui, lobby, canvas, actions: { duel: (training) => fade(() => startDuel(training)), exit: () => fade(() => toMenu()) } });
+  lobbyUi = new LobbyUI({ ui, lobby, canvas, actions: { duel: (training) => walkToDuel(training), exit: () => fade(() => toMenu()) } });
   window.__LOBBYUI__ = lobbyUi;
   // fim de partida: o lobby paga a recompensa, grava histórico, avança metas e confere conquistas
   duel.onMatchEnd = (m) => { const out = applyMatch(save.get(), m, Date.now(), today(), RIVALS); if (out.save !== save.get()) save.set(out.save); if (!m.training) lastOutcome = lastOutcome ? { ...out, finished: out.finished || lastOutcome.finished, unlocked: [...lastOutcome.unlocked, ...out.unlocked], missionsDone: [...lastOutcome.missionsDone, ...out.missionsDone] } : out; return out; };
@@ -64,14 +65,17 @@ async function boot() {
     },
     newgame: () => { sfx('nav'); keepMenu(); ui.slots('new', { pick: (n) => askName((name) => save.create(n, name)) }); },
     load: () => { sfx('nav'); keepMenu(); ui.slots('load', { load: (n) => { ui.closeModal(); save.use(n); sfx('start'); if (save.company()) fade(toLobby); else askName(); } }); },
-    quit: () => (duel.over ? fade(toLobby) : ui.confirm('Abandonar a partida?', duel.training ? 'O treino acaba aqui. Não vale nada mesmo.' : 'A partida conta como derrota e o rival fica com o investimento.', 'ABANDONAR', () => { duel.forfeit(); fade(toLobby); }, 'Continuar jogando')),
+    quit: () => (duel.over ? fade(toLobby) : ui.confirm('Abandonar a partida?', duel.training ? 'O treino acaba aqui. Não vale nada mesmo.' : 'A partida conta como derrota e o rival fica com o investimento.', 'Abandonar', () => { duel.forfeit(); fade(toLobby); }, 'Continuar jogando', { tone: duel.training ? '' : 'danger', kind: duel.training ? 'Treino' : 'Partida' })),
     quit2: () => fade(toLobby),
   });
-  window.addEventListener('keydown', (e) => { if (mode === 'menu' && e.key === 'Enter' && document.getElementById('modal').classList.contains('hidden')) { unlockAudio(); if (save.lastSlot()) ui.h.continue(); else ui.h.newgame(); } });
+  // abertura do menu: qualquer clique ou tecla pula a animação e mostra tudo no lugar (e não vale como escolha)
+  const skip = (e) => { if (mode === 'menu' && street.introOn) { street.skipIntro(); ui.menuStage('show'); unlock(); e.preventDefault(); e.stopImmediatePropagation(); } };
+  window.addEventListener('pointerdown', skip, true); window.addEventListener('keydown', skip, true);
+  window.addEventListener('keydown', (e) => { if (mode === 'menu' && e.key === 'Enter' && !ui.menuBusy && document.getElementById('modal').classList.contains('hidden')) { unlockAudio(); if (save.lastSlot()) ui.h.continue(); else ui.h.newgame(); } });
   const unlock = () => { unlockAudio(); document.getElementById('unlock').classList.add('hidden'); };
   window.addEventListener('pointerdown', unlock); window.addEventListener('keydown', unlock);
   initAudio(); applyVolumes();
-  setTimeout(() => { ui.bootDone(); toMenu(true); document.getElementById('unlock').classList.remove('hidden'); const q = new URLSearchParams(location.search); if (q.has('duel')) { settings.set({ seenHelp: true }); startDuel(); } else if (q.has('lobby')) toLobby(); }, 250);
+  setTimeout(() => { ui.bootDone(); toMenu(true); document.getElementById('unlock').classList.remove('hidden'); const q = new URLSearchParams(location.search); testShortcuts(q); if (q.has('duel')) { settings.set({ seenHelp: true }); startDuel(); } else if (q.has('lobby')) toLobby(); }, 250);
   requestAnimationFrame(loop);
   // ganchos de depuração/teste
   window.__DUEL__ = duel; duel.aiChoose = aiChoose; window.__SAVE__ = save;
@@ -90,8 +94,22 @@ function fade(fn) {
   f.classList.add('on'); sfx('whoosh');
   setTimeout(() => { fn(); requestAnimationFrame(() => f.classList.remove('on')); }, 320);
 }
+/**
+ * Atalhos de teste pelo endereço (como ?lobby e ?duel): ?verba=100000 garante esse PATRIMÔNIO (sem número: $ 100.000);
+ * ?sobras põe de 1 a 3 cópias sobrando em metade das cartas, para testar a trituradora. Valem para a gaveta em uso.
+ * Antes de lançar o jogo: tirar ou esconder (ver docs/design-system/HANDOFF.md).
+ */
+function testShortcuts(q) {
+  if (!q.has('verba') && !q.has('sobras')) return;
+  const s = structuredClone(save.get());
+  if (q.has('verba')) s.patrimonio = Math.max(s.patrimonio, Number(q.get('verba')) || 100000);
+  if (q.has('sobras')) CARDS.forEach((c, i) => { if (i % 2 === 0) s.collection[c.id] = Math.max(s.collection[c.id] ?? 0, 3 + (i % 3) + 1); });
+  save.set(s);
+}
+// ao sair da rua, os efeitos dela não vão junto (tom sépia, paleta, clarão, brilho)
+function resetPost() { const u = gfx.u; u.uWobble.value = T.post.wobble; u.uPal.value = 0; u.uTintWarm.value = 0; u.uFlash.value = 0; u.uGlitch.value = 0; u.uBloom.value = T.post.bloom; u.uAberr.value = gfx.base.aberr; }
 function toLobby() {
-  mode = 'lobby'; duel.stop(); setMusicMode('menu'); ui.mainMenu(false);
+  mode = 'lobby'; duel.stop(); setMusicMode('menu'); ui.mainMenu(false); resetPost();
   gfx.u.uFade.value = 0; duel.lampOn = 1; R.opp.face.uDead.value = 0; R.opp.face.uOn.value = 1;
   document.getElementById('unlock').classList.add('hidden');
   lobby.enter(); lobbyUi.show(true);
@@ -101,15 +119,34 @@ function toMenu(first) {
   mode = 'menu'; duel.stop(); setMusicMode('menu'); lobbyUi?.show(false); ui.mainMenu(true);
   gfx.u.uFade.value = 0; duel.lampOn = 1; R.opp.face.uDead.value = 0; R.opp.face.uOn.value = 1;
   if (!first) sfx('cancel');
+  // ao abrir o jogo: a rua acende e a câmera desce do céu até a fachada; só então o logotipo e o cartão de ponto aparecem.
+  // Voltando da sala, só o logotipo e o cartão entram. Com "reduzir movimento", aparece tudo de uma vez.
+  const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (first && !still) { ui.menuStage('intro'); street.intro(() => ui.menuStage('reveal')); }
+  else ui.menuStage(still ? 'show' : 'reveal');
 }
-function startDuel(training = false) {
-  mode = 'duel'; ui.mainMenu(false); lobbyUi.show(false); document.getElementById('unlock').classList.add('hidden');
+/**
+ * Do lobby para o duelo sem corte: a câmera anda até a sala de reunião, a porta da esquerda abre e a câmera entra no escuro;
+ * no escuro o duelo começa, a luminária da mesa acende piscando e a câmera segue andando até o lugar de jogar.
+ * Com "reduzir movimento" do sistema, fica o escurecimento rápido de antes.
+ */
+function walkToDuel(training) {
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return fade(() => startDuel(training));
+  lobbyUi.walking(true); sfx('whoosh');
+  lobby.walkIn(() => { lobbyUi.walking(false); startDuel(training, { entry: true }); }, () => sfx('door'));
+}
+const ENTRY = { cam: 2.5, light: 0.4, fade: 0.9 }, entryPos = new THREE.Vector3(0.15, 2.7, 11.5), entryLook = new THREE.Vector3(0, 1.55, -2);
+let entry = null;
+function startDuel(training = false, { entry: walkIn = false } = {}) {
+  mode = 'duel'; resetPost(); ui.mainMenu(false); lobbyUi.show(false); document.getElementById('unlock').classList.add('hidden');
   duel.started = false;
   const s = save.get();
   const pool = CARDS.filter((c) => (s.collection[c.id] ?? 0) > 0).map((c) => c.id);
   const plan = training ? null : rivalPlan(s.campaign, pool, Math.floor(Math.random() * 2 ** 31)); // a próxima batalha da campanha
-  duel.newGame({ training, deck: [...activeDeck(s).cards], pool, plan });
-  if (!settings.get().seenHelp) { settings.set({ seenHelp: true }); setTimeout(() => ui.help(), 1400); }
+  duel.newGame({ training, deck: [...activeDeck(s).cards], pool, plan, delay: walkIn ? 1900 : 350 });
+  entry = walkIn ? { t: 0, lit: false } : null;
+  document.getElementById('hud').classList.toggle('is-entering', walkIn);
+  if (!settings.get().seenHelp) { settings.set({ seenHelp: true }); setTimeout(() => ui.help(), walkIn ? 3200 : 1400); } // entrando pela porta, o manual espera a câmera chegar
 }
 function onResize() {
   if (!gfx) return;
@@ -129,13 +166,28 @@ function loop(nowMs) {
   duel.update(dt, t);
   particles.update(dt);
   // lobby: a recepção por dentro
-  if (mode === 'lobby') { lobby.update(dt, t, duel.mouse); gfx.render(lobby.scene, lobby.camera); lobbyUi.frame(); return; }
+  gfx.u.uPal.value = 0;
+  if (mode === 'lobby') {
+    lobby.update(dt, t, duel.mouse); const u = gfx.u;
+    if (mode !== 'lobby') return; // a caminhada terminou neste quadro e o duelo já começou: os efeitos dela não vão junto
+    u.uFade.value = lobby.fade; u.uAberr.value = gfx.base.aberr + lobby.walkFx.aberr; u.uWobble.value = T.post.wobble + lobby.walkFx.wobble; // caminhada até o duelo: o sonho
+    gfx.render(lobby.scene, lobby.camera); lobbyUi.frame(); return;
+  }
   // menu: a rua com o prédio e a fila (cena própria, mesmo filtro de imagem)
-  if (mode !== 'duel') { street.update(dt, t, duel.mouse); gfx.render(street.scene, street.camera); return; }
+  if (mode !== 'duel') {
+    // a rua do menu: estilo da arte de referência (paleta e contorno), tom sépia e os efeitos do estalo do letreiro na abertura
+    street.update(dt, t, duel.mouse);
+    const fx = street.fx, u = gfx.u;
+    u.uFade.value = street.fade; u.uPal.value = 1; u.uTintWarm.value = fx.warm; u.uGlitch.value = fx.glitch;
+    u.uFlash.value = fx.flash; if (fx.flash > 0) u.uFlashCol.value.setRGB(1, 0.72, 0.36);
+    u.uBloom.value = T.post.bloom + fx.bloom; u.uAberr.value = gfx.base.aberr + fx.aberr;
+    gfx.render(street.scene, street.camera); return;
+  }
   // câmera: pose-alvo por modo + paralaxe do mouse + respiração + tremor
   const cam = R.camera, wide = Math.max(1, 1.62 / cam.aspect);
   if (mode === 'duel') {
-    const up = duel.lookUp;
+    // na vez do rival a câmera só levanta um pouquinho (antes ela subia o olhar para o rival e as cartas jogadas saíam de quadro)
+    const up = duel.lookUp * (duel.over ? 1 : 0.22); // no fim da partida ela ainda olha o rival (atrás da tela final)
     tmpP.set(0, 4.75 * wide - up * 0.35, 0.25 + 4.45 * wide + up * 0.3);
     tmpL.set(0, up * 1.3, 0.3 - up * 1.55);
   } else {
@@ -143,12 +195,23 @@ function loop(nowMs) {
     tmpL.set(-1.1, 1.9, -3.6);
   }
   const k = 1 - Math.exp(-dt * 2.6);
-  camPos.lerp(tmpP, k); camLook.lerp(tmpL, k);
+  if (entry && mode === 'duel') {
+    // entrando pela porta: a câmera vem do fundo escuro da sala até a mesa (sai andando, como chegou) e a luz da mesa acende
+    entry.t += dt; const x = Math.min(1, entry.t / ENTRY.cam), u = 1 - Math.pow(1 - x, 3);
+    camPos.lerpVectors(entryPos, tmpP, u); camLook.lerpVectors(entryLook, tmpL, u);
+    gfx.u.uFade.value = 1 - Math.min(1, entry.t / ENTRY.fade) ** 0.7;
+    const on = entry.t - ENTRY.light; // acende piscando: estalos por meio segundo e fica
+    duel.lampOn = on < 0 ? 0 : on > 0.5 ? 1 : Math.sin(on * 70) > 0.1 - on * 2.2 ? 1 : 0.08;
+    if (on >= 0 && !entry.lit) { entry.lit = true; sfx('lampOn'); }
+    if (entry.t > 1.1) document.getElementById('hud').classList.remove('is-entering');
+    if (x >= 1) { entry = null; gfx.u.uFade.value = 0; duel.lampOn = 1; }
+  } else { camPos.lerp(tmpP, k); camLook.lerp(tmpL, k); }
   const mx = duel.mouse.x - 0.5, my = duel.mouse.y - 0.5, sh = duel.shake * duel.shake * 0.16;
   cam.position.set(camPos.x + mx * 0.3 + Math.sin(t * 0.5) * 0.02 + (Math.random() - 0.5) * sh, camPos.y - my * 0.14 + Math.sin(t * 0.8) * 0.015 + (Math.random() - 0.5) * sh, camPos.z);
   cam.lookAt(camLook.x + mx * 0.35, camLook.y - my * (mode === 'duel' ? 0.55 : 0.2), camLook.z);
   cam.rotation.z += (Math.random() - 0.5) * sh * 0.15;
   if (window.__CAMOVR__) { const o = window.__CAMOVR__; cam.position.set(...o.pos); cam.lookAt(...o.look); } // testes: câmera fixa
   gfx.render(R.scene, cam);
+  glass.render(gfx.renderer);   // interface curva (quando ligada): passe final, por cima da cena
 }
 boot().catch((e) => { console.error(e); document.getElementById('boot-line').textContent = `Erro ao abrir o caixa: ${e.message}`; });
