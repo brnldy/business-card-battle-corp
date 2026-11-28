@@ -17,7 +17,6 @@ import { CARDS, RIVALS } from './cards.js';
 import { aiChoose } from './engine.js';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
 import { T } from './theme.js';
-import { weather, WEATHER } from './weathering.js';
 
 document.body.classList.add('theme-buckshot');
 {
@@ -40,14 +39,11 @@ async function boot() {
   R = buildScene();
   // reflexos suaves para os modelos PBR (TV, luminária, arquivos)
   const pm = new THREE.PMREMGenerator(gfx.renderer);
-  R.scene.environment = pm.fromScene(new RoomEnvironment(), 0.04).texture; R.scene.environmentIntensity = 0.04; pm.dispose();
+  R.scene.environment = pm.fromScene(new RoomEnvironment(), 0.04).texture; R.scene.environmentIntensity = 0.16; pm.dispose();
   window.__R__ = R;
   street = buildStreet(); window.__STREET__ = street; // fundo do menu: a sede da empresa e a fila de candidatos
   lobby = buildLobby(); window.__LOBBY__ = lobby; lobby.renderer = gfx.renderer;     // o lobby: a recepção por dentro, com as áreas clicáveis
-  lobby.scene.environment = R.scene.environment; lobby.scene.environmentIntensity = 0.03;
-  // a sujeira na superfície dos objetos, igual nas três cenas (rua, lobby e duelo): ver weathering.js
-  weather(street.scene); weather(lobby.scene); weather(R.scene);
-  window.__WEATHER__ = WEATHER; window.__GFX__ = gfx; // ganchos de teste: força da sujeira e do contorno
+  lobby.scene.environment = R.scene.environment; lobby.scene.environmentIntensity = 0.12;
   particles = new Particles(R.scene);
   duel = new Duel({ gfx, R, particles, ui });
   lobbyUi = new LobbyUI({ ui, lobby, canvas, actions: { duel: (training) => fade(() => startDuel(training)), exit: () => fade(() => toMenu()) } });
@@ -111,7 +107,7 @@ function testShortcuts(q) {
   save.set(s);
 }
 // ao sair da rua, os efeitos dela não vão junto (tom sépia, paleta, clarão, brilho)
-function resetPost() { const u = gfx.u; u.uTintWarm.value = 0; u.uFlash.value = 0; u.uGlitch.value = 0; u.uBloom.value = T.post.bloom; u.uAberr.value = gfx.base.aberr; }
+function resetPost() { const u = gfx.u; u.uPal.value = 0; u.uTintWarm.value = 0; u.uFlash.value = 0; u.uGlitch.value = 0; u.uBloom.value = T.post.bloom; u.uAberr.value = gfx.base.aberr; }
 function toLobby() {
   mode = 'lobby'; duel.stop(); setMusicMode('menu'); ui.mainMenu(false); resetPost();
   gfx.u.uFade.value = 0; duel.lampOn = 1; R.opp.face.uDead.value = 0; R.opp.face.uOn.value = 1;
@@ -156,13 +152,14 @@ function loop(nowMs) {
   duel.update(dt, t);
   particles.update(dt);
   // lobby: a recepção por dentro
+  gfx.u.uPal.value = 0;
   if (mode === 'lobby') { lobby.update(dt, t, duel.mouse); gfx.render(lobby.scene, lobby.camera); lobbyUi.frame(); return; }
   // menu: a rua com o prédio e a fila (cena própria, mesmo filtro de imagem)
   if (mode !== 'duel') {
     // a rua do menu: estilo da arte de referência (paleta e contorno), tom sépia e os efeitos do estalo do letreiro na abertura
     street.update(dt, t, duel.mouse);
     const fx = street.fx, u = gfx.u;
-    u.uFade.value = street.fade; u.uTintWarm.value = fx.warm; u.uGlitch.value = fx.glitch;
+    u.uFade.value = street.fade; u.uPal.value = 1; u.uTintWarm.value = fx.warm; u.uGlitch.value = fx.glitch;
     u.uFlash.value = fx.flash; if (fx.flash > 0) u.uFlashCol.value.setRGB(1, 0.72, 0.36);
     u.uBloom.value = T.post.bloom + fx.bloom; u.uAberr.value = gfx.base.aberr + fx.aberr;
     gfx.render(street.scene, street.camera); return;
