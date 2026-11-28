@@ -14,6 +14,21 @@ import { drawLogo } from './cosmetics.js';
 const M = (color, o = {}) => new THREE.MeshLambertMaterial({ color, ...o });
 const B = (color, o = {}) => new THREE.MeshBasicMaterial({ color, ...o });
 const CARD_W = 0.2, CARD_R = 1257 / 1079; // carta que entra na trituradora: largura (m) e proporção da imagem
+/** junta malhas irmãs com o mesmo material numa só (cada malha é um desenho por quadro): posições, normais e uv já no espaço do pai */
+function mergeMeshes(list) {
+  const pos = [], nor = [], uv = [], idx = [], v = new THREE.Vector3(), nm = new THREE.Matrix3(); let base = 0;
+  for (const m of list) {
+    m.updateMatrix(); nm.getNormalMatrix(m.matrix);
+    const G = m.geometry, P = G.attributes.position, Nn = G.attributes.normal, U = G.attributes.uv;
+    for (let k = 0; k < P.count; k++) { v.fromBufferAttribute(P, k).applyMatrix4(m.matrix); pos.push(v.x, v.y, v.z); v.fromBufferAttribute(Nn, k).applyMatrix3(nm).normalize(); nor.push(v.x, v.y, v.z); uv.push(U ? U.getX(k) : 0, U ? U.getY(k) : 0); }
+    if (G.index) for (const i of G.index.array) idx.push(i + base); else for (let k = 0; k < P.count; k++) idx.push(k + base);
+    base += P.count;
+  }
+  const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); geo.setAttribute('normal', new THREE.Float32BufferAttribute(nor, 3)); geo.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); geo.setIndex(idx);
+  const one = new THREE.Mesh(geo, list[0].material); one.castShadow = list.some((m) => m.castShadow); one.receiveShadow = list.some((m) => m.receiveShadow);
+  const parent = list[0].parent; for (const m of list) { parent?.remove(m); m.geometry.dispose(); } parent?.add(one);
+  return one;
+}
 const box = (w, h, d, m) => new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m);
 const rbox = (w, h, d, r, m) => new THREE.Mesh(new RoundedBoxGeometry(w, h, d, 2, r), m);
 const cyl = (rt, rb, h, seg, m) => new THREE.Mesh(new THREE.CylinderGeometry(rt, rb, h, seg), m);
@@ -375,6 +390,8 @@ export function buildLobby() {
     const led = at(box(0.026, 0.026, 0.008, B(0xee3a30)), 0.1875, -0.002, 0.233); head.add(led);
     const l = new THREE.PointLight(0xff7a4a, 3.2, 3, 1.7); at(l, 0.25, 1.3, 0.75); g.add(l);
     flick.push({ set: (k) => { if (!shredBusy && !shredHot) led.material.color.setRGB(0.93 * k, 0.23 * k, 0.19 * k); }, rate: 2.2, seed: 41, hard: true });
+    // as peças paradas do gabinete com o mesmo material viram uma malha só (16 desenhos a menos por quadro)
+    for (const mat of [body, rubber, liner]) { const list = g.children.filter((c) => c.isMesh && c.material === mat); if (list.length > 1) mergeMeshes(list); }
     shredRig = { g, head, headY: HY, led, light: l, slotY: HY + 0.0975, slotZ: SZ, slotX: 0, outY: CY1, IX, IZ, GAP, pileAt, pileAdd, pileSync, dirty: false, front: 0, pressed: [], last: null };
     hotspot('recycle', 'Trituradora', 'Reciclar repetidas', g, { hit: [0.62, 1.02, 0.56, 0, 0.51, 0.02], anchor: [0, 1.0, 0.1], light: l, lit: 1.8 });
     // o casco preto não acende com o mouse: só a luz da sala reforça, e a cabeça continua preta
@@ -528,7 +545,13 @@ export function buildLobby() {
   const clampTo = (v, a, b) => Math.max(a, Math.min(b, v));
   const dropStrip = (m) => {
     const R = shredRig, i = landed.indexOf(m), j = R.pressed.indexOf(m); if (i >= 0) landed.splice(i, 1); if (j >= 0) R.pressed.splice(j, 1);
-    R.g.remove(m); m.geometry.dispose(); if (--m.material.userData.left <= 0) { m.material.map?.dispose(); m.material.dispose(); }
+    R.g.remove(m); m.geometry.dispose(); if ((m.material.userData.left -= m.userData.n ?? 1) <= 0) { m.material.map?.dispose(); m.material.dispose(); }
+  };
+  // desempenho: cada tira é um objeto desenhado à parte. Quando as tiras deitadas de uma carta pousam, viram um objeto só
+  // (as 9 de uma carta custavam 9 desenhos por quadro; juntas, custam 1). As do acrílico continuam soltas (no máximo 10).
+  const mergeStrips = (list) => {
+    for (const m of list) { const i = landed.indexOf(m); if (i >= 0) landed.splice(i, 1); }
+    const one = mergeMeshes(list); one.userData.n = list.length; landed.push(one);
   };
   const api = {
     scene, camera, dust, hot,
@@ -603,7 +626,7 @@ export function buildLobby() {
       const card = at(new THREE.Mesh(new THREE.PlaneGeometry(Wc, Hc), new THREE.MeshBasicMaterial({ map: tex, side: THREE.DoubleSide, clippingPlanes: [above] })), slotX, slotY + Hc / 2 + 0.02, slotZ);
       g.add(card);
       // um pouco de brilho próprio: dentro do cesto a luz é pouca, e a tira precisa aparecer pela janela
-      const mat = new THREE.MeshLambertMaterial({ map: tex, emissive: 0x262626, emissiveMap: tex, side: THREE.DoubleSide, clippingPlanes: [below] }); mat.userData.left = N;
+      const mat = new THREE.MeshLambertMaterial({ map: tex, emissive: 0x262626, emissiveMap: tex, side: THREE.DoubleSide, clippingPlanes: [below] }); mat.userData.left = N; mat.userData.cut = N;
       // o verso da tira é papel branco (como o de uma carta de verdade): de costas ela não vira um palito escuro
       mat.onBeforeCompile = (sh) => {
         sh.fragmentShader = sh.fragmentShader.replace('#include <map_fragment>', '#include <map_fragment>\n  if (!gl_FrontFacing) diffuseColor.rgb = vec3(0.86, 0.84, 0.78);')
@@ -700,12 +723,15 @@ export function buildLobby() {
               R.dirty = true;
               // no acrílico ficam só as últimas tiras (umas três cartas): a janela mostra o que acabou de cair, sem virar chuvisco
               if (s.front) { R.pressed.push(m); if (R.pressed.length > 10) dropStrip(R.pressed.shift()); }
+              const ud = m.material.userData; if (!s.front) (ud.lying ??= []).push(m);
+              if ((ud.down = (ud.down ?? 0) + 1) === ud.cut && ud.lying?.length) { mergeStrips(ud.lying); ud.lying = null; }
             }
           }
         }
         for (let i = falling.length - 1; i >= 0; i--) if (falling[i].done) falling.splice(i, 1);
         if (R.dirty) { R.dirty = false; R.pileSync(); }
-        while (landed.length > 300) dropStrip(landed[0]);
+        // o que fica no cesto: as cartas mais antigas já estão enterradas no monte; acima disso, saem
+        while (landed.length > 40) dropStrip(landed[0]);
       }
       for (const f of flick) {
         const s = Math.sin(t * f.rate + f.seed * 13.1) + Math.sin(t * f.rate * 2.7 + f.seed * 3.3);
