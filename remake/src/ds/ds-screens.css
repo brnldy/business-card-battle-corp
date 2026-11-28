@@ -366,7 +366,8 @@ button.ds-check { background: none; border: none; padding: 6px 0; pointer-events
 .rc-item { display: grid; gap: 10px; align-content: start; padding: 12px 12px 10px; border: var(--ds-line) solid transparent; border-radius: 3px; }
 .rc-item.is-sel { background: var(--ds-tex-lines), var(--ds-amber); border-color: var(--ds-ink); box-shadow: 3px 4px 0 rgba(27, 20, 13, 0.3); }
 #lobby button.rc-card { all: unset; box-sizing: border-box; pointer-events: auto; cursor: pointer; position: relative; display: block; transition: transform 0.1s; } #lobby button.rc-card:hover, #lobby button.rc-card:focus-visible { transform: translateY(-4px) rotate(-0.6deg); }
-.rc-qty { position: absolute; right: -8px; bottom: -10px; }
+/* a fita "+2" fica na borda direita, na altura da foto: no pé ela tampava o segundo atributo da carta */
+.rc-qty { position: absolute; right: -10px; top: 34%; }
 .rc-item.sc-item--rare .ds-mini { box-shadow: 0 0 0 1.5px var(--ds-ink), 0 0 0 4px #5aa2e6, 0 0 0 5.5px var(--ds-ink), 4px 6px 0 rgba(0, 0, 0, 0.3); } .rc-item.sc-item--legendary .ds-mini { box-shadow: 0 0 0 1.5px var(--ds-ink), 0 0 0 4px var(--ds-amber), 0 0 0 5.5px var(--ds-ink), 4px 6px 0 rgba(0, 0, 0, 0.3); }
 .rc-val { margin: 0; font: 400 20px/1 var(--f-title); color: var(--ds-green); }
 .rc-empty { display: grid; place-content: center; justify-items: center; gap: 10px; padding: 30px; text-align: center; } .rc-empty b { font: 400 30px/1 var(--f-title); text-transform: uppercase; color: var(--ds-ink-2); } .rc-empty p { margin: 0; max-width: 380px; font: 500 15px/1.45 var(--f-ui); color: var(--ds-ink-2); }
@@ -385,6 +386,11 @@ body.rc-dragging, body.rc-dragging * { cursor: grabbing !important; }
 /* ── Reciclar, proposta A (sala): a câmera foi até a trituradora 3D; a janela vira um painel à esquerda e a sala aparece ── */
 #lobby.is-shredroom .lb-win { justify-items: start; padding-left: 3vw; background: linear-gradient(to right, rgba(4, 7, 5, 0.82) 0, rgba(4, 7, 5, 0.68) var(--rc-free, 48%), rgba(4, 7, 5, 0) var(--rc-clear, 66%)); backdrop-filter: none; }
 #lobby .lb-box--recycle.is-room { width: min(600px, 47%); }
+@media (max-width: 1150px) { #lobby .lb-box--recycle.is-room { width: min(600px, 56%); } }
+/* na sala, os avisos saem em cima da máquina, no espaço livre (no centro do topo, batiam no clipe do recibo) */
+#lobby.is-shredroom.is-open .lb-toasts, #lobby.is-shredroom.is-open[data-panel] .lb-toasts { left: var(--rc-toast, 75%); }
+/* a grade rola: a última fileira some num esmaecido em vez de ser cortada no meio do texto */
+.rc-room .rc-grid { padding-bottom: 26px; -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 26px), transparent); mask-image: linear-gradient(to bottom, #000 calc(100% - 26px), transparent); }
 .rc-room { flex: 1; min-height: 0; grid-template-rows: auto minmax(0, 1fr) auto !important; }
 .rc-room .rc-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .rc-room__foot { display: grid; gap: 10px; margin: 0 var(--ds-5); padding: 12px 0 16px; border-top: 1.5px dashed var(--ds-ink-3); }

@@ -13,6 +13,7 @@ import { drawLogo } from './cosmetics.js';
 
 const M = (color, o = {}) => new THREE.MeshLambertMaterial({ color, ...o });
 const B = (color, o = {}) => new THREE.MeshBasicMaterial({ color, ...o });
+const CARD_W = 0.2, CARD_R = 1257 / 1079; // carta que entra na trituradora: largura (m) e proporção da imagem
 const box = (w, h, d, m) => new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m);
 const rbox = (w, h, d, r, m) => new THREE.Mesh(new RoundedBoxGeometry(w, h, d, 2, r), m);
 const cyl = (rt, rb, h, seg, m) => new THREE.Mesh(new THREE.CylinderGeometry(rt, rb, h, seg), m);
@@ -328,7 +329,9 @@ export function buildLobby() {
     const tops = [];
     for (let k = 0; k < pp.count; k++) { if (pp.getY(k) > 0) tops.push(k); pp.setY(k, pp.getY(k) > 0 ? h0(pp.getX(k), pp.getZ(k)) - 0.004 : FLOOR); }
     pileGeo.computeVertexNormals();
-    const pile = new THREE.Mesh(pileGeo, M(0xb8b098, { map: shredPileTexture(), emissive: 0x000000 })); pile.receiveShadow = true; g.add(pile);
+    // o corpo do monte tem brilho próprio fraco: visto pelo acrílico, abaixo da superfície também é papel (sem isso ficava escuro como o vidro)
+    const pileTex = shredPileTexture(), pile = new THREE.Mesh(pileGeo, M(0xb8b098, { map: pileTex, emissive: 0x4a4536, emissiveMap: pileTex }));
+    pile.receiveShadow = true; pile.frustumCulled = false; g.add(pile);
     const PAPER = [0xe4dfcc, 0xd9d3b8, 0xc9c2a6, 0xeeeadf, 0xb9c4c6, 0xd9b4a6, 0xe6d9a0], NB = 150;
     const bits = new THREE.InstancedMesh(new THREE.BoxGeometry(0.013, 0.002, 1), M(0xffffff, { emissive: 0x000000 }), NB), d = new THREE.Object3D(), col = new THREE.Color();
     for (let i = 0; i < NB; i++) {
@@ -340,15 +343,21 @@ export function buildLobby() {
     }
     bits.frustumCulled = false; bits.receiveShadow = true; g.add(bits);
     const pileH = new Float32Array(PX * PZ), cellOf = (x, z) => Math.min(PZ - 1, Math.max(0, Math.floor(((z + IZ) / (2 * IZ)) * PZ))) * PX + Math.min(PX - 1, Math.max(0, Math.floor(((x + IX) / (2 * IX)) * PX)));
-    for (let j = 0; j < PZ; j++) for (let i = 0; i < PX; i++) pileH[j * PX + i] = h0(-IX + ((i + 0.5) * 2 * IX) / PX, -IZ + ((j + 0.5) * 2 * IZ) / PZ) + 0.01;
-    const pileAt = (x, z) => pileH[cellOf(x, z)], pileAdd = (x, z, dh) => { const c = cellOf(x, z); pileH[c] = Math.min(MAXF, pileH[c] + dh); };
+    for (let j = 0; j < PZ; j++) for (let i = 0; i < PX; i++) pileH[j * PX + i] = h0(-IX + ((i + 0.5) * 2 * IX) / PX, -IZ + ((j + 0.5) * 2 * IZ) / PZ) - 0.001;
+    // o que cai se espalha um pouco para as casas vizinhas (papel picado não faz pico); a superfície é a média das casas em volta,
+    // a mesma usada para desenhar o monte e para pousar as tiras: nada fica boiando acima do papel
+    const cell = (i, j) => pileH[Math.min(PZ - 1, Math.max(0, j)) * PX + Math.min(PX - 1, Math.max(0, i))];
+    const pileAdd = (x, z, dh) => {
+      const c = cellOf(x, z), i = c % PX, j = (c - i) / PX;
+      for (const [di, dj, w] of [[0, 0, 1], [1, 0, 0.45], [-1, 0, 0.45], [0, 1, 0.45], [0, -1, 0.45]]) { const a = i + di, b = j + dj; if (a >= 0 && a < PX && b >= 0 && b < PZ) pileH[b * PX + a] = Math.min(MAXF, pileH[b * PX + a] + dh * w); }
+    };
+    const pileAt = (x, z) => {
+      const fx = ((x + IX) / (2 * IX)) * PX - 0.5, fz = ((z + IZ) / (2 * IZ)) * PZ - 0.5, i = Math.floor(fx), j = Math.floor(fz), u = fx - i, v = fz - j;
+      return (cell(i, j) * (1 - u) + cell(i + 1, j) * u) * (1 - v) + (cell(i, j + 1) * (1 - u) + cell(i + 1, j + 1) * u) * v;
+    };
     // o monte sobe junto com o que cai: a superfície de papel acompanha a grade e vai enterrando as tiras antigas
     const pileSync = () => {
-      const hx = IX / PX, hz = IZ / PZ;
-      for (const k of tops) {
-        const x = pp.getX(k), z = pp.getZ(k), hs = (pileAt(x - hx, z - hz) + pileAt(x + hx, z - hz) + pileAt(x - hx, z + hz) + pileAt(x + hx, z + hz)) / 4;
-        pp.setY(k, Math.max(h0(x, z) - 0.004, hs - 0.016));
-      }
+      for (const k of tops) { const x = pp.getX(k), z = pp.getZ(k); pp.setY(k, Math.max(h0(x, z) - 0.004, pileAt(x, z) - 0.003)); }
       pp.needsUpdate = true; pileGeo.computeVertexNormals();
     };
     // cabeça de corte: casco escuro, tampa clara com a fenda, chave, luz e a etiqueta da frente
@@ -364,16 +373,10 @@ export function buildLobby() {
     // um único acento de cor, apagado: o friso âmbar do pé da cabeça (destaca a máquina de longe sem virar brinquedo)
     head.add(at(plane(0.5, 0.014, M(0xa8742c, { emissive: 0x000000 })), 0, -0.078, 0.2302));
     const led = at(box(0.026, 0.026, 0.008, B(0xee3a30)), 0.1875, -0.002, 0.233); head.add(led);
-    // papel engasgado na ponta direita da fenda: a carta entra ao lado dele, então ele nunca precisa sumir
-    const SW = 0.1, SH = 0.13, hg = new THREE.PlaneGeometry(SW, SH, 2, 5), hp = hg.attributes.position;
-    for (let k = 0; k < hp.count; k++) { const v = hp.getY(k) / SH + 0.5, u = hp.getX(k) / SW + 0.5; hp.setZ(k, -0.035 * v * v + 0.008 * Math.sin(u * Math.PI) * v); }
-    hg.computeVertexNormals();
-    const half = at(new THREE.Mesh(hg, M(0xc4c8c6, { map: paperTexture(true, 9), side: THREE.DoubleSide })), 0.112, 0.0975 + SH / 2 - 0.004, SZ); half.rotation.set(-0.12, 0.05, -0.09); head.add(half);
     const l = new THREE.PointLight(0xff7a4a, 3.2, 3, 1.7); at(l, 0.25, 1.3, 0.75); g.add(l);
     flick.push({ set: (k) => { if (!shredBusy && !shredHot) led.material.color.setRGB(0.93 * k, 0.23 * k, 0.19 * k); }, rate: 2.2, seed: 41, hard: true });
-    // a carta entra na parte livre da fenda (à esquerda do papel engasgado)
-    shredRig = { g, head, headY: HY, led, light: l, half, slotY: HY + 0.0975, slotZ: SZ, slotX: -0.045, outY: CY1, IX, IZ, GAP, pileAt, pileAdd, pileSync, dirty: false, front: 0, pressed: [], last: null };
-    hotspot('recycle', 'Trituradora', 'Reciclar repetidas', g, { hit: [0.62, 1.02, 0.56, 0, 0.51, 0.02], anchor: [0, 1.12, 0.1], light: l, lit: 1.8 });
+    shredRig = { g, head, headY: HY, led, light: l, slotY: HY + 0.0975, slotZ: SZ, slotX: 0, outY: CY1, IX, IZ, GAP, pileAt, pileAdd, pileSync, dirty: false, front: 0, pressed: [], last: null };
+    hotspot('recycle', 'Trituradora', 'Reciclar repetidas', g, { hit: [0.62, 1.02, 0.56, 0, 0.51, 0.02], anchor: [0, 1.0, 0.1], light: l, lit: 1.8 });
     // o casco preto não acende com o mouse: só a luz da sala reforça, e a cabeça continua preta
     { const H = hot[hot.length - 1]; H.mats = H.mats.filter((x) => x.m !== hs.material); }
     // o fio vai pelo carpete até a tomada da parede do fundo
@@ -517,10 +520,11 @@ export function buildLobby() {
   // foco da câmera (Reciclar, proposta "sala"): viaja até a trituradora e deixa a esquerda da tela para o painel 2D
   let focusId = null, focusK = 0, shredBusy = 0, shredHot = 0;
   const FOCUS = { recycle: { pos: V(-1.15, 1.55, 1.0), look: V(-2.8, 0.5, -1.05) } };
-  let free = 0.5; // borda direita do painel 2D (fração da largura da tela)
+  let free = 0.5; // onde a máquina fica na tela no foco (horizontal, -1 a 1)
   const curPos = V(0, 0, 0), curLook = V(0, 0, 0), falling = [], landed = [];
   // tira deitada: comprimento no eixo x do cesto, face para cima
   const lieQ = new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(V(0, 0, 1), V(1, 0, 0), V(0, 1, 0))), yawQ = new THREE.Quaternion(), UP = V(0, 1, 0);
+  const flipQ = new THREE.Quaternion().setFromAxisAngle(V(0, 1, 0), Math.PI); // vira a tira sobre o comprimento: mostra o verso
   const clampTo = (v, a, b) => Math.max(a, Math.min(b, v));
   const dropStrip = (m) => {
     const R = shredRig, i = landed.indexOf(m), j = R.pressed.indexOf(m); if (i >= 0) landed.splice(i, 1); if (j >= 0) R.pressed.splice(j, 1);
@@ -574,32 +578,40 @@ export function buildLobby() {
     /** câmera viaja até uma área (null volta para a sala) */
     focus(id) { focusId = FOCUS[id] ? id : null; },
     focusSpots: FOCUS,
-    /** onde começa a área livre da tela (à direita do painel): a câmera centraliza a máquina ali */
-    focusFree(x) { free = clampTo(x, 0, 0.9); },
+    /** onde a máquina deve ficar na tela, na horizontal (-1 a 1): o painel calcula o meio do espaço livre à direita dele */
+    focusFree(x) { free = clampTo(x, -0.9, 0.9); },
     /** a trituradora acende quando uma carta arrastada passa por cima */
     setShredHot(b) { shredHot = b ? 1 : 0; },
     /** ponto da fenda da trituradora na tela (pixels do navegador) */
     shredderScreen() {
       if (!shredRig) return null;
-      const p = V(shredRig.slotX, shredRig.slotY, shredRig.slotZ); shredRig.g.localToWorld(p); p.project(camera);
-      return { x: (p.x * 0.5 + 0.5) * window.innerWidth, y: (-p.y * 0.5 + 0.5) * window.innerHeight };
+      const R = shredRig, W = window.innerWidth, H = window.innerHeight, scr = (x, y) => { const v = V(x, y, R.slotZ); R.g.localToWorld(v); v.project(camera); return [(v.x * 0.5 + 0.5) * W, (-v.y * 0.5 + 0.5) * H]; };
+      // também o tamanho, na tela, da carta 3D que vai entrar: a carta arrastada encolhe até ele antes da troca
+      const [x, y] = scr(R.slotX, R.slotY), [x0] = scr(R.slotX - CARD_W / 2, R.slotY), [x1] = scr(R.slotX + CARD_W / 2, R.slotY), [, yt] = scr(R.slotX, R.slotY + 0.02 + CARD_W * CARD_R);
+      return { x, y, w: Math.abs(x1 - x0), h: Math.abs(y - yt) };
     },
     /** a carta desce pela fenda da cabeça; por baixo da lâmina saem as tiras, dentro do cesto, que caem na pilha e ficam lá */
     async shredIn(url, { feed = 1100 } = {}) {
       if (!shredRig) return;
       const r = this.renderer; if (r) r.localClippingEnabled = true;
-      const img = await new Promise((ok) => { const i = new Image(); i.onload = () => ok(i); i.src = url; });
+      const img = await new Promise((ok) => { const i = new Image(); i.onload = () => ok(i); i.onerror = () => ok(null); i.src = url; });
+      if (!img) return; // imagem que não carregou: a carta é gravada do mesmo jeito, só sem a animação
       const tex = new THREE.Texture(img); tex.colorSpace = THREE.SRGBColorSpace; tex.needsUpdate = true;
-      const R = shredRig, g = R.g, Wc = 0.2, Hc = Wc * (1257 / 1079), N = 9, { slotX, slotY, slotZ, outY } = R;
+      const R = shredRig, g = R.g, Wc = CARD_W, Hc = Wc * CARD_R, N = 9, { slotX, slotY, slotZ, outY } = R;
       const wy = (y) => { const v = V(0, y, slotZ); g.localToWorld(v); return v.y; };
       const above = new THREE.Plane(V(0, 1, 0), -wy(slotY)), below = new THREE.Plane(V(0, -1, 0), wy(outY));
       const card = at(new THREE.Mesh(new THREE.PlaneGeometry(Wc, Hc), new THREE.MeshBasicMaterial({ map: tex, side: THREE.DoubleSide, clippingPlanes: [above] })), slotX, slotY + Hc / 2 + 0.02, slotZ);
       g.add(card);
       // um pouco de brilho próprio: dentro do cesto a luz é pouca, e a tira precisa aparecer pela janela
       const mat = new THREE.MeshLambertMaterial({ map: tex, emissive: 0x262626, emissiveMap: tex, side: THREE.DoubleSide, clippingPlanes: [below] }); mat.userData.left = N;
+      // o verso da tira é papel branco (como o de uma carta de verdade): de costas ela não vira um palito escuro
+      mat.onBeforeCompile = (sh) => {
+        sh.fragmentShader = sh.fragmentShader.replace('#include <map_fragment>', '#include <map_fragment>\n  if (!gl_FrontFacing) diffuseColor.rgb = vec3(0.86, 0.84, 0.78);')
+          .replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\n  if (!gl_FrontFacing) totalEmissiveRadiance = vec3(0.16, 0.155, 0.14);');
+      };
       const strips = [];
       for (let i = 0; i < N; i++) {
-        const geo = new THREE.PlaneGeometry(Wc / N - 0.002, Hc, 1, 6), uv = geo.attributes.uv;
+        const geo = new THREE.PlaneGeometry(Wc / N - 0.002, Hc, 1, 12), uv = geo.attributes.uv;
         for (let k = 0; k < uv.count; k++) uv.setX(k, (i + uv.getX(k)) / N);
         const m = at(new THREE.Mesh(geo, mat), slotX - Wc / 2 + (i + 0.5) * (Wc / N), outY + Hc / 2, slotZ); m.userData.L = Hc; g.add(m); strips.push(m);
       }
@@ -633,9 +645,11 @@ export function buildLobby() {
       camera.position.copy(curPos); camera.lookAt(curLook);
       if (f > 0.0005 && shredRig) {
         // a máquina fica no meio da área livre, em qualquer proporção de tela: gira a câmera no eixo vertical até ela chegar lá
-        camera.updateMatrixWorld(); tmp.set(0, 0.46, 0); shredRig.g.localToWorld(tmp); tmp.applyMatrix4(camera.matrixWorldInverse);
         const th = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * camera.aspect;
-        camera.rotateOnWorldAxis(UP, (Math.atan(free * th) - Math.atan2(tmp.x, -tmp.z)) * f);
+        for (let it = 0; it < 2; it++) { // duas passadas: a câmera está inclinada para baixo, a primeira chega perto e a segunda acerta
+          camera.updateMatrixWorld(); tmp.set(0, 0.46, 0); shredRig.g.localToWorld(tmp); tmp.applyMatrix4(camera.matrixWorldInverse);
+          camera.rotateOnWorldAxis(UP, (Math.atan(free * th) - Math.atan2(tmp.x, -tmp.z)) * f);
+        }
       }
       // no foco a luminária do estagiário baixa: a mesa dele, ao lado, não disputa a atenção com a trituradora
       if (intern) intern.spot.userData.f = 1 - 0.6 * f;
@@ -657,13 +671,15 @@ export function buildLobby() {
             if (p.y - L / 2 <= R.pileAt(p.x, p.z)) {
               const pos = m.geometry.attributes.position, tw = (Math.random() - 0.5) * 0.01;
               s.q0 = m.quaternion.clone(); s.p0 = p.clone(); s.st = 0;
-              if (Math.random() < 0.4) {
+              if (Math.random() < 0.3) {
                 // escorrega para a frente e fica prensada no acrílico, em pé e torta, com a face para fora
-                const lean = (Math.random() - 0.5) * 1.1, ex = Math.abs(Math.sin(lean)) * (L / 2) + 0.014;
+                const lean = (Math.random() - 0.5) * 0.55, ex = Math.abs(Math.sin(lean)) * (L / 2) + 0.022;
                 const fx = clampTo(p.x + (Math.random() - 0.5) * 0.22, -R.IX + ex, R.IX - ex), fz = R.IZ - 0.003 - (R.front++ % 13) * 0.0008;
                 const fy = R.pileAt(fx, R.IZ - R.GAP - 0.01) - L * (0.12 + Math.random() * 0.22) * Math.cos(lean);
-                for (let k = 0; k < pos.count; k++) { const y = pos.getY(k) / L + 0.5; pos.setZ(k, -0.006 * Math.sin(Math.PI * y) + tw * pos.getX(k) * 30 * (y - 0.5)); }
-                s.q1 = new THREE.Quaternion().setFromEuler(new THREE.Euler(-0.08, 0, lean)); s.p1 = V(fx, fy, fz); s.u = [Math.sin(lean) * L * 0.3, 0]; s.front = true;
+                // papel picado não fica reto: a tira ondula de lado ao longo do comprimento, como uma fita amassada
+                const wa = 0.006 + Math.random() * 0.008, wf = 1.2 + Math.random() * 1.3, wp = Math.random() * 6;
+                for (let k = 0; k < pos.count; k++) { const y = pos.getY(k) / L + 0.5; pos.setX(k, pos.getX(k) + wa * Math.sin(y * wf * Math.PI * 2 + wp)); pos.setZ(k, -0.006 * Math.sin(Math.PI * y) + tw * pos.getX(k) * 30 * (y - 0.5)); }
+                s.q1 = new THREE.Quaternion().setFromEuler(new THREE.Euler(-0.08, Math.random() < 0.5 ? Math.PI : 0, lean)); s.p1 = V(fx, fy, fz); s.u = [Math.sin(lean) * L * 0.3, 0]; s.front = true;
               } else {
                 // tomba e deita por cima do monte, arqueada como papel picado de verdade
                 const a = (Math.random() - 0.5) * 1.8, ca = Math.abs(Math.cos(a)), sa = Math.abs(Math.sin(a)), ex = (L / 2) * ca + 0.014 * sa, ez = (L / 2) * sa + 0.014 * ca;
@@ -671,7 +687,7 @@ export function buildLobby() {
                 const ux = Math.cos(a) * L * 0.42, uz = -Math.sin(a) * L * 0.42;
                 const fy = Math.max(R.pileAt(fx, fz), R.pileAt(fx + ux, fz + uz), R.pileAt(fx - ux, fz - uz)) + 0.002, amp = 0.006 + Math.random() * 0.02;
                 for (let k = 0; k < pos.count; k++) { const y = pos.getY(k) / L + 0.5; pos.setZ(k, amp * Math.sin(Math.PI * y) + tw * pos.getX(k) * 60 * (y - 0.5)); }
-                s.q1 = yawQ.setFromAxisAngle(UP, a + (Math.random() < 0.5 ? Math.PI : 0)).clone().multiply(lieQ); s.p1 = V(fx, fy, fz); s.u = [ux, uz];
+                s.q1 = yawQ.setFromAxisAngle(UP, a + (Math.random() < 0.5 ? Math.PI : 0)).clone().multiply(lieQ); if (Math.random() < 0.45) s.q1.multiply(flipQ); s.p1 = V(fx, fy, fz); s.u = [ux, uz];
               }
               pos.needsUpdate = true; m.geometry.computeVertexNormals();
             }
@@ -683,7 +699,7 @@ export function buildLobby() {
               for (const f of [-1, -0.33, 0.33, 1]) R.pileAdd(s.p1.x + s.u[0] * f, s.p1.z + s.u[1] * f, 0.004);
               R.dirty = true;
               // no acrílico ficam só as últimas tiras (umas três cartas): a janela mostra o que acabou de cair, sem virar chuvisco
-              if (s.front) { R.pressed.push(m); if (R.pressed.length > 14) dropStrip(R.pressed.shift()); }
+              if (s.front) { R.pressed.push(m); if (R.pressed.length > 10) dropStrip(R.pressed.shift()); }
             }
           }
         }

@@ -229,9 +229,11 @@ export class LobbyUI {
   /** sala: diz à câmera onde termina o painel, para a trituradora ficar no meio do espaço livre à direita */
   roomFree() {
     const b = $('.lb-box', this.win); if (!b) return;
-    const f = b.getBoundingClientRect().right / innerWidth; this.lobby.focusFree?.(f);
-    // a sombra do painel vai até perto da máquina, apagando o resto da sala (a mesa do estagiário) em telas largas
-    this.root.style.setProperty('--rc-free', `${(f * 100).toFixed(1)}%`); this.root.style.setProperty('--rc-clear', `${((f + (1 - f) * 0.34) * 100).toFixed(1)}%`);
+    // a máquina vai para o meio do espaço livre; em tela muito larga (21:9) fica mais perto do painel, para o estagiário sair de quadro
+    const W = innerWidth, H = innerHeight, r = b.getBoundingClientRect().right, x = r + Math.min((W - r) / 2, 0.55 * H), pc = (v) => `${((v / W) * 100).toFixed(1)}%`;
+    this.lobby.focusFree?.((x / W) * 2 - 1);
+    // a sombra do painel vai até perto da máquina, apagando o resto da sala (a mesa do estagiário); os avisos saem em cima da máquina, longe do recibo
+    const st = this.root.style; st.setProperty('--rc-free', pc(r)); st.setProperty('--rc-clear', pc(Math.max(r + 40, x - 0.22 * H))); st.setProperty('--rc-toast', pc(x));
   }
   close() { if (!this.panel) return; this.lobby.focus?.(null); this.root.classList.remove('is-shredroom'); if (this.panel === 'deck') { this.forgetDecks(); this.resetFilters(); } this.peek(null); this.panel = null; this.win.classList.add('hidden'); this.lobby.setHover(null); sfx('navBack'); }
   render() {
@@ -766,7 +768,8 @@ export class LobbyUI {
     if (d.hot) {
       // a carta voa até onde a máquina a recebe e a trituração começa
       const q = ROOM && this.lobby.shredderScreen(), gr = g.getBoundingClientRect();
-      const m = ROOM ? { left: q.x - gr.width * 0.13, top: q.y - gr.height * 0.3, width: gr.width * 0.26 } : this.shredder?.cardStart();
+      // na sala, a carta encolhe até o tamanho e o lugar da carta 3D em cima da fenda, e só então troca
+      const m = ROOM ? { left: q.x - q.w / 2, top: q.y - q.h, width: q.w } : this.shredder?.cardStart();
       if (m) g.animate([{ transform: g.style.transform }, { transform: `translate(${m.left - d.r.left}px, ${m.top - d.r.top}px) scale(${m.width / gr.width})` }], { duration: 170, easing: 'ease-in', fill: 'forwards' }).onfinish = () => g.remove();
       else g.remove();
       setTimeout(() => this.shred([d.id]), 150);
