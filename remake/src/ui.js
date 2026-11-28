@@ -62,7 +62,7 @@ export class UI {
         <div class="h-follow hidden" id="preview"></div>
         <div class="h-follow hidden" id="tip"></div>
       </div>
-      <div id="over" class="screen hidden"><div class="over-box"><div class="memo" id="over-memo"></div><h2 id="over-title"></h2><p id="over-sub"></p><p class="stats" id="over-stats"></p><p class="reward" id="over-reward"></p><nav><button data-act="quit2">Voltar ao lobby</button><button data-act="again" class="primary">Nova partida</button></nav></div></div>
+      <div id="over" class="screen hidden"></div>
       <div id="modal" class="screen hidden"></div>
       <div id="unlock" class="hidden">clique para ligar o som</div>
       <div id="fade"></div>`;
@@ -431,11 +431,42 @@ export class UI {
       <nav><button data-close class="primary">Voltar ao expediente</button></nav>`, 'ending');
     sfx('win');
   }
+  /**
+   * Fim de partida (peça .ov): um documento com carimbo. Vitória: comunicado aos acionistas, carimbo verde, o que entra no
+   * patrimônio. Derrota: aviso de falência, carimbo vermelho. Empate: ata de reunião. Embaixo, o caixa final dos dois, a
+   * campanha e duas ações; a principal diz o que vem (próxima reunião, revanche, treinar de novo) e já vem com o foco (Enter).
+   */
   gameOver(o) {
     this.show('over', !!o); if (!o) return;
-    $('#over').className = `screen ${o.win ? 'win' : o.draw ? 'draw' : 'lose'}`;
-    $('#over-memo').textContent = o.win ? 'Comunicado aos acionistas / aprovado' : o.draw ? 'Ata de reunião / sem deliberação' : 'Aviso de falência / 2ª via';
-    $('#over-title').textContent = o.title; $('#over-sub').textContent = o.sub; $('#over-stats').textContent = o.stats; $('#over-reward').textContent = o.reward ?? ''; $('#over-reward').className = `reward ${o.win ? 'good' : ''}`;
+    const kind = o.win ? 'win' : o.draw ? 'draw' : 'lose', m = (v) => `$ ${Math.round(v).toLocaleString('pt-BR')}`;
+    const doc = { win: 'Comunicado aos acionistas', draw: 'Ata de reunião', lose: 'Aviso de falência / 2ª via' }[kind];
+    const where = o.training ? 'Treino' : o.camp ? `Reunião ${o.camp.stage} de ${o.camp.total}` : o.free ? 'Reunião livre' : '';
+    const sub = o.limit && o.draw ? 'Acabaram os turnos com o mesmo CAIXA dos dois lados.' : o.limit ? 'Acabaram os turnos: vence quem tem mais CAIXA.' : o.win ? `${o.rival} ficou sem CAIXA.` : o.draw ? 'Ninguém levou o investimento.' : `${o.rival} leva o investimento.`;
+    const [cm, cr] = o.caixa ?? [0, 0];
+    const row = (who, v, tone) => `<div class="ov-row ${tone}"><dt><span>${esc(who)}</span></dt><dd>${m(v)}</dd></div>`;
+    let result = '';
+    if (o.training) result = '<p class="ov-note">Treino: não vale PATRIMÔNIO nem entra no histórico.</p>';
+    else if (o.gain > 0) result = `<p class="ov-gain"><span>Entra no patrimônio</span><b>+ ${m(o.gain)}</b></p>`;
+    else if (o.draw) result = '<p class="ov-note">Empate não rende investimento. As metas do mural pagam.</p>';
+    else if (!o.win) result = '<p class="ov-note">Os investidores não pagam derrota. As metas do mural pagam.</p>';
+    let camp = '';
+    if (o.camp) camp = `<p class="ov-camp"><span class="ds-formlabel">Campanha</span><span>${o.camp.finished ? 'Campanha concluída. O Conselho caiu.' : o.camp.advanced ? `Reunião ${o.camp.stage} de ${o.camp.total} vencida. A próxima porta está aberta.` : `Você continua na reunião ${o.camp.stage} de ${o.camp.total}.`}</span></p>`;
+    const again = o.training ? 'Treinar de novo' : o.camp?.finished ? 'Reunião livre' : o.camp?.advanced ? 'Próxima reunião' : o.win || o.draw ? 'Nova reunião' : 'Revanche';
+    const box = $('#over'); box.className = `screen ov-screen is-${kind}`;
+    box.innerHTML = `<article class="ov" role="dialog" aria-modal="true" aria-labelledby="ov-t">
+      <i class="ov-staple"></i>
+      <header class="ov-bar"><span>${esc(doc)}</span>${where ? `<b>${esc(where)}</b>` : ''}</header>
+      <div class="ov-body">
+        <h2 class="ov-stamp" id="ov-t"><span>${esc(o.title)}</span></h2>
+        <p class="ov-sub">${esc(sub)}</p>
+        <dl class="ov-score"><div class="ov-row ov-row--head"><dt>Caixa final</dt><dd>${o.turns ?? 0} turnos</dd></div>
+          ${row(o.me ?? 'Sua empresa', cm, o.win ? 'is-up' : o.draw ? '' : 'is-down')}${row(o.rival ?? 'Rival', cr, '')}</dl>
+        ${result}${camp}
+      </div>
+      <nav class="ov-acts"><button class="ds-btn" data-act="quit2">Voltar ao lobby</button><button class="ds-btn ds-btn--primary" data-act="again"><span class="ds-key">Enter</span>${esc(again)}</button></nav>
+    </article>`;
+    setTimeout(() => box.querySelector('[data-act="again"]')?.focus({ preventScroll: true }), 50);
   }
+
 }
 export { ICON };

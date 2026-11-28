@@ -486,8 +486,10 @@ export class Duel {
     }
     const s = this.state, name = this.names[OP];
     const out = this.closeMatch(draw ? 'draw' : win ? 'win' : 'loss');
+    const camp = this.plan && !this.plan.free ? { stage: this.plan.stage, total: this.plan.total, advanced: !!out?.advanced, finished: !!out?.finished } : null;
     this.ui.gameOver({
-      win, draw,
+      win, draw, me: this.names[ME], rival: name, caixa: [s.players[ME].caixa, s.players[OP].caixa], turns: s.turn, limit: e.reason === 'turn_limit',
+      gain: out?.reward ?? 0, training: this.training, camp, free: !!this.plan?.free,
       reward: [this.training ? 'Treino: não vale PATRIMÔNIO nem entra no histórico.' : out?.reward ? `+ ${money(out.reward)} de PATRIMÔNIO` : win ? '' : 'Os investidores não pagam derrota. As metas do mural pagam.',
         this.plan && !this.plan.free ? (out?.finished ? 'Campanha concluída. O Conselho caiu.' : out?.advanced ? `Batalha ${this.plan.stage} de ${this.plan.total} vencida. A próxima porta está aberta.` : `Você continua na batalha ${this.plan.stage} de ${this.plan.total}.`) : ''].filter(Boolean).join('\n'),
       title: draw ? 'EMPATE' : win ? 'VOCÊ VENCEU' : 'VOCÊ FALIU',

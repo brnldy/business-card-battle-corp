@@ -548,8 +548,10 @@ export function buildLobby() {
   // foco da câmera (Reciclar, proposta "sala"): viaja até a trituradora e deixa a esquerda da tela para o painel 2D
   let focusId = null, focusK = 0, shredBusy = 0, shredHot = 0;
   // caminhada até a sala de reunião (início do duelo): tempos em segundos
-  const WALK = { door: 0.45, dark: 1.9, cam: 2.6, end: 2.7 };
+  // a câmera anda com velocidade própria: devagar até a porta abrir e, do meio do caminho em diante, acelera e treme (sonho)
+  const WALK = { door: 0.3, fov: 42, fovDream: 62 };
   let walk = null, walkFade = 0;
+  const walkFx = { aberr: 0, wobble: 0 };
   const FOCUS = { recycle: { pos: V(-1.15, 1.55, 1.0), look: V(-2.8, 0.5, -1.05) } };
   let free = 0.5; // onde a máquina fica na tela no foco (horizontal, -1 a 1)
   const curPos = V(0, 0, 0), curLook = V(0, 0, 0), falling = [], landed = [];
@@ -676,18 +678,21 @@ export function buildLobby() {
       for (const m of strips) falling.push({ m, v: V((Math.random() - 0.5) * 0.3, -0.15 - Math.random() * 0.25, (Math.random() - 0.5) * 0.3), spin: (Math.random() - 0.5) * 6, fr: 5 + Math.random() * 4, ph: Math.random() * 6, st: -1 });
     },
     /** entrada: a câmera vem da porta da rua */
-    enter() { enterK = 0; walk = null; walkFade = 0; doorLeft.rotation.y = 0; },
+    enter() { enterK = 0; walk = null; walkFade = 0; doorLeft.rotation.y = 0; walkFx.aberr = walkFx.wobble = 0; if (camera.fov !== WALK.fov) { camera.fov = WALK.fov; camera.updateProjectionMatrix(); } },
     /**
-     * Ir para o duelo sem corte: a câmera anda até a porta da sala de reunião, a folha da esquerda abre para dentro e a câmera
-     * entra no escuro do vão. done() é chamado quando a tela está toda escura (o duelo começa no escuro e continua dali).
+     * Ir para o duelo sem corte: a câmera anda até o centro da porta da sala de reunião, a folha da esquerda abre e, do meio do
+     * caminho em diante, a câmera acelera, treme de leve, a lente abre e a imagem ondula, como quem entra num sonho; aí some
+     * no escuro do vão. done() é chamado quando a tela está toda escura (o duelo começa no escuro e continua dali).
      */
     walkIn(done, onDoor) {
       const d = new THREE.Vector3(); camera.getWorldDirection(d);
-      walk = { t: 0, done, onDoor, p: [camera.position.clone(), V(-0.42, 1.85, BACK + 3.4), V(-0.56, 1.62, BACK + 1.05), V(-0.57, 1.52, BACK + 0.2)],
-        l: [camera.position.clone().addScaledVector(d, 6), V(-0.5, 1.5, BACK), V(-0.56, 1.46, BACK - 2), V(-0.57, 1.45, BACK - 4)] };
+      walk = { t: 0, u: 0, done, onDoor, p: [camera.position.clone(), V(0, 1.85, BACK + 3.4), V(0, 1.62, BACK + 1.05), V(0, 1.52, BACK + 0.15)],
+        l: [camera.position.clone().addScaledVector(d, 6), V(0, 1.5, BACK), V(0, 1.46, BACK - 2), V(0, 1.45, BACK - 4)] };
       walk.cp = new THREE.CatmullRomCurve3(walk.p); walk.cl = new THREE.CatmullRomCurve3(walk.l); hoverId = null;
     },
     get fade() { return walkFade; },
+    /** efeitos de tela da caminhada (o main.js soma aos de base): aberração de cor e ondulação da imagem */
+    walkFx,
     setCompany(info) { crt.userData.draw(info); },
     update(dt, t, mouse) {
       enterK = Math.min(1, enterK + dt * 0.7);
@@ -708,14 +713,22 @@ export function buildLobby() {
       }
       if (walk) {
         // a caminhada até a porta: começa parada e chega ao vão ainda andando (a entrada no duelo continua o movimento)
-        walk.t += dt; const x = Math.min(1, walk.t / WALK.cam), u = x * x * (1.6 - 0.6 * x);
+        // velocidade (fração do caminho por segundo): sai do parado e anda; do meio em diante dispara
+        walk.t += dt; const st = (a, b, x) => { const k = Math.min(1, Math.max(0, (x - a) / (b - a))); return k * k * (3 - 2 * k); };
+        walk.u = Math.min(1, walk.u + dt * (0.42 * st(0, 0.55, walk.t) + 1.7 * st(0.85, 1.5, walk.t)));
+        const u = walk.u, dream = st(0.38, 0.95, u);
         walk.cp.getPoint(u, camera.position); walk.cl.getPoint(u, tmp);
-        camera.position.y += Math.sin(walk.t * 9) * 0.012 * (1 - x); camera.lookAt(tmp); // passo, de leve
-        // a folha da esquerda abre para fora (para o lado da câmera, que passa à direita dela) e mostra o escuro lá dentro
-        const o = Math.min(1, Math.max(0, (walk.t - WALK.door) / 1.05)); doorLeft.rotation.y = -1.4 * (1 - Math.pow(1 - o, 3));
+        camera.position.y += Math.sin(walk.t * 9) * 0.012 * (1 - dream); // passo, de leve
+        // o tremor leve do sonho: cresce do meio para o fim, rápido e pequeno
+        const sh = 0.022 * dream; camera.position.x += (Math.sin(walk.t * 37) + Math.sin(walk.t * 23.7)) * sh; camera.position.y += (Math.sin(walk.t * 31.3) + Math.sin(walk.t * 19.1)) * sh * 0.8;
+        camera.lookAt(tmp); camera.rotateZ(Math.sin(walk.t * 5.3) * 0.035 * dream);
+        const fov = WALK.fov + (WALK.fovDream - WALK.fov) * dream; if (Math.abs(camera.fov - fov) > 0.01) { camera.fov = fov; camera.updateProjectionMatrix(); }
+        walkFx.aberr = 0.014 * dream; walkFx.wobble = 0.006 * dream;
+        // a folha da esquerda abre para fora (para o lado da câmera) e mostra o escuro lá dentro; a câmera passa pelo meio
+        const o = Math.min(1, Math.max(0, (walk.t - WALK.door) / 0.8)); doorLeft.rotation.y = -1.4 * (1 - Math.pow(1 - o, 3));
         if (walk.t >= WALK.door && !walk.creak) { walk.creak = true; walk.onDoor?.(); }
-        walkFade = Math.min(1, Math.max(0, (walk.t - WALK.dark) / (WALK.cam - WALK.dark)));
-        if (walk.t >= WALK.end && walk.done) { const cb = walk.done; walk.done = null; cb(); }
+        walkFade = st(0.8, 1, u);
+        if (u >= 1 && walk.done) { walk.hold = (walk.hold ?? 0) + dt; if (walk.hold > 0.08) { const cb = walk.done; walk.done = null; cb(); } }
       }
       // no foco a luminária do estagiário baixa: a mesa dele, ao lado, não disputa a atenção com a trituradora
       if (intern) intern.spot.userData.f = 1 - 0.6 * f;

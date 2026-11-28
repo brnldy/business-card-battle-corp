@@ -107,7 +107,7 @@ function testShortcuts(q) {
   save.set(s);
 }
 // ao sair da rua, os efeitos dela não vão junto (tom sépia, paleta, clarão, brilho)
-function resetPost() { const u = gfx.u; u.uPal.value = 0; u.uTintWarm.value = 0; u.uFlash.value = 0; u.uGlitch.value = 0; u.uBloom.value = T.post.bloom; u.uAberr.value = gfx.base.aberr; }
+function resetPost() { const u = gfx.u; u.uWobble.value = T.post.wobble; u.uPal.value = 0; u.uTintWarm.value = 0; u.uFlash.value = 0; u.uGlitch.value = 0; u.uBloom.value = T.post.bloom; u.uAberr.value = gfx.base.aberr; }
 function toLobby() {
   mode = 'lobby'; duel.stop(); setMusicMode('menu'); ui.mainMenu(false); resetPost();
   gfx.u.uFade.value = 0; duel.lampOn = 1; R.opp.face.uDead.value = 0; R.opp.face.uOn.value = 1;
@@ -167,7 +167,12 @@ function loop(nowMs) {
   particles.update(dt);
   // lobby: a recepção por dentro
   gfx.u.uPal.value = 0;
-  if (mode === 'lobby') { lobby.update(dt, t, duel.mouse); gfx.u.uFade.value = lobby.fade; gfx.render(lobby.scene, lobby.camera); lobbyUi.frame(); return; }
+  if (mode === 'lobby') {
+    lobby.update(dt, t, duel.mouse); const u = gfx.u;
+    if (mode !== 'lobby') return; // a caminhada terminou neste quadro e o duelo já começou: os efeitos dela não vão junto
+    u.uFade.value = lobby.fade; u.uAberr.value = gfx.base.aberr + lobby.walkFx.aberr; u.uWobble.value = T.post.wobble + lobby.walkFx.wobble; // caminhada até o duelo: o sonho
+    gfx.render(lobby.scene, lobby.camera); lobbyUi.frame(); return;
+  }
   // menu: a rua com o prédio e a fila (cena própria, mesmo filtro de imagem)
   if (mode !== 'duel') {
     // a rua do menu: estilo da arte de referência (paleta e contorno), tom sépia e os efeitos do estalo do letreiro na abertura
@@ -181,7 +186,8 @@ function loop(nowMs) {
   // câmera: pose-alvo por modo + paralaxe do mouse + respiração + tremor
   const cam = R.camera, wide = Math.max(1, 1.62 / cam.aspect);
   if (mode === 'duel') {
-    const up = duel.lookUp;
+    // na vez do rival a câmera só levanta um pouquinho (antes ela subia o olhar para o rival e as cartas jogadas saíam de quadro)
+    const up = duel.lookUp * 0.22;
     tmpP.set(0, 4.75 * wide - up * 0.35, 0.25 + 4.45 * wide + up * 0.3);
     tmpL.set(0, up * 1.3, 0.3 - up * 1.55);
   } else {
